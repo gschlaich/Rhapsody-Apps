@@ -13,6 +13,7 @@ public class MainApp extends App {
 	*/
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		//TODO
+		// is this ok?
 	}	
 	
     /*
@@ -22,5 +23,6 @@ public class MainApp extends App {
 	public static void main(String[] args) {
 		MainApp app = new MainApp();
 		app.invokeFromMain();
+		
 	}		
 }
