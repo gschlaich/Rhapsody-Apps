@@ -22,5 +22,6 @@ public class MainApp extends App {
 	public static void main(String[] args) {
 		MainApp app = new MainApp();
 		app.invokeFromMain();
+		
 	}		
 }
