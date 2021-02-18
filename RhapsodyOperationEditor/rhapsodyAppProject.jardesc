@@ -12,8 +12,8 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
         <file path="/RhapsodyOperationEditor/.project"/>
+        <javaElement handleIdentifier="=RhapsodyOperationEditor/src"/>
         <file path="/RhapsodyOperationEditor/.classpath"/>
-		<javaElement handleIdentifier="=RhapsodyOperationEditor/src"/>
-		<file path="/RhapsodyOperationEditor/rhapsodyAppProject.jardesc"/>
+        <file path="/RhapsodyOperationEditor/rhapsodyAppProject.jardesc"/>
     </selectedElements>
 </jardesc>
