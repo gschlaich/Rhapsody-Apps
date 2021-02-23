@@ -1,5 +1,7 @@
 package apps;
 
+import java.util.List;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -11,13 +13,15 @@ import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPVariable;
 
-public class RhapsodyVariableCompletion extends VariableCompletion implements RhapsodyClassifier {
+public class RhapsodyAttributeCompletion extends VariableCompletion implements RhapsodyClassifier {
 
 	private IRPAttribute myAttribute;
 	
-	public RhapsodyVariableCompletion(CompletionProvider provider, IRPAttribute aAttribute) {
+	public RhapsodyAttributeCompletion(CompletionProvider provider, IRPAttribute aAttribute) {
 		super(provider, aAttribute.getName(), aAttribute.getType().getName());
 		myAttribute = aAttribute;
+		
+		setShortDescription(myAttribute.getDescription());
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
@@ -34,7 +38,6 @@ public class RhapsodyVariableCompletion extends VariableCompletion implements Rh
 		return ret;
 	}
 	
-	
 			
 	@Override
 	public IRPClassifier getIRPClassifier() {
@@ -44,5 +47,12 @@ public class RhapsodyVariableCompletion extends VariableCompletion implements Rh
 	@Override
 	public boolean isReference() {
 		return (myAttribute.getIsReference()==1);
-	}	
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<IRPClassifier> getNestedClassifiers() {
+		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
 }

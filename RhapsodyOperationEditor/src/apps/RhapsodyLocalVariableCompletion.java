@@ -1,5 +1,10 @@
 package apps;
 
+import java.util.List;
+
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
@@ -29,5 +34,13 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 		return myIsReference;
 	}
 	
+
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<IRPClassifier> getNestedClassifiers() {
+		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
 
 }

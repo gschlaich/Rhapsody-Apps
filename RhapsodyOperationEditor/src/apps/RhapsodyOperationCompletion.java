@@ -15,6 +15,7 @@ import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPType;
 
 import apps.ClassifierCompletionProvider.visibility;
 
@@ -31,6 +32,8 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)aProvider;
+		
+		setShortDescription(myOperation.getDescription());
 		
 		
 		for(IRPArgument argument : arguments)
@@ -66,18 +69,24 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	
 	@Override
 	public Icon getIcon() {
-		
-		Icon ret = new ImageIcon(myOperation.getIconFileName());
-		
+		Icon ret = new ImageIcon(myOperation.getIconFileName().replace('\\', '/'));
 		return ret;
 	}
 
 	@Override
 	public boolean isReference() {
-		String ReturnPattern = myOperation.getPropertyValue("CPP_CG.Type.ReturnType");
+		String ReturnPattern = myOperation.getPropertyValue("CPP_CG.Class.ReturnType");
+		if(getIRPClassifier() instanceof IRPType)
+		{
+			ReturnPattern = myOperation.getPropertyValue("CPP_CG.Type.ReturnType");
+		}
 		return(ReturnPattern.endsWith("*"));
 	}
-	
-	
+
+	@Override
+	public List<IRPClassifier> getNestedClassifiers() {
+		//return empty list
+		return new ArrayList<IRPClassifier>();
+	}
 
 }

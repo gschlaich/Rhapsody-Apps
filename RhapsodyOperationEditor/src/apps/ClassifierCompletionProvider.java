@@ -52,10 +52,12 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		myVisibility = aVisibility;
 		super.setParameterizedCompletionParams('(', ", ", ')');
 		myClassifierName = myClassifier.getName();
-		createClassCompletion(myClassifier, myVisibility);
-		
-		
-		
+		createClassCompletion(myClassifier, myVisibility);		
+	}
+	
+	public ClassifierCompletionProvider()
+	{
+		super();
 	}
 	
 	public int getBaseRelevance() {
@@ -72,6 +74,9 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 
 		//IRPCollection operations = myClass.getOperations();
 		
+		RhapsodyClassifierCompletion rcm = new RhapsodyClassifierCompletion(this, aClassifier);
+		addCompletion(rcm);
+		
 		List<IRPOperation> operations = aClassifier.getOperations().toList();
 		
 		for (IRPOperation operation  : operations) 
@@ -85,6 +90,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			}
 			
 				RhapsodyOperationCompletion oc = new RhapsodyOperationCompletion(this, operation, myVisibility);
+				oc.setDefinedIn(aClassifier.getName());
 				oc.setRelevance(myBaseRelevance);
 				addCompletion(oc);
 			
@@ -105,7 +111,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				continue;
 			}
 			
-			RhapsodyVariableCompletion rvc = new RhapsodyVariableCompletion(this, attribute);
+			RhapsodyAttributeCompletion rvc = new RhapsodyAttributeCompletion(this, attribute);
 			rvc.setRelevance(myBaseRelevance-10);
 			addCompletion(rvc);
 			
@@ -128,6 +134,11 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		for(IRPDependency dependency : dependencies)
 		{
 			IRPModelElement modelElement = dependency.getDependsOn();
+			
+			if((aVisibility == visibility.v_public)&&(dependency.getPropertyValue("CG.Dependency.UsageType").equals("Implementation")))
+			{
+				continue;
+			}
 			
 			if(modelElement instanceof IRPClassifier)
 			{
@@ -181,6 +192,10 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 
 	}
 	
+	
+	
+	
+	
 	@Override
 	public void addCompletion(Completion aCompletion)
 	{
@@ -230,32 +245,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			// importing completions
 			myLocalCompletionProvider = new LocalCompletionProvider(comp.getText(),this);
 		}
-		String text = getAlreadyEnteredText(comp);
-		if(text.length()==0)
-		{
-			text = getTextForImport(comp);
-			if(text.length() == 0 )
-			{
-				List<Completion> ret = super.getCompletionsImpl(comp);
-				if(myLocalCompletionProvider!=null)
-				{
-					List<Completion> local = myLocalCompletionProvider.getCompletions(comp);
-					if(local!=null)
-					{
-						if(ret!=null)
-						{
-							ret.addAll(local);
-						}
-						else
-						{
-							ret = local;
-						}
-					}
-				}
-				
-				return ret;
-			}
-		}
+		
+		String text = getTextForImport(comp);
 		
 		if ((text.indexOf("->")==-1)&&(text.indexOf(".")==-1)&&(text.indexOf("::")==-1))
 		{
@@ -282,6 +273,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		String lookForProvider = "";
 		boolean ref = false;
+		boolean st = false;
 		
 		//TODO search from end for string
 		
@@ -300,6 +292,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		}
 		if(endDD>end)
 		{
+			st = true;
 			end = endDD;
 			ref = false;
 			startSearch = end+2;
@@ -328,30 +321,54 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		if((outerCompletionList!=null)&&(outerCompletionList.size()==1))
 		{
-			RhapsodyClassifier rc = (RhapsodyClassifier)outerCompletionList.get(0);
-			if(rc!=null)
+			List<Completion> cs = new ArrayList<Completion>();
+			String searchText = text.substring(startSearch);
+			if(searchText==null)
 			{
+				searchText = ""; 
+			}
+			Completion c = outerCompletionList.get(0);
+			if((c!=null)&&((c instanceof  RhapsodyNamespaceCompletion)==false))
+			{
+				RhapsodyClassifier rc = (RhapsodyClassifier)c;
 				if(rc.isReference()!=ref)
 				{
 					//no completion fit...
-					return new ArrayList<Completion>();
+					return cs;
 				}
 				ClassifierCompletionProvider ccp = new ClassifierCompletionProvider(rc.getIRPClassifier(), visibility.v_public);
-				String searchText = text.substring(startSearch);
-				if(searchText==null)
-				{
-					searchText = ""; 
-				}
+				
 				System.out.println("searchText  " + searchText );
-				List<Completion> completions = ccp.getSubCompletions(searchText);
-				return completions;
+				return ccp.getSubCompletions(searchText);
+			}
+			else if((c!=null)&&(c instanceof RhapsodyNamespaceCompletion))
+			{
+				
+				if(st==false)
+				{
+					return cs;
+				}
+				
+				RhapsodyNamespaceCompletion rnc = (RhapsodyNamespaceCompletion)c;
+				List<IRPClassifier> classifiers = rnc.getClassifiers().toList();
+				for(IRPClassifier classifier:classifiers)
+				{
+					cs.addAll(getSubCompletions(classifier.getName()));
+					
+				}
+				return cs;
+			
+				
+			}
+			else
+			{
+				return cs;
 			}
 		}
-		
-		
-		
-		//return empty List
-		return new ArrayList<Completion>();
+		else
+		{
+			return completions;
+		}
 		
 	}
 
@@ -376,6 +393,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		return len==0 ? EMPTY_STRING : new String(seg.array,start,len);
 
 	}
+	
 	
 	
 	
