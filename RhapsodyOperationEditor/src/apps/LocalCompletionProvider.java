@@ -1,5 +1,6 @@
 package apps;
 
+import java.io.Console;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.IBinding;
+import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTNameSpecifier;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTQualifiedName;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPBinding;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
@@ -28,6 +30,7 @@ import org.eclipse.cdt.core.parser.IParserLogService;
 import org.eclipse.cdt.core.parser.IScannerInfo;
 import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
 import org.eclipse.cdt.core.parser.ScannerInfo;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTQualifiedName;
 import org.eclipse.cdt.internal.core.index.EmptyCIndex;
 import org.eclipse.cdt.internal.core.parser.scanner.CharArray;
 import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
@@ -47,6 +50,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	private int options = 0;
 	Map<String, String> definedMacros = new HashMap<String, String>();
 	private ClassifierCompletionProvider itsCompletionProvider = null;
+	String myOperation;
 	
 	
 	public LocalCompletionProvider(String aOperationBody, ClassifierCompletionProvider aCompletionProvider) {
@@ -62,8 +66,8 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 		code.append("() { \n");
 		code.append(aOperationBody);
 		code.append("\n }");
-		
-		FileContent fileContent = new InternalFileContent(defaultFileName, new CharArray(code.toString()));
+		myOperation = code.toString();
+		FileContent fileContent = new InternalFileContent(defaultFileName, new CharArray(myOperation));
 		
 		enableOption(GPPLanguage.OPTION_IS_SOURCE_UNIT);
     	enableOption(ITranslationUnit.AST_SKIP_ALL_HEADERS);
@@ -119,15 +123,58 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         	if(specifier instanceof IASTNamedTypeSpecifier)
         	{
         		IASTNamedTypeSpecifier namedSpec = (IASTNamedTypeSpecifier)specifier;
+        		IRPClassifier irpClassifier = null;
         		String classifierName = namedSpec.getName().getLastName().toString();
-        		
-        		//find classifier 
-        		
-        		Completion c = itsCompletionProvider.getFirstCompletion(classifierName);
-        		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
-        		if((c!=null)&&(c instanceof RhapsodyClassifierCompletion))
+        		if(namedSpec.getName() instanceof CPPASTQualifiedName)
         		{
-        			RhapsodyClassifierCompletion rcc = (RhapsodyClassifierCompletion)c;
+        			CPPASTQualifiedName qName = (CPPASTQualifiedName)namedSpec.getName();
+        			ICPPASTNameSpecifier[] names = qName.getAllSegments();
+        			RhapsodyClassifier classifier = null;
+        			
+        			for(ICPPASTNameSpecifier name : names)
+        			{
+        				
+        				Completion c = itsCompletionProvider.getFirstCompletion(name.toString());
+        				if((c!=null)&&(c instanceof RhapsodyClassifier))
+        				{
+        					classifier = (RhapsodyClassifier)c;
+        					irpClassifier = classifier.getIRPClassifier();
+        				}
+        				else if(classifier!=null)
+        				{
+        					
+        					for(IRPClassifier ic : classifier.getNestedClassifiers())
+        					{
+        						if(ic.getName().equals(name.toString()))
+        						{
+        							irpClassifier = ic;
+        							break;
+        						}
+        					}
+        				}
+        				else
+        				{
+        					//something went wrong
+        					break;
+        				}
+        			}
+        			
+        		}
+        		else
+        		{
+        			Completion c = itsCompletionProvider.getFirstCompletion(classifierName);
+        			IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
+            		if((c!=null)&&(c instanceof RhapsodyClassifierCompletion))
+            		{
+            			RhapsodyClassifier rcc = (RhapsodyClassifier)c;
+            			irpClassifier = rcc.getIRPClassifier();
+            		}
+        		}
+        			
+        		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
+        		if(irpClassifier!=null)
+        		{
+        			
         			
         			for(IASTDeclarator declarator : declarators)
         			{
@@ -137,7 +184,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         				{
         					isReference = true;
         				}
-        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(this, declarator.getName().toString(), rcc.getIRPClassifier(),isReference);
+        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(this, declarator.getName().toString(), irpClassifier,isReference);
         				this.addCompletion(rlvc);
         			}
         		}
@@ -161,12 +208,15 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         	}
         	else
         	{
+        		int offset = specifier.getFileLocation().getNodeOffset();
+        		int length = specifier.getFileLocation().getNodeLength();
+        		String classifierName = myOperation.substring(offset, offset+length);
         		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
     			for(IASTDeclarator declarator : declarators)
     			{
-    				BasicCompletion bc = new BasicCompletion(this, declarator.getName().toString());
-    				System.out.println("Only basic for: " + declarator.getName());
-    				this.addCompletion(bc);
+    				
+    				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(),classifierName);
+    				this.addCompletion(vc);
     			}
         	}
         }

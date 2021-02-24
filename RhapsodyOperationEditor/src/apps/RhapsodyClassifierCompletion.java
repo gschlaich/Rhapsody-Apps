@@ -1,5 +1,7 @@
 package apps;
 
+import java.util.List;
+
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
@@ -15,8 +17,7 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	
 	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier) {
 		super(aProvider, aClassifier.getName(), aClassifier.getDescription());
-		myClassifier = aClassifier;
-		
+		myClassifier = aClassifier;	
 	}
 
 	@Override
@@ -25,7 +26,10 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 		return myClassifier;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return this.getInputText();
+	}
 	
 	@Override
 	public Icon getIcon() {
@@ -39,5 +43,12 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	public boolean isReference() {
 		return false;
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<IRPClassifier> getNestedClassifiers() {
+		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
 
 }

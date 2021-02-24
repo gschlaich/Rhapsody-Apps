@@ -2,6 +2,7 @@ package apps;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.util.List;
 
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JEditorPane;
@@ -23,9 +24,14 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.ibm.rhapsody.apps.App;
 
 import apps.ClassifierCompletionProvider.visibility;
@@ -61,8 +67,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	    	return;
 	    }
 	    
-
-	   
+	    
+	    IRPClassifier selectedClass = (IRPClassifier)selectedOperation.getOwner();
+	 
 		
 		textArea = new RSyntaxTextArea(40, 80);
 	    textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
@@ -114,14 +121,40 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 		};
 		
-		SwingUtilities.invokeLater(focusInWindow);
+		SwingUtilities.invokeLater(focusInWindow);   
 		
-		
-		
-		
+	}
+
+	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
+		IRPModelElement e =  selected;
+	    
+	    while((e instanceof IRPPackage)==false)
+	    {
+	    	e = e.getOwner();
+	    }
 	    
 	    
-		
+	    while(e.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("0"))
+	    {
+	    	e = e.getOwner();
+	    }
+	    
+	    if (e instanceof IRPPackage)
+    	{
+    		IRPPackage p = (IRPPackage)e;
+    		System.out.println(e.getName());
+    		List<IRPDependency> dependencies = p.getDependencies().toList();
+    		for(IRPDependency dependency: dependencies)
+    		{
+    			if(dependency.getDependsOn() instanceof IRPPackage)
+    			{
+    				IRPPackage dp = (IRPPackage) dependency.getDependsOn();
+    				RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, dp); 
+    				provider.addCompletion(rnc);
+    			}
+    				
+    		}    		
+    	}
 	}
 	
 	public static void Run(IRPApplication rhapsody, IRPModelElement selected, MainApp aMainApp)
@@ -151,6 +184,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		// Create the provider used when typing code.
 		ClassifierCompletionProvider codeCP = new ClassifierCompletionProvider(selectedClass, visibility.v_private);
 		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
+		
+		List<IRPArgument> arguments = selectedOperation.getArguments().toList();
+		for(IRPArgument argument : arguments)
+		{
+			RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(codeCP, argument);
+			rac.setDefinedIn(selectedOperation.getName());
+			codeCP.addCompletion(rac);
+		}
+		
+		
+		getNameSpaces(codeCP, selectedOperation);
 		
 		// The provider used when typing a string.
 		CompletionProvider stringCP = createStringCompletionProvider();

@@ -9,17 +9,19 @@ import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
+import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
-import com.telelogic.rhapsody.core.IRPInstance;
-import com.telelogic.rhapsody.core.IRPRelation;
+import com.telelogic.rhapsody.core.IRPType;
 
-public class RhapsodyRelationCompletion extends VariableCompletion implements RhapsodyClassifier {
-
-	private IRPRelation myRelation;
-	public RhapsodyRelationCompletion(CompletionProvider provider, IRPRelation aRelation) {
-		super(provider, aRelation.getName(), aRelation.getOtherClass().getName());
-		myRelation = aRelation;
+public class RhapsodyArgumentCompletion extends VariableCompletion implements RhapsodyClassifier {
+	
+	IRPArgument myArgument;
+	
+	public RhapsodyArgumentCompletion(CompletionProvider provider, IRPArgument aArgument) {
+		super(provider, aArgument.getName(), aArgument.getType().getName());
+		myArgument = aArgument;
 		
+		setShortDescription(myArgument.getDescription());
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
@@ -29,43 +31,34 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 			abstractProvider.addCompletion(rc);
 		}
 		
-		
 	}
 	
-	
-	@Override
-	public String getType() {
-		//TODO check if relation is Vector or List...
-		
-		return getIRPClassifier().getName();	
-	}
 	
 
 	@Override
 	public IRPClassifier getIRPClassifier() {
-		return myRelation.getOtherClass();
-		
+		return myArgument.getType();
 	}
-
 
 	@Override
 	public boolean isReference() {
-		if(myRelation instanceof IRPInstance)
+		
+		String direction = myArgument.getArgumentDirection();
+		String ReturnPattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
+		if(getIRPClassifier() instanceof IRPType)
 		{
-			return false;
+			ReturnPattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
 		}
 		
-		return true;
+		return(ReturnPattern.endsWith("*"));
+
 	}
-	
 
 	@Override
 	public Icon getIcon() {
-		Icon ret = new ImageIcon(myRelation.getIconFileName().replace('\\', '/'));
+		Icon ret = new ImageIcon(myArgument.getIconFileName().replace("\\", "/"));
 		return ret;
 	}
-
-
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -73,5 +66,8 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		return getIRPClassifier().getNestedClassifiers().toList();
 	}
 
+	
+
+	
 
 }
