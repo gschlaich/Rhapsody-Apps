@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.Element;
@@ -21,13 +22,18 @@ import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
 
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPAttribute;
+import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPEvent;
+import com.telelogic.rhapsody.core.IRPEventReception;
 import com.telelogic.rhapsody.core.IRPGeneralization;
+import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPRelation;
+import com.telelogic.rhapsody.core.IRPStatechart;
 
 
 
@@ -89,10 +95,38 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				continue;
 			}
 			
-				RhapsodyOperationCompletion oc = new RhapsodyOperationCompletion(this, operation, myVisibility);
+				RhapsodyOperationCompletion oc = new RhapsodyOperationCompletion(this, operation);
 				oc.setDefinedIn(aClassifier.getName());
 				oc.setRelevance(myBaseRelevance);
 				addCompletion(oc);
+			
+		}
+		
+		//check if class has a state chart
+		if(aClassifier instanceof IRPClass)
+		{
+			IRPClass c = (IRPClass)aClassifier;
+			
+			if(c.getIsReactive()==1)
+			{
+				List<IRPModelElement> elements = c.getNestedElements().toList();
+				for(IRPModelElement e : elements)
+				{
+					if(e instanceof IRPEventReception)
+					{
+						
+						IRPEventReception er = (IRPEventReception)e;
+						//RhapsodyClassifierCompletion ercc = new RhapsodyClassifierCompletion(this, er);
+						
+						//this.addCompletion(ercc);
+						IRPEvent ev = er.getEvent();
+						RhapsodyClassifierCompletion ercc = new RhapsodyClassifierCompletion(this, ev);
+						this.addCompletion(ercc);
+						//RhapsodyOperationCompletion evc = new RhapsodyOperationCompletion(this, ev);
+						//this.addCompletion(evc);
+					}
+				}
+			}
 			
 		}
 		
@@ -140,6 +174,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				continue;
 			}
 			
+			
+			
 			if(modelElement instanceof IRPClassifier)
 			{
 				IRPClassifier classifier = (IRPClassifier)modelElement;
@@ -168,6 +204,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				IRPGeneralization generalization = (IRPGeneralization)g;
 				IRPClassifier baseClass = generalization.getBaseClass();
 				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, baseClass);
+				rcc.setIcon(new ImageIcon(generalization.getIconFileName().replace("\\","/")));
 				addCompletion(rcc);
 				if(aVisibility==visibility.v_public)
 				{
@@ -238,6 +275,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	 */
 	@Override
 	protected List<Completion> getCompletionsImpl(JTextComponent comp) {
+		List<Completion> cs = new ArrayList<Completion>();
 		
 		//TODO rework this function!!!!
 		if(myVisibility==visibility.v_private)
@@ -321,7 +359,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		if((outerCompletionList!=null)&&(outerCompletionList.size()==1))
 		{
-			List<Completion> cs = new ArrayList<Completion>();
+			
 			String searchText = text.substring(startSearch);
 			if(searchText==null)
 			{
@@ -367,7 +405,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		}
 		else
 		{
-			return completions;
+			return cs;
 		}
 		
 	}

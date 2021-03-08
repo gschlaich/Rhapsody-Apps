@@ -9,6 +9,7 @@ import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPModelElement;
 
 public class RhapsodyLocalVariableCompletion extends VariableCompletion implements RhapsodyClassifier {
 
@@ -20,11 +21,12 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 		super(provider, aName, aClassifier.getName());
 		myClassifier = aClassifier;
 		myIsReference = aIsReference;
+		setDefinedIn("local");
+		
 	}
 	
 	@Override
 	public IRPClassifier getIRPClassifier() {
-		
 		return myClassifier;
 	}
 
@@ -34,12 +36,15 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 		return myIsReference;
 	}
 	
-
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<IRPClassifier> getNestedClassifiers() {
 		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
+	@Override
+	public IRPModelElement getElement() {	
+		return myClassifier;
 	}
 
 

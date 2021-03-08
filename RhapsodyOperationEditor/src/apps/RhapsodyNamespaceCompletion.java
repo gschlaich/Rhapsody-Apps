@@ -1,5 +1,6 @@
 package apps;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Icon;
@@ -10,6 +11,7 @@ import org.fife.ui.autocomplete.CompletionProvider;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
+import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 
 public class RhapsodyNamespaceCompletion extends BasicCompletion implements RhapsodyClassifier
@@ -19,13 +21,17 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	
 	public RhapsodyNamespaceCompletion(CompletionProvider aProvider ,IRPPackage aPackage) 
 	{
-		super(aProvider, aPackage.getNamespace(), aPackage.getDescription() );
+		super(aProvider, aPackage.getNamespace());
+		setSummary(aPackage.getDescriptionPlainText());
+		
 		myPackage = aPackage;
 	}
 
 	public IRPCollection getClassifiers()
 	{
-		return myPackage.getClasses();
+		//return myPackage.getClasses();
+		
+		return myPackage.getNestedClassifiers();
 	}
 
 	@Override
@@ -40,17 +46,40 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		
 		return ret;
 	}
-
-	@SuppressWarnings("unchecked")
+	
+	private List<IRPClassifier> getNestedClassifiers(IRPPackage aPackage) {
+		List<?> classifiers = aPackage.getNestedClassifiers().toList();
+		List<IRPClassifier> ret = new ArrayList<IRPClassifier>();
+		for(Object co:classifiers)
+		{
+			if(co instanceof IRPClassifier)
+			{
+				ret.add((IRPClassifier)co);
+			}
+			else if(co instanceof IRPPackage)
+			{
+				ret.addAll(getNestedClassifiers((IRPPackage)co));
+			}
+		}	
+		return ret;
+	}
+	
 	@Override
 	public List<IRPClassifier> getNestedClassifiers() {
-		return myPackage.getNestedClassifiers().toList();
+		return getNestedClassifiers(myPackage);
+		
 	}
 
 	@Override
 	public boolean isReference() {
-		// TODO Auto-generated method stub
+		
 		return false;
+	}
+
+	@Override
+	public IRPModelElement getElement() {
+		
+		return myPackage;
 	}
 
 }

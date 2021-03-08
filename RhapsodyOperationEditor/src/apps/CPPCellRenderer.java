@@ -15,16 +15,13 @@ public class CPPCellRenderer extends CompletionCellRenderer{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private Icon variableIcon;
-	private Icon functionIcon;
-
+	
 
 	/**
 	 * Constructor.
 	 */
 	public CPPCellRenderer() {
-		variableIcon = getIcon("var.png");
-		functionIcon = getIcon("function.png");
+		
 	}
 
 
@@ -35,7 +32,7 @@ public class CPPCellRenderer extends CompletionCellRenderer{
 	protected void prepareForOtherCompletion(JList list,
 			Completion c, int index, boolean selected, boolean hasFocus) {
 		super.prepareForOtherCompletion(list, c, index, selected, hasFocus);
-		setIcon(getEmptyIcon());
+		
 	}
 
 
@@ -48,7 +45,7 @@ public class CPPCellRenderer extends CompletionCellRenderer{
 			boolean hasFocus) {
 		super.prepareForVariableCompletion(list, vc, index, selected,
 										hasFocus);
-		setIcon(variableIcon);
+		
 	}
 
 
@@ -61,7 +58,7 @@ public class CPPCellRenderer extends CompletionCellRenderer{
 			boolean hasFocus) {
 		super.prepareForFunctionCompletion(list, fc, index, selected,
 										hasFocus);
-		setIcon(functionIcon);
+		
 	}
 
 
