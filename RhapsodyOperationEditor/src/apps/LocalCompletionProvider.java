@@ -44,13 +44,14 @@ import org.fife.ui.autocomplete.VariableCompletion;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPOperation;
 
+import RhapsodyUtilities.ASTHelper;
+
 public class LocalCompletionProvider extends DefaultCompletionProvider
 {
-	private String defaultFileName = "SourceCode.c";
-	private int options = 0;
-	Map<String, String> definedMacros = new HashMap<String, String>();
+	
 	private ClassifierCompletionProvider itsCompletionProvider = null;
-	String myOperation;
+	private String myOperationBody;
+	
 	
 	
 	public LocalCompletionProvider(String aOperationBody, ClassifierCompletionProvider aCompletionProvider) {
@@ -60,43 +61,16 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	
 	private void createLocalCompletions(String aOperationBody)
 	{
-		StringBuilder code = new StringBuilder();
-		code.append("void ");
-		code.append("checkOperation");
-		code.append("() { \n");
-		code.append(aOperationBody);
-		code.append("\n }");
-		myOperation = code.toString();
-		FileContent fileContent = new InternalFileContent(defaultFileName, new CharArray(myOperation));
-		
-		enableOption(GPPLanguage.OPTION_IS_SOURCE_UNIT);
-    	enableOption(ITranslationUnit.AST_SKIP_ALL_HEADERS);
-    	enableOption(GPPLanguage.OPTION_NO_IMAGE_LOCATIONS);
-    	
-    	String[] includePaths = new String[0];
-        IScannerInfo info = new ScannerInfo(definedMacros,includePaths);
-        IParserLogService log = new DefaultLogService();
-        IIndex index = EmptyCIndex.INSTANCE; // or can be null
-        //final IIndexManager indexManager= CCorePlugin.getIndexManager();
-        //IIndex index = indexManager.getIndex(fTranslationUnit.getCProject(),IIndexManager.ADD_EXTENSION_FRAGMENTS_EDITOR);
-        
-        IncludeFileContentProvider emptyIncludes = IncludeFileContentProvider.getEmptyFilesProvider();
-        
-        try {
-            // Using: org.eclipse.cdt.internal.core.dom.parser.cpp.GNUCPPSourceParser
-        	IASTTranslationUnit translationUnit = GPPLanguage.getDefault().getASTTranslationUnit(fileContent, info, emptyIncludes, index, options , log);
-        	collectCompletions(translationUnit);
-        	//collectMacrosAndComments(translationUnit);
-        	
-        } catch (CoreException e) {
-            e.printStackTrace();
-        }
+		myOperationBody = aOperationBody;
+		IASTTranslationUnit astTranslationUnit = ASTHelper.getTranslationUnit(aOperationBody);
+		if(astTranslationUnit!=null)
+		{
+			collectCompletions(astTranslationUnit);
+		}
 		
 	}
 	
-	public void enableOption(int option){
-        options |= option;
-    }
+	
 	
 	@Override
 	public void addCompletion(Completion aCompletion)
@@ -141,9 +115,9 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         					irpClassifier = classifier.getIRPClassifier();
         				}
         				else if(classifier!=null)
-        				{
-        					
-        					for(IRPClassifier ic : classifier.getNestedClassifiers())
+        				{	
+        					List<IRPClassifier> classifiers = classifier.getNestedClassifiers();
+        					for(IRPClassifier ic : classifiers)
         					{
         						if(ic.getName().equals(name.toString()))
         						{
@@ -210,7 +184,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         	{
         		int offset = specifier.getFileLocation().getNodeOffset();
         		int length = specifier.getFileLocation().getNodeLength();
-        		String classifierName = myOperation.substring(offset, offset+length);
+        		String classifierName = myOperationBody.substring(offset, offset+length);
         		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
     			for(IASTDeclarator declarator : declarators)
     			{

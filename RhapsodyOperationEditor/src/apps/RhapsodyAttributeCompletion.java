@@ -11,6 +11,7 @@ import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPVariable;
 
 public class RhapsodyAttributeCompletion extends VariableCompletion implements RhapsodyClassifier {
@@ -53,6 +54,11 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 	@Override
 	public List<IRPClassifier> getNestedClassifiers() {
 		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
+	@Override
+	public IRPModelElement getElement() {	
+		return myAttribute;
 	}
 
 }

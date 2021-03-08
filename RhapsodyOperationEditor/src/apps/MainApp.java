@@ -72,6 +72,7 @@ public class MainApp extends App {
 		}
 		catch (Exception ex)
 		{
+			ex.printStackTrace();
 			println(ex.toString());
 		}
 		

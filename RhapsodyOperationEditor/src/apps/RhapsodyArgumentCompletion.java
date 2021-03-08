@@ -11,6 +11,7 @@ import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPType;
 
 public class RhapsodyArgumentCompletion extends VariableCompletion implements RhapsodyClassifier {
@@ -21,7 +22,14 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		super(provider, aArgument.getName(), aArgument.getType().getName());
 		myArgument = aArgument;
 		
-		setShortDescription(myArgument.getDescription());
+		setSummary(myArgument.getDescription());
+		
+		String iconPath = myArgument.getIconFileName();
+		iconPath = iconPath.replace("\\", "/");
+		Icon icon = new ImageIcon(iconPath);
+		setIcon(icon);
+		
+		
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
@@ -53,17 +61,36 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		return(ReturnPattern.endsWith("*"));
 
 	}
-
+	
+	
 	@Override
-	public Icon getIcon() {
-		Icon ret = new ImageIcon(myArgument.getIconFileName().replace("\\", "/"));
-		return ret;
+	public String getType() 
+	{
+		String direction = myArgument.getArgumentDirection();
+		String pattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
+		if(getIRPClassifier() instanceof IRPType)
+		{
+			pattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
+		}
+		
+		return pattern.replaceFirst("$Type", getIRPClassifier().getName());
+		
 	}
+
+	
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<IRPClassifier> getNestedClassifiers() {
 		return getIRPClassifier().getNestedClassifiers().toList();
+	}
+
+
+
+	@Override
+	public IRPModelElement getElement() {
+		
+		return myArgument;
 	}
 
 	
