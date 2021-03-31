@@ -46,7 +46,7 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		return false;
 	}
 

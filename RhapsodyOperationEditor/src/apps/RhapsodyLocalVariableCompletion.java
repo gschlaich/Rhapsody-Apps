@@ -23,6 +23,14 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 		myIsReference = aIsReference;
 		setDefinedIn("local");
 		
+		
+		RhapsodyClassifierCompletion c = new RhapsodyClassifierCompletion(provider, myClassifier);
+		if(myIsReference==false)
+		{
+			myIsReference = c.isPointer();
+		}
+		myClassifier = c.getIRPClassifier();
+			
 	}
 	
 	@Override
@@ -31,8 +39,9 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		// TODO Auto-generated method stub
+		
 		return myIsReference;
 	}
 	

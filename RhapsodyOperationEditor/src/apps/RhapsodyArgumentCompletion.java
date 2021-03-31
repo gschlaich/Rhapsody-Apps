@@ -49,7 +49,7 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		
 		String direction = myArgument.getArgumentDirection();
 		String ReturnPattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);

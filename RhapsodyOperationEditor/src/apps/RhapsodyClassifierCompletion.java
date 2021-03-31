@@ -10,18 +10,28 @@ import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPEnumerationLiteral;
 import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPTemplateInstantiation;
 import com.telelogic.rhapsody.core.IRPType;
 
 import RhapsodyUtilities.ASTHelper;
+import RhapsodyUtilities.RhapsodyOperation;
 
 public class RhapsodyClassifierCompletion extends BasicCompletion implements RhapsodyClassifier {
 
 	
-	IRPClassifier myClassifier;
+	private IRPClassifier myClassifier;
+	private boolean myIsPointer = false;
 	
-	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier) {
+	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier)
+	{
+		this(aProvider,aClassifier,false);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier, boolean aExtractEnum) {
 		super(aProvider, aClassifier.getName());
 		myClassifier = aClassifier;	
 		setSummary( aClassifier.getDescription());
@@ -46,21 +56,72 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 			IRPType rType = (IRPType)myClassifier;
 			if(rType.isKindLanguage()==1)
 			{
-				if(rType.isEnum()==1)
+				if(aExtractEnum &&(rType.isEnum()==1))
 				{
 					String[] enumNames = ASTHelper.parseLanguageEnumType(rType);
+					if(enumNames==null)
+					{
+						return;
+					}
 					for(String enumName : enumNames)
 					{
-						BasicCompletion ebc = new BasicCompletion(abstractProvider, enumName);
-						ebc.setSummary("enum from " + rType.getFullPathNameIn());
-						ebc.setIcon(this.getIcon());
-						
-						abstractProvider.addCompletion(ebc);
+						RhapsodyEnumLiteralCompletion rlc = new RhapsodyEnumLiteralCompletion(abstractProvider, rType, enumName);
+						abstractProvider.addCompletion(rlc);
 					}
+				}
+				else if(rType.getIsTypedef()==1)
+				{
+					setSummary(rType.getDeclaration().replace("%s", rType.getName()));
+					String classifierName = ASTHelper.parseLanguageTypedef(rType);
+					if(classifierName!=null)
+					{
+						IRPClassifier rc = RhapsodyOperation.findClassifier(myClassifier, classifierName);
+						myIsPointer = ASTHelper.isPointer(rType);
+						if(rc!=null)
+						{
+							
+							myClassifier = rc;
+						}
+					}
+				}
+			}
+			else if(aExtractEnum && (rType.isKindEnumeration()==1))
+			{
+				List<IRPEnumerationLiteral> literals = rType.getEnumerationLiterals().toList();
+				for(IRPEnumerationLiteral literal:literals)
+				{
+					RhapsodyEnumLiteralCompletion rlc = new RhapsodyEnumLiteralCompletion(abstractProvider, literal);
+					abstractProvider.addCompletion(rlc);
+				}
+				
+			}
+			else if (rType.isKindTypedef()==1)
+			{
+				myClassifier = rType.getTypedefBaseType();
+				if(rType.isPointer()==1)
+				{
+					myIsPointer = true;
 				}
 			}
 	
 		}
+		else
+		{
+			//check for template instantiation
+			IRPTemplateInstantiation ti = myClassifier.getTi();
+			if(ti!=null)
+			{
+				IRPModelElement t = ti.getOfTemplate();
+			
+				if((t!=null)&&(t instanceof IRPClassifier))
+				{
+					myClassifier = (IRPClassifier)t;
+					System.out.println(myClassifier.getName());
+					
+				}
+			}
+		}
+			
 		
 		
 	}
@@ -77,8 +138,8 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	}
 	
 	@Override
-	public boolean isReference() {
-		return false;
+	public boolean isPointer() {
+		return myIsPointer;
 	}
 
 	@SuppressWarnings("unchecked")

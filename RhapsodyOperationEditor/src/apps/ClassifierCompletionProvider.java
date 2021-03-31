@@ -32,8 +32,11 @@ import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRelation;
 import com.telelogic.rhapsody.core.IRPStatechart;
+
+import RhapsodyUtilities.RhapsodyOperation;
 
 
 
@@ -72,6 +75,11 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	public void setBaseRelevance(int aBaseRelevance) {
 		this.myBaseRelevance = aBaseRelevance;
+	}
+	
+	public IRPClassifier getClassifier()
+	{
+		return myClassifier;
 	}
 	
 	
@@ -274,7 +282,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	 * {@inheritDoc}
 	 */
 	@Override
-	protected List<Completion> getCompletionsImpl(JTextComponent comp) {
+	protected List<Completion> getCompletionsImpl(JTextComponent comp) 
+	{
 		List<Completion> cs = new ArrayList<Completion>();
 		
 		//TODO rework this function!!!!
@@ -350,65 +359,99 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		}
 		
 		System.out.println("lookForProvider " + lookForProvider );
+		String searchText = text.substring(startSearch);
+		if(searchText==null)
+		{
+			searchText = ""; 
+		}
 		List<Completion> outerCompletionList = this.getCompletionByInputText(lookForProvider);
+		Completion c = null;
 		if(outerCompletionList==null)
 		{
 			outerCompletionList = myLocalCompletionProvider.getCompletionByInputText(lookForProvider);
 		}
 		
-		
 		if((outerCompletionList!=null)&&(outerCompletionList.size()==1))
 		{
+			c = outerCompletionList.get(0);
+		}
+		else
+		{
+			//search in model
 			
-			String searchText = text.substring(startSearch);
-			if(searchText==null)
+			IRPClassifier cl = RhapsodyOperation.findClassifier(myClassifier, lookForProvider);
+			
+			if(cl!=null)
 			{
-				searchText = ""; 
+				c = new RhapsodyClassifierCompletion(myLocalCompletionProvider, cl);
+				myLocalCompletionProvider.addCompletion(c);
 			}
-			Completion c = outerCompletionList.get(0);
-			if((c!=null)&&((c instanceof  RhapsodyNamespaceCompletion)==false))
+		}
+		if((c!=null)&&((c instanceof  RhapsodyNamespaceCompletion)==false))
+		{
+			
+			
+			RhapsodyClassifier rc = (RhapsodyClassifier)c;
+			if(rc.isPointer()!=ref)
 			{
-				RhapsodyClassifier rc = (RhapsodyClassifier)c;
-				if(rc.isReference()!=ref)
+				//no completion fit...
+				return cs;
+			}
+			
+			//check for visibility
+			
+			visibility v = visibility.v_public;
+			
+			List<IRPGeneralization> gens = myClassifier.getGeneralizations().toList();
+			for(IRPGeneralization gen:gens)
+			{
+				System.out.println(gen.getBaseClass().getName());
+				if(gen.getBaseClass().equals(rc.getIRPClassifier()))
 				{
-					//no completion fit...
-					return cs;
+					v = visibility.v_protected;
+					break;
 				}
-				ClassifierCompletionProvider ccp = new ClassifierCompletionProvider(rc.getIRPClassifier(), visibility.v_public);
+			}
+			
+			ClassifierCompletionProvider ccp = new ClassifierCompletionProvider(rc.getIRPClassifier(), v);
 				
 				System.out.println("searchText  " + searchText );
 				return ccp.getSubCompletions(searchText);
-			}
-			else if((c!=null)&&(c instanceof RhapsodyNamespaceCompletion))
+		}
+		else if((c!=null)&&(c instanceof RhapsodyNamespaceCompletion))
+		{
+				
+			if(st==false)
 			{
-				
-				if(st==false)
-				{
-					return cs;
-				}
-				
-				RhapsodyNamespaceCompletion rnc = (RhapsodyNamespaceCompletion)c;
-				List<IRPClassifier> classifiers = rnc.getClassifiers().toList();
-				for(IRPClassifier classifier:classifiers)
-				{
-					cs.addAll(getSubCompletions(classifier.getName()));
-					
-				}
 				return cs;
+			}
 			
+			RhapsodyNamespaceCompletion rnc = (RhapsodyNamespaceCompletion)c;
+			List<IRPClassifier> classifiers = rnc.getClassifiers();
+			for(IRPClassifier classifier:classifiers)
+			{
+				//cs.addAll(getSubCompletions(classifier.getName()));
+				if(classifier!=null)
+				{
+					RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(myLocalCompletionProvider, classifier, true);
+					myLocalCompletionProvider.addCompletion(rcc);
+					cs.add(rcc);	
+				}
+				else
+				{
+					boolean stop=true;
+				}
 				
 			}
-			else
-			{
-				return cs;
-			}
+			return myLocalCompletionProvider.getCompletionByInputText(searchText);	
+				
 		}
 		else
 		{
 			return cs;
 		}
-		
 	}
+	
 
 	public String getTextForImport(JTextComponent comp) {
 

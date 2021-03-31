@@ -13,6 +13,6 @@ public interface RhapsodyClassifier {
 	
 	List<IRPClassifier> getNestedClassifiers();
 	
-	boolean isReference();
+	boolean isPointer();
 	
 }
