@@ -27,12 +27,34 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		myPackage = aPackage;
 	}
 
-	public IRPCollection getClassifiers()
+	public List<IRPClassifier> getClassifiers()
 	{
-		//return myPackage.getClasses();
-		
-		return myPackage.getNestedClassifiers();
+		return getClassifiers(myPackage);
 	}
+	
+	private List<IRPClassifier> getClassifiers(IRPPackage aPackage)
+	{
+		List<IRPClassifier> ret = new ArrayList<IRPClassifier>();
+		
+		List<IRPModelElement> elements = aPackage.getNestedClassifiers().toList();
+		for(IRPModelElement element:elements)
+		{
+			if(element instanceof IRPClassifier)
+			{
+				ret.add((IRPClassifier)element);
+			}
+			else if(element instanceof IRPPackage)
+			{
+				IRPPackage p = (IRPPackage)element;
+				if(p.getNamespace().endsWith(myPackage.getNamespace()))
+				{
+					ret.addAll(getClassifiers(p));
+				}
+			}
+		}
+		return ret;
+	}
+	
 
 	@Override
 	public IRPClassifier getIRPClassifier() {
@@ -71,7 +93,7 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		
 		return false;
 	}

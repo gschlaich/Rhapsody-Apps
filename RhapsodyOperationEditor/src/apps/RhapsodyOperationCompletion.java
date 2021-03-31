@@ -28,6 +28,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 
 	IRPInterfaceItem myInterfaceItem;
 	
+	
 	@SuppressWarnings("unchecked")
 	public RhapsodyOperationCompletion(CompletionProvider aProvider, IRPInterfaceItem aOperation) {
 		super(aProvider, aOperation.getName(),aOperation instanceof IRPOperation ?  RhapsodyOperation.getReturnType((IRPOperation)aOperation):"void");
@@ -87,7 +88,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		String ReturnPattern = myInterfaceItem.getPropertyValue("CPP_CG.Class.ReturnType");
 		if(getIRPClassifier() instanceof IRPType)
 		{

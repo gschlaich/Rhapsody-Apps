@@ -4,8 +4,14 @@ import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPCollection;
+import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
+import com.telelogic.rhapsody.core.RPClassifier;
 
 public class RhapsodyOperation {
 	
@@ -134,6 +140,60 @@ public class RhapsodyOperation {
 		}
 		
 		return sBuffer.toString();
+	}
+	
+	
+	public static IRPClassifier findClassifier(IRPClassifier aClassifier, String aName)
+	{
+		IRPClassifier ret = null;
+		
+		IRPModelElement owner = aClassifier.getOwner();
+		
+		
+		if(owner instanceof IRPPackage)
+		{
+			ret = findClassifier((IRPPackage)owner, aName);
+		}
+		else if(owner instanceof IRPClassifier)
+		{
+			ret = findClassifier((IRPClassifier)owner,aName);
+		}
+
+		if(ret==null)
+		{
+			List<IRPDependency> dependencies = owner.getDependencies().toList();
+			for( IRPDependency dependency:dependencies)
+			{
+				IRPModelElement element = dependency.getDependsOn();
+				if(element instanceof IRPPackage)
+				{
+					ret = findClassifier((IRPPackage)element, aName);
+					if(ret!=null)
+					{
+						break;
+					}					
+				}
+			}
+		}
+		
+		return ret;
+		
+	}
+	
+	public static IRPClassifier findClassifier(IRPPackage aPackage, String aName)
+	{
+		
+		IRPClassifier ret = null;
+		if(aPackage!=null)
+		{
+			ret = aPackage.findClass(aName);
+			if(ret==null)
+			{
+				ret = aPackage.findType(aName);
+			}
+		}
+		
+		return ret;
 	}
 
 }

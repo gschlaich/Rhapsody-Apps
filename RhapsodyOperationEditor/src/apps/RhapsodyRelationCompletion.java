@@ -50,7 +50,7 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		if(myRelation instanceof IRPInstance)
 		{
 			return false;

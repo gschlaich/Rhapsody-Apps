@@ -1,14 +1,20 @@
 package RhapsodyUtilities;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier.IASTEnumerator;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeSelector;
+import org.eclipse.cdt.core.dom.ast.IASTPointer;
+import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTTemplateId;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
 import org.eclipse.cdt.core.index.IIndex;
 import org.eclipse.cdt.core.model.ITranslationUnit;
@@ -18,14 +24,19 @@ import org.eclipse.cdt.core.parser.IParserLogService;
 import org.eclipse.cdt.core.parser.IScannerInfo;
 import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
 import org.eclipse.cdt.core.parser.ScannerInfo;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTQualifiedName;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTTemplateId;
 import org.eclipse.cdt.internal.core.index.EmptyCIndex;
 import org.eclipse.cdt.internal.core.parser.scanner.CharArray;
 import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
 import org.eclipse.core.runtime.CoreException;
 
+import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPType;
 
-public class ASTHelper {
+public class ASTHelper 
+{
 	
 	private static String DefaultFilename = "SourceCode.c";
 	private static String Prolog = "void checkOperation() { \n";
@@ -83,12 +94,14 @@ public class ASTHelper {
 	public static String[] parseLanguageEnumType(IRPType aType)
 	{
 		ArrayList<String> ret = new ArrayList<String>();
-		String declaration = aType.getDeclaration();
-		declaration = declaration.replace("%s", (aType.getName()+";"));
+		IASTTranslationUnit translationUnit = getTranslationUnit(aType);
 		
-		IASTTranslationUnit translationUnit = getTranslationUnit(declaration);
+		//IASTEnumerationSpecifier enumSpec = getEnumerationSpecifier(translationUnit);
 		
-		IASTEnumerationSpecifier enumSpec = getEnumerationSpecifier(translationUnit);
+		ASTNode<IASTEnumerationSpecifier> parse = new ASTNode<IASTEnumerationSpecifier>(IASTEnumerationSpecifier.class);
+		
+		IASTEnumerationSpecifier enumSpec = parse.getNode(translationUnit);
+		
 		if(enumSpec==null)
 		{
 			return null;
@@ -101,7 +114,6 @@ public class ASTHelper {
 		}
 		
 		return ret.toArray(new String[0]);
-	
 	}
 	
 	private static IASTEnumerationSpecifier getEnumerationSpecifier(IASTNode aNode)
@@ -126,5 +138,106 @@ public class ASTHelper {
 		return null;
 	}
 	
+	public static String parseLanguageTypedef(IRPType aType)
+	{
+		String ret = null;
+		
+		IASTTranslationUnit translationUnit = getTranslationUnit(aType);
+		
+		
+		ASTNode<ICPPASTTemplateId> parseTemplate = new ASTNode<ICPPASTTemplateId>(ICPPASTTemplateId.class);
+		
+		ICPPASTTemplateId templateId = parseTemplate.getNode(translationUnit);
+		
+		if(templateId!=null)
+		{
+			return templateId.getTemplateName().toString();
+		}
+		ASTNode<IASTSimpleDeclaration> parseTypedef = new ASTNode<IASTSimpleDeclaration>(IASTSimpleDeclaration.class);
+		IASTSimpleDeclaration simpleDeclaration = parseTypedef.getNode(translationUnit);
+		if(simpleDeclaration!=null)
+		{
+			IASTDeclSpecifier specifier = simpleDeclaration.getDeclSpecifier();
+        	if(specifier instanceof IASTNamedTypeSpecifier)
+        	{
+        		IASTNamedTypeSpecifier namedSpec = (IASTNamedTypeSpecifier)specifier;
+        		ret = namedSpec.getName().getLastName().toString();
+        	}
+        		
+		}
+
+		return ret;
+	}
+
+	private static IASTTranslationUnit getTranslationUnit(IRPType aType) {
+		String declaration = aType.getDeclaration();
+		declaration = declaration.replace("%s", (aType.getName()+";"));
+		IASTTranslationUnit translationUnit = getTranslationUnit(declaration);
+		return translationUnit;
+	}
 	
+	public static boolean isPointer(IRPType aType)
+	{
+		boolean ret = false;
+		IASTTranslationUnit translationUnit = getTranslationUnit(aType);
+		ASTNode<IASTPointer> parseTemplate = new ASTNode<IASTPointer>(IASTPointer.class);
+		IASTPointer pointer = parseTemplate.getNode(translationUnit);
+		
+		ret = (pointer!=null);
+		
+		return ret;
+	}
+	
+	
+	private static <T extends IASTNode> T getNode(IASTNode aNode, Class<T> aType)
+	{
+		if(aNode==null)
+		{
+			return null;
+		}
+		return aType.cast(aNode);
+		
+		
+		
+	}
+	
+
+	
+
 }
+
+class ASTNode<T>
+{
+	public Class<T> myType;
+	
+	public ASTNode(Class<T> aType) 
+	{
+		myType = aType;
+	}
+	
+	public T getNode(IASTNode aNode)
+	{
+		if(aNode==null)
+		{
+			return null;
+		}
+
+		if(myType.isAssignableFrom(aNode.getClass()))
+		{
+			return myType.cast(aNode);
+		}
+	
+		IASTNode[] nodes = aNode.getChildren();
+		for(IASTNode node : nodes)
+		{
+			T n =  getNode(node);
+			if(n!=null)
+			{
+				return n;
+			}
+		}
+			
+		return null;
+	}
+}
+

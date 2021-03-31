@@ -75,6 +75,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private JFrame myFrame;
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
+
 	
 	
 	/**
@@ -110,13 +111,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabsEmulated(true);
 		myTextArea.setTabSize(3);
 		myTextArea.addHyperlinkListener(this);
-		
+		/*
 		if(mySelectedOperation.isReadOnly()==1)
 		{
 			myTextArea.setEnabled(false);
 			myTextArea.setBackground(Color.lightGray);
 		}
-		
+		*/
 		
 		
 		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
@@ -235,6 +236,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			buttonPanel.add(applyButton);
 			JButton cancelButton = new JButton("Cancel");
 			buttonPanel.add(cancelButton);
+			JButton locateButton = new JButton("Locate");
+			buttonPanel.add(locateButton);
 			buttonPanel.setVisible(true);
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,selected);
@@ -251,6 +254,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			cancelButton.setActionCommand("cancel");
 			cancelButton.addActionListener(oew);
+			
+			locateButton.setActionCommand("locate");
+			locateButton.addActionListener(oew);
 			
 			
 			//frame.add(editorPanel);
@@ -289,6 +295,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
 		
 		
+		@SuppressWarnings("unchecked")
 		List<IRPArgument> arguments = selectedOperation.getArguments().toList();
 		for(IRPArgument argument : arguments)
 		{
@@ -353,43 +360,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	private void createTraceCompletions(ClassifierCompletionProvider aCp)
 	{
-		/*
-		 * DOES NOT WORK! SORTING IS NOT CORRECT!
-		 
-		 
-		Parameter parLevel = new Parameter("_", "TraceLevel");
-		parLevel.setDescription("Set trace level");
-		Parameter parType = new Parameter("_", "TraceType");
-		parType.setDescription("Set TraceType");
-		ArrayList<Parameter> parameters = new ArrayList<Parameter>();
-		parameters.add(parLevel);
-		
-		FunctionCompletion xTraceRelease = new FunctionCompletion(aCp, "X_TRACE_RELEASE", "void");
-		xTraceRelease.setSummary("Trace a release message (Macro)");
-		xTraceRelease.setDefinedIn("TCSI");
-		xTraceRelease.setParams(parameters);
-		aCp.addCompletion(xTraceRelease);
-		
-		FunctionCompletion xTraceDebug = new FunctionCompletion(aCp, "X_TRACE_DEBUG", "void");
-		xTraceDebug.setSummary("Trace a debug message (Macro)");
-		xTraceDebug.setDefinedIn("TCSI");
-		xTraceDebug.setParams(parameters);
-		aCp.addCompletion(xTraceDebug);
-		
-		parameters.add(parType);
-		
-		FunctionCompletion xTraceRelease2 = new FunctionCompletion(aCp, "X_TRACE_RELEASE2", "void");
-		xTraceRelease2.setSummary("Trace a release message (Macro) with type");
-		xTraceRelease2.setDefinedIn("TCSI");
-		xTraceRelease2.setParams(parameters);
-		aCp.addCompletion(xTraceRelease2);
-		
-		FunctionCompletion xTraceDebug2 = new FunctionCompletion(aCp, "X_TRACE_DEBUG2", "void");
-		xTraceDebug2.setSummary("Trace a debug message (Macro) with type");
-		xTraceDebug2.setDefinedIn("TCSI");
-		xTraceDebug2.setParams(parameters);
-		aCp.addCompletion(xTraceDebug2);
-		*/
 		
 		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_ERROR)"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_WARNING)"));
@@ -401,10 +371,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		aCp.addCompletion(new BasicCompletion(aCp, "X_WARNING"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_FATAL"));
-		
-		
-		
-		
+	
 
 	}
 
@@ -432,6 +399,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			if(myFrame!=null)
 			{
 				myFrame.dispose();
+			}
+		}
+		if(command.equals("locate"))
+		{
+			if(mySelectedOperation!=null)
+			{
+				mySelectedOperation.locateInBrowser();
 			}
 		}
 		
@@ -510,6 +484,18 @@ class OpenFeature extends TextAction
         	}
         	if(c==null)
         	{
+        		IRPClassifier classifier = myCompletionProvider.getClassifier();
+        		IRPClassifier cl = RhapsodyOperation.findClassifier(classifier, elementName);
+        		if(cl!=null)
+        		{
+        			cl.openFeaturesDialog(1);
+        			return;
+        		}
+        		
+        	}
+        	
+        	if(c==null)
+        	{
         		IASTTranslationUnit translationUnit = ASTHelper.getTranslationUnit(tc.getText());
         		if(translationUnit!=null)
         		{
@@ -556,6 +542,9 @@ class OpenFeature extends TextAction
 		
 		if(aNode==null)
 		{
+			//try to find in Rhapsody
+			
+			
 			return false;
 		}
 		

@@ -1,6 +1,8 @@
 package apps;
 
 import java.io.Console;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +41,15 @@ import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.Util;
 import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPProject;
 
 import RhapsodyUtilities.ASTHelper;
+import RhapsodyUtilities.RhapsodyOperation;
 
 public class LocalCompletionProvider extends DefaultCompletionProvider
 {
@@ -86,6 +91,45 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 			}
 		}
 		super.addCompletion(aCompletion);
+	}
+	
+	@Override
+	public List<Completion> getCompletionByInputText(String inputText) {
+		
+		List<Completion> retVal = new ArrayList<Completion>();
+		if (inputText!=null) {
+
+			int index = Collections.binarySearch(completions, inputText, comparator);
+			if (index<0) { // No exact match
+				index = -index - 1;
+			}
+			else {
+				// If there are several overloads for the function being
+				// completed, Collections.binarySearch() will return the index
+				// of one of those overloads, but we must return all of them,
+				// so search backward until we find the first one.
+				int pos = index - 1;
+				while (pos>0 &&
+						comparator.compare(completions.get(pos), inputText)==0) {
+					retVal.add(completions.get(pos));
+					pos--;
+				}
+			}
+
+			while (index<completions.size()) {
+				Completion c = completions.get(index);
+				if (Util.startsWithIgnoreCase(c.getInputText(), inputText)) {
+					retVal.add(c);
+					index++;
+				}
+				else {
+					break;
+				}
+			}
+
+		}
+
+		return retVal;
 	}
 	
 	private void collectCompletions(IASTNode aNode)
@@ -146,6 +190,18 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         		}
         			
         		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
+        		
+        		if(irpClassifier==null)
+        		{
+        			// no dependency which fits, try to find it in the model
+        			irpClassifier = RhapsodyOperation.findClassifier(itsCompletionProvider.getClassifier(), classifierName);
+        		}
+        		if(irpClassifier==null)
+        		{
+        			// hacky... search in whole project...
+        			IRPProject project = itsCompletionProvider.getClassifier().getProject();
+        			irpClassifier = RhapsodyOperation.findClassifier(project, classifierName);
+        		}
         		if(irpClassifier!=null)
         		{
         			

@@ -17,6 +17,7 @@ import com.telelogic.rhapsody.core.IRPVariable;
 public class RhapsodyAttributeCompletion extends VariableCompletion implements RhapsodyClassifier {
 
 	private IRPAttribute myAttribute;
+	private IRPClassifier myClassifier;
 	
 	public RhapsodyAttributeCompletion(CompletionProvider provider, IRPAttribute aAttribute) {
 		super(provider, aAttribute.getName(), aAttribute.getType().getName());
@@ -26,10 +27,15 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
-		if((getIRPClassifier()!=null)&&(abstractProvider!=null))
+		if((myAttribute.getType()!=null)&&(abstractProvider!=null))
 		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier());
+			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, myAttribute.getType());
 			abstractProvider.addCompletion(rc);
+			myClassifier = rc.getIRPClassifier();
+		}
+		else
+		{
+			myClassifier = myAttribute.getType();
 		}
 	}
 	
@@ -42,11 +48,11 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 			
 	@Override
 	public IRPClassifier getIRPClassifier() {
-		return myAttribute.getType();
+		return myClassifier;
 	}
 
 	@Override
-	public boolean isReference() {
+	public boolean isPointer() {
 		return (myAttribute.getIsReference()==1);
 	}
 
