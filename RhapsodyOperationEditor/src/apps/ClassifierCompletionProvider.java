@@ -358,6 +358,12 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			}
 		}
 		
+		
+		if(lookForProvider.contains("this"))
+		{
+			lookForProvider = myClassifierName;
+		}
+		
 		System.out.println("lookForProvider " + lookForProvider );
 		String searchText = text.substring(startSearch);
 		if(searchText==null)

@@ -2,7 +2,10 @@ package apps;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -101,8 +104,19 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	    
 	    IRPClassifier selectedClass = (IRPClassifier)mySelectedOperation.getOwner();
 	 
+	    int factorW = 7;
+	    int factorH = 16;
+	    
+		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		
-		myTextArea = new RSyntaxTextArea(40, 120);
+		int rows = (int)(dim.height/factorH*0.7);
+		int cols = (int)(dim.width/factorW*0.5);
+		
+		
+		
+		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
+		
+		myTextArea = new RSyntaxTextArea(rows, cols);
 	    myTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
 	    myTextArea.setCaretPosition(0);
 		myTextArea.requestFocusInWindow();
@@ -214,6 +228,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		if(selected instanceof IRPOperation)
 		{
+			
+			
+			
 			IRPOperation op = (IRPOperation)selected;
 
 			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
@@ -227,8 +244,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			frame.setLayout(new BorderLayout());
 			
 			JPanel buttonPanel = new JPanel();
-	
-			
+		
 			JButton okButton = new JButton("ok");
 			buttonPanel.add(okButton);
 			JButton applyButton = new JButton("Apply");
@@ -242,8 +258,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,selected);
 			oew.setFrame(frame);
-			
-			
+						
 			frame.add(oew);
 			
 			okButton.setActionCommand("ok");
@@ -266,6 +281,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		    //frame.getContentPane().add (new OperationEditorWindow(rhapsody,selected));
 		    frame.pack();
 		    ScreenMonitor.Instance.registerFrame(frame);
+
+			Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+			frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+		    
 	        frame.setVisible(true);
 	        
 		}

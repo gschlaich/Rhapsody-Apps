@@ -3,6 +3,8 @@ package apps;
 
 
 import java.awt.BorderLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
@@ -125,6 +127,13 @@ public class MainApp extends App {
 	    
 	    
 	    JPanel contentPane = new JPanel(new BorderLayout());
+	    
+	    Point location = MouseInfo.getPointerInfo().getLocation(); 
+		int x = (int) location.getX();
+		int y = (int) location.getY();
+	    
+	    
+	    contentPane.setLocation(location);
 	    RSyntaxTextArea textArea = new RSyntaxTextArea(25, 40);
 	    textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
 	    textArea.setCaretPosition(0);

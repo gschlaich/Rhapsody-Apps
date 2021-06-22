@@ -84,6 +84,12 @@ public class RhapsodyOperation {
 		catch (Exception e) { }
 		
 		String ret = returnPattern.replace("$type", returnType.getName());
+		
+		if((ret==null)||(ret.isEmpty()))
+		{
+			ret = aOperation.getReturnTypeDeclaration();
+			
+		}
 
 		return ret;
 	}
