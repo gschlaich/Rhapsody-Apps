@@ -295,6 +295,17 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		String text = getTextForImport(comp);
 		
+		
+		// for completion in methods...
+		if(text.indexOf("(")!=-1)
+		{
+			text = text.substring(text.indexOf("(")+1);
+		}
+		if(text.indexOf(" ")!=-1)
+		{
+			text = text.substring(text.indexOf(" ")+1);
+		}
+		
 		if ((text.indexOf("->")==-1)&&(text.indexOf(".")==-1)&&(text.indexOf("::")==-1))
 		{
 			List<Completion> ret = super.getCompletionsImpl(comp);
@@ -316,7 +327,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			
 			return ret;
 		}
-	
+		
 		
 		String lookForProvider = "";
 		boolean ref = false;
