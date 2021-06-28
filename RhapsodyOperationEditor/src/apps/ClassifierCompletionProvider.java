@@ -295,6 +295,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		String text = getTextForImport(comp);
 		
+		
+		// for completion in methods...
 		if(text.indexOf("(")!=-1)
 		{
 			text = text.substring(text.indexOf("(")+1);
