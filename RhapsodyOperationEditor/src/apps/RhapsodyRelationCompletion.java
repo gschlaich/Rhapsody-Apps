@@ -9,10 +9,14 @@ import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
+import com.telelogic.rhapsody.core.IRPAssociationClass;
+import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPInstance;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPRelation;
+
+import RhapsodyUtilities.RhapsodyOperation;
 
 public class RhapsodyRelationCompletion extends VariableCompletion implements RhapsodyClassifier {
 
@@ -22,8 +26,24 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		myRelation = aRelation;
 		
 		
-		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
+		if(myRelation.getMultiplicity().equals("*"))
+		{
+			//container...
+			if(myRelation.getQualifier().equals("")==false)
+			{
+				//map...
+				
+			}
+			else 
+			{
+				//list or vector... assume vector
+				//if()
+			}
+		}
+		
+		//add also type to completion
+		
 		if((getIRPClassifier()!=null)&&(abstractProvider!=null))
 		{
 			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier());
@@ -33,17 +53,62 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		
 	}
 	
+	private boolean isVector()
+	{
+		if(myRelation.getMultiplicity().equals("*"))
+		{
+			if(myRelation.getQualifier().equals(""))
+			{
+				
+				return true;
+				
+			}	
+		}
+		return false;
+	}
+	
+	private boolean isMap()
+	{
+		if(myRelation.getMultiplicity().equals("*"))
+		{
+			if(myRelation.getQualifier().equals("")==false)
+			{
+				return true;
+				
+			}	
+		}
+		return false;
+	}
+	
 	
 	@Override
 	public String getType() {
 		//TODO check if relation is Vector or List...
-		
+		if(isVector())
+		{
+			return "vector";
+		}
+		if(isMap())
+		{
+			return "map";
+		}
 		return getIRPClassifier().getName();	
 	}
 	
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier() 
+	{
+		if(isVector())
+		{
+			IRPClass vectorClass = myRelation.getProject().findClass("vector");
+			return vectorClass;
+		}
+		if(isMap())
+		{
+			IRPClass mapClass = myRelation.getProject().findClass("map");
+			return mapClass;
+		}
 		return myRelation.getOtherClass();
 		
 	}
@@ -51,6 +116,15 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 
 	@Override
 	public boolean isPointer() {
+		if(isVector())
+		{
+			return false;
+		}
+		if(isMap())
+		{
+			return false;
+		}
+			
 		if(myRelation instanceof IRPInstance)
 		{
 			return false;
@@ -62,8 +136,7 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 
 	@Override
 	public Icon getIcon() {
-		Icon ret = new ImageIcon(myRelation.getIconFileName().replace('\\', '/'));
-		return ret;
+		return  RhapsodyOperation.getIcon(myRelation);
 	}
 
 

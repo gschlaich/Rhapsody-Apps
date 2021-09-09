@@ -1,51 +1,28 @@
 package apps;
 
-import java.io.Console;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import org.eclipse.cdt.core.dom.ast.DOMException;
-import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
+import org.eclipse.cdt.core.dom.ast.ExpansionOverlapsBoundaryException;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
-import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTPointerOperator;
-import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
-import org.eclipse.cdt.core.dom.ast.IBinding;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTNameSpecifier;
-import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTQualifiedName;
-import org.eclipse.cdt.core.dom.ast.cpp.ICPPBinding;
-import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
-import org.eclipse.cdt.core.index.IIndex;
-import org.eclipse.cdt.core.model.ITranslationUnit;
-import org.eclipse.cdt.core.parser.DefaultLogService;
-import org.eclipse.cdt.core.parser.FileContent;
-import org.eclipse.cdt.core.parser.IParserLogService;
-import org.eclipse.cdt.core.parser.IScannerInfo;
-import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
-import org.eclipse.cdt.core.parser.ScannerInfo;
+import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTTemplateId;
+import org.eclipse.cdt.core.parser.IToken;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTQualifiedName;
-import org.eclipse.cdt.internal.core.index.EmptyCIndex;
-import org.eclipse.cdt.internal.core.parser.scanner.CharArray;
-import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
-import org.eclipse.core.runtime.CoreException;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
-import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.Util;
 import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
-import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProject;
 
 import RhapsodyUtilities.ASTHelper;
@@ -61,13 +38,13 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	
 	public LocalCompletionProvider(String aOperationBody, ClassifierCompletionProvider aCompletionProvider) {
 		itsCompletionProvider = aCompletionProvider;
-		createLocalCompletions(aOperationBody);
+		createLocalCompletions(aOperationBody,aCompletionProvider);
 	}
 	
-	private void createLocalCompletions(String aOperationBody)
+	private void createLocalCompletions(String aOperationBody, ClassifierCompletionProvider aCompletionProvider)
 	{
 		myOperationBody = aOperationBody;
-		IASTTranslationUnit astTranslationUnit = ASTHelper.getTranslationUnit(aOperationBody);
+		IASTTranslationUnit astTranslationUnit = ASTHelper.getTranslationUnit(aOperationBody, aCompletionProvider);
 		if(astTranslationUnit!=null)
 		{
 			collectCompletions(astTranslationUnit);
@@ -135,7 +112,9 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	private void collectCompletions(IASTNode aNode)
 	{
         
-        if(aNode instanceof IASTSimpleDeclaration){
+        if(aNode instanceof IASTSimpleDeclaration)
+        {
+        	boolean isReference = false;
         	IASTSimpleDeclaration simpleDeclaration = (IASTSimpleDeclaration)aNode;
         	IASTDeclSpecifier specifier =  simpleDeclaration.getDeclSpecifier();
         	if(specifier instanceof IASTNamedTypeSpecifier)
@@ -149,13 +128,34 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         			ICPPASTNameSpecifier[] names = qName.getAllSegments();
         			RhapsodyClassifier classifier = null;
         			
+        			
         			for(ICPPASTNameSpecifier name : names)
         			{
+        				String completionName;
+        				List<String> templateArguments = new ArrayList<String>();
+        				if(name instanceof ICPPASTTemplateId)
+        				{
+        					ICPPASTTemplateId templateId = (ICPPASTTemplateId)name;
+        					IASTName templateName = templateId.getTemplateName();
+        					completionName = templateName.toString();
+        					templateArguments = ASTHelper.getTemplateArguments(templateId);
+        				}
+        				else
+        				{
+        					completionName = name.toString();
+        				}
         				
-        				Completion c = itsCompletionProvider.getFirstCompletion(name.toString());
-        				if((c!=null)&&(c instanceof RhapsodyClassifier))
+        				
+        				Completion	c = itsCompletionProvider.getFirstCompletion(completionName);
+        				if(c==null)
+        				{
+        					irpClassifier = RhapsodyOperation.findClassifier(itsCompletionProvider.getClassifier(), completionName);
+        					isReference = false;
+        				}
+        				else if(c instanceof RhapsodyClassifier)
         				{
         					classifier = (RhapsodyClassifier)c;
+        					isReference = classifier.isPointer();
         					irpClassifier = classifier.getIRPClassifier();
         				}
         				else if(classifier!=null)
@@ -166,15 +166,35 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         						if(ic.getName().equals(name.toString()))
         						{
         							irpClassifier = ic;
+        							isReference = false;
         							break;
         						}
         					}
         				}
-        				else
+        				if(irpClassifier!=null)
         				{
-        					//something went wrong
-        					break;
+        					if(irpClassifier.isATemplate()==1)
+                			{
+                				if(irpClassifier.findNestedElement("operator->", "Operation")!=null)
+                				{
+                					for(String arg:templateArguments)
+									{
+										IRPClassifier trc = RhapsodyOperation.findClassifier(irpClassifier.getProject(), arg);
+										if(trc!=null)
+										{
+											irpClassifier = trc;
+											isReference=true;
+											break;
+										}
+									}
+	
+                				}
+                				
+                			}
+
         				}
+        				
+        				
         			}
         			
         		}
@@ -185,7 +205,10 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
             		if((c!=null)&&(c instanceof RhapsodyClassifierCompletion))
             		{
             			RhapsodyClassifier rcc = (RhapsodyClassifier)c;
+
+            			isReference = rcc.isPointer();
             			irpClassifier = rcc.getIRPClassifier();
+
             		}
         		}
         			
@@ -204,12 +227,10 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         		}
         		if(irpClassifier!=null)
         		{
-        			
-        			
         			for(IASTDeclarator declarator : declarators)
         			{
         				IASTPointerOperator[] pointers = declarator.getPointerOperators();
-        				boolean isReference = false;
+        				
         				if((pointers!=null) && (pointers.length>0))
         				{
         					isReference = true;
@@ -231,6 +252,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         			{
         				
         				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(), classifierName);
+        				vc.setDefinedIn("local variable");
         				this.addCompletion(vc);
         			}
         		}
@@ -238,16 +260,36 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         	}
         	else
         	{
-        		int offset = specifier.getFileLocation().getNodeOffset();
-        		int length = specifier.getFileLocation().getNodeLength();
-        		String classifierName = myOperationBody.substring(offset, offset+length);
-        		IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
-    			for(IASTDeclarator declarator : declarators)
-    			{
-    				
-    				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(),classifierName);
-    				this.addCompletion(vc);
-    			}
+        		
+        		String classifierName = "";
+        		try {
+					//classifierName = specifier.getSyntax().getImage();
+					
+					IToken token = specifier.getSyntax();
+					if(token!=null)
+					{
+						classifierName = token.getImage();
+						if(classifierName!=null)
+						{
+							IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
+			    			for(IASTDeclarator declarator : declarators)
+			    			{
+			    				
+			    				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(),classifierName);
+			    				vc.setDefinedIn("local variable");
+			    				this.addCompletion(vc);
+			    			}
+							
+						}
+					}					
+				} 
+        		catch (ExpansionOverlapsBoundaryException e) 
+        		{
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+        		
+        		
         	}
         }
         else

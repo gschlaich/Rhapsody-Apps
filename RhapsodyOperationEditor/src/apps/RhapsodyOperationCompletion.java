@@ -34,14 +34,10 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		super(aProvider, aOperation.getName(),aOperation instanceof IRPOperation ?  RhapsodyOperation.getReturnType((IRPOperation)aOperation):"void");
 		myInterfaceItem = aOperation;
 		
-		
 		List<IRPArgument> arguments = myInterfaceItem.getArguments().toList();
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		
-		String iconPath = myInterfaceItem.getIconFileName();
-		iconPath = iconPath.replace("\\", "/");
-		Icon icon = new ImageIcon(iconPath);
-		setIcon(icon);
+		setIcon(RhapsodyOperation.getIcon(aOperation));
 		
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)aProvider;
 		

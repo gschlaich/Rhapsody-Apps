@@ -123,7 +123,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setMarkOccurrences(true);
 		myTextArea.setCodeFoldingEnabled(true);
 		myTextArea.setTabsEmulated(true);
-		myTextArea.setTabSize(3);
+		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		/*
 		if(mySelectedOperation.isReadOnly()==1)
@@ -164,6 +164,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		setContentPane(contentPane);
 
 		myTextArea.setText(mySelectedOperation.getBody());
+		myTextArea.convertTabsToSpaces();
 		myTextArea.requestFocusInWindow();
 		
 		
@@ -267,11 +268,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			applyButton.setActionCommand("apply");
 			applyButton.addActionListener(oew);
 			
+			
 			cancelButton.setActionCommand("cancel");
 			cancelButton.addActionListener(oew);
 			
 			locateButton.setActionCommand("locate");
 			locateButton.addActionListener(oew);
+			
+			
 			
 			
 			//frame.add(editorPanel);
@@ -286,6 +290,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
 		    
 	        frame.setVisible(true);
+	        if(op.isReadOnly()!=0)
+			{
+				okButton.setEnabled(false);			
+				applyButton.setEnabled(false);
+			}		
+			
 	        
 		}
 		else
@@ -319,7 +329,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		for(IRPArgument argument : arguments)
 		{
 			RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(myClassifierCompletionProvider, argument);
-			rac.setDefinedIn(selectedOperation.getName());
 			myClassifierCompletionProvider.addCompletion(rac);
 		}
 		
@@ -380,8 +389,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private void createTraceCompletions(ClassifierCompletionProvider aCp)
 	{
 		
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_ERROR)"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_WARNING)"));
+		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_ERROR)", "Error Release Trace in USMMonitor and log file"));
+		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_WARNING)", "Warning Release Trace in USMMonitor and log file"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_INFO)"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_ERROR)"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_WARNING)"));
@@ -390,6 +399,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		aCp.addCompletion(new BasicCompletion(aCp, "X_WARNING"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_FATAL"));
+		aCp.addCompletion(new BasicCompletion(aCp, "nullptr", "defined value when pointer is null"));
 	
 
 	}
@@ -515,7 +525,7 @@ class OpenFeature extends TextAction
         	
         	if(c==null)
         	{
-        		IASTTranslationUnit translationUnit = ASTHelper.getTranslationUnit(tc.getText());
+        		IASTTranslationUnit translationUnit = ASTHelper.getTranslationUnit(tc.getText(),null);
         		if(translationUnit!=null)
         		{
         			IASTNode node = ASTHelper.getNodeAtPostion(tc.getSelectionStart(), tc.getSelectionEnd(), translationUnit);

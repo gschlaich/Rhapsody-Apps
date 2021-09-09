@@ -14,6 +14,8 @@ import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPVariable;
 
+import RhapsodyUtilities.RhapsodyOperation;
+
 public class RhapsodyAttributeCompletion extends VariableCompletion implements RhapsodyClassifier {
 
 	private IRPAttribute myAttribute;
@@ -24,6 +26,7 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 		myAttribute = aAttribute;
 		
 		setShortDescription(myAttribute.getDescription());
+		setDefinedIn(myAttribute.getOwner().getFullPathNameIn());
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
@@ -41,8 +44,7 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 	
 	@Override
 	public Icon getIcon() {
-		Icon ret = new ImageIcon(myAttribute.getIconFileName().replace("\\", "/"));
-		return ret;
+		return  RhapsodyOperation.getIcon(myAttribute);
 	}
 	
 			

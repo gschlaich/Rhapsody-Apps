@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.print.attribute.TextSyntax;
 import javax.print.attribute.standard.MediaSize.Other;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -141,7 +142,8 @@ public class MainApp extends App {
 		textArea.setMarkOccurrences(true);
 		textArea.setCodeFoldingEnabled(true);
 		textArea.setTabsEmulated(true);
-		textArea.setTabSize(3);
+		textArea.setTabSize(4);
+		
 		
 		
 		CompletionProvider provider = new ClassifierCompletionProvider(selectedClass, visibility.v_public);
@@ -164,9 +166,12 @@ public class MainApp extends App {
 		
 		ac.install(textArea);
 	    
-	   contentPane.add(textArea);
+		contentPane.add(textArea);
 
-	   textArea.setText(selectedOperation.getBody());
+		textArea.setText(selectedOperation.getBody());
+		
+		textArea.convertTabsToSpaces();
+		
 	    
 	    JScrollPane scrollPane = new JScrollPane(contentPane);
 

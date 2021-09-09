@@ -14,42 +14,26 @@ import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPType;
 
+import RhapsodyUtilities.RhapsodyOperation;
+
 public class RhapsodyArgumentCompletion extends VariableCompletion implements RhapsodyClassifier {
 	
 	IRPArgument myArgument;
+	IRPClassifier myClassifier;
+	boolean myIsPointer = false;
 	
 	public RhapsodyArgumentCompletion(CompletionProvider provider, IRPArgument aArgument) {
-		super(provider, aArgument.getName(), aArgument.getType().getName());
+		super(provider, aArgument.getName(), RhapsodyOperation.getArgumentType(aArgument));
 		myArgument = aArgument;
 		
 		setSummary(myArgument.getDescription());
 		
-		String iconPath = myArgument.getIconFileName();
-		iconPath = iconPath.replace("\\", "/");
-		Icon icon = new ImageIcon(iconPath);
-		setIcon(icon);
+		setIcon( RhapsodyOperation.getIcon(myArgument));
 		
-		
+		setDefinedIn(aArgument.getOwner().getFullPathNameIn());
 		
 		//add also type to completion
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
-		if((getIRPClassifier()!=null)&&(abstractProvider!=null))
-		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier());
-			abstractProvider.addCompletion(rc);
-		}
-		
-	}
-	
-	
-
-	@Override
-	public IRPClassifier getIRPClassifier() {
-		return myArgument.getType();
-	}
-
-	@Override
-	public boolean isPointer() {
 		
 		String direction = myArgument.getArgumentDirection();
 		String ReturnPattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
@@ -58,7 +42,31 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 			ReturnPattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
 		}
 		
-		return(ReturnPattern.endsWith("*"));
+		myIsPointer = ReturnPattern.endsWith("*");
+		
+		
+		
+		if((myArgument.getType()!=null)&&(abstractProvider!=null))
+		{
+			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, myArgument.getType());
+			abstractProvider.addCompletion(rc);
+			myClassifier = rc.getIRPClassifier();
+			myIsPointer = rc.isPointer();
+		}
+		
+	}
+	
+	
+
+	@Override
+	public IRPClassifier getIRPClassifier() {
+		return myClassifier;
+	}
+
+	@Override
+	public boolean isPointer() {
+		
+		return myIsPointer;
 
 	}
 	
@@ -66,15 +74,7 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 	@Override
 	public String getType() 
 	{
-		String direction = myArgument.getArgumentDirection();
-		String pattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
-		if(getIRPClassifier() instanceof IRPType)
-		{
-			pattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
-		}
-		
-		return pattern.replaceFirst("$Type", getIRPClassifier().getName());
-		
+		return RhapsodyOperation.getArgumentType(myArgument);
 	}
 
 	

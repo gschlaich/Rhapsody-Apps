@@ -1,6 +1,14 @@
 package RhapsodyUtilities;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -14,6 +22,13 @@ import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.RPClassifier;
 
 public class RhapsodyOperation {
+	
+	private static IconProvider myIconProvider;
+	
+	static
+	{
+		myIconProvider = new IconProvider();
+	}
 	
 	public static String getArgumentType(IRPArgument aArgument)
 	{
@@ -94,6 +109,31 @@ public class RhapsodyOperation {
 		return ret;
 	}
 	
+	
+	public static String getNamespace(IRPModelElement aElement)
+	{
+		if(aElement==null)
+		{
+			return null;
+		}
+		
+		
+		if((aElement instanceof IRPPackage)==false)
+		{
+			return getNamespace(aElement.getOwner());
+		}
+		else
+		{
+			IRPPackage p = (IRPPackage)aElement;
+			String ret = p.getNamespace();
+			if((ret==null)||(ret.equals("")))
+			{
+				return getNamespace(aElement.getOwner());
+			}
+			return ret;
+		}
+	}
+	
 	public static List<IRPArgument> getArguments(IRPOperation aOperation)
 	{
 		@SuppressWarnings("unchecked")
@@ -154,6 +194,8 @@ public class RhapsodyOperation {
 		IRPClassifier ret = null;
 		
 		IRPModelElement owner = aClassifier.getOwner();
+		System.out.println("Owner: " + owner.getName());
+		System.out.println("Classifier:" + aClassifier.getName());
 		
 		
 		if(owner instanceof IRPPackage)
@@ -182,6 +224,8 @@ public class RhapsodyOperation {
 			}
 		}
 		
+		
+		
 		return ret;
 		
 	}
@@ -201,7 +245,13 @@ public class RhapsodyOperation {
 		
 		return ret;
 	}
-
+	
+	
+	public static Icon getIcon(IRPModelElement eElement)
+	{
+		return myIconProvider.getIcon(eElement);
+	}
+	
 }
 
 

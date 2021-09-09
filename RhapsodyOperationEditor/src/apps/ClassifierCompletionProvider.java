@@ -93,22 +93,27 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		List<IRPOperation> operations = aClassifier.getOperations().toList();
 		
+		
+		
 		for (IRPOperation operation  : operations) 
 		{
 			
-			if(operation.getVisibility().equals("private")&&(aVisibility!=visibility.v_private)){
+			if(operation.getVisibility().equals("private")&&(aVisibility!=visibility.v_private))
+			{
 				continue;
 			}
-			if(operation.getVisibility().equals("protected")&&(aVisibility==visibility.v_public)) {
+			if(operation.getVisibility().equals("protected")&&(aVisibility==visibility.v_public)) 
+			{
 				continue;
 			}
-			
-				RhapsodyOperationCompletion oc = new RhapsodyOperationCompletion(this, operation);
-				oc.setDefinedIn(aClassifier.getName());
-				oc.setRelevance(myBaseRelevance);
-				addCompletion(oc);
+				
+			RhapsodyOperationCompletion oc = new RhapsodyOperationCompletion(this, operation);
+			oc.setDefinedIn(aClassifier.getFullPathNameIn());
+			oc.setRelevance(myBaseRelevance);
+			addCompletion(oc);
 			
 		}
+		
 		
 		//check if class has a state chart
 		if(aClassifier instanceof IRPClass)
@@ -259,6 +264,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	public Completion getFirstCompletion(String aCompletionName)
 	{
+		
+		
 		//TODO optimize search
 		for(Completion completion: completions)
 		{
@@ -296,15 +303,31 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		String text = getTextForImport(comp);
 		
 		
-		// for completion in methods...
+		
+		// TODO improve this
 		if(text.indexOf("(")!=-1)
 		{
-			text = text.substring(text.indexOf("(")+1);
+			text = text.substring(text.lastIndexOf("(")+1);
 		}
 		if(text.indexOf(" ")!=-1)
 		{
-			text = text.substring(text.indexOf(" ")+1);
+			text = text.substring(text.lastIndexOf(" ")+1);
 		}
+		if(text.indexOf("=")!=-1)
+		{
+			text = text.substring(text.lastIndexOf("=")+1);
+		}
+		if(text.indexOf("<")!=-1)
+		{
+			text = text.substring(text.lastIndexOf("<")+1);
+		}
+		if(text.indexOf(",")!=-1)
+		{
+			text = text.substring(text.lastIndexOf(",")+1);
+		}
+		
+		
+		
 		
 		if ((text.indexOf("->")==-1)&&(text.indexOf(".")==-1)&&(text.indexOf("::")==-1))
 		{
@@ -388,9 +411,17 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			outerCompletionList = myLocalCompletionProvider.getCompletionByInputText(lookForProvider);
 		}
 		
-		if((outerCompletionList!=null)&&(outerCompletionList.size()==1))
+		if(outerCompletionList!=null)
 		{
-			c = outerCompletionList.get(0);
+			//search for complete same..
+			for(Completion cc : outerCompletionList)
+			{
+				if(cc.getReplacementText().equals(lookForProvider))
+				{
+					c = cc;
+					break;
+				}
+			}
 		}
 		else
 		{
@@ -492,7 +523,10 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 
 	}
 	
-	
+	public List<Completion> getCompletions()
+	{
+		return completions;
+	}
 	
 	
 	@SuppressWarnings("unchecked")
