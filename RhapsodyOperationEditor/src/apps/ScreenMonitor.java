@@ -35,7 +35,7 @@ public enum ScreenMonitor {
                 if (screenIndex != currentMonitorIndex) {
                     prefs.putInt(MonitorIndex, screenIndex);
                     currentMonitorIndex = screenIndex;
-                    System.out.println("changed: "+currentMonitorIndex);
+                    //System.out.println("changed: "+currentMonitorIndex);
                 }
             }
         });

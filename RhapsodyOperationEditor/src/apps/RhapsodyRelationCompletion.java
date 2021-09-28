@@ -44,9 +44,9 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		
 		//add also type to completion
 		
-		if((getIRPClassifier()!=null)&&(abstractProvider!=null))
+		if((getIRPClassifier(isPointer())!=null)&&(abstractProvider!=null))
 		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier());
+			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier(isPointer()));
 			abstractProvider.addCompletion(rc);
 		}
 		
@@ -92,12 +92,12 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		{
 			return "map";
 		}
-		return getIRPClassifier().getName();	
+		return getIRPClassifier(isPointer()).getName();	
 	}
 	
 
 	@Override
-	public IRPClassifier getIRPClassifier() 
+	public IRPClassifier getIRPClassifier(boolean isPointer) 
 	{
 		if(isVector())
 		{
@@ -143,14 +143,20 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	public List<IRPClassifier> getNestedClassifiers(boolean isPointer) {
+		return getIRPClassifier(isPointer).getNestedClassifiers().toList();
 	}
 
 
 	@Override
 	public IRPModelElement getElement() {
 		return myRelation;
+	}
+
+	@Override
+	public boolean isValue() {
+		// TODO Auto-generated method stub
+		return !isPointer();
 	}
 
 

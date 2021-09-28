@@ -1,8 +1,10 @@
 package apps;
 
 import java.awt.Point;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -45,6 +47,9 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	private IRPClassifier myClassifier;
 	private visibility myVisibility;
 	private String myClassifierName;
+	private long myStartTime = 0;
+	
+	private int myCompletionCount = 0;
 	
 	private LocalCompletionProvider myLocalCompletionProvider;
 	
@@ -59,6 +64,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	public ClassifierCompletionProvider(IRPClassifier aClassifier, visibility aVisibility) {
 		myClassifier = aClassifier;
 		myVisibility = aVisibility;
+		myStartTime = new Date().getTime();
 		super.setParameterizedCompletionParams('(', ", ", ')');
 		myClassifierName = myClassifier.getName();
 		createClassCompletion(myClassifier, myVisibility);		
@@ -249,33 +255,43 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	@Override
 	public void addCompletion(Completion aCompletion)
 	{
-		//check if completion already added
-		//TODO optimize search
-		for(Completion storedCompetion: completions)
+		
+		
+		
+		if(getFirstCompletion(aCompletion.getInputText())==null)
 		{
-			if(storedCompetion.compareTo(aCompletion)==0)
-			{
-				//do not add
-				return;
-			}
+			myCompletionCount++;
+			
+			Date date = new Date();
+			
+			double time = (double)(date.getTime()-myStartTime)/1000;
+			
+			
+			
+			
+			System.out.println("Insert(" + myCompletionCount +") " + aCompletion.getInputText() + ": " + time);
+			super.addCompletion(aCompletion);
+		}
+		/*
+		
+		if(completions.contains(aCompletion))
+		{
+			return;
 		}
 		super.addCompletion(aCompletion);
+		*/
+		
 	}
 	
-	public Completion getFirstCompletion(String aCompletionName)
+	public Completion getFirstCompletion(final String aCompletionName)
 	{
 		
-		
-		//TODO optimize search
-		for(Completion completion: completions)
+		List<Completion> completions = super.getCompletionByInputText(aCompletionName);
+		if(completions==null||completions.isEmpty())
 		{
-			if(completion.getInputText().equals(aCompletionName))
-			{
-				//do not add
-				return completion;
-			}
+			return null;
 		}
-		return null;
+		return completions.get(0);
 		
 	}
 	
@@ -353,7 +369,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		
 		String lookForProvider = "";
-		boolean ref = false;
+		boolean isPointer = false;
 		boolean st = false;
 		
 		//TODO search from end for string
@@ -367,7 +383,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		
 		if(endRef>end)
 		{
-			ref = true;
+			isPointer = true;
 			end = endRef;
 			startSearch = end+2;
 		}
@@ -375,7 +391,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		{
 			st = true;
 			end = endDD;
-			ref = false;
+			isPointer = false;
 			startSearch = end+2;
 		}
 		
@@ -440,11 +456,23 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			
 			
 			RhapsodyClassifier rc = (RhapsodyClassifier)c;
-			if(rc.isPointer()!=ref)
+			
+			if(isPointer)
 			{
-				//no completion fit...
-				return cs;
+				if(rc.isPointer()==false)
+				{
+					//no completion fit...
+					return cs;
+				}
 			}
+			else
+			{
+				if(rc.isValue()==false)
+				{
+					return cs;
+				}
+			}
+			
 			
 			//check for visibility
 			
@@ -453,17 +481,16 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			List<IRPGeneralization> gens = myClassifier.getGeneralizations().toList();
 			for(IRPGeneralization gen:gens)
 			{
-				System.out.println(gen.getBaseClass().getName());
-				if(gen.getBaseClass().equals(rc.getIRPClassifier()))
+				
+				if(gen.getBaseClass().equals(rc.getIRPClassifier(isPointer)))
 				{
 					v = visibility.v_protected;
 					break;
 				}
 			}
 			
-			ClassifierCompletionProvider ccp = new ClassifierCompletionProvider(rc.getIRPClassifier(), v);
+			ClassifierCompletionProvider ccp = new ClassifierCompletionProvider(rc.getIRPClassifier(isPointer), v);
 				
-				System.out.println("searchText  " + searchText );
 				return ccp.getSubCompletions(searchText);
 		}
 		else if((c!=null)&&(c instanceof RhapsodyNamespaceCompletion))

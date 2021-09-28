@@ -114,7 +114,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         
         if(aNode instanceof IASTSimpleDeclaration)
         {
-        	boolean isReference = false;
+        	boolean isPointer = false;
         	IASTSimpleDeclaration simpleDeclaration = (IASTSimpleDeclaration)aNode;
         	IASTDeclSpecifier specifier =  simpleDeclaration.getDeclSpecifier();
         	if(specifier instanceof IASTNamedTypeSpecifier)
@@ -150,23 +150,23 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         				if(c==null)
         				{
         					irpClassifier = RhapsodyOperation.findClassifier(itsCompletionProvider.getClassifier(), completionName);
-        					isReference = false;
+        					isPointer = false;
         				}
         				else if(c instanceof RhapsodyClassifier)
         				{
         					classifier = (RhapsodyClassifier)c;
-        					isReference = classifier.isPointer();
-        					irpClassifier = classifier.getIRPClassifier();
+        					isPointer = classifier.isPointer();
+        					irpClassifier = classifier.getIRPClassifier(isPointer);
         				}
         				else if(classifier!=null)
         				{	
-        					List<IRPClassifier> classifiers = classifier.getNestedClassifiers();
+        					List<IRPClassifier> classifiers = classifier.getNestedClassifiers(isPointer);
         					for(IRPClassifier ic : classifiers)
         					{
         						if(ic.getName().equals(name.toString()))
         						{
         							irpClassifier = ic;
-        							isReference = false;
+        							isPointer = false;
         							break;
         						}
         					}
@@ -183,7 +183,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 										if(trc!=null)
 										{
 											irpClassifier = trc;
-											isReference=true;
+											isPointer=true;
 											break;
 										}
 									}
@@ -206,8 +206,8 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
             		{
             			RhapsodyClassifier rcc = (RhapsodyClassifier)c;
 
-            			isReference = rcc.isPointer();
-            			irpClassifier = rcc.getIRPClassifier();
+            			isPointer = rcc.isPointer();
+            			irpClassifier = rcc.getIRPClassifier(isPointer);
 
             		}
         		}
@@ -233,9 +233,9 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         				
         				if((pointers!=null) && (pointers.length>0))
         				{
-        					isReference = true;
+        					isPointer = true;
         				}
-        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(this, declarator.getName().toString(), irpClassifier,isReference);
+        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(this, declarator.getName().toString(), irpClassifier,isPointer);
         				this.addCompletion(rlvc);
         			}
         		}

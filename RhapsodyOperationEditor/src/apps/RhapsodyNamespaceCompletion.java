@@ -63,8 +63,8 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
-		return null;
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
+			return null;
 	}
 	
 	@Override
@@ -90,7 +90,7 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	}
 	
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		return getNestedClassifiers(myPackage);
 		
 	}
@@ -100,6 +100,8 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		
 		return false;
 	}
+	
+	
 
 	@Override
 	public IRPModelElement getElement() {
@@ -171,6 +173,12 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isValue() {
+		// TODO Auto-generated method stub
+		return true;
 	}
 
 

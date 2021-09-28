@@ -66,7 +66,7 @@ public class ASTHelper
 				if(c instanceof RhapsodyClassifierCompletion)
 				{
 					RhapsodyClassifierCompletion rcc = (RhapsodyClassifierCompletion)c;
-					IRPClassifier irpc = rcc.getIRPClassifier();
+					IRPClassifier irpc = rcc.getIRPClassifier(false);
 					if(irpc instanceof IRPClass)
 					{
 						String namespace = RhapsodyOperation.getNamespace(irpc);

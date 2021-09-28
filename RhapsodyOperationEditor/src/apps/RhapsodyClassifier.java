@@ -7,12 +7,14 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 
 public interface RhapsodyClassifier {
 	
-	IRPClassifier getIRPClassifier();
+	IRPClassifier getIRPClassifier(boolean aPointer);
 	
 	IRPModelElement getElement();
 	
-	List<IRPClassifier> getNestedClassifiers();
+	List<IRPClassifier> getNestedClassifiers(boolean aPointer);
 	
 	boolean isPointer();
+	
+	boolean isValue();
 	
 }

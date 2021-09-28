@@ -33,7 +33,7 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	
 	
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		
 		return myType.getTypedefBaseType();
 	}
@@ -45,7 +45,7 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	}
 
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -53,6 +53,12 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	@Override
 	public boolean isPointer() {
 		return false;
+	}
+
+
+	@Override
+	public boolean isValue() {
+		return true;
 	}
 
 }

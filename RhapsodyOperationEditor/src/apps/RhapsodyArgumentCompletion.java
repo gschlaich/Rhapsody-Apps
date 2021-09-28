@@ -20,7 +20,9 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 	
 	IRPArgument myArgument;
 	IRPClassifier myClassifier;
+	IRPClassifier myClassifierPointer;
 	boolean myIsPointer = false;
+	boolean myIsValue = true;
 	
 	public RhapsodyArgumentCompletion(CompletionProvider provider, IRPArgument aArgument) {
 		super(provider, aArgument.getName(), RhapsodyOperation.getArgumentType(aArgument));
@@ -37,7 +39,7 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		
 		String direction = myArgument.getArgumentDirection();
 		String ReturnPattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
-		if(getIRPClassifier() instanceof IRPType)
+		if(getIRPClassifier(false) instanceof IRPType)
 		{
 			ReturnPattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
 		}
@@ -50,8 +52,11 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		{
 			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, myArgument.getType());
 			abstractProvider.addCompletion(rc);
-			myClassifier = rc.getIRPClassifier();
+			myClassifier = rc.getIRPClassifier(false);
+			myClassifierPointer = rc.getIRPClassifier(true);
 			myIsPointer = rc.isPointer();
+			myIsValue = rc.isValue();
+			
 		}
 		
 	}
@@ -59,7 +64,7 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 	
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		return myClassifier;
 	}
 
@@ -81,8 +86,13 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
+		{
+			return null;
+		}
+		return classifier.getNestedClassifiers().toList();
 	}
 
 
@@ -91,6 +101,13 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 	public IRPModelElement getElement() {
 		
 		return myArgument;
+	}
+
+
+
+	@Override
+	public boolean isValue() {
+		return myIsValue;
 	}
 
 	

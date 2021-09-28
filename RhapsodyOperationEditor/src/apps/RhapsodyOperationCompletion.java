@@ -58,9 +58,9 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 			parameters.add(p);
 		}
 		
-		if((getIRPClassifier()!=null)&&(abstractProvider!=null))
+		if((getIRPClassifier(false)!=null)&&(abstractProvider!=null))
 		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, getIRPClassifier());
+			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, getIRPClassifier(false));
 			abstractProvider.addCompletion(rc);
 		}
 		
@@ -72,7 +72,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	}
 	
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		if(myInterfaceItem instanceof IRPOperation)
 		{
 			IRPOperation op = (IRPOperation)myInterfaceItem;
@@ -86,7 +86,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	@Override
 	public boolean isPointer() {
 		String ReturnPattern = myInterfaceItem.getPropertyValue("CPP_CG.Class.ReturnType");
-		if(getIRPClassifier() instanceof IRPType)
+		if(getIRPClassifier(false) instanceof IRPType)
 		{
 			ReturnPattern = myInterfaceItem.getPropertyValue("CPP_CG.Type.ReturnType");
 		}
@@ -94,7 +94,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	}
 
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		//return empty list
 		return new ArrayList<IRPClassifier>();
 	}
@@ -102,6 +102,12 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	@Override
 	public IRPModelElement getElement() {
 		return myInterfaceItem;
+	}
+
+	@Override
+	public boolean isValue() {
+		// TODO Auto-generated method stub
+		return !isPointer();
 	}
 
 }

@@ -20,6 +20,9 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 
 	private IRPAttribute myAttribute;
 	private IRPClassifier myClassifier;
+	private IRPClassifier myClassifierPointer;
+	private boolean myIsPointer = false;
+	private boolean myIsValue = true;
 	
 	public RhapsodyAttributeCompletion(CompletionProvider provider, IRPAttribute aAttribute) {
 		super(provider, aAttribute.getName(), aAttribute.getType().getName());
@@ -34,11 +37,18 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 		{
 			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, myAttribute.getType());
 			abstractProvider.addCompletion(rc);
-			myClassifier = rc.getIRPClassifier();
+			myClassifier = rc.getIRPClassifier(false);
+			myClassifierPointer = rc.getIRPClassifier(true);
+			myIsPointer = rc.isPointer();
+			myIsValue = rc.isValue();
 		}
 		else
 		{
 			myClassifier = myAttribute.getType();
+		}
+		if((myAttribute.getIsReference()==1))
+		{
+			myIsPointer = true;
 		}
 	}
 	
@@ -49,24 +59,42 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 	
 			
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
+		if(aPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 
 	@Override
-	public boolean isPointer() {
-		return (myAttribute.getIsReference()==1);
+	public boolean isPointer() 
+	{
+		return myIsPointer;
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) 
+	{
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
+		{
+			return null;
+		}
+		return classifier.getNestedClassifiers().toList();
 	}
+	
 
 	@Override
 	public IRPModelElement getElement() {	
 		return myAttribute;
+	}
+
+	@Override
+	public boolean isValue() {
+		return myIsValue;
 	}
 
 }

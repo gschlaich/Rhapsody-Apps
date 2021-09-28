@@ -16,6 +16,8 @@ import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiation;
+import com.telelogic.rhapsody.core.IRPTemplateInstantiationParameter;
+import com.telelogic.rhapsody.core.IRPTemplateParameter;
 import com.telelogic.rhapsody.core.IRPType;
 
 import RhapsodyUtilities.ASTHelper;
@@ -25,7 +27,9 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 
 	
 	private IRPClassifier myClassifier;
+	private IRPClassifier myClassifierPointer;
 	private boolean myIsPointer = false;
+	private boolean myIsValue = true;
 	
 	private String definedIn;
 
@@ -86,7 +90,12 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 					{
 						IRPClassifier rc = RhapsodyOperation.findClassifier(myClassifier, classifierName);
 						myClassifier = rc;
-						myIsPointer = ASTHelper.isPointer(rType);
+						if(ASTHelper.isPointer(rType))
+						{
+							myIsPointer = true;
+							myIsValue = false;
+						}
+						
 						if(rc!=null)
 						{
 							if(rc.isATemplate()==1)
@@ -101,7 +110,7 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 											IRPClassifier trc = RhapsodyOperation.findClassifier(rType, cs);
 											if(trc!=null)
 											{
-												myClassifier = trc;
+												myClassifierPointer = trc;
 												myIsPointer=true;
 												break;
 											}
@@ -132,6 +141,9 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				if(rType.isPointer()==1)
 				{
 					myIsPointer = true;
+					myClassifierPointer = myClassifier;
+					myClassifier = null;
+					myIsValue = false;
 				}
 			}
 	
@@ -147,19 +159,30 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				if((t!=null)&&(t instanceof IRPClassifier))
 				{
 					myClassifier = (IRPClassifier)t;
-					System.out.println(myClassifier.getName());
 					
+					if(myClassifier.findNestedElement("operator->", "Operation")!=null)
+					{
+						List<IRPTemplateInstantiationParameter> params = ti.getTemplateInstantiationParameters().toList();// t.getTemplateParameters().toList();
+						if(params.isEmpty()==false)
+						{
+							//hacky
+							IRPTemplateInstantiationParameter param = params.get(0);
+							myClassifierPointer = param.getType();
+							myIsPointer = true;
+						}	
+					}
 				}
 			}
 		}
-			
-		
-		
 	}
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		
+		if(aPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 	
@@ -175,8 +198,13 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
+		{
+			return null;
+		}
+		return classifier.getNestedClassifiers().toList();
 	}
 
 	@Override
@@ -262,6 +290,15 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	public void setDefinedIn(String definedIn) {
 		this.definedIn = definedIn;
 	}
+
+	@Override
+	public boolean isValue() {
+		
+		return myIsValue;
+	}
+
+	
+	
 
 
 	

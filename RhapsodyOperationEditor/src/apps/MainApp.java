@@ -88,6 +88,7 @@ public class MainApp extends App {
 		final Display display = new Display();
 	    final Shell shell = new Shell(display);
 	    shell.setText("Operation Editor");
+	    System.out.println("Version: " + Runtime.class.getPackage().getImplementationVersion());
 	    
 	    Composite editComp = new Composite(shell, SWT.EMBEDDED); 
 
@@ -143,8 +144,7 @@ public class MainApp extends App {
 		textArea.setCodeFoldingEnabled(true);
 		textArea.setTabsEmulated(true);
 		textArea.setTabSize(4);
-		
-		
+			
 		
 		CompletionProvider provider = new ClassifierCompletionProvider(selectedClass, visibility.v_public);
 				

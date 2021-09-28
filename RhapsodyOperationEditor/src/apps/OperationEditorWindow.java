@@ -9,7 +9,9 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.Box;
@@ -204,7 +206,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
     		provider.addCompletion(rnc);
     		
     		
-    		System.out.println(e.getName());
+    		//System.out.println(e.getName());
     		List<IRPDependency> dependencies = p.getDependencies().toList();
     		for(IRPDependency dependency: dependencies)
     		{
@@ -235,6 +237,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			IRPOperation op = (IRPOperation)selected;
 
 			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
+			
+			aMainApp.printToRhapsody("Java Version: " + System.getProperty("java.vm.version"));
+			aMainApp.printToRhapsody(System.getProperty("java.version"));
+			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());	
+			aMainApp.printToRhapsody(timeStamp);
 			
 			String imageName = op.getIconFileName();
 			imageName = imageName.replace("\\", "/");
@@ -294,7 +301,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				okButton.setEnabled(false);			
 				applyButton.setEnabled(false);
-			}		
+			}	
+	        
+	        timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+	        aMainApp.printToRhapsody(timeStamp);
 			
 	        
 		}
@@ -400,6 +410,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_FATAL"));
 		aCp.addCompletion(new BasicCompletion(aCp, "nullptr", "defined value when pointer is null"));
+		aCp.addCompletion(new BasicCompletion(aCp, "static_cast", "static cast of data type"));
+		aCp.addCompletion(new BasicCompletion(aCp, "dynamic_cast", "dynamic cast of data type"));
+		aCp.addCompletion(new BasicCompletion(aCp, "const_cast", "const cast of data type"));
 	
 
 	}
@@ -486,8 +499,6 @@ class OpenFeature extends TextAction
            return;
         }
         
-        
-        System.out.println(elementName);
         
         if(myCompletionProvider!=null)
         {
@@ -579,7 +590,7 @@ class OpenFeature extends TextAction
 		
 		CPPASTFieldReference fieldReference = (CPPASTFieldReference)aNode;
 		ICPPASTExpression expression =  fieldReference.getFieldOwner();
-		System.out.println(expression.getRawSignature());
+		//System.out.println(expression.getRawSignature());
 		String classifierName = expression.getRawSignature();
 		c = myCompletionProvider.getFirstCompletion(classifierName);
 		if(c==null)
@@ -592,9 +603,9 @@ class OpenFeature extends TextAction
 		}
 		if((c!=null)&&(c instanceof RhapsodyClassifier))
 		{
-			IRPModelElement element = ((RhapsodyClassifier)c).getIRPClassifier();
+			IRPModelElement element = ((RhapsodyClassifier)c).getIRPClassifier(false);
 			
-			System.out.println(element.getName());
+			//System.out.println(element.getName());
 			List<IRPModelElement> elements = element.getNestedElements().toList();
 			for(IRPModelElement me : elements)
 			{

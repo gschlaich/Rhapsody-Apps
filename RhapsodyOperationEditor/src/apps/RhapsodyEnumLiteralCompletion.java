@@ -46,7 +46,11 @@ public class RhapsodyEnumLiteralCompletion extends BasicCompletion implements Rh
 
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
+		if(aPointer)
+		{
+			return null;
+		}
 		return myIRPType;
 	}
 
@@ -56,13 +60,15 @@ public class RhapsodyEnumLiteralCompletion extends BasicCompletion implements Rh
 	}
 
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		if(myIRPType==null)
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
 		{
 			return null;
 		}
-		return myIRPType.getNestedElements().toList();
+		return classifier.getNestedClassifiers().toList();
 	}
+	
 
 	@Override
 	public boolean isPointer() {
@@ -132,6 +138,11 @@ public class RhapsodyEnumLiteralCompletion extends BasicCompletion implements Rh
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public boolean isValue() {
+		return true;
 	}
 
 
