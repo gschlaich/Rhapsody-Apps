@@ -57,6 +57,8 @@ import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPCollection;
+import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -80,6 +82,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private JFrame myFrame;
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
+	private IRPApplication myApplication;
 
 	
 	
@@ -90,7 +93,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	public OperationEditorWindow(IRPApplication rhapsody, IRPModelElement selected) {
 		
-		
+		myApplication = rhapsody;
 		mySelectedOperation = null;
 	    
 	    if(selected instanceof IRPOperation )
@@ -127,13 +130,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabsEmulated(true);
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
-		/*
-		if(mySelectedOperation.isReadOnly()==1)
-		{
-			myTextArea.setEnabled(false);
-			myTextArea.setBackground(Color.lightGray);
-		}
-		*/
 		
 		
 		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
@@ -156,7 +152,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		JPopupMenu popup = myTextArea.getPopupMenu();
 	    popup.addSeparator();
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
-	      
+	    
 		
 		
 		
@@ -263,6 +259,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			JButton locateButton = new JButton("Locate");
 			buttonPanel.add(locateButton);
 			buttonPanel.setVisible(true);
+			JButton generateButton = new JButton("Generate");
+			buttonPanel.add(generateButton);
+			buttonPanel.setVisible(true);
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,selected);
 			oew.setFrame(frame);
@@ -281,6 +280,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			locateButton.setActionCommand("locate");
 			locateButton.addActionListener(oew);
+			
+			generateButton.setActionCommand("generate");
+			generateButton.addActionListener(oew);
 			
 			
 			
@@ -426,13 +428,15 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		
-		if(command.equals("ok")||command.equals("apply"))
+		if(mySelectedOperation.isReadOnly()==0)
 		{
-			String text = myTextArea.getText();
-			if(mySelectedOperation!=null)
+			if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
 			{
-				mySelectedOperation.setBody(text);
+				String text = myTextArea.getText();
+				if(mySelectedOperation!=null)
+				{
+					mySelectedOperation.setBody(text);
+				}
 			}
 		}
 		
@@ -443,11 +447,27 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				myFrame.dispose();
 			}
 		}
+		
 		if(command.equals("locate"))
 		{
 			if(mySelectedOperation!=null)
 			{
 				mySelectedOperation.locateInBrowser();
+			}
+		}
+		
+		if(command.equals("generate"))
+		{
+			//find class
+			IRPModelElement element = mySelectedOperation.getOwner();
+			if (element instanceof IRPClass) 
+			{
+				IRPClass selectedClass = (IRPClass) element;
+				selectedClass.locateInBrowser();
+				IRPCollection generateCollection = myApplication.getListOfSelectedElements();
+				generateCollection.addItem(selectedClass);
+				
+				myApplication.generateElements(generateCollection);
 			}
 		}
 		
