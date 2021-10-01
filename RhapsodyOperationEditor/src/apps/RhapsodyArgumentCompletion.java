@@ -38,24 +38,46 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
 		
 		String direction = myArgument.getArgumentDirection();
-		String ReturnPattern = myArgument.getPropertyValue("CPP_CG.Class."+direction);
+		
+		String propertyName = "CPP_CG.Class."+direction;
 		if(getIRPClassifier(false) instanceof IRPType)
 		{
-			ReturnPattern = myArgument.getPropertyValue("CPP_CG.Type."+direction);
+			propertyName = "CPP_CG.Type."+direction;
 		}
 		
-		myIsPointer = ReturnPattern.endsWith("*");
 		
+		String codePattern = null;
+		
+		try
+		{
+			codePattern = myArgument.getPropertyValueExplicit(propertyName);
+		}
+		catch(Exception e)
+		{
+			IRPClassifier type= myArgument.getType();
+			codePattern = type.getPropertyValue(propertyName);
+		}
+
+		myIsPointer = codePattern.endsWith("*");
 		
 		
 		if((myArgument.getType()!=null)&&(abstractProvider!=null))
 		{
 			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, myArgument.getType());
 			abstractProvider.addCompletion(rc);
-			myClassifier = rc.getIRPClassifier(false);
-			myClassifierPointer = rc.getIRPClassifier(true);
-			myIsPointer = rc.isPointer();
-			myIsValue = rc.isValue();
+			if(myIsPointer==false)
+			{
+				myClassifier = rc.getIRPClassifier(false);
+				myClassifierPointer = rc.getIRPClassifier(true);
+				myIsPointer = rc.isPointer();
+				myIsValue = rc.isValue();
+			}
+			else
+			{
+				myIsValue = false;
+				myClassifier = null;
+				myClassifierPointer = rc.getIRPClassifier(false);
+			}
 			
 		}
 		
@@ -65,6 +87,10 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 
 	@Override
 	public IRPClassifier getIRPClassifier(boolean aPointer) {
+		if(aPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 

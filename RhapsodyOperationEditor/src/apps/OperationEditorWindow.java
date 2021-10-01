@@ -131,20 +131,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
+		//startAutoComplete();
 		
-		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
+		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
+		//startAutoCompletion.startAutoComplete();
+		startAutoCompletion.start();
 		
-		
-		
-		// Install auto-completion onto our text area.
-		myAutoComplete = new AutoCompletion(provider);
-		myAutoComplete.setListCellRenderer(new CPPCellRenderer());
-		myAutoComplete.setShowDescWindow(true);
-		myAutoComplete.setParameterAssistanceEnabled(true);
-		
-		myAutoComplete.setAutoCompleteEnabled(true);
-		myAutoComplete.setAutoActivationEnabled(true);
-		myAutoComplete.setAutoActivationDelay(750);
 		//ac.setExternalURLHandler(new JavadocUrlHandler());
 		
 		//ac.setParamChoicesRenderer(new JavaParamListCellRenderer());
@@ -156,7 +148,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		
 		
-		myAutoComplete.install(myTextArea);
+		
 		contentPane.add(new RTextScrollPane(myTextArea, true));
 	    
 		setContentPane(contentPane);
@@ -178,44 +170,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		SwingUtilities.invokeLater(focusInWindow);   
 		
+		
+		
+		
+		
 	}
-
-	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
-		IRPModelElement e =  selected;
-	    
-	    while((e instanceof IRPPackage)==false)
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    //System.out.println(e.getPropertyValue("CPP_CG.Package.DefineNameSpace"));
-	    while(e.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("False"))
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    if (e instanceof IRPPackage)
-    	{
-    		IRPPackage p = (IRPPackage)e;
-    		
-    		RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p);
-    		provider.addCompletion(rnc);
-    		
-    		
-    		//System.out.println(e.getName());
-    		List<IRPDependency> dependencies = p.getDependencies().toList();
-    		for(IRPDependency dependency: dependencies)
-    		{
-    			if(dependency.getDependsOn() instanceof IRPPackage)
-    			{
-    				p = (IRPPackage) dependency.getDependsOn();
-    				rnc = new RhapsodyNamespaceCompletion(provider, p); 
-    				provider.addCompletion(rnc);
-    			}
-    				
-    		}    		
-    	}
-	}
+	
+	
+	
 	
 	private void setFrame(JFrame aFrame)
 	{
@@ -227,9 +189,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		if(selected instanceof IRPOperation)
 		{
-			
-			
-			
+		
 			IRPOperation op = (IRPOperation)selected;
 
 			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
@@ -305,8 +265,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				applyButton.setEnabled(false);
 			}	
 	        
-	        timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-	        aMainApp.printToRhapsody(timeStamp);
+	        
+	        
+	        
 			
 	        
 		}
@@ -318,6 +279,114 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 	
+	
+	
+	
+	
+	
+	@Override
+	public void hyperlinkUpdate(HyperlinkEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String command = e.getActionCommand();
+		if(mySelectedOperation.isReadOnly()==0)
+		{
+			if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
+			{
+				String text = myTextArea.getText();
+				if(mySelectedOperation!=null)
+				{
+					mySelectedOperation.setBody(text);
+				}
+			}
+		}
+		
+		if(command.equals("ok")||command.equals("cancel"))
+		{	
+			if(myFrame!=null)
+			{
+				myFrame.dispose();
+			}
+		}
+		
+		if(command.equals("locate"))
+		{
+			if(mySelectedOperation!=null)
+			{
+				mySelectedOperation.locateInBrowser();
+			}
+		}
+		
+		if(command.equals("generate"))
+		{
+			//find class
+			IRPModelElement element = mySelectedOperation.getOwner();
+			if (element instanceof IRPClass) 
+			{
+				IRPClass selectedClass = (IRPClass) element;
+				selectedClass.locateInBrowser();
+				IRPCollection generateCollection = myApplication.getListOfSelectedElements();
+				generateCollection.addItem(selectedClass);
+				
+				myApplication.generateElements(generateCollection);
+			}
+		}
+		
+	}
+
+
+}
+
+class StartAutoCompletion extends Thread
+{
+	private RSyntaxTextArea myTextArea;
+	private AutoCompletion myAutoComplete;
+	private IRPOperation mySelectedOperation;
+	private ClassifierCompletionProvider myClassifierCompletionProvider;
+	private IRPApplication myApplication;
+	
+	public StartAutoCompletion(
+			RSyntaxTextArea aTextArea, 
+			AutoCompletion aAutoComplete, 
+			IRPOperation aSelectedOperation,
+			IRPApplication aApplication) 
+	{
+		myTextArea = aTextArea;
+		myAutoComplete = aAutoComplete;
+		mySelectedOperation = aSelectedOperation;
+		myApplication = aApplication;
+	}
+	
+	
+	public void run()
+	{
+		startAutoComplete();
+	}
+	
+	public void startAutoComplete()
+	{
+		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		myApplication.writeToOutputWindow("log", "Start Autocomplete collection at " + timeStamp + "\n");
+		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
+		// Install auto-completion onto our text area.
+		myAutoComplete = new AutoCompletion(provider);
+		myAutoComplete.setListCellRenderer(new CPPCellRenderer());
+		myAutoComplete.setShowDescWindow(true);
+		myAutoComplete.setParameterAssistanceEnabled(true);
+		myAutoComplete.setAutoCompleteEnabled(true);
+		myAutoComplete.setAutoActivationEnabled(true);
+		myAutoComplete.setAutoActivationDelay(750);
+		myAutoComplete.install(myTextArea);
+		timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
+		
+		
+		
+	}
 	
 	
 	/**
@@ -418,63 +487,50 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 
 	}
-
-	@Override
-	public void hyperlinkUpdate(HyperlinkEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		String command = e.getActionCommand();
-		if(mySelectedOperation.isReadOnly()==0)
-		{
-			if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
-			{
-				String text = myTextArea.getText();
-				if(mySelectedOperation!=null)
-				{
-					mySelectedOperation.setBody(text);
-				}
-			}
-		}
-		
-		if(command.equals("ok")||command.equals("cancel"))
-		{	
-			if(myFrame!=null)
-			{
-				myFrame.dispose();
-			}
-		}
-		
-		if(command.equals("locate"))
-		{
-			if(mySelectedOperation!=null)
-			{
-				mySelectedOperation.locateInBrowser();
-			}
-		}
-		
-		if(command.equals("generate"))
-		{
-			//find class
-			IRPModelElement element = mySelectedOperation.getOwner();
-			if (element instanceof IRPClass) 
-			{
-				IRPClass selectedClass = (IRPClass) element;
-				selectedClass.locateInBrowser();
-				IRPCollection generateCollection = myApplication.getListOfSelectedElements();
-				generateCollection.addItem(selectedClass);
-				
-				myApplication.generateElements(generateCollection);
-			}
-		}
-		
+	
+	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
+		IRPModelElement e =  selected;
+	    
+	    while((e instanceof IRPPackage)==false)
+	    {
+	    	e = e.getOwner();
+	    }
+	    
+	    //System.out.println(e.getPropertyValue("CPP_CG.Package.DefineNameSpace"));
+	    while(e.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("False"))
+	    {
+	    	e = e.getOwner();
+	    }
+	    
+	    if (e instanceof IRPPackage)
+    	{
+    		IRPPackage p = (IRPPackage)e;
+    		
+    		RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p);
+    		provider.addCompletion(rnc);
+    		
+    		
+    		//System.out.println(e.getName());
+    		List<IRPDependency> dependencies = p.getDependencies().toList();
+    		for(IRPDependency dependency: dependencies)
+    		{
+    			if(dependency.getDependsOn() instanceof IRPPackage)
+    			{
+    				p = (IRPPackage) dependency.getDependsOn();
+    				rnc = new RhapsodyNamespaceCompletion(provider, p); 
+    				provider.addCompletion(rnc);
+    			}
+    				
+    		}    		
+    	}
 	}
 
 
+	
+	
 }
+
+
 
 class OpenFeature extends TextAction
 {
