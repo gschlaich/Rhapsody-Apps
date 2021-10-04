@@ -66,6 +66,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPSearchManager;
 import com.telelogic.rhapsody.core.IRPSearchQuery;
+import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPType;
 
 import RhapsodyUtilities.ASTHelper;
@@ -83,8 +84,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private IRPApplication myApplication;
-
-	
 	
 	/**
 	 * 
@@ -95,7 +94,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		myApplication = rhapsody;
 		mySelectedOperation = null;
-	    
+		
 	    if(selected instanceof IRPOperation )
 		{
 			mySelectedOperation = (IRPOperation) selected;	
@@ -105,10 +104,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	    	//only operations work...
 	    	return;
 	    }
-	    
-	    
+	   
 	    IRPClassifier selectedClass = (IRPClassifier)mySelectedOperation.getOwner();
-	 
+
 	    int factorW = 7;
 	    int factorH = 16;
 	    
@@ -116,8 +114,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		int rows = (int)(dim.height/factorH*0.7);
 		int cols = (int)(dim.width/factorW*0.5);
-		
-		
 		
 		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
 		
@@ -131,24 +127,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
-		//startAutoComplete();
-		
 		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
-		//startAutoCompletion.startAutoComplete();
+		
 		startAutoCompletion.start();
-		
-		//ac.setExternalURLHandler(new JavadocUrlHandler());
-		
-		//ac.setParamChoicesRenderer(new JavaParamListCellRenderer());
-		
-		JPopupMenu popup = myTextArea.getPopupMenu();
-	    popup.addSeparator();
-	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
-	    
-		
-		
-		
-		
+
 		contentPane.add(new RTextScrollPane(myTextArea, true));
 	    
 		setContentPane(contentPane);
@@ -156,9 +138,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setText(mySelectedOperation.getBody());
 		myTextArea.convertTabsToSpaces();
 		myTextArea.requestFocusInWindow();
-		
-		
-		
+				
 		Runnable focusInWindow = new Runnable() {
 			
 			@Override
@@ -170,13 +150,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		SwingUtilities.invokeLater(focusInWindow);   
 		
-		
-		
-		
-		
 	}
-	
-	
 	
 	
 	private void setFrame(JFrame aFrame)
@@ -188,8 +162,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	{
 		
 		if(selected instanceof IRPOperation)
-		{
-		
+		{	
 			IRPOperation op = (IRPOperation)selected;
 
 			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
@@ -234,7 +207,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			applyButton.setActionCommand("apply");
 			applyButton.addActionListener(oew);
 			
-			
 			cancelButton.setActionCommand("cancel");
 			cancelButton.addActionListener(oew);
 			
@@ -243,9 +215,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			generateButton.setActionCommand("generate");
 			generateButton.addActionListener(oew);
-			
-			
-			
 			
 			//frame.add(editorPanel);
 			frame.add(buttonPanel,BorderLayout.SOUTH);
@@ -263,20 +232,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				okButton.setEnabled(false);			
 				applyButton.setEnabled(false);
-			}	
-	        
-	        
-	        
-	        
-			
-	        
+			}	           
 		}
 		else
 		{
 			aMainApp.printToRhapsody("no operation - exit");
 		}
-		
-		
 	}
 	
 	
@@ -383,6 +344,15 @@ class StartAutoCompletion extends Thread
 		myAutoComplete.install(myTextArea);
 		timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
+		
+
+		JPopupMenu popup = myTextArea.getPopupMenu();
+	    popup.addSeparator();
+	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
+	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
+	    
+		
+		
 		
 		
 		
@@ -629,7 +599,6 @@ class OpenFeature extends TextAction
         	}
         }
 
-		
 	}
 	
 	private boolean openDeclarationFeature(String aElementName, LocalCompletionProvider aLocalCompletionProvider, IASTNode aNode)
@@ -711,7 +680,7 @@ class OpenFeature extends TextAction
      * @return The filename at the caret position.
      * @throws BadLocationException Shouldn't actually happen.
      */
-    public String getElementNameAtCaret(JTextComponent tc) throws BadLocationException 
+    static public String getElementNameAtCaret(JTextComponent tc) throws BadLocationException 
     {
        int caret = tc.getCaretPosition();
        int start = caret;
@@ -744,11 +713,133 @@ class OpenFeature extends TextAction
        return doc.getText(start, end - start);
     }
     
-    public boolean isElementChar(char ch) {
+    static public boolean isElementChar(char ch) {
         return Character.isLetterOrDigit(ch);
      }
 
 	
 	
+}
+
+class AddDependency extends TextAction
+{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8665373931943623988L;
+	
+	private IRPClass myClass;
+
+	public AddDependency(IRPOperation aOperation) {
+		super("Add Dependency");	
+
+		IRPModelElement element = aOperation.getOwner();
+		if(element instanceof IRPClass)
+		{
+			myClass = (IRPClass)element;
+		}
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		
+		if(myClass==null)
+		{
+			System.out.println("Class not defined!");
+			return;
+		}
+		
+		if(myClass.isReadOnly()==1)
+		{
+			System.out.println("Class is read only");
+			return;
+		}
+		
+		
+		JTextComponent tc = getTextComponent(e);
+		String elementName = null;
+
+        try 
+        {
+           int selStart = tc.getSelectionStart();
+           int selEnd = tc.getSelectionEnd();
+           
+           if (selStart != selEnd) 
+           {
+              elementName = tc.getText(selStart, selEnd - selStart);
+           } 
+           else 
+           {
+              elementName = OpenFeature.getElementNameAtCaret(tc);
+           }
+        } 
+        catch (BadLocationException ble) 
+        {
+           ble.printStackTrace();
+           UIManager.getLookAndFeel().provideErrorFeedback(tc);
+           return;
+        }
+        
+        
+        IRPProject project = myClass.getProject();
+
+        if(project==null)
+        {
+        	System.out.println("Project not defined");
+        	return;
+        }
+        
+        IRPClass foundClass = project.findClass(elementName);
+        
+        if(foundClass == null)
+        {
+        	System.out.println("Class " + elementName + " not found in " + project.getName());
+        	return;
+        }
+        
+        //check if dependeny already there...
+        
+        List<IRPDependency> dependencies = myClass.getDependencies().toList();
+        
+        boolean found = false;
+        for(IRPDependency dependency:dependencies)
+        {
+        	if(dependency.getDependsOn().equals(foundClass))
+        	{
+        		System.out.println("Dependency is already there");
+        		return;
+        	}
+        }
+        
+        IRPDependency newDependency = myClass.addDependencyTo(foundClass);
+        List<IRPStereotype> stereoTypes = project.getAllStereotypes().toList();
+        for(IRPStereotype stereoType:stereoTypes)
+        {
+        	if(stereoType.getName().equals("Usage"))
+        	{
+        		newDependency.addSpecificStereotype(stereoType);
+        		break;
+        	}
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        	
+        
+        
+        
+        
+
+        
+
+	}
+		
 }
 
