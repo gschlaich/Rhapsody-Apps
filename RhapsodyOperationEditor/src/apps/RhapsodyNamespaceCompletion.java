@@ -14,17 +14,23 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 
+import RhapsodyUtilities.RhapsodyOperation;
+
 public class RhapsodyNamespaceCompletion extends BasicCompletion implements RhapsodyClassifier
 {
 	
 	IRPPackage myPackage;
+	private String definedIn;
 	
 	public RhapsodyNamespaceCompletion(CompletionProvider aProvider ,IRPPackage aPackage) 
 	{
 		super(aProvider, aPackage.getNamespace());
 		setSummary(aPackage.getDescriptionPlainText());
 		
+		
 		myPackage = aPackage;
+		
+		definedIn = myPackage.getOwner().getFullPathNameIn();
 	}
 
 	public List<IRPClassifier> getClassifiers()
@@ -57,16 +63,13 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
-		return null;
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
+			return null;
 	}
 	
 	@Override
-	public Icon getIcon() {
-		
-		Icon ret = new ImageIcon(myPackage.getIconFileName().replace('\\', '/'));
-		
-		return ret;
+	public Icon getIcon() {		
+		return RhapsodyOperation.getIcon(myPackage);
 	}
 	
 	private List<IRPClassifier> getNestedClassifiers(IRPPackage aPackage) {
@@ -87,7 +90,7 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	}
 	
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		return getNestedClassifiers(myPackage);
 		
 	}
@@ -97,11 +100,86 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		
 		return false;
 	}
+	
+	
 
 	@Override
 	public IRPModelElement getElement() {
 		
 		return myPackage;
 	}
+	
+	/**
+	 * Returns where this variable is defined.
+	 *
+	 * @return Where this variable is defined.
+	 * @see #setDefinedIn(String)
+	 */
+	public String getDefinedIn() {
+		return definedIn;
+	}
+	
+	/**
+	 * Returns the name of this variable.
+	 *
+	 * @return The name.
+	 */
+	public String getName() {
+		return getReplacementText();
+	}
+
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSummary() {
+		StringBuilder sb = new StringBuilder();
+		possiblyAddDescription(sb);
+		possiblyAddDefinedIn(sb);
+		return sb.toString();
+	}
+
+
+	
+	
+
+	/**
+	 * Adds some HTML describing where this package is defined, if this
+	 * information is known.
+	 *
+	 * @param sb The buffer to append to.
+	 */
+	protected void possiblyAddDefinedIn(StringBuilder sb) {
+		if (definedIn!=null) {
+			sb.append("<hr>Defined in:"); // TODO: Localize me
+			sb.append(" <em>").append(definedIn).append("</em>");
+		}
+	}
+
+
+	/**
+	 * Adds the description text as HTML to a buffer, if a description is
+	 * defined.
+	 *
+	 * @param sb The buffer to append to.
+	 * @return Whether there was a description to add.
+	 */
+	protected boolean possiblyAddDescription(StringBuilder sb) {
+		if (getShortDescription()!=null) {
+			sb.append("<hr><br>");
+			sb.append(getShortDescription());
+			sb.append("<br><br><br>");
+			return true;
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isValue() {
+		// TODO Auto-generated method stub
+		return true;
+	}
+
 
 }

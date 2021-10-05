@@ -15,26 +15,47 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 
 	
 	IRPClassifier myClassifier;
-	boolean myIsReference;
+	IRPClassifier myClassifierPointer;
+	boolean myIsPointer = false;
+	boolean myIsValue = true;
 	
-	public RhapsodyLocalVariableCompletion(AbstractCompletionProvider provider,String aName,IRPClassifier aClassifier, boolean aIsReference ) {
+	public RhapsodyLocalVariableCompletion(AbstractCompletionProvider provider,String aName,IRPClassifier aClassifier, boolean aIsPointer ) {
 		super(provider, aName, aClassifier.getName());
 		myClassifier = aClassifier;
-		myIsReference = aIsReference;
+		myClassifierPointer = aClassifier;
 		setDefinedIn("local");
+		
+
 		
 		
 		RhapsodyClassifierCompletion c = new RhapsodyClassifierCompletion(provider, myClassifier);
-		if(myIsReference==false)
+		
+		if(aIsPointer==false)
 		{
-			myIsReference = c.isPointer();
+			myIsPointer = c.isPointer();
+			myIsValue = c.isValue();
+	
+			myClassifier = c.getIRPClassifier(false);
+			myClassifierPointer = c.getIRPClassifier(true);
 		}
-		myClassifier = c.getIRPClassifier();
+		else
+		{
+			myIsPointer = true;
+			myIsValue = false;
+			myClassifier = null;
+			myClassifierPointer = c.getIRPClassifier(false);
+		}
+		
 			
 	}
 	
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) 
+	{
+		if(aPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 
@@ -42,18 +63,31 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 	public boolean isPointer() {
 		// TODO Auto-generated method stub
 		
-		return myIsReference;
+		return myIsPointer;
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
+		{
+			return null;
+		}
+		return classifier.getNestedClassifiers().toList();
 	}
 
 	@Override
 	public IRPModelElement getElement() {	
 		return myClassifier;
+	}
+
+	
+
+	@Override
+	public boolean isValue() {
+		
+		return myIsValue;
 	}
 
 

@@ -59,7 +59,7 @@ public class SourceCompletionProvider extends DefaultCompletionProvider {
 		}
 		
 		
-		System.out.println("import completion for " + text );
+		//System.out.println("import completion for " + text );
 		
 		return null;
 		

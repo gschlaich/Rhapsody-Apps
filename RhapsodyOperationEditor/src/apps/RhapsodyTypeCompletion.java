@@ -2,6 +2,8 @@ package apps;
 
 import java.util.List;
 
+import javax.swing.Icon;
+
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 
@@ -10,6 +12,7 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPType;
 
 import RhapsodyUtilities.ASTHelper;
+import RhapsodyUtilities.RhapsodyOperation;
 
 public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyClassifier {
 
@@ -24,11 +27,13 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 			ASTHelper.parseLanguageEnumType(myType);
 		}
 		
+		setIcon( RhapsodyOperation.getIcon(myType));
+		
 	}
 	
-
+	
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		
 		return myType.getTypedefBaseType();
 	}
@@ -40,7 +45,7 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	}
 
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -48,6 +53,12 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 	@Override
 	public boolean isPointer() {
 		return false;
+	}
+
+
+	@Override
+	public boolean isValue() {
+		return true;
 	}
 
 }

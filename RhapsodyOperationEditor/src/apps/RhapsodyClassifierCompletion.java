@@ -4,6 +4,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.text.JTextComponent;
 
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.BasicCompletion;
@@ -13,7 +14,10 @@ import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPEnumerationLiteral;
 import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiation;
+import com.telelogic.rhapsody.core.IRPTemplateInstantiationParameter;
+import com.telelogic.rhapsody.core.IRPTemplateParameter;
 import com.telelogic.rhapsody.core.IRPType;
 
 import RhapsodyUtilities.ASTHelper;
@@ -23,11 +27,16 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 
 	
 	private IRPClassifier myClassifier;
+	private IRPClassifier myClassifierPointer;
 	private boolean myIsPointer = false;
+	private boolean myIsValue = true;
+	
+	private String definedIn;
+
 	
 	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier)
 	{
-		this(aProvider,aClassifier,false);
+		this(aProvider,aClassifier,true);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -35,8 +44,11 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 		super(aProvider, aClassifier.getName());
 		myClassifier = aClassifier;	
 		setSummary( aClassifier.getDescription());
-		setIcon(new ImageIcon(myClassifier.getIconFileName().replace('\\', '/')));
+		setShortDescription(aClassifier.getDescription());
 		
+		setIcon(RhapsodyOperation.getIcon(aClassifier));
+		
+		setDefinedIn(aClassifier.getOwner().getFullPathNameIn());
 		
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)aProvider;
 		if(abstractProvider!=null)
@@ -73,15 +85,43 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				{
 					setSummary(rType.getDeclaration().replace("%s", rType.getName()));
 					String classifierName = ASTHelper.parseLanguageTypedef(rType);
+
 					if(classifierName!=null)
 					{
 						IRPClassifier rc = RhapsodyOperation.findClassifier(myClassifier, classifierName);
-						myIsPointer = ASTHelper.isPointer(rType);
+						myClassifier = rc;
+						if(ASTHelper.isPointer(rType))
+						{
+							myIsPointer = true;
+							myIsValue = false;
+						}
+						
 						if(rc!=null)
 						{
+							if(rc.isATemplate()==1)
+							{
+								if(rc.findNestedElement("operator->", "Operation")!=null)
+								{
+									List<String> templateInstantiations = ASTHelper.getLanguageTypedefTemplateArguments(rType);
+									if(templateInstantiations!=null && templateInstantiations.size()!=0)
+									{
+										for(String cs:templateInstantiations)
+										{
+											IRPClassifier trc = RhapsodyOperation.findClassifier(rType, cs);
+											if(trc!=null)
+											{
+												myClassifierPointer = trc;
+												myIsPointer=true;
+												break;
+											}
+										}
+									}	
+								}
+								
+							}
 							
-							myClassifier = rc;
 						}
+
 					}
 				}
 			}
@@ -101,6 +141,9 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				if(rType.isPointer()==1)
 				{
 					myIsPointer = true;
+					myClassifierPointer = myClassifier;
+					myClassifier = null;
+					myIsValue = false;
 				}
 			}
 	
@@ -116,19 +159,30 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				if((t!=null)&&(t instanceof IRPClassifier))
 				{
 					myClassifier = (IRPClassifier)t;
-					System.out.println(myClassifier.getName());
 					
+					if(myClassifier.findNestedElement("operator->", "Operation")!=null)
+					{
+						List<IRPTemplateInstantiationParameter> params = ti.getTemplateInstantiationParameters().toList();// t.getTemplateParameters().toList();
+						if(params.isEmpty()==false)
+						{
+							//hacky
+							IRPTemplateInstantiationParameter param = params.get(0);
+							myClassifierPointer = param.getType();
+							myIsPointer = true;
+						}	
+					}
 				}
 			}
 		}
-			
-		
-		
 	}
 
 	@Override
-	public IRPClassifier getIRPClassifier() {
+	public IRPClassifier getIRPClassifier(boolean aPointer) {
 		
+		if(aPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 	
@@ -144,14 +198,109 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public List<IRPClassifier> getNestedClassifiers() {
-		return getIRPClassifier().getNestedClassifiers().toList();
+	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
+		IRPClassifier classifier = getIRPClassifier(aPointer);
+		if(classifier==null)
+		{
+			return null;
+		}
+		return classifier.getNestedClassifiers().toList();
 	}
 
 	@Override
 	public IRPModelElement getElement() {
 		return myClassifier;
 	}
+	
+	
+	
+	/**
+	 * Returns where this variable is defined.
+	 *
+	 * @return Where this variable is defined.
+	 * @see #setDefinedIn(String)
+	 */
+	public String getDefinedIn() {
+		return definedIn;
+	}
+	
+	/**
+	 * Returns the name of this variable.
+	 *
+	 * @return The name.
+	 */
+	public String getName() {
+		return getReplacementText();
+	}
 
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSummary() {
+		StringBuilder sb = new StringBuilder();
+		possiblyAddDescription(sb);
+		possiblyAddDefinedIn(sb);
+		return sb.toString();
+	}
+
+
+	
+	
+
+	/**
+	 * Adds some HTML describing where this variable is defined, if this
+	 * information is known.
+	 *
+	 * @param sb The buffer to append to.
+	 */
+	protected void possiblyAddDefinedIn(StringBuilder sb) {
+		if (definedIn!=null) {
+			sb.append("<hr>Defined in:"); // TODO: Localize me
+			sb.append(" <em>").append(definedIn).append("</em>");
+		}
+	}
+
+
+	/**
+	 * Adds the description text as HTML to a buffer, if a description is
+	 * defined.
+	 *
+	 * @param sb The buffer to append to.
+	 * @return Whether there was a description to add.
+	 */
+	protected boolean possiblyAddDescription(StringBuilder sb) {
+		if (getShortDescription()!=null) {
+			sb.append("<hr><br>");
+			sb.append(getShortDescription());
+			sb.append("<br><br><br>");
+			return true;
+		}
+		return false;
+	}
+
+
+	/**
+	 * Sets where this variable is defined.
+	 *
+	 * @param definedIn Where this variable is defined.
+	 * @see #getDefinedIn()
+	 */
+	public void setDefinedIn(String definedIn) {
+		this.definedIn = definedIn;
+	}
+
+	@Override
+	public boolean isValue() {
+		
+		return myIsValue;
+	}
+
+	
+	
+
+
+	
 
 }
