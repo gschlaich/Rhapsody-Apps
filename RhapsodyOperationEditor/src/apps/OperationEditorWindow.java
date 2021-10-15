@@ -27,6 +27,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.swing.text.BadLocationException;
@@ -49,8 +50,15 @@ import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.FunctionCompletion;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.Style;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.telelogic.rhapsody.core.IRPApplication;
@@ -75,6 +83,9 @@ import RhapsodyUtilities.RhapsodyOperation;
 import com.ibm.rhapsody.apps.App;
 
 import apps.ClassifierCompletionProvider.visibility;
+import parser.CppParser;
+import parser.RhapsodyTokenMaker;
+import parser.TypeParser;
 
 public class OperationEditorWindow extends JRootPane implements HyperlinkListener, ActionListener, SyntaxConstants { 
 
@@ -84,6 +95,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private IRPApplication myApplication;
+	private SyntaxScheme myScheme;
+	
 	
 	/**
 	 * 
@@ -94,6 +107,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		myApplication = rhapsody;
 		mySelectedOperation = null;
+		
+		AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
+		atmf.putMapping("text/RhapsodyCPP", "parser.RhapsodyTokenMaker");
+		
+		
+		
 		
 	    if(selected instanceof IRPOperation )
 		{
@@ -117,8 +136,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
 		
+		
+		
+		
 		myTextArea = new RSyntaxTextArea(rows, cols);
 	    myTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
+	    //myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
 	    myTextArea.setCaretPosition(0);
 		myTextArea.requestFocusInWindow();
 		myTextArea.setMarkOccurrences(true);
@@ -127,17 +150,29 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
-		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
 		
-		startAutoCompletion.start();
 
 		contentPane.add(new RTextScrollPane(myTextArea, true));
 	    
 		setContentPane(contentPane);
 
 		myTextArea.setText(mySelectedOperation.getBody());
+		
+		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
+		
+		startAutoCompletion.start();
+		
 		myTextArea.convertTabsToSpaces();
 		myTextArea.requestFocusInWindow();
+		
+		setRhapsodyStyle();
+		
+		
+		
+		
+		
+		
+		
 				
 		Runnable focusInWindow = new Runnable() {
 			
@@ -149,6 +184,56 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		};
 		
 		SwingUtilities.invokeLater(focusInWindow);   
+		
+	}
+
+
+	private void setRhapsodyStyle() 
+	{
+		//settings should be similar to rhapsody
+		myTextArea.setBackground(new Color(0xffffff));
+		myTextArea.setCaretColor(new Color(0x000000));
+		myTextArea.setCurrentLineHighlightColor(new Color(0xe8f2fe));
+		myTextArea.setFadeCurrentLineHighlight(false);
+		myTextArea.setMarginLineColor(new Color(0xb0b4b9));
+		myTextArea.setMarkAllHighlightColor(new Color(0x6b8189));
+		myTextArea.setMatchedBracketBorderColor(new Color(0xdbe0cc));
+		myTextArea.setBracketMatchingEnabled(true);
+		myScheme = myTextArea.getSyntaxScheme();
+		
+		int colorComment = 0x30a030;
+		
+		setTokenFgColor(SyntaxScheme.IDENTIFIER, 0x00000);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD, 0x0000ff);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD_2, 0x0000ff);
+		setTokenFgColor(SyntaxScheme.ANNOTATION, 0x80f080);
+		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_EOL, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_MULTILINE, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_MARKUP, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_KEYWORD, 0xae9fbf);
+		setTokenFgColor(SyntaxScheme.DATA_TYPE, 0x4040ff);
+		setTokenFgColor(SyntaxScheme.VARIABLE, 0x5050a0);
+		setTokenFgColor(SyntaxScheme.LITERAL_STRING_DOUBLE_QUOTE, 0xA31515);
+		
+		
+		
+		
+		
+		
+		
+		
+		myTextArea.setSyntaxScheme(myScheme);
+	}
+
+
+	private void setTokenFgColor(int aTokenType, int aColor ) {
+		
+		
+		Style s = myScheme.getStyle(aTokenType);
+		s.foreground = new Color(aColor);
+		myScheme.setStyle(aTokenType, s);
 		
 	}
 	
@@ -177,23 +262,48 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			Toolkit kit = Toolkit.getDefaultToolkit();
 			Image img = kit.createImage(imageName);
 
+			String lufSystem = UIManager.getSystemLookAndFeelClassName();
+			
+			try {
+				UIManager.setLookAndFeel(lufSystem);
+			} catch (ClassNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InstantiationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (UnsupportedLookAndFeelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 			JFrame frame = new JFrame (RhapsodyOperation.getOperation(op));
 			frame.setLayout(new BorderLayout());
 			
 			JPanel buttonPanel = new JPanel();
-		
-			JButton okButton = new JButton("ok");
-			buttonPanel.add(okButton);
-			JButton applyButton = new JButton("Apply");
 			
-			buttonPanel.add(applyButton);
-			JButton cancelButton = new JButton("Cancel");
-			buttonPanel.add(cancelButton);
 			JButton locateButton = new JButton("Locate");
 			buttonPanel.add(locateButton);
-			buttonPanel.setVisible(true);
+		
+			
+			
 			JButton generateButton = new JButton("Generate");
 			buttonPanel.add(generateButton);
+			
+			JButton applyButton = new JButton("Apply");
+			buttonPanel.add(applyButton);
+			
+			JButton okButton = new JButton("ok");
+			buttonPanel.add(okButton);
+			
+			
+			
+			JButton cancelButton = new JButton("Cancel");
+			buttonPanel.add(cancelButton);
+			
 			buttonPanel.setVisible(true);
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,selected);
@@ -300,204 +410,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	}
 
 
-}
-
-class StartAutoCompletion extends Thread
-{
-	private RSyntaxTextArea myTextArea;
-	private AutoCompletion myAutoComplete;
-	private IRPOperation mySelectedOperation;
-	private ClassifierCompletionProvider myClassifierCompletionProvider;
-	private IRPApplication myApplication;
-	
-	public StartAutoCompletion(
-			RSyntaxTextArea aTextArea, 
-			AutoCompletion aAutoComplete, 
-			IRPOperation aSelectedOperation,
-			IRPApplication aApplication) 
-	{
-		myTextArea = aTextArea;
-		myAutoComplete = aAutoComplete;
-		mySelectedOperation = aSelectedOperation;
-		myApplication = aApplication;
-	}
-	
-	
-	public void run()
-	{
-		startAutoComplete();
-	}
-	
-	public void startAutoComplete()
-	{
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-		myApplication.writeToOutputWindow("log", "Start Autocomplete collection at " + timeStamp + "\n");
-		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
-		// Install auto-completion onto our text area.
-		myAutoComplete = new AutoCompletion(provider);
-		myAutoComplete.setListCellRenderer(new CPPCellRenderer());
-		myAutoComplete.setShowDescWindow(true);
-		myAutoComplete.setParameterAssistanceEnabled(true);
-		myAutoComplete.setAutoCompleteEnabled(true);
-		myAutoComplete.setAutoActivationEnabled(true);
-		myAutoComplete.setAutoActivationDelay(750);
-		myAutoComplete.install(myTextArea);
-		timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
-		
-
-		JPopupMenu popup = myTextArea.getPopupMenu();
-	    popup.addSeparator();
-	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
-	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
-	    
-		
-		
-		
-		
-		
-	}
-	
-	
-	/**
-	 * Creates the completion provider for a C editor.  This provider can be
-	 * shared among multiple editors.
-	 * @param aClass 
-	 *
-	 * @return The provider.
-	 */
-	private CompletionProvider createCompletionProvider(IRPOperation selectedOperation) {
-
-		IRPClass selectedClass = (IRPClass) selectedOperation.getOwner();
-		
-		// Create the provider used when typing code.
-		myClassifierCompletionProvider = new ClassifierCompletionProvider(selectedClass, visibility.v_private);
-		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
-		
-		
-		@SuppressWarnings("unchecked")
-		List<IRPArgument> arguments = selectedOperation.getArguments().toList();
-		for(IRPArgument argument : arguments)
-		{
-			RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(myClassifierCompletionProvider, argument);
-			myClassifierCompletionProvider.addCompletion(rac);
-		}
-		
-		createTraceCompletions(myClassifierCompletionProvider);
-		
-		getNameSpaces(myClassifierCompletionProvider, selectedOperation);
-		
-		// The provider used when typing a string.
-		CompletionProvider stringCP = createStringCompletionProvider();
-
-		// The provider used when typing a comment.
-		CompletionProvider commentCP = createCommentCompletionProvider();
-
-		// Create the "parent" completion provider.
-		LanguageAwareCompletionProvider provider = new LanguageAwareCompletionProvider(myClassifierCompletionProvider);
-		provider.setStringCompletionProvider(stringCP);
-		provider.setCommentCompletionProvider(commentCP);
-
-
-		return provider;
-
-	}
-	
-	/**
-	 * Returns the completion provider to use when the caret is in a string.
-	 *
-	 * @return The provider.
-	 * @see #createCodeCompletionProvider()
-	 * @see #createCommentCompletionProvider()
-	 */
-	private CompletionProvider createStringCompletionProvider() {
-		DefaultCompletionProvider cp = new SourceCompletionProvider();
-		cp.addCompletion(new BasicCompletion(cp, "%c", "char", "Prints a character"));
-		cp.addCompletion(new BasicCompletion(cp, "%i", "signed int", "Prints a signed integer"));
-		cp.addCompletion(new BasicCompletion(cp, "%f", "float", "Prints a float"));
-		cp.addCompletion(new BasicCompletion(cp, "%s", "string", "Prints a string"));
-		cp.addCompletion(new BasicCompletion(cp, "%u", "unsigned int", "Prints an unsigned integer"));
-		cp.addCompletion(new BasicCompletion(cp, "%d", "int", "Prints a decimal value"));
-		cp.addCompletion(new BasicCompletion(cp, "\\n", "Newline", "Prints a newline"));
-		return cp;
-	}
-	
-	/**
-	 * Returns the provider to use when in a comment.
-	 *
-	 * @return The provider.
-	 * @see #createCodeCompletionProvider()
-	 * @see #createStringCompletionProvider()
-	 */
-	private CompletionProvider createCommentCompletionProvider() {
-		DefaultCompletionProvider cp = new DefaultCompletionProvider();
-		cp.addCompletion(new BasicCompletion(cp, "TODO:", "A to-do reminder"));
-		cp.addCompletion(new BasicCompletion(cp, "FIXME:", "A bug that needs to be fixed"));
-		cp.addCompletion(new BasicCompletion(cp, "Jira Issue:", "See USM-XXX "));
-		return cp;
-	}
-	
-	private void createTraceCompletions(ClassifierCompletionProvider aCp)
-	{
-		
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_ERROR)", "Error Release Trace in USMMonitor and log file"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_WARNING)", "Warning Release Trace in USMMonitor and log file"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_INFO)"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_ERROR)"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_WARNING)"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_INFO)"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_INFO"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_WARNING"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR"));
-		aCp.addCompletion(new BasicCompletion(aCp, "X_FATAL"));
-		aCp.addCompletion(new BasicCompletion(aCp, "nullptr", "defined value when pointer is null"));
-		aCp.addCompletion(new BasicCompletion(aCp, "static_cast", "static cast of data type"));
-		aCp.addCompletion(new BasicCompletion(aCp, "dynamic_cast", "dynamic cast of data type"));
-		aCp.addCompletion(new BasicCompletion(aCp, "const_cast", "const cast of data type"));
-	
-
-	}
-	
-	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
-		IRPModelElement e =  selected;
-	    
-	    while((e instanceof IRPPackage)==false)
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    //System.out.println(e.getPropertyValue("CPP_CG.Package.DefineNameSpace"));
-	    while(e.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("False"))
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    if (e instanceof IRPPackage)
-    	{
-    		IRPPackage p = (IRPPackage)e;
-    		
-    		RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p);
-    		provider.addCompletion(rnc);
-    		
-    		
-    		//System.out.println(e.getName());
-    		List<IRPDependency> dependencies = p.getDependencies().toList();
-    		for(IRPDependency dependency: dependencies)
-    		{
-    			if(dependency.getDependsOn() instanceof IRPPackage)
-    			{
-    				p = (IRPPackage) dependency.getDependsOn();
-    				rnc = new RhapsodyNamespaceCompletion(provider, p); 
-    				provider.addCompletion(rnc);
-    			}
-    				
-    		}    		
-    	}
-	}
-
-
-	
-	
 }
 
 

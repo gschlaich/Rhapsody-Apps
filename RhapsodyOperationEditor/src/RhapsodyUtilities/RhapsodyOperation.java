@@ -194,8 +194,8 @@ public class RhapsodyOperation {
 		IRPClassifier ret = null;
 		
 		IRPModelElement owner = aClassifier.getOwner();
-		//System.out.println("Owner: " + owner.getName());
-		//System.out.println("Classifier:" + aClassifier.getName());
+		System.out.println("Owner: " + owner.getName());
+		System.out.println("Classifier:" + aClassifier.getName());
 		
 		
 		if(owner instanceof IRPPackage)

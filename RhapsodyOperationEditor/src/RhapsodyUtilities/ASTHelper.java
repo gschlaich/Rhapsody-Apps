@@ -15,6 +15,8 @@ import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier.IASTEnumerator;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeSelector;
 import org.eclipse.cdt.core.dom.ast.IASTPointer;
+import org.eclipse.cdt.core.dom.ast.IASTProblem;
+import org.eclipse.cdt.core.dom.ast.IASTProblemExpression;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTQualifiedName;
@@ -49,7 +51,7 @@ public class ASTHelper
 {
 	
 	private static String DefaultFilename = "SourceCode.cpp";
-	private static String Prolog = "void checkOperation() { \n";
+	public final static String Prolog = "void checkOperation() { \n";
 	private static String Epilog = "\n }";
 	
 	
@@ -305,6 +307,14 @@ public class ASTHelper
 		
 	}
 	
+	public static List<IASTProblem> getProblems(String aText)
+	{
+		IASTTranslationUnit unit = getTranslationUnit(aText, null);		
+		ASTNode<IASTProblem> parseProblem = new ASTNode<IASTProblem>(IASTProblem.class);
+		return parseProblem.getNodes(unit);
+		
+	}
+	
 
 	
 
@@ -342,6 +352,30 @@ class ASTNode<T>
 		}
 			
 		return null;
+	}
+	
+	public List<T> getNodes(IASTNode aNode)
+	{
+		ArrayList<T> ret = new ArrayList<T>();
+		if(aNode==null)
+		{
+			return ret;
+		}
+		
+		if(myType.isAssignableFrom(aNode.getClass()))
+		{
+			ret.add(myType.cast(aNode));
+			return ret;
+		}
+		
+		IASTNode[] nodes = aNode.getChildren();
+		for(IASTNode node : nodes)
+		{
+			ret.addAll(getNodes(node));
+		}
+		
+		return ret;
+			
 	}
 }
 
