@@ -13,6 +13,8 @@ import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
+import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
@@ -73,9 +75,7 @@ public class StartAutoCompletion extends Thread
 		instance = this;
 		
 		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-		 //start parser
-	    CppParser parser = new CppParser();
-	    myTextArea.addParser(parser);
+		
 	    
 		myApplication.writeToOutputWindow("log", "Start Autocomplete collection at " + timeStamp + "\n");
 		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
@@ -91,15 +91,28 @@ public class StartAutoCompletion extends Thread
 		timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
 		
+		
+		 //start parser
+	    CppParser parser = new CppParser(myClassifierCompletionProvider);
+	    myTextArea.addParser(parser);
+		
 
 		JPopupMenu popup = myTextArea.getPopupMenu();
 	    popup.addSeparator();
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
 	    
-	    TypeParser tp = new TypeParser(myAutoComplete);
+	    FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
+	   
 	    
 	    myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
+	   
+	    
+	   
+		
+		myTextArea.setCodeFoldingEnabled(true);
+	   
+	    //TypeParser tp = new TypeParser(myAutoComplete);
 	    //myTextArea.addParser(tp);
 	    
 	    

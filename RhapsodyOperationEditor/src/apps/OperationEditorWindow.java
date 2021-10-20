@@ -145,7 +145,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	    myTextArea.setCaretPosition(0);
 		myTextArea.requestFocusInWindow();
 		myTextArea.setMarkOccurrences(true);
-		myTextArea.setCodeFoldingEnabled(true);
+		myTextArea.setCodeFoldingEnabled(false);
 		myTextArea.setTabsEmulated(true);
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
@@ -703,13 +703,23 @@ class AddDependency extends TextAction
         	return;
         }
         
-        IRPClass foundClass = project.findClass(elementName);
-        
+        IRPModelElement foundClass = project.findNestedElementRecursive(elementName, "Class");
+ 
+        if(foundClass == null)
+        {
+        	foundClass = project.findNestedElementRecursive(elementName, "Type");
+        }
+        	
         if(foundClass == null)
         {
         	System.out.println("Class " + elementName + " not found in " + project.getName());
         	return;
         }
+        
+        
+        
+        
+        
         
         //check if dependeny already there...
         

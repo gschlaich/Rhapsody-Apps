@@ -68,15 +68,18 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 							tokenType = Token.FUNCTION;
 							if(start>2)
 							{
-								if(start-1=='.')
+								if(array[start-1]=='.')
 								{
 									tokenType = Token.IDENTIFIER;
 								}
-								else if((start-1=='>')&&(start-2=='-'))
+								else if(array[start-1]=='>')
 								{
-									tokenType = Token.IDENTIFIER;
+									if(array[start-2]=='-')
+									{
+										tokenType = Token.IDENTIFIER;
+									}
 								}
-								else if((start-1==':')&&(start-2==':'))
+								else if((array[start-1]==':')&&(array[start-2]==':'))
 								{
 									tokenType = Token.IDENTIFIER;
 								}

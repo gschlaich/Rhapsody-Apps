@@ -254,7 +254,7 @@ public class ASTHelper
 	}
 	
 
-	private static IASTTranslationUnit getTranslationUnit(IRPType aType) {
+	public static IASTTranslationUnit getTranslationUnit(IRPType aType) {
 		String declaration = aType.getDeclaration();
 		declaration = declaration.replace("%s", (aType.getName()+";"));
 		IASTTranslationUnit translationUnit = getTranslationUnit(declaration,null);
@@ -307,15 +307,27 @@ public class ASTHelper
 		
 	}
 	
-	public static List<IASTProblem> getProblems(String aText)
+	public static List<IASTProblem> getProblems(IASTNode aNode)
 	{
-		IASTTranslationUnit unit = getTranslationUnit(aText, null);		
+			
 		ASTNode<IASTProblem> parseProblem = new ASTNode<IASTProblem>(IASTProblem.class);
-		return parseProblem.getNodes(unit);
+		return parseProblem.getNodes(aNode);
 		
 	}
 	
-
+	public static List<IASTSimpleDeclaration> getSimpleDeclarations(IASTNode aNode)
+	{
+		ASTNode<IASTSimpleDeclaration> parseSimpleDeclaration = new ASTNode<IASTSimpleDeclaration>(IASTSimpleDeclaration.class);
+		return parseSimpleDeclaration.getNodes(aNode);
+	}
+	
+	public static List<IASTNamedTypeSpecifier> getNamedTypeSpecifiers(IASTNode aNode)
+	{
+		ASTNode<IASTNamedTypeSpecifier> parseNamedTypeSpecifiers = new ASTNode<IASTNamedTypeSpecifier>(IASTNamedTypeSpecifier.class);
+		return parseNamedTypeSpecifiers.getNodes(aNode);
+	}
+	
+	
 	
 
 }

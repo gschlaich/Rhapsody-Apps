@@ -1,5 +1,6 @@
 package parser;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.event.HyperlinkEvent;
@@ -7,7 +8,10 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
 import org.eclipse.cdt.core.dom.ast.ExpansionOverlapsBoundaryException;
+import org.eclipse.cdt.core.dom.ast.IASTName;
+import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTNodeLocation;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTProblemExpression;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -22,16 +26,20 @@ import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 
 import RhapsodyUtilities.ASTHelper;
+import apps.ClassifierCompletionProvider;
+import apps.StartAutoCompletion;
 
 public class CppParser extends AbstractParser implements ExtendedHyperlinkListener
 {
 
 	private DefaultParseResult myResult = null;
 	private RSyntaxDocument myDoc = null;
+	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	
-	public CppParser()
+	public CppParser(ClassifierCompletionProvider aProvider)
 	{
 		myResult = new DefaultParseResult(this);
+		myClassifierCompletionProvider = aProvider;
 	}
 	
 	@Override
@@ -49,8 +57,8 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 		try 
 		{
 			text = aDoc.getText(0, aDoc.getLength());
-			
-			List<IASTProblem> problems = ASTHelper.getProblems(text);
+			IASTTranslationUnit unit = ASTHelper.getTranslationUnit(text, null);	
+			List<IASTProblem> problems = ASTHelper.getProblems(unit);
 			
 			for(IASTProblem problem : problems)
 			{
@@ -91,6 +99,39 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				myResult.addNotice(notice);
 				
 			}
+			
+			List<String> typeNames = new ArrayList<String>();
+			List<IASTNamedTypeSpecifier> namedSpecifiers = ASTHelper.getNamedTypeSpecifiers(unit);
+			for(IASTNamedTypeSpecifier namedSpecifier:namedSpecifiers)
+			{
+				DefaultParserNotice notice = null;
+				IASTName astName = namedSpecifier.getName().getLastName();
+				String typeName = astName.toString();
+				if(myClassifierCompletionProvider.getFirstCompletion(typeName)==null)
+				{
+					//unknown type
+					
+					int length = 0;
+					int pos = 0;
+					
+					IASTNodeLocation[] locations = astName.getNodeLocations();
+					
+					if(locations.length>0)
+					{
+						length = locations[0].getNodeLength();
+						pos = locations[0].getNodeOffset()-ASTHelper.Prolog.length();
+					}
+					
+					
+					
+					System.out.println("unknown type: " + typeName);
+					notice = new DefaultParserNotice(this, "unknown type: "+typeName, 0, pos, length);
+					myResult.addNotice(notice);
+				}
+				
+			}
+			
+			
 			System.out.println("End problems");
 			
 		} 

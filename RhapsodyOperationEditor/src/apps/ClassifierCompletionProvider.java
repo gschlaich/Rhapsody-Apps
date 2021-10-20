@@ -255,31 +255,22 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	@Override
 	public void addCompletion(Completion aCompletion)
 	{
-		
-		
-		
-		if(getFirstCompletion(aCompletion.getInputText())==null)
+		if(isInserted(aCompletion)==false)
 		{
 			myCompletionCount++;
-			
 			Date date = new Date();
-			
 			double time = (double)(date.getTime()-myStartTime)/1000;
-			
-			
-			
-			
 			System.out.println("Insert(" + myCompletionCount +") " + aCompletion.getInputText() + ": " + time);
-			super.addCompletion(aCompletion);
+			try
+			{
+				super.addCompletion(aCompletion);
+			}
+			catch(Exception e)
+			{
+				boolean breakHere = true;
+			}
+			completions.sort(comparator);
 		}
-		/*
-		
-		if(completions.contains(aCompletion))
-		{
-			return;
-		}
-		super.addCompletion(aCompletion);
-		*/
 		
 	}
 	
@@ -553,6 +544,54 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	public List<Completion> getCompletions()
 	{
 		return completions;
+	}
+	
+	
+	private boolean isInserted(Completion aCompletion)
+	{
+		if(aCompletion.getInputText().isEmpty())
+		{
+			return true;
+		}
+		if(aCompletion instanceof RhapsodyClassifier)
+		{
+			RhapsodyClassifier arc = (RhapsodyClassifier)aCompletion;
+			
+			IRPModelElement are = arc.getElement();
+			if(are==null)
+			{
+				System.out.println("no element in :" + aCompletion.getInputText());
+				return true;
+			}
+			
+			List<Completion> foundCompletions = super.getCompletionByInputText(aCompletion.getInputText());
+			if(foundCompletions==null)
+			{
+				return false;
+			}
+			for(Completion c:foundCompletions)
+			{
+				if(c instanceof RhapsodyClassifier)
+				{
+					RhapsodyClassifier rc = (RhapsodyClassifier)c;
+					IRPModelElement re = rc.getElement();
+					if(re.equals(are))
+					{
+						return true;	
+					}
+					
+				}
+				
+			}
+		}
+		else
+		{
+			if(getFirstCompletion(aCompletion.getInputText())!=null)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	
