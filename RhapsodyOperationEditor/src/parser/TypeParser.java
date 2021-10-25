@@ -14,6 +14,7 @@ public class TypeParser extends AbstractParser {
 	public TypeParser( AutoCompletion aAutoCompletion)
 	{
 		myAutocompletion = aAutoCompletion;
+		
 	}
 
 	@Override

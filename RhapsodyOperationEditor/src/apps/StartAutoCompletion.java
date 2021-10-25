@@ -106,14 +106,10 @@ public class StartAutoCompletion extends Thread
 	   
 	    
 	    myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
-	   
-	    
-	   
-		
+	
 		myTextArea.setCodeFoldingEnabled(true);
 	   
-	    //TypeParser tp = new TypeParser(myAutoComplete);
-	    //myTextArea.addParser(tp);
+	    
 	    
 	    
 	    

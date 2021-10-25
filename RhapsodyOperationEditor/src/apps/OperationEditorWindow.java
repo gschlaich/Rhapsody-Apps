@@ -9,6 +9,7 @@ import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -65,8 +66,10 @@ import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPCodeGenerator;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComponent;
+import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -76,6 +79,7 @@ import com.telelogic.rhapsody.core.IRPSearchManager;
 import com.telelogic.rhapsody.core.IRPSearchQuery;
 import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPType;
+import com.telelogic.rhapsody.core.IRPUnit;
 
 import RhapsodyUtilities.ASTHelper;
 import RhapsodyUtilities.RhapsodyOperation;
@@ -167,12 +171,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		setRhapsodyStyle();
 		
-		
-		
-		
-		
-		
-		
+
 				
 		Runnable focusInWindow = new Runnable() {
 			
@@ -216,13 +215,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		setTokenFgColor(SyntaxScheme.DATA_TYPE, 0x4040ff);
 		setTokenFgColor(SyntaxScheme.VARIABLE, 0x5050a0);
 		setTokenFgColor(SyntaxScheme.LITERAL_STRING_DOUBLE_QUOTE, 0xA31515);
-		
-		
-		
-		
-		
-		
-		
+
 		
 		myTextArea.setSyntaxScheme(myScheme);
 	}
@@ -287,20 +280,25 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			JButton locateButton = new JButton("Locate");
 			buttonPanel.add(locateButton);
+			
+			JButton explorerButton = new JButton("Explorer");
+			buttonPanel.add(explorerButton);
+			
+			JButton updateButton = new JButton("Update");
+			buttonPanel.add(updateButton);
 		
-			
-			
 			JButton generateButton = new JButton("Generate");
 			buttonPanel.add(generateButton);
+			
+			JButton roundTripButton = new JButton("RoundTrip");
+			buttonPanel.add(roundTripButton);
 			
 			JButton applyButton = new JButton("Apply");
 			buttonPanel.add(applyButton);
 			
 			JButton okButton = new JButton("ok");
 			buttonPanel.add(okButton);
-			
-			
-			
+				
 			JButton cancelButton = new JButton("Cancel");
 			buttonPanel.add(cancelButton);
 			
@@ -326,6 +324,15 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			generateButton.setActionCommand("generate");
 			generateButton.addActionListener(oew);
 			
+			explorerButton.setActionCommand("explorer");
+			explorerButton.addActionListener(oew);
+			
+			updateButton.setActionCommand("update");
+			updateButton.addActionListener(oew);
+			
+			roundTripButton.setActionCommand("roundTrip");
+			roundTripButton.addActionListener(oew);
+			
 			//frame.add(editorPanel);
 			frame.add(buttonPanel,BorderLayout.SOUTH);
 			frame.setIconImage(img);
@@ -336,6 +343,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 
 			Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 			frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+			
 		    
 	        frame.setVisible(true);
 	        if(op.isReadOnly()!=0)
@@ -405,6 +413,124 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				
 				myApplication.generateElements(generateCollection);
 			}
+		}
+		if(command.equals("explorer"))
+		{
+			IRPUnit unit = mySelectedOperation.getSaveUnit();
+			String directory = unit.getCurrentDirectory();
+			String sbsFile = unit.getFilename();
+			System.out.println(directory);
+			try 
+			{
+				Runtime.getRuntime().exec("explorer.exe /select," + directory+"\\"+sbsFile);
+			} 
+			catch (IOException e1) 
+			{
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		if(command.equals("update")||command.equals("generate"))
+		{
+			//may start in a worker thread?
+			IRPModelElement element = mySelectedOperation.getOwner();
+			if (element instanceof IRPClass) 
+			{
+				IRPClass selectedClass = (IRPClass) element;
+				ClassifierCompletionProvider provider = StartAutoCompletion.GetClassifierCompletionProvider();
+				provider.createClassCompletion(selectedClass, visibility.v_private);
+			}
+		}
+		if(command.equals("roundTrip"))
+		{
+			IRPModelElement element = mySelectedOperation.getOwner();
+			if (element instanceof IRPClass) 
+			{
+				IRPClass selectedClass = (IRPClass) element;
+				IRPUnit unit = selectedClass.getSaveUnit();
+				
+				IRPUnit unitOwner = unit.getOwner().getSaveUnit();
+				
+				System.out.println(unitOwner.getCurrentDirectory()+"\\"+unitOwner.getFilename());
+				System.out.println(unit.getFilename());
+				
+				
+				List<IRPProject> projects = myApplication.getProjects().toList();
+				
+				IRPComponent activeComponent = null;
+				
+				for(IRPProject project:projects)
+				{
+					activeComponent = project.getActiveComponent();
+					if(activeComponent!=null)
+					{
+						break;
+					}
+				}
+				
+				
+				String filePath = null;
+				
+				List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
+				for(IRPConfiguration configuration:configurations)
+				{
+					filePath = configuration.getDirectory(1,"");
+				}
+				
+				List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
+				boolean isActive = false;
+				
+				IRPModelElement selectedElement = selectedClass;
+				
+				while(selectedElement.getOwner() instanceof IRPClass)
+				{
+					
+					selectedElement = selectedElement.getOwner();
+				}
+				
+				for(IRPModelElement scopeElement: scopeElements)
+				{
+					if(scopeElement.equals(selectedElement))
+					{
+						filePath = filePath+"\\"+selectedElement.getName()+".cpp";
+						isActive = true;
+						break;
+					}	
+				}
+				
+				if(isActive==false)
+				{
+					System.out.println("file not found / component not active: " + selectedClass.getName());
+					return;
+				}
+				
+				System.out.println(filePath);
+				
+				String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
+				
+				String className = selectedClass.getName();
+				IRPModelElement owner = selectedClass.getOwner();
+				while(owner instanceof IRPClass)
+				{
+					className = owner.getName()+"::"+className;
+					owner = owner.getOwner();
+				}
+				
+				String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, mySelectedOperation.getName());
+				if(roundTripText!=null)
+				{
+					myTextArea.setText(roundTripText);
+				}
+				else
+				{
+					
+					System.out.println("An error occured. Roundtrip not possible");
+				}
+	
+
+			}
+			
+			
 		}
 		
 	}

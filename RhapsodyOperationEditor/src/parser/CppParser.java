@@ -1,5 +1,6 @@
 package parser;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ import org.fife.ui.rsyntaxtextarea.parser.DefaultParserNotice;
 import org.fife.ui.rsyntaxtextarea.parser.ExtendedHyperlinkListener;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
+import org.fife.ui.rsyntaxtextarea.parser.ParserNotice.Level;
 
 import RhapsodyUtilities.ASTHelper;
 import apps.ClassifierCompletionProvider;
@@ -126,6 +128,8 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 					
 					System.out.println("unknown type: " + typeName);
 					notice = new DefaultParserNotice(this, "unknown type: "+typeName, 0, pos, length);
+					notice.setColor(Color.ORANGE);
+					
 					myResult.addNotice(notice);
 				}
 				

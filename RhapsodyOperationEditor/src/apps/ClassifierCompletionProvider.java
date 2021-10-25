@@ -90,7 +90,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	
 	@SuppressWarnings("unchecked")
-	private void createClassCompletion(IRPClassifier aClassifier, visibility aVisibility) {
+	public void createClassCompletion(IRPClassifier aClassifier, visibility aVisibility) {
 
 		//IRPCollection operations = myClass.getOperations();
 		
