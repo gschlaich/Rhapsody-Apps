@@ -28,7 +28,7 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 
 		
 		
-		RhapsodyClassifierCompletion c = new RhapsodyClassifierCompletion(provider, myClassifier);
+		RhapsodyClassifierCompletion c = new RhapsodyClassifierCompletion(provider, myClassifier,true);
 		
 		if(aIsPointer==false)
 		{

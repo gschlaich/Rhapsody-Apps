@@ -75,8 +75,23 @@ public class MainApp extends App {
 		}
 		catch (Exception ex)
 		{
+			
+			
 			ex.printStackTrace();
-			println(ex.toString());
+			
+			StackTraceElement[] stes = ex.getStackTrace();
+			
+			printToRhapsody("--------------------------- Exception occured: ");
+			for(StackTraceElement ste:stes)
+			{
+				printToRhapsody(ste.toString());
+			}
+			
+			
+			printToRhapsody(ex.toString());
+			printToRhapsody("--------------------------- Exception end");
+			
+			
 		}
 		
 		

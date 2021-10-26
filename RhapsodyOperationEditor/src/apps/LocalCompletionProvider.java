@@ -112,7 +112,8 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	private void collectCompletions(IASTNode aNode)
 	{
         
-        if(aNode instanceof IASTSimpleDeclaration)
+        // TODO: rewrite this operation ( use ASTHelper )
+		if(aNode instanceof IASTSimpleDeclaration)
         {
         	boolean isPointer = false;
         	IASTSimpleDeclaration simpleDeclaration = (IASTSimpleDeclaration)aNode;

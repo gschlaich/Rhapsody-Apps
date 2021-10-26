@@ -14,6 +14,6 @@
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/autocomplete-3.1.1.jar" sourcepath="/AutoComplete"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox.common.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/rsyntaxtextarea-3.1.2.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/rsyntaxtextarea-3.1.2.jar" sourcepath="/RSyntaxTextArea"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
