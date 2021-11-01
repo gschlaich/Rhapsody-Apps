@@ -6,6 +6,7 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.text.BadLocationException;
 
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
@@ -13,8 +14,12 @@ import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
 import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
+import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
+import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.GutterIconInfo;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
@@ -24,8 +29,10 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 
+import RhapsodyUtilities.RhapsodyOperation;
 import apps.ClassifierCompletionProvider.visibility;
 import parser.CppParser;
+import parser.DiffParser;
 import parser.TypeParser;
 
 public class StartAutoCompletion extends Thread
@@ -92,9 +99,6 @@ public class StartAutoCompletion extends Thread
 		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
 		
 		
-		 //start parser
-	    CppParser parser = new CppParser(myClassifierCompletionProvider);
-	    myTextArea.addParser(parser);
 		
 
 		JPopupMenu popup = myTextArea.getPopupMenu();
@@ -108,14 +112,32 @@ public class StartAutoCompletion extends Thread
 	    myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
 	
 		myTextArea.setCodeFoldingEnabled(true);
-	   
-	    
-	    
-	    
-	    
-	    
-	
 		
+		TaskTagParser taskTagParser = new TaskTagParser();
+		myTextArea.addParser(taskTagParser);
+		
+		
+		
+		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
+		
+		
+		gutter.setBookmarkIcon(RhapsodyOperation.getIcon("RhapsodyIcons_110.gif")); 
+		gutter.setBookmarkingEnabled(true); 
+		
+		
+		 //start parser
+	    CppParser parser = new CppParser(myClassifierCompletionProvider, gutter);
+	    myTextArea.addParser(parser);
+		
+		
+		DiffParser diffParser = new DiffParser(myTextArea.getText(),gutter);
+		myTextArea.addParser(diffParser);
+		
+		
+		
+		
+		
+	
 		
 		
 	}

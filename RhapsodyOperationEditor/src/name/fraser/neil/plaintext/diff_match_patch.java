@@ -283,7 +283,7 @@ public class diff_match_patch {
    * @param deadline Time when the diff should be complete by.
    * @return Linked List of Diff objects.
    */
-  private LinkedList<Diff> diff_lineMode(String text1, String text2,
+  public LinkedList<Diff> diff_lineMode(String text1, String text2,
                                          long deadline) {
     // Scan the text on a line-by-line basis first.
     LinesToCharsResult a = diff_linesToChars(text1, text2);

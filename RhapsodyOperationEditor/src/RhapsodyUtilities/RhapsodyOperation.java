@@ -252,6 +252,11 @@ public class RhapsodyOperation {
 		return myIconProvider.getIcon(eElement);
 	}
 	
+	public static Icon getIcon(String aFileName)
+	{
+		return myIconProvider.getIcon(aFileName);
+	}
+	
 }
 
 

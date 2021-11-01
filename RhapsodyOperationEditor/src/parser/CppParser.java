@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.Icon;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
@@ -26,8 +27,11 @@ import org.fife.ui.rsyntaxtextarea.parser.ExtendedHyperlinkListener;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
 import org.fife.ui.rsyntaxtextarea.parser.ParserNotice.Level;
+import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.GutterIconInfo;
 
 import RhapsodyUtilities.ASTHelper;
+import RhapsodyUtilities.RhapsodyOperation;
 import apps.ClassifierCompletionProvider;
 import apps.StartAutoCompletion;
 
@@ -37,11 +41,19 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	private DefaultParseResult myResult = null;
 	private RSyntaxDocument myDoc = null;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
+	private Gutter myGutter = null;
+	private Icon myErrorIcon = null;
+	private List<GutterIconInfo> myInfos = null;
 	
-	public CppParser(ClassifierCompletionProvider aProvider)
+	
+	public CppParser(ClassifierCompletionProvider aProvider, Gutter aGutter)
 	{
 		myResult = new DefaultParseResult(this);
 		myClassifierCompletionProvider = aProvider;
+		myGutter = aGutter;
+		myErrorIcon = RhapsodyOperation.getIcon("RhapsodyIcons_110.gif");
+		myInfos = new ArrayList<GutterIconInfo>();
+		
 	}
 	
 	@Override
@@ -54,6 +66,12 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 		myResult.clearNotices();
 		// Always spell check all lines, for now.
 		myResult.setParsedLines(0, lineCount-1);
+		
+		for(GutterIconInfo info:myInfos)
+		{
+			myGutter.removeTrackingIcon(info);
+		}
+		
 		
 		String text;
 		try 
@@ -84,11 +102,19 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				int pos = problem.getSourceStart()-ASTHelper.Prolog.length();
 				int line = problem.getSourceLineNumber()-2;
 				
-				System.out.println(problem.getSourceLineNumber()+ " " + pos + " " + length);
+				System.out.println(line+ " " + pos + " " + length);
+				
+				GutterIconInfo info = myGutter.addLineTrackingIcon(line,myErrorIcon, message);
+				myInfos.add(info);
 				
 				DefaultParserNotice notice = null;
 				
-				if(length==0)
+				if(line>lineCount)
+				{
+					line = lineCount;
+				}
+				
+				if(length<=0)
 				{
 					notice = new DefaultParserNotice(this, message, line);
 				}

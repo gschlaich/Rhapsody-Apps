@@ -447,14 +447,24 @@ public class ASTHelper
 				sl.add(line);
 			}
 			
-
-			String checkTab = sl.get(1);
+			int i=0;
+			int tabPos = -1;
 			
-			int tabPos = checkTab.indexOf('/');
+			for(String checkTab:sl)
+			{
+				tabPos = checkTab.indexOf("//#[");
+				if(tabPos!=(-1))
+				{
+					break;
+				}
+				i++;
+			}
+			
+			i++;
 			
 			System.out.println(tabPos);
 			
-			for(int i=2; i<(sl.size()-2); i++)
+			for(; i<(sl.size()-2); i++)
 			{
 				line = sl.get(i);
 				if(line.length()>tabPos)

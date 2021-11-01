@@ -96,6 +96,17 @@ public class IconProvider {
 		}
 	}
 	
+	public Icon getIcon(String aFileName)
+	{
+		Image image = getImage(aFileName);
+		if(image!=null)
+		{
+			return new ImageIcon(image);
+		}
+		
+		return new ImageIcon();
+	}
+	
 	private Image getImage(String aFileName)
 	{
 		Image image = myImageMap.get(aFileName);

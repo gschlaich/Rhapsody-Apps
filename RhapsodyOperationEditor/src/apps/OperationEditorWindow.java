@@ -52,6 +52,7 @@ import org.fife.ui.autocomplete.FunctionCompletion;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Style;
@@ -60,6 +61,8 @@ import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.GutterIconInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.telelogic.rhapsody.core.IRPApplication;
@@ -82,6 +85,7 @@ import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 
 import RhapsodyUtilities.ASTHelper;
+import RhapsodyUtilities.IconProvider;
 import RhapsodyUtilities.RhapsodyOperation;
 
 import com.ibm.rhapsody.apps.App;
@@ -154,13 +158,28 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
+		RTextScrollPane scrollPane = new RTextScrollPane(myTextArea, true);
+		ErrorStrip es = new ErrorStrip(myTextArea);
+		JPanel temp = new JPanel(new BorderLayout());
+		temp.add(scrollPane);
+		temp.add(es, BorderLayout.LINE_END);
 		
 
-		contentPane.add(new RTextScrollPane(myTextArea, true));
-	    
+		contentPane.add(temp);
+		
+		
+		
+		
+		
 		setContentPane(contentPane);
-
+		scrollPane.setIconRowHeaderEnabled(true);
+		
 		myTextArea.setText(mySelectedOperation.getBody());
+		
+		
+		
+
+		
 		
 		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
 		
@@ -308,7 +327,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			oew.setFrame(frame);
 						
 			frame.add(oew);
-			
+
 			okButton.setActionCommand("ok");
 			okButton.addActionListener(oew);
 			
