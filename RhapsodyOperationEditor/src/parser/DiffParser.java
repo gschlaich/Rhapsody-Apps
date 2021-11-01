@@ -146,19 +146,35 @@ public class DiffParser extends AbstractParser {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					
-					
-					
 					myResult.addNotice(cn);
-					
-					
-					
-					
-					
+
 					i++;
 					lineNr++;
 					
 				}
+				if(targetLines.isEmpty())
+				{
+					//delete...
+					ChangeNotice cn = new ChangeNotice(this, type.toString(), target.getPosition());
+					cn.setLevel(ParserNotice.Level.WARNING);
+					cn.setShowInEditor(false);
+					cn.setColor(COLOR);
+					
+					try 
+					{
+						GutterIconInfo info = myGutter.addLineTrackingIcon(lineNr,myChangedIcon, type.toString());
+						myInfos.add(info);
+						
+						
+					} 
+					catch (BadLocationException e) 
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					myResult.addNotice(cn);
+				}
+				
 				
 				
 	
@@ -172,85 +188,7 @@ public class DiffParser extends AbstractParser {
 			e.printStackTrace();
 		}
 	    
-	    /*
 	    
-	    System.out.println("Start Diff:");
-	    for(int i = 0; i<currentLines.size(); ++i)
-	    {
-	    	boolean change = false;
-	    	String currentLine = currentLines.get(i);
-	    	String origLine = "";
-	    	int indexOrig = i;
-	    	if((indexOrig<myOrigLines.size())&&(indexOrig>=0))
-	    	{
-	    		origLine = myOrigLines.get(indexOrig);
-	    	}
-	    	
-    		//check if line removed
-    		int j = offset+i;
-    		for(;j<myOrigLines.size();++j)
-    		{
-    			String line = myOrigLines.get(j);
-    			if(currentLine.equals(line))
-    			{
-    				break;
-    			}
-    		}
-    		
-    		if(j == offset+i)
-    		{
-    			//equal
-    		}
-    		else if(j==myOrigLines.size())
-    		{
-    			j = offset+i;
-    			for(;j>=0;--j)
-    			{
-    				String line = myOrigLines.get(j);
-    				if(currentLine.equals(line))
-    				{
-    					break;
-    				}
-    			}
-    			if(j<0)
-    			{
-    				change = true;
-    				
-    			}
-    			else
-    			{
-    				offset = j-i;
-    				change = true;
-    				
-    			}
-    		}
-    		else
-    		{
-    			
-    			offset = j-i;
-    			change = true;
-    			
-    		}
-    		
-    		if(change==true)
-    		{
-    			if((origLine.trim().isEmpty()&&currentLine.trim().isEmpty())==false)
-				{
-    				System.out.println("Line " + (i+1) + " Offset: " + offset +" Change!");
-    				ChangeNotice pn = new ChangeNotice(this, "Line " + (i+1) + ": Changed from: \n"+ origLine +"\n to: \n" + currentLine, i);
-    				pn.setLevel(ParserNotice.Level.WARNING);
-    				pn.setShowInEditor(false);
-    				pn.setColor(COLOR);
-    				myResult.addNotice(pn);
-				}
-    		}
-    		
-    		
-		    	
-	    }
-	    
-	    System.out.println("End Diff");
-	  	*/
 	    
 		return myResult;
 	}
