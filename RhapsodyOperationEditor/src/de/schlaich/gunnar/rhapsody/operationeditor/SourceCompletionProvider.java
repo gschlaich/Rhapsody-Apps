@@ -1,8 +1,6 @@
 package de.schlaich.gunnar.rhapsody.operationeditor;
 
 import java.awt.Point;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.text.BadLocationException;
@@ -12,7 +10,6 @@ import javax.swing.text.JTextComponent;
 
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.fife.ui.autocomplete.Util;
 
 public class SourceCompletionProvider extends DefaultCompletionProvider {
 	

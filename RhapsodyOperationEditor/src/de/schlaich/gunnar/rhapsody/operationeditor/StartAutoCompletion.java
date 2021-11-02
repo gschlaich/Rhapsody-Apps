@@ -6,8 +6,6 @@ import java.util.List;
 
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
-import javax.swing.text.BadLocationException;
-
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
@@ -19,8 +17,6 @@ import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
 import org.fife.ui.rtextarea.Gutter;
-import org.fife.ui.rtextarea.GutterIconInfo;
-
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
@@ -31,7 +27,6 @@ import com.telelogic.rhapsody.core.IRPPackage;
 
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
-import de.schlaich.gunnar.parser.TypeParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyArgumentCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyNamespaceCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
@@ -251,6 +246,7 @@ public class StartAutoCompletion extends Thread
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
 		IRPModelElement e =  selected;
 	    

@@ -4,28 +4,18 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JRootPane;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -36,67 +26,41 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
 
-import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTExpression;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTExpressionStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionCallExpression;
 import org.fife.ui.autocomplete.AutoCompletion;
-import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
-import org.fife.ui.autocomplete.CompletionProvider;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.fife.ui.autocomplete.FunctionCompletion;
-import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
-import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
-import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Style;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
-import org.fife.ui.rsyntaxtextarea.Theme;
-import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
-import org.fife.ui.rtextarea.Gutter;
-import org.fife.ui.rtextarea.GutterIconInfo;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.telelogic.rhapsody.core.IRPApplication;
-import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
-import com.telelogic.rhapsody.core.IRPCodeGenerator;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
-import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
-import com.telelogic.rhapsody.core.IRPSearchManager;
-import com.telelogic.rhapsody.core.IRPSearchQuery;
 import com.telelogic.rhapsody.core.IRPStereotype;
-import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 
 import apps.MainApp;
 
-import com.ibm.rhapsody.apps.App;
-
-import de.schlaich.gunnar.parser.CppParser;
-import de.schlaich.gunnar.parser.RhapsodyTokenMaker;
-import de.schlaich.gunnar.parser.TypeParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
-import de.schlaich.gunnar.rhapsody.utilities.IconProvider;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 public class OperationEditorWindow extends JRootPane implements HyperlinkListener, ActionListener, SyntaxConstants { 
@@ -105,7 +69,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private AutoCompletion myAutoComplete;
 	private JFrame myFrame;
 	private IRPOperation mySelectedOperation;
-	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private IRPApplication myApplication;
 	private SyntaxScheme myScheme;
 	
@@ -136,8 +99,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	    	return;
 	    }
 	   
-	    IRPClassifier selectedClass = (IRPClassifier)mySelectedOperation.getOwner();
-
 	    int factorW = 7;
 	    int factorH = 16;
 	    
@@ -386,6 +347,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
@@ -656,21 +618,7 @@ class OpenFeature extends TextAction
 
 	}
 	
-	private boolean openDeclarationFeature(String aElementName, LocalCompletionProvider aLocalCompletionProvider, IASTNode aNode)
-	{
-		Completion c;
-		IASTNode parent = aNode.getParent();
-		if(parent==null)
-		{
-			return false;
-		}
-		
-		
-		
-		return false;
-	}
-	
-
+	@SuppressWarnings("unchecked")
 	private boolean openOperationFeature(String aElementName, LocalCompletionProvider aLocalCompletionProvider, IASTNode aNode) 
 	{
 		Completion c;
@@ -796,6 +744,7 @@ class AddDependency extends TextAction
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public void actionPerformed(ActionEvent e) 
 	{
@@ -859,16 +808,11 @@ class AddDependency extends TextAction
         	return;
         }
         
-        
-        
-        
-        
-        
+
         //check if dependeny already there...
         
         List<IRPDependency> dependencies = myClass.getDependencies().toList();
         
-        boolean found = false;
         for(IRPDependency dependency:dependencies)
         {
         	if(dependency.getDependsOn().equals(foundClass))

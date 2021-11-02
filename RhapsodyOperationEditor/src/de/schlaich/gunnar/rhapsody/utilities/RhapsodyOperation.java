@@ -1,25 +1,15 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
-import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
-import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
-import com.telelogic.rhapsody.core.RPClassifier;
 
 public class RhapsodyOperation {
 	
@@ -189,6 +179,7 @@ public class RhapsodyOperation {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	public static IRPClassifier findClassifier(IRPClassifier aClassifier, String aName)
 	{
 		IRPClassifier ret = null;

@@ -3,13 +3,10 @@ package de.schlaich.gunnar.rhapsody.completion;
 import java.util.List;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
-import com.telelogic.rhapsody.core.IRPAssociationClass;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPInstance;

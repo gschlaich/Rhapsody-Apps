@@ -3,8 +3,6 @@ package de.schlaich.gunnar.rhapsody.completion;
 import java.util.List;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
@@ -12,8 +10,6 @@ import org.fife.ui.autocomplete.VariableCompletion;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
-import com.telelogic.rhapsody.core.IRPVariable;
-
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 public class RhapsodyAttributeCompletion extends VariableCompletion implements RhapsodyClassifier {

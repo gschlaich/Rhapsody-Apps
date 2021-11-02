@@ -1,7 +1,6 @@
 package de.schlaich.gunnar.rhapsody.completionprovider;
 
 import java.awt.Point;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -16,13 +15,7 @@ import javax.swing.text.JTextComponent;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.fife.ui.autocomplete.FunctionCompletion;
-import org.fife.ui.autocomplete.ParameterizedCompletion;
 import org.fife.ui.autocomplete.Util;
-import org.fife.ui.autocomplete.VariableCompletion;
-import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
-
-import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -31,13 +24,9 @@ import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPEvent;
 import com.telelogic.rhapsody.core.IRPEventReception;
 import com.telelogic.rhapsody.core.IRPGeneralization;
-import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
-import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRelation;
-import com.telelogic.rhapsody.core.IRPStatechart;
-
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyAttributeCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifierCompletion;
@@ -258,6 +247,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void addCompletion(Completion aCompletion)
 	{
@@ -273,7 +263,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			}
 			catch(Exception e)
 			{
-				boolean breakHere = true;
+				e.printStackTrace();
 			}
 			completions.sort(comparator);
 		}
@@ -301,6 +291,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	/**
 	 * {@inheritDoc}
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	protected List<Completion> getCompletionsImpl(JTextComponent comp) 
 	{
@@ -511,7 +502,6 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				}
 				else
 				{
-					boolean stop=true;
 				}
 				
 			}

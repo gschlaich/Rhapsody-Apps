@@ -9,15 +9,11 @@ import javax.swing.event.HyperlinkEvent;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
 
-import org.eclipse.cdt.core.dom.ast.ExpansionOverlapsBoundaryException;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
-import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeLocation;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
-import org.eclipse.cdt.core.dom.ast.IASTProblemExpression;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
-import org.eclipse.cdt.internal.core.dom.parser.ASTProblem;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.parser.AbstractParser;
@@ -25,13 +21,10 @@ import org.fife.ui.rsyntaxtextarea.parser.DefaultParseResult;
 import org.fife.ui.rsyntaxtextarea.parser.DefaultParserNotice;
 import org.fife.ui.rsyntaxtextarea.parser.ExtendedHyperlinkListener;
 import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
-import org.fife.ui.rsyntaxtextarea.parser.Parser;
-import org.fife.ui.rsyntaxtextarea.parser.ParserNotice.Level;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
-import de.schlaich.gunnar.rhapsody.operationeditor.StartAutoCompletion;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
@@ -39,7 +32,6 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 {
 
 	private DefaultParseResult myResult = null;
-	private RSyntaxDocument myDoc = null;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private Gutter myGutter = null;
 	private Icon myErrorIcon = null;
@@ -60,7 +52,6 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	public ParseResult parse(RSyntaxDocument aDoc, String aStyle) 
 	{
 		
-		myDoc = aDoc;
 		Element root = aDoc.getDefaultRootElement();
 		int lineCount = root.getElementCount();
 		myResult.clearNotices();
@@ -128,7 +119,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				
 			}
 			
-			List<String> typeNames = new ArrayList<String>();
+			new ArrayList<String>();
 			List<IASTNamedTypeSpecifier> namedSpecifiers = ASTHelper.getNamedTypeSpecifiers(unit);
 			for(IASTNamedTypeSpecifier namedSpecifier:namedSpecifiers)
 			{

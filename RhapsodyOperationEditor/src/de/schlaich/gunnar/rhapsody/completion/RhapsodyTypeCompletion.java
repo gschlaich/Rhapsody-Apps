@@ -2,8 +2,6 @@ package de.schlaich.gunnar.rhapsody.completion;
 
 import java.util.List;
 
-import javax.swing.Icon;
-
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 

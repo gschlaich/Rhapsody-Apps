@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
-
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
-import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 
@@ -42,6 +39,7 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	{
 		List<IRPClassifier> ret = new ArrayList<IRPClassifier>();
 		
+		@SuppressWarnings("unchecked")
 		List<IRPModelElement> elements = aPackage.getNestedClassifiers().toList();
 		for(IRPModelElement element:elements)
 		{

@@ -12,11 +12,9 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 public class Listener implements CaretListener, ActionListener {
 
 	
-	private RSyntaxTextArea textArea;
 	private Timer t;
 
 	public Listener(RSyntaxTextArea textArea) {
-		this.textArea = textArea;
 		textArea.addCaretListener(this);
 		t = new Timer(650, this);
 		t.setRepeats(false);

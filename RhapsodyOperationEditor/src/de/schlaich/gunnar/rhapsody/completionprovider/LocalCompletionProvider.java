@@ -35,10 +35,6 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 {
 	
 	private ClassifierCompletionProvider itsCompletionProvider = null;
-	private String myOperationBody;
-	
-	
-	
 	public LocalCompletionProvider(String aOperationBody, ClassifierCompletionProvider aCompletionProvider) {
 		itsCompletionProvider = aCompletionProvider;
 		createLocalCompletions(aOperationBody,aCompletionProvider);
@@ -46,7 +42,6 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	
 	private void createLocalCompletions(String aOperationBody, ClassifierCompletionProvider aCompletionProvider)
 	{
-		myOperationBody = aOperationBody;
 		IASTTranslationUnit astTranslationUnit = ASTHelper.getTranslationUnit(aOperationBody, aCompletionProvider);
 		if(astTranslationUnit!=null)
 		{
@@ -73,6 +68,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 		super.addCompletion(aCompletion);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<Completion> getCompletionByInputText(String inputText) {
 		
@@ -205,7 +201,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         		else
         		{
         			Completion c = itsCompletionProvider.getFirstCompletion(classifierName);
-        			IASTDeclarator[] declarators =  simpleDeclaration.getDeclarators();
+        			simpleDeclaration.getDeclarators();
             		if((c!=null)&&(c instanceof RhapsodyClassifierCompletion))
             		{
             			RhapsodyClassifier rcc = (RhapsodyClassifier)c;

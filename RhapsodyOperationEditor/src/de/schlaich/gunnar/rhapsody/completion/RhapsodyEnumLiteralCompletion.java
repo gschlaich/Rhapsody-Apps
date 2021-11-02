@@ -59,6 +59,7 @@ public class RhapsodyEnumLiteralCompletion extends BasicCompletion implements Rh
 		return myEnumerationLiteral;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<IRPClassifier> getNestedClassifiers(boolean aPointer) {
 		IRPClassifier classifier = getIRPClassifier(aPointer);
