@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+App-Id: a88aa2e9ec024d32bf8544e0ea3de6fc
+Main-Class: apps.MainApp
+App-TriggerDriven: none
+App-Trigger: 
+App-Class-Path: C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar C:/Rhapsody/v840/Share/RhapsodyApps/libs/jdom.jar C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar
+OMRoot-Hint: C:/Rhapsody/v840/Share
+ProjectName-Hint: PlantUMLView
+JavaAPI-Hint: C:/Rhapsody/v840/Share/JavaAPI
