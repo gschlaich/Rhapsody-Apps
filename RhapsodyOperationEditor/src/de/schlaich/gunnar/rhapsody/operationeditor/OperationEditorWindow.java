@@ -422,80 +422,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		if(command.equals("roundTrip"))
 		{
-			IRPModelElement element = mySelectedOperation.getOwner();
-			if (element instanceof IRPClass) 
-			{
-				IRPClass selectedClass = (IRPClass) element;
-				IRPUnit unit = selectedClass.getSaveUnit();
+			
+				String roundTripText = ASTHelper.getSourceText(mySelectedOperation, myApplication);
 				
-				IRPUnit unitOwner = unit.getOwner().getSaveUnit();
-				
-				System.out.println(unitOwner.getCurrentDirectory()+"\\"+unitOwner.getFilename());
-				System.out.println(unit.getFilename());
-				
-				
-				List<IRPProject> projects = myApplication.getProjects().toList();
-				
-				IRPComponent activeComponent = null;
-				
-				for(IRPProject project:projects)
-				{
-					activeComponent = project.getActiveComponent();
-					if(activeComponent!=null)
-					{
-						break;
-					}
-				}
-				
-				
-				String filePath = null;
-				
-				List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
-				for(IRPConfiguration configuration:configurations)
-				{
-					filePath = configuration.getDirectory(1,"");
-				}
-				
-				List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
-				boolean isActive = false;
-				
-				IRPModelElement selectedElement = selectedClass;
-				
-				while(selectedElement.getOwner() instanceof IRPClass)
-				{
-					
-					selectedElement = selectedElement.getOwner();
-				}
-				
-				for(IRPModelElement scopeElement: scopeElements)
-				{
-					if(scopeElement.equals(selectedElement))
-					{
-						filePath = filePath+"\\"+selectedElement.getName()+".cpp";
-						isActive = true;
-						break;
-					}	
-				}
-				
-				if(isActive==false)
-				{
-					System.out.println("file not found / component not active: " + selectedClass.getName());
-					return;
-				}
-				
-				System.out.println(filePath);
-				
-				String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
-				
-				String className = selectedClass.getName();
-				IRPModelElement owner = selectedClass.getOwner();
-				while(owner instanceof IRPClass)
-				{
-					className = owner.getName()+"::"+className;
-					owner = owner.getOwner();
-				}
-				
-				String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, mySelectedOperation.getName());
 				if(roundTripText!=null)
 				{
 					myTextArea.setText(roundTripText);
@@ -507,7 +436,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 	
 
-			}
+			
 			
 			
 		}

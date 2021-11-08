@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.management.InstanceAlreadyExistsException;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -77,11 +78,11 @@ public class MainApp extends App {
      */	
 	public static void main(String[] args) 
 	{
-		/*
+		
 		MainApp app = new MainApp();
 		app.invokeFromMain();
-		*/
 		
+		/*
 		Display display = new Display();
 	    Shell shell = new Shell(display);
 	    shell.setText("StackOverflow");
@@ -105,6 +106,7 @@ public class MainApp extends App {
 	        }
 	    }
 	    display.dispose();
+	    */
 	}
 
 
@@ -167,13 +169,7 @@ public class MainApp extends App {
 			
 		});
 	    
-	        
-
 	       
-
-	        
-	
-		
 		
 		
 	}		
