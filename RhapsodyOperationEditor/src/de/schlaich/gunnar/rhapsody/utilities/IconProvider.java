@@ -15,6 +15,7 @@ import javax.swing.ImageIcon;
 
 import com.telelogic.rhapsody.core.IRPModelElement;
 
+
 public class IconProvider {
 	
 	private Map<String, Image> myImageMap;
@@ -34,9 +35,9 @@ public class IconProvider {
 		
 	}
 	
-	private void setPath(String aPath)
+	public void setPath(String aPath)
 	{
-		if(myPath==null)
+		//if(myPath==null)
 		{
 			File file = new File(aPath);
 			myPath = file.getParent();
@@ -46,8 +47,15 @@ public class IconProvider {
 	
 	public Icon getIcon(IRPModelElement aElement)
 	{
-		String backgroundPath = aElement.getIconFileName();
 		
+		
+		String backgroundPath = aElement.getIconFileName();
+		//return only icon when its a *.ico ...
+		if(backgroundPath.endsWith(".ico"))
+		{
+			return new ImageIcon();
+		}
+
 		setPath(backgroundPath);
 		
 		String backgroundFileName = getFilename(backgroundPath);

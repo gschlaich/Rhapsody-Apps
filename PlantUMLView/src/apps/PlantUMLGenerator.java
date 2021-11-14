@@ -38,6 +38,7 @@ public class PlantUMLGenerator {
 	
 	private String myPlantUml;
 	private int myRootLevel;
+	private boolean myFromDiagram;
 	
 	private List<String> myClasses = new ArrayList<String>();
 			
@@ -58,6 +59,8 @@ public class PlantUMLGenerator {
 	public PlantUMLGenerator(IRPModelElement aIRPElement) 
 	{
 		myRootLevel = 2;
+		myFromDiagram = false;
+		
 		
 		StringBuffer plantStringBuffer = new StringBuffer();
 		
@@ -69,6 +72,7 @@ public class PlantUMLGenerator {
 		}
 		else if(aIRPElement instanceof IRPDiagram)
 		{
+			myFromDiagram = true;
 			generate((IRPDiagram) aIRPElement, plantStringBuffer, myRootLevel);
 		}
 		else
@@ -589,13 +593,13 @@ public class PlantUMLGenerator {
 		//at the moment only classes..
 		if((dependent instanceof IRPClass)&&(dependsOn instanceof IRPClass))
 		{
-			generate((IRPClassifier)dependent,aPlantStringBuffer,0);
-			generate((IRPClassifier)dependsOn,aPlantStringBuffer,0);
+			generate((IRPClassifier)dependent,aPlantStringBuffer,aLevel+1);
+			generate((IRPClassifier)dependsOn,aPlantStringBuffer,aLevel+1);
 		}
 		else if((dependent instanceof IRPPackage)&&(dependsOn instanceof IRPPackage))
 		{
-			generate((IRPPackage)dependent,aPlantStringBuffer,0);
-			generate((IRPPackage)dependsOn,aPlantStringBuffer,0);
+			generate((IRPPackage)dependent,aPlantStringBuffer,aLevel+1);
+			generate((IRPPackage)dependsOn,aPlantStringBuffer,aLevel+1);
 		}
 		else
 		{

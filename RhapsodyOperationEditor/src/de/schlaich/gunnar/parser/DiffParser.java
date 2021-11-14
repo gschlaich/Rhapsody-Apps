@@ -27,6 +27,7 @@ import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.DeltaType;
 import com.github.difflib.patch.Patch;
 
+import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 public class DiffParser extends AbstractParser {
@@ -42,34 +43,13 @@ public class DiffParser extends AbstractParser {
 	public DiffParser(String aOrigDoc, Gutter aGutter) 
 	{
 		myResult = new DefaultParseResult(this);
-		myOrigLines = getLines(aOrigDoc);
+		myOrigLines = ASTHelper.getLines(aOrigDoc);
 		myGutter = aGutter;
 		myChangedIcon = RhapsodyOperation.getIcon("RhapsodyIcons_111.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
 	}
 
-	private List<String> getLines(String aText) 
-	{
-		List<String> ret = null;
-		try
-		{		
-			BufferedReader origBR = new BufferedReader(new StringReader(aText));
-			String line;
-			ret= new ArrayList<String>();
-			while((line = origBR.readLine())!=null)
-			{
-				line = line.trim();
-				ret.add(line);
-			}
-		} 
-		catch (IOException e) 
-		{
-			
-			e.printStackTrace();
-		}
-		
-		return ret;
-	}
+	
 
 	@Override
 	public ParseResult parse(RSyntaxDocument aDoc, String style) 
@@ -95,7 +75,7 @@ public class DiffParser extends AbstractParser {
 			e.printStackTrace();
 		}
 		
-	    List<String> currentLines = getLines(currentDoc);
+	    List<String> currentLines = ASTHelper.getLines(currentDoc);
 	       
 	    try 
 	    {

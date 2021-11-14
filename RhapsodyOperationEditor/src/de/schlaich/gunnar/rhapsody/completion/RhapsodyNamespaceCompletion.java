@@ -22,7 +22,9 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	public RhapsodyNamespaceCompletion(CompletionProvider aProvider ,IRPPackage aPackage) 
 	{
 		super(aProvider, aPackage.getNamespace());
-		setSummary(aPackage.getDescriptionPlainText());
+		
+		setSummary( aPackage.getDescription());
+		setShortDescription(aPackage.getDescription());
 		
 		
 		myPackage = aPackage;

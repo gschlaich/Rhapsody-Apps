@@ -43,9 +43,16 @@ import org.eclipse.cdt.internal.core.parser.scanner.CharArray;
 import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
 import org.eclipse.core.runtime.CoreException;
 
+import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPComponent;
+import com.telelogic.rhapsody.core.IRPConfiguration;
+import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
+import com.telelogic.rhapsody.core.IRPUnit;
 
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifierCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
@@ -270,6 +277,32 @@ public class ASTHelper
 		return qualifiedName.getLastName().toString();
 	}
 	
+	public static List<String> getLines(String aText) 
+	{
+		List<String> ret = null;
+		try
+		{		
+			BufferedReader origBR = new BufferedReader(new StringReader(aText));
+			String line;
+			ret= new ArrayList<String>();
+			while((line = origBR.readLine())!=null)
+			{
+				line = line.trim();
+				
+				line.replace((char)0x09, ' ');
+				
+				ret.add(line);
+			}
+		} 
+		catch (IOException e) 
+		{
+			
+			e.printStackTrace();
+		}
+		
+		return ret;
+	}
+	
 	
 
 	
@@ -406,9 +439,7 @@ public class ASTHelper
 		
 		try
 		{
-			
-			
-		
+
 			InputStream in = new FileInputStream(aPath);
 			
 			byte[] bbody = new byte[length];
@@ -449,8 +480,6 @@ public class ASTHelper
 			
 			i++;
 			
-			System.out.println(tabPos);
-			
 			for(; i<(sl.size()-2); i++)
 			{
 				line = sl.get(i);
@@ -487,6 +516,84 @@ public class ASTHelper
 		}
 		
 		return "";
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	public static String getSourceText(IRPOperation aOperation, IRPApplication aApplication)
+	{
+		
+		IRPModelElement element = aOperation.getOwner();
+		if (element instanceof IRPClass==false) 
+		{
+			System.out.println("owner of operation is not a class!");
+			return null;
+		}
+		
+		IRPClass selectedClass = (IRPClass) element;
+		IRPUnit unit = selectedClass.getSaveUnit();
+		
+		IRPUnit unitOwner = unit.getOwner().getSaveUnit();
+			
+		List<IRPProject> projects = aApplication.getProjects().toList();
+		
+		IRPComponent activeComponent = null;
+		
+		for(IRPProject project:projects)
+		{
+			activeComponent = project.getActiveComponent();
+			if(activeComponent!=null)
+			{
+				break;
+			}
+		}
+		String filePath = null;
+		
+		List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
+		for(IRPConfiguration configuration:configurations)
+		{
+			filePath = configuration.getDirectory(1,"");
+		}
+		
+		List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
+		boolean isActive = false;
+		
+		IRPModelElement selectedElement = selectedClass;
+		
+		while(selectedElement.getOwner() instanceof IRPClass)
+		{
+			
+			selectedElement = selectedElement.getOwner();
+		}
+		
+		for(IRPModelElement scopeElement: scopeElements)
+		{
+			if(scopeElement.equals(selectedElement))
+			{
+				filePath = filePath+"\\"+selectedElement.getName()+".cpp";
+				isActive = true;
+				break;
+			}	
+		}
+		
+		if(isActive==false)
+		{
+			System.out.println("file not found / component not active: " + selectedClass.getName());
+			return null;
+		}
+		
+		String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
+		
+		String className = selectedClass.getName();
+		IRPModelElement owner = selectedClass.getOwner();
+		while(owner instanceof IRPClass)
+		{
+			className = owner.getName()+"::"+className;
+			owner = owner.getOwner();
+		}
+		
+		String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, aOperation.getName());
+		return roundTripText;
 	}
 	
 	

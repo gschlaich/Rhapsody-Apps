@@ -75,7 +75,12 @@ public class RhapsodyLocalVariableCompletion extends VariableCompletion implemen
 	}
 
 	@Override
-	public IRPModelElement getElement() {	
+	public IRPModelElement getElement() 
+	{	
+		if(myIsPointer)
+		{
+			return myClassifierPointer;
+		}
 		return myClassifier;
 	}
 

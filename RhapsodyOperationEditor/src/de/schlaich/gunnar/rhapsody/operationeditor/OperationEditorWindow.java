@@ -7,11 +7,15 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -26,6 +30,8 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
 
+import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.Imaging;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTExpression;
@@ -230,8 +236,37 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			String imageName = op.getIconFileName();
 			imageName = imageName.replace("\\", "/");
-			Toolkit kit = Toolkit.getDefaultToolkit();
-			Image img = kit.createImage(imageName);
+			
+			List<BufferedImage> icons = new ArrayList<BufferedImage>();
+			File f = new File(imageName);
+			try 
+			{
+				icons = Imaging.getAllBufferedImages(f);
+				
+			} 
+			catch (ImageReadException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} 
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+				
+				//icons =  ICODecoder.read(f);
+			
+			Image img = null;
+			
+			if(icons.size()>0)
+			{
+				img = icons.get(icons.size()-1);
+			}
+			
+			
+			//Toolkit kit = Toolkit.getDefaultToolkit();
+			//Image img = kit.createImage(imageName);
 
 			String lufSystem = UIManager.getSystemLookAndFeelClassName();
 			
@@ -313,7 +348,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			//frame.add(editorPanel);
 			frame.add(buttonPanel,BorderLayout.SOUTH);
-			frame.setIconImage(img);
+			if(img!=null)
+			{
+				frame.setIconImage(img);
+			}
+			
 		    frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
 		    //frame.getContentPane().add (new OperationEditorWindow(rhapsody,selected));
 		    frame.pack();
@@ -332,7 +371,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		else
 		{
-			aMainApp.printToRhapsody("no operation - exit");
+			//aMainApp.printToRhapsody("no operation - exit");
 		}
 	}
 	
@@ -422,80 +461,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		if(command.equals("roundTrip"))
 		{
-			IRPModelElement element = mySelectedOperation.getOwner();
-			if (element instanceof IRPClass) 
-			{
-				IRPClass selectedClass = (IRPClass) element;
-				IRPUnit unit = selectedClass.getSaveUnit();
+			
+				String roundTripText = ASTHelper.getSourceText(mySelectedOperation, myApplication);
 				
-				IRPUnit unitOwner = unit.getOwner().getSaveUnit();
-				
-				System.out.println(unitOwner.getCurrentDirectory()+"\\"+unitOwner.getFilename());
-				System.out.println(unit.getFilename());
-				
-				
-				List<IRPProject> projects = myApplication.getProjects().toList();
-				
-				IRPComponent activeComponent = null;
-				
-				for(IRPProject project:projects)
-				{
-					activeComponent = project.getActiveComponent();
-					if(activeComponent!=null)
-					{
-						break;
-					}
-				}
-				
-				
-				String filePath = null;
-				
-				List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
-				for(IRPConfiguration configuration:configurations)
-				{
-					filePath = configuration.getDirectory(1,"");
-				}
-				
-				List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
-				boolean isActive = false;
-				
-				IRPModelElement selectedElement = selectedClass;
-				
-				while(selectedElement.getOwner() instanceof IRPClass)
-				{
-					
-					selectedElement = selectedElement.getOwner();
-				}
-				
-				for(IRPModelElement scopeElement: scopeElements)
-				{
-					if(scopeElement.equals(selectedElement))
-					{
-						filePath = filePath+"\\"+selectedElement.getName()+".cpp";
-						isActive = true;
-						break;
-					}	
-				}
-				
-				if(isActive==false)
-				{
-					System.out.println("file not found / component not active: " + selectedClass.getName());
-					return;
-				}
-				
-				System.out.println(filePath);
-				
-				String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
-				
-				String className = selectedClass.getName();
-				IRPModelElement owner = selectedClass.getOwner();
-				while(owner instanceof IRPClass)
-				{
-					className = owner.getName()+"::"+className;
-					owner = owner.getOwner();
-				}
-				
-				String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, mySelectedOperation.getName());
 				if(roundTripText!=null)
 				{
 					myTextArea.setText(roundTripText);
@@ -507,7 +475,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 	
 
-			}
+			
 			
 			
 		}
