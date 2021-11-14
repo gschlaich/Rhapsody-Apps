@@ -99,29 +99,51 @@ public class RhapsodyOperation {
 		return ret;
 	}
 	
-	
-	public static String getNamespace(IRPModelElement aElement)
+	public static IRPPackage getPackage(IRPModelElement aElement)
 	{
 		if(aElement==null)
 		{
 			return null;
 		}
 		
-		
-		if((aElement instanceof IRPPackage)==false)
+		if(aElement instanceof IRPPackage)
 		{
-			return getNamespace(aElement.getOwner());
+			return (IRPPackage) aElement;
 		}
 		else
 		{
-			IRPPackage p = (IRPPackage)aElement;
-			String ret = p.getNamespace();
-			if((ret==null)||(ret.equals("")))
-			{
-				return getNamespace(aElement.getOwner());
-			}
-			return ret;
+			return getPackage(aElement.getOwner());
 		}
+	}
+
+	public static IRPPackage getNamespacePackage(IRPModelElement aElement)
+	{
+		IRPPackage p = getPackage(aElement);
+		
+		if(p==null)
+		{
+			return null;
+		}
+		
+		String namespaceName = p.getNamespace();
+		if((namespaceName==null)||(namespaceName.equals("")))
+		{
+			return getNamespacePackage(p.getOwner());
+		}
+		return p;
+	}
+	
+	public static String getNamespace(IRPModelElement aElement)
+	{
+		
+		IRPPackage nameSpacePackage = getNamespacePackage(aElement);
+		if(nameSpacePackage==null)
+		{
+			return null;
+		}
+		
+		return nameSpacePackage.getNamespace();
+		
 	}
 	
 	public static List<IRPArgument> getArguments(IRPOperation aOperation)

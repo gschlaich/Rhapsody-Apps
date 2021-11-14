@@ -30,6 +30,7 @@ import com.telelogic.rhapsody.core.IRPRelation;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyAttributeCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifierCompletion;
+import de.schlaich.gunnar.rhapsody.completion.RhapsodyLocalVariableCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyNamespaceCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyOperationCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyRelationCompletion;
@@ -62,6 +63,12 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		myStartTime = new Date().getTime();
 		super.setParameterizedCompletionParams('(', ", ", ')');
 		myClassifierName = myClassifier.getName();
+		
+
+		RhapsodyLocalVariableCompletion thisCompletion = new RhapsodyLocalVariableCompletion(this, "this", myClassifier, true);
+		addCompletion(thisCompletion);
+		
+		
 		createClassCompletion(myClassifier, myVisibility);		
 	}
 	
@@ -396,11 +403,6 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			}
 		}
 		
-		
-		if(lookForProvider.contains("this"))
-		{
-			lookForProvider = myClassifierName;
-		}
 		
 		System.out.println("lookForProvider " + lookForProvider );
 		String searchText = text.substring(startSearch);

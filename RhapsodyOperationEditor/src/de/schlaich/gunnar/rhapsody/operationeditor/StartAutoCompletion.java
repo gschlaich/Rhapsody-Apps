@@ -246,46 +246,48 @@ public class StartAutoCompletion extends Thread
 
 	}
 	
+
 	@SuppressWarnings("unchecked")
-	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) {
-		IRPModelElement e =  selected;
-	    
-	    while((e instanceof IRPPackage)==false)
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    //System.out.println(e.getPropertyValue("CPP_CG.Package.DefineNameSpace"));
-	    while(e.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("False"))
-	    {
-	    	e = e.getOwner();
-	    }
-	    
-	    if (e instanceof IRPPackage)
-    	{
-    		IRPPackage p = (IRPPackage)e;
-    		
-    		RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p);
-    		provider.addCompletion(rnc);
-    		
-    		
-    		//System.out.println(e.getName());
-    		List<IRPDependency> dependencies = p.getDependencies().toList();
-    		for(IRPDependency dependency: dependencies)
-    		{
-    			if(dependency.getDependsOn() instanceof IRPPackage)
-    			{
-    				p = (IRPPackage) dependency.getDependsOn();
-    				rnc = new RhapsodyNamespaceCompletion(provider, p); 
-    				provider.addCompletion(rnc);
-    			}
-    				
-    		}    		
-    	}
+	private void getNameSpaces(DefaultCompletionProvider provider, IRPModelElement selected) 
+	{
+		
+		IRPPackage selectedPackage = RhapsodyOperation.getPackage(selected);
+		if(selectedPackage==null)
+		{
+			return;
+		}
+		
+		List<IRPDependency> dependencies = selectedPackage.getDependencies().toList();
+		
+		IRPPackage namespacePackage = RhapsodyOperation.getNamespacePackage(selectedPackage);
+		
+		
+		if(namespacePackage!=null)
+		{
+			RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, namespacePackage);
+			provider.addCompletion(rnc);
+			if(namespacePackage.equals(selectedPackage)==false)
+			{
+				dependencies.addAll(namespacePackage.getDependencies().toList());
+			}
+		}
+		
+		for(IRPDependency dependency: dependencies)
+		{
+			if(dependency.getDependsOn() instanceof IRPPackage)
+			{
+				IRPPackage p = RhapsodyOperation.getNamespacePackage(dependency.getDependsOn());
+				if(p!=null)
+				{
+					RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p); 
+					provider.addCompletion(rnc);
+				}
+			}
+				
+		}
+		
 	}
 
-
-	
 	
 }
 
