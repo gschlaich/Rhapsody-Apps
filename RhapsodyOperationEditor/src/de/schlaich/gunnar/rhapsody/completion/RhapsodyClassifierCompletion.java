@@ -168,6 +168,8 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				}
 			}
 		}
+	
+		
 	}
 
 	@Override

@@ -40,6 +40,7 @@ public class StartAutoCompletion extends Thread
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private IRPApplication myApplication;
+	private DiffParser myDiffParser;
 	
 	private static StartAutoCompletion instance;
 	
@@ -111,33 +112,23 @@ public class StartAutoCompletion extends Thread
 	
 		myTextArea.setCodeFoldingEnabled(true);
 		
-		TaskTagParser taskTagParser = new TaskTagParser();
-		myTextArea.addParser(taskTagParser);
-		
-		
-		
+		 //start parser
 		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
-		
-		
+
 		gutter.setBookmarkIcon(RhapsodyOperation.getIcon("RhapsodyIcons_110.gif")); 
 		gutter.setBookmarkingEnabled(true); 
 		
-		
-		 //start parser
 	    CppParser parser = new CppParser(myClassifierCompletionProvider, gutter);
 	    myTextArea.addParser(parser);
+		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
+		myTextArea.addParser(myDiffParser);
+
 		
-		myApplication.writeToOutputWindow("log","Start diffparser");
-		DiffParser diffParser = new DiffParser(myTextArea.getText(),gutter);
-		myTextArea.addParser(diffParser);
-		
-		
-		
-		
-		
+	}
 	
-		
-		
+	public DiffParser getDiffParser()
+	{
+		return myDiffParser;
 	}
 	
 	
