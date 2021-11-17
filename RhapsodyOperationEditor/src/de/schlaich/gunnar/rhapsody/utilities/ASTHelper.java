@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.fife.ui.autocomplete.Completion;
-
+import org.fife.ui.autocomplete.CompletionProvider;
+import org.fife.ui.autocomplete.FunctionCompletion;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
@@ -23,6 +24,7 @@ import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeSelector;
 import org.eclipse.cdt.core.dom.ast.IASTPointer;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
+import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -369,6 +371,44 @@ public class ASTHelper
 		return parseNamedTypeSpecifiers.getNodes(aNode);
 	}
 	
+	public static IASTFunctionDeclarator getFunctionDeclarator(IASTNode aNode)
+	{
+		ASTNode<IASTFunctionDeclarator> parseFunctionDeclarator = new ASTNode<IASTFunctionDeclarator>(IASTFunctionDeclarator.class);
+		return parseFunctionDeclarator.getNode(aNode);
+	}
+	/*
+	public static FunctionCompletion getFunctionCompletion(IASTSimpleDeclaration aSimpleDeclaration, CompletionProvider aProvider)
+	{
+		IASTFunctionDeclarator functionDeclarator = getFunctionDeclarator(aSimpleDeclaration);
+		
+		
+		
+		if(functionDeclarator==null)
+		{
+			return null; //no function
+		}
+		
+		String functionName = functionDeclarator.getName().toString();
+		
+		IASTDeclSpecifier returnDecl = aSimpleDeclaration.getDeclSpecifier(); 
+		if(returnDecl instanceof IASTSimpleDeclaration)
+		{
+			IASTSimpleDeclSpecifier sReturnDecl = (IASTSimpleDeclSpecifier)returnDecl;
+			sReturnDecl.getDeclTypeExpression().to
+		}
+		
+		String returnType = returnDecl.get
+		
+		FunctionCompletion fc = new FunctionCompletion(aProvider, functionName, returnType);
+		
+	}
+	
+	public static IASTSimpleDeclSpecifier getSimpleDeclSpecifier(IASTSimpleDeclaration aSimpleDeclaration)
+	{
+		return aSimpleDeclaration.getDeclSpecifier();
+	}
+	
+	*/
 	
 	public static String getOperationBody(String aPath, String aNameSpace, String aClassName, String aOperationName)
 	{

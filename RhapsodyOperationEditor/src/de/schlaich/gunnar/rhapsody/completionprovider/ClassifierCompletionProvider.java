@@ -188,6 +188,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		List<IRPDependency> dependencies = aClassifier.getDependencies().toList();
 		for(IRPDependency dependency : dependencies)
 		{
+			System.out.println(dependency.getName());
+			
 			IRPModelElement modelElement = dependency.getDependsOn();
 			
 			if((aVisibility == visibility.v_public)&&(dependency.getPropertyValue("CG.Dependency.UsageType").equals("Implementation")))
@@ -196,13 +198,21 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			}
 			
 			
-			
 			if(modelElement instanceof IRPClassifier)
 			{
 				IRPClassifier classifier = (IRPClassifier)modelElement;
-				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier);
-				rcc.setRelevance(myBaseRelevance-10);
-				addCompletion(rcc);
+				if(classifier.getLanguage().equals("C"))
+				{
+					//this is not a class! 
+					createClassCompletion(classifier, aVisibility);
+				}
+				else
+				{
+					
+					RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier);
+					rcc.setRelevance(myBaseRelevance-10);
+					addCompletion(rcc);
+				}
 			}
 			else
 			{

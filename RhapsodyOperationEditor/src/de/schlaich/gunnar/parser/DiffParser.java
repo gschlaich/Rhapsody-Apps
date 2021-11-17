@@ -1,9 +1,6 @@
 package de.schlaich.gunnar.parser;
 
 import java.awt.Color;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.Icon;
@@ -39,6 +36,7 @@ public class DiffParser extends AbstractParser {
 	private Gutter myGutter;
 	private Icon myChangedIcon = null;
 	private List<GutterIconInfo> myInfos = null;
+	
 
 	public DiffParser(String aOrigDoc, Gutter aGutter) 
 	{
@@ -47,6 +45,18 @@ public class DiffParser extends AbstractParser {
 		myGutter = aGutter;
 		myChangedIcon = RhapsodyOperation.getIcon("RhapsodyIcons_111.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
+	}
+	
+	
+	public void update(String aOrigDoc)
+	{
+		myOrigLines = ASTHelper.getLines(aOrigDoc);
+		myResult.clearNotices();
+		for(GutterIconInfo info:myInfos)
+		{
+			myGutter.removeTrackingIcon(info);
+		}
+
 	}
 
 	
@@ -122,7 +132,7 @@ public class DiffParser extends AbstractParser {
 				}
 				if(targetLines.isEmpty())
 				{
-					//delete...
+					
 					ChangeNotice cn = new ChangeNotice(this, type.toString(), target.getPosition());
 					cn.setLevel(ParserNotice.Level.WARNING);
 					cn.setShowInEditor(false);
@@ -156,8 +166,7 @@ public class DiffParser extends AbstractParser {
 			e.printStackTrace();
 		}
 	    
-	    
-	    
+	   
 		return myResult;
 	}
 	

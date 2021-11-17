@@ -7,6 +7,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +17,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.SwingUtilities;
@@ -41,18 +43,22 @@ import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
 import org.fife.ui.rsyntaxtextarea.Style;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
+import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
+import com.github.difflib.DiffUtils;
+import com.github.difflib.algorithm.DiffException;
+import com.github.difflib.patch.Patch;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
-import com.telelogic.rhapsody.core.IRPComponent;
-import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -61,7 +67,8 @@ import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPUnit;
 
 import apps.MainApp;
-
+import de.schlaich.gunnar.parser.CppParser;
+import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
@@ -77,6 +84,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private IRPOperation mySelectedOperation;
 	private IRPApplication myApplication;
 	private SyntaxScheme myScheme;
+	private StartAutoCompletion myStartAutoCompletion;
 	
 	
 	/**
@@ -138,17 +146,22 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 
 		contentPane.add(temp);
 		
-
+		
+		
+		
 		setContentPane(contentPane);
 		scrollPane.setIconRowHeaderEnabled(true);
 		
 		myTextArea.setText(mySelectedOperation.getBody());
 		
-
+		TaskTagParser taskTagParser = new TaskTagParser();
+		myTextArea.addParser(taskTagParser);
 		
-		StartAutoCompletion startAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
 		
-		startAutoCompletion.start();
+		
+		myStartAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
+		
+		myStartAutoCompletion.start();
 		
 		myTextArea.convertTabsToSpaces();
 		myTextArea.requestFocusInWindow();
@@ -166,9 +179,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 		};
 		
-		SwingUtilities.invokeLater(focusInWindow);   
+		SwingUtilities.invokeLater(focusInWindow); 
+		
+
+		
 		
 	}
+	
+	
 
 
 	private void setRhapsodyStyle() 
@@ -218,6 +236,32 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private void setFrame(JFrame aFrame)
 	{
 		myFrame = aFrame;
+		
+		myFrame.addWindowListener(new WindowAdapter() {
+	        public void windowClosing(WindowEvent e) 
+	        {
+	        	if(textChanged())
+				{
+					int n = JOptionPane.showConfirmDialog(
+					    null,
+					    "There are changes in the editor\nOK: Apply Changes to the model\nCancel: Changes are irretrievably deleted",
+					    "Apply changes to model?",
+					    JOptionPane.OK_CANCEL_OPTION);
+				
+					if(n==0)
+					{
+						String text = myTextArea.getText();
+						if(mySelectedOperation!=null)
+						{
+							mySelectedOperation.setBody(text);
+						}
+					}
+				}
+	        }
+
+	    });
+		
+		
 	}
 	
 	public static void Run(IRPApplication rhapsody, IRPModelElement selected, MainApp aMainApp)
@@ -306,6 +350,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			JButton roundTripButton = new JButton("RoundTrip");
 			buttonPanel.add(roundTripButton);
 			
+			JButton revertButton = new JButton("Revert");
+			buttonPanel.add(revertButton);
+			
 			JButton applyButton = new JButton("Apply");
 			buttonPanel.add(applyButton);
 			
@@ -346,6 +393,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			roundTripButton.setActionCommand("roundTrip");
 			roundTripButton.addActionListener(oew);
 			
+			revertButton.setActionCommand("revert");
+			revertButton.addActionListener(oew);
+			
+			
 			//frame.add(editorPanel);
 			frame.add(buttonPanel,BorderLayout.SOUTH);
 			if(img!=null)
@@ -367,7 +418,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				okButton.setEnabled(false);			
 				applyButton.setEnabled(false);
-			}	           
+			}
+	        
+	        
+	        
 		}
 		else
 		{
@@ -386,7 +440,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
@@ -399,6 +452,32 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				{
 					mySelectedOperation.setBody(text);
 				}
+				
+				DiffParser diffParser = myStartAutoCompletion.getDiffParser();
+				if(diffParser!=null)
+				{
+					diffParser.update(text);
+				}
+				
+			}
+		}
+		
+		
+		if(command.equals("cancel"))
+		{
+			if(textChanged())
+			{
+				int n = JOptionPane.showConfirmDialog(
+				    null,
+				    "Changes are irretrievably deleted",
+				    "Discard all changes in the editor?",
+				    JOptionPane.OK_CANCEL_OPTION);
+			
+				if(n!=0)
+				{
+					return;
+				}
+				myTextArea.setText(mySelectedOperation.getBody());
 			}
 		}
 		
@@ -461,24 +540,75 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		if(command.equals("roundTrip"))
 		{
+			if(textChanged())
+			{
+				int n = JOptionPane.showConfirmDialog(
+				    null,
+				    "Will overwrite changes in editor",
+				    "Roundtrip from source file?",
+				    JOptionPane.YES_NO_OPTION);
 			
-				String roundTripText = ASTHelper.getSourceText(mySelectedOperation, myApplication);
+				if(n!=0)
+				{
+					return;
+				}
+			}
+			String roundTripText = ASTHelper.getSourceText(mySelectedOperation, myApplication);
 				
-				if(roundTripText!=null)
-				{
-					myTextArea.setText(roundTripText);
-				}
-				else
-				{
-					
-					System.out.println("An error occured. Roundtrip not possible");
-				}
-	
-
+			if(roundTripText!=null)
+			{
+				myTextArea.setText(roundTripText);
+			}
+			else
+			{
+				
+				System.out.println("An error occured. Roundtrip not possible");
+			}	
+		}
+		if(command.equals("revert"))
+		{
 			
-			
+			if(textChanged())
+			{
+				int n = JOptionPane.showConfirmDialog(
+					    null,
+					    "Will overwrite changes in editor",
+					    "Revert from model?",
+					    JOptionPane.YES_NO_OPTION);
+				
+				if(n!=0)
+				{
+					return;
+				}
+				
+				if(mySelectedOperation!=null)
+				{
+					String body = mySelectedOperation.getBody();
+					myTextArea.setText(body);
+				}
+			}
 			
 		}
+		
+	}
+	
+	private boolean textChanged()
+	{
+		List<String> editorLines = ASTHelper.getLines(myTextArea.getText());
+		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody());
+		try 
+		{
+			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
+			return(patch.getDeltas().isEmpty()==false);
+		} 
+		catch (DiffException e) {
+			
+			e.printStackTrace();
+		}
+		
+		return false;
+		
+		
 		
 	}
 
