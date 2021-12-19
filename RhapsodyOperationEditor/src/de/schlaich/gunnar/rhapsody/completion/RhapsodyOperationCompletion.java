@@ -101,5 +101,34 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		// TODO Auto-generated method stub
 		return !isPointer();
 	}
+	
+	/*
 
+	@Override
+	protected void possiblyAddDefinedIn(StringBuilder sb) {
+		// TODO Auto-generated method stub
+		super.possiblyAddDefinedIn(sb);
+	}
+
+	@Override
+	protected boolean possiblyAddDescription(StringBuilder sb) {
+		
+			sb.append("<hr><br>");
+			sb.append(myInterfaceItem.getToolTipHTML());
+			//sb.append(getShortDescription());
+			sb.append("<br><br><br>");
+			return true;
+		
+	}
+
+	@Override
+	public void setDefinedIn(String definedIn) {
+		// TODO Auto-generated method stub
+		super.setDefinedIn(definedIn);
+	}
+	
+	*/
+	
+	
+	
 }

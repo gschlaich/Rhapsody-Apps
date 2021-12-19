@@ -14,6 +14,7 @@ import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.FunctionCompletion;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier.IASTEnumerator;
@@ -22,6 +23,7 @@ import org.eclipse.cdt.core.dom.ast.IASTFunctionDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeSelector;
+import org.eclipse.cdt.core.dom.ast.IASTParameterDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTPointer;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
@@ -46,6 +48,7 @@ import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
 import org.eclipse.core.runtime.CoreException;
 
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPComponent;
@@ -282,6 +285,12 @@ public class ASTHelper
 	public static List<String> getLines(String aText) 
 	{
 		List<String> ret = null;
+		
+		if(aText==null || aText.isEmpty())
+		{
+			return null;
+		}
+		
 		try
 		{		
 			BufferedReader origBR = new BufferedReader(new StringReader(aText));
@@ -289,10 +298,8 @@ public class ASTHelper
 			ret= new ArrayList<String>();
 			while((line = origBR.readLine())!=null)
 			{
-				line = line.trim();
-				
 				line.replace((char)0x09, ' ');
-				
+				line = line.trim();
 				ret.add(line);
 			}
 		} 
@@ -300,6 +307,14 @@ public class ASTHelper
 		{
 			
 			e.printStackTrace();
+		}
+		
+		
+		
+		//remove empty lines at the end of the source
+		while(ret.size()!=0 && ret.get(ret.size()-1).isEmpty())
+		{
+			ret.remove(ret.size()-1);
 		}
 		
 		return ret;
@@ -376,6 +391,24 @@ public class ASTHelper
 		ASTNode<IASTFunctionDeclarator> parseFunctionDeclarator = new ASTNode<IASTFunctionDeclarator>(IASTFunctionDeclarator.class);
 		return parseFunctionDeclarator.getNode(aNode);
 	}
+	
+	public static List<IASTParameterDeclaration> getParameterDeclaration(IASTNode aNode)
+	{
+		ASTNode<IASTParameterDeclaration> parseParameterDeclaration = new ASTNode<IASTParameterDeclaration>(IASTParameterDeclaration.class);
+		return parseParameterDeclaration.getNodes(aNode);
+	}
+	
+	public static ICPPASTQualifiedName getQualifiedName(IASTNode aNode)
+	{
+		ASTNode<ICPPASTQualifiedName> parseQualifiedName = new ASTNode<ICPPASTQualifiedName>(ICPPASTQualifiedName.class);
+		return parseQualifiedName.getNode(aNode);
+	}
+	
+	public static IASTDeclarator getDeclarator(IASTNode aNode)
+	{
+		ASTNode<IASTDeclarator> parseDeclarator = new ASTNode<IASTDeclarator>(IASTDeclarator.class);
+		return parseDeclarator.getNode(aNode);
+	}
 	/*
 	public static FunctionCompletion getFunctionCompletion(IASTSimpleDeclaration aSimpleDeclaration, CompletionProvider aProvider)
 	{
@@ -410,42 +443,83 @@ public class ASTHelper
 	
 	*/
 	
-	public static String getOperationBody(String aPath, String aNameSpace, String aClassName, String aOperationName)
+	public static String getOperationBody(String aPath, String aNameSpace, String aClassName, IRPOperation aOperation)
 	{
 		
 		IASTTranslationUnit translationUnit = getTranslationUnit(aPath);
 		
+		IASTNode source = translationUnit;
 		
-		//parse for namespace
-		ASTNode<ICPPASTNamespaceDefinition> parseNameSpace = new ASTNode<ICPPASTNamespaceDefinition>(ICPPASTNamespaceDefinition.class);
-		List<ICPPASTNamespaceDefinition> nameSpaceDefinitions = parseNameSpace.getNodes(translationUnit);
-		ICPPASTNamespaceDefinition theNameSpaceDefinition=null;
-		for(ICPPASTNamespaceDefinition nameSpaceDefiniton:nameSpaceDefinitions)
+		if(aNameSpace!=null)
 		{
-			if(aNameSpace.equals(nameSpaceDefiniton.getName().toString()))
+			//parse for namespace
+			ASTNode<ICPPASTNamespaceDefinition> parseNameSpace = new ASTNode<ICPPASTNamespaceDefinition>(ICPPASTNamespaceDefinition.class);
+			List<ICPPASTNamespaceDefinition> nameSpaceDefinitions = parseNameSpace.getNodes(translationUnit);
+			ICPPASTNamespaceDefinition theNameSpaceDefinition=null;
+			for(ICPPASTNamespaceDefinition nameSpaceDefiniton:nameSpaceDefinitions)
 			{
-				theNameSpaceDefinition = nameSpaceDefiniton;
-				break;
+				if(aNameSpace.equals(nameSpaceDefiniton.getName().toString()))
+				{
+					theNameSpaceDefinition = nameSpaceDefiniton;
+					break;
+				}
 			}
-		}
-		
-		if(theNameSpaceDefinition==null)
-		{
-			//namespace not found
-			return null;
+			
+			if(theNameSpaceDefinition==null)
+			{
+				//namespace not found
+				return null;
+			}
+			source = theNameSpaceDefinition;
 		}
 		
 		ASTNode<IASTFunctionDefinition> parseFunctionDefinition = new ASTNode<IASTFunctionDefinition>(IASTFunctionDefinition.class);
-		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(theNameSpaceDefinition);
+		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(source);
 		IASTFunctionDefinition theFunctionDefinition=null;
 		for(IASTFunctionDefinition functionDefinition:functionDefinitions)
 		{
 			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
 			
-			String operationeName = functionDeclarator.getName().toString();
+			String operationName = functionDeclarator.getName().toString();
 			
-			if((aClassName+"::"+aOperationName).equals(operationeName))
+			if((aClassName+"::"+aOperation.getName()).equals(operationName))
 			{
+				//check for parameters...
+				List<IRPArgument> arguments = aOperation.getArguments().toList();
+				List<IASTParameterDeclaration> parameterDeclarations = getParameterDeclaration(functionDeclarator);
+				
+				if(arguments.size()!=parameterDeclarations.size())
+				{
+					continue;
+				}
+				
+				boolean isEqual = true;
+				//check for names...
+				for(int i=0; i<arguments.size();i++)
+				{
+					IASTParameterDeclaration declaration = parameterDeclarations.get(i);
+					IASTDeclarator declarator = getDeclarator(declaration);
+					if(arguments.get(i).getName().equals(declarator.getName().toString()))
+					{
+						continue;
+						//should we also check type?
+						
+					}
+					else
+					{
+						isEqual=false;
+						break;
+					}
+					
+				}
+				
+				
+				if(isEqual==false)
+				{
+					continue;
+				}
+				
+				
 				theFunctionDefinition = functionDefinition;
 				break;
 			}
@@ -460,7 +534,7 @@ public class ASTHelper
 		
 		//check for syntax error
 		
-		List<IASTProblem> problems = ASTHelper.getProblems(theNameSpaceDefinition);
+		List<IASTProblem> problems = ASTHelper.getProblems(source);
 		
 		if(problems.isEmpty()==false)
 		{
@@ -573,6 +647,8 @@ public class ASTHelper
 		IRPClass selectedClass = (IRPClass) element;
 		IRPUnit unit = selectedClass.getSaveUnit();
 		
+		//System.out.println("UnitLast modified: " + unit.getLastModifiedTime());
+		
 		IRPUnit unitOwner = unit.getOwner().getSaveUnit();
 			
 		List<IRPProject> projects = aApplication.getProjects().toList();
@@ -632,7 +708,7 @@ public class ASTHelper
 			owner = owner.getOwner();
 		}
 		
-		String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, aOperation.getName());
+		String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, aOperation);
 		return roundTripText;
 	}
 	

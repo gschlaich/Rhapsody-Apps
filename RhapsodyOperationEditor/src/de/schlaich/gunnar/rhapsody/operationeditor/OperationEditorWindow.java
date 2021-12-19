@@ -75,6 +75,7 @@ import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 public class OperationEditorWindow extends JRootPane implements HyperlinkListener, ActionListener, SyntaxConstants { 
 
@@ -257,6 +258,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 						}
 					}
 				}
+	        	
+	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+				prefs.clearRhapsodyModelElement(mySelectedOperation);
+	        	
+	        	
 	        }
 
 	    });
@@ -269,6 +275,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		if(selected instanceof IRPOperation)
 		{	
+			
+			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+			
+			if(prefs.checkRhapsodyModelElement(selected))
+			{
+				aMainApp.printToRhapsody("Operation already open");
+				return;
+			}
+			
+			prefs.setRhapsodyModelElement(selected);
+			
 			IRPOperation op = (IRPOperation)selected;
 
 			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
@@ -486,6 +503,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			if(myFrame!=null)
 			{
 				myFrame.dispose();
+				RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+				prefs.clearRhapsodyModelElement(mySelectedOperation);
 			}
 		}
 		

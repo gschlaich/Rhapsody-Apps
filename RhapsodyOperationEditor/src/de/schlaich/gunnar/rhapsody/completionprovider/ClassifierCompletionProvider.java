@@ -204,7 +204,10 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				if(classifier.getLanguage().equals("C"))
 				{
 					//this is not a class! 
-					createClassCompletion(classifier, aVisibility);
+					if(aVisibility == visibility.v_private)
+					{
+						createClassCompletion(classifier, aVisibility);
+					}
 				}
 				else
 				{
