@@ -269,7 +269,8 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	protected boolean possiblyAddDescription(StringBuilder sb) {
 		if (getShortDescription()!=null) {
 			sb.append("<hr><br>");
-			sb.append(getShortDescription());
+			sb.append(myClassifier.getToolTipHTML());
+			//sb.append(getShortDescription());
 			sb.append("<br><br><br>");
 			return true;
 		}

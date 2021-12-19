@@ -2,6 +2,8 @@ package apps;
 
 
 
+import java.util.prefs.Preferences;
+
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
@@ -16,13 +18,17 @@ public class MainApp extends App {
 	* selected - Selected element in Rhapsody
 	*/
 	
-	
+	private String myGuid;
 	
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 	
 		
-		println("Start App");
-		System.out.println("Start App");
+		if((selected instanceof IRPOperation) == false)
+		{
+			return;
+		}
+		
+		
 		
 		
 		try 
@@ -69,6 +75,15 @@ public class MainApp extends App {
 		MainApp app = new MainApp();
 		app.invokeFromMain();
 	}
+	
+	
+
+	public final void onFinish(){
+	    Preferences prefs;
+	    prefs = Preferences.userRoot().node(this.getClass().getName());
+	    prefs.remove(myGuid);
+	}
+
 	
 	
 	
