@@ -89,7 +89,11 @@ public class DiffParser extends AbstractParser {
 	       
 	    try 
 	    {
-			Patch<String> patch = DiffUtils.diff(myOrigLines, currentLines);
+			if((myOrigLines==null)||(currentLines==null))
+			{
+				return myResult;
+			}
+	    	Patch<String> patch = DiffUtils.diff(myOrigLines, currentLines);
 			
 			for (AbstractDelta<String> delta : patch.getDeltas()) 
 			{

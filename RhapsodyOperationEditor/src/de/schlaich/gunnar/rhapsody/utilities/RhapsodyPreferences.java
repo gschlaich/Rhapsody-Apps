@@ -23,6 +23,11 @@ public class RhapsodyPreferences {
 	
 	public boolean checkRhapsodyModelElement(IRPModelElement aModelElement)
 	{
+		
+		if(isDebug())
+		{
+			return false;
+		}
 		String guid = aModelElement.getGUID();
 		return myPrefs.getBoolean(guid,false);
 	}
@@ -34,6 +39,12 @@ public class RhapsodyPreferences {
 		
 		myPrefs.remove(guid);
 		
+	}
+	
+	private boolean isDebug()
+	{
+		 boolean ret = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;
+			 return ret;
 	}
 	
 	

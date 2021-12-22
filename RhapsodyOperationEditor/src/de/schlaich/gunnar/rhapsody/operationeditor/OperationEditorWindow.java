@@ -617,6 +617,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody());
 		try 
 		{
+			if((bodyLines==null)||(editorLines==null))
+			{
+				return false;
+			}
 			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
 			return(patch.getDeltas().isEmpty()==false);
 		} 
@@ -626,7 +630,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		
 		return false;
-		
 		
 		
 	}
@@ -768,7 +771,8 @@ class OpenFeature extends TextAction
 		}
 		if((c!=null)&&(c instanceof RhapsodyClassifier))
 		{
-			IRPModelElement element = ((RhapsodyClassifier)c).getIRPClassifier(false);
+			RhapsodyClassifier rc = (RhapsodyClassifier)c;
+			IRPModelElement element = rc.getIRPClassifier(rc.isPointer());
 			
 			//System.out.println(element.getName());
 			List<IRPModelElement> elements = element.getNestedElements().toList();
