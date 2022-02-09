@@ -508,7 +508,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			if(myFrame!=null)
 			{
 
-
+				myFrame.dispose();
+				RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+				prefs.clearRhapsodyModelElement(mySelectedOperation);
 			}
 		}
 		
@@ -969,22 +971,7 @@ class AddDependency extends TextAction
         		newDependency.addSpecificStereotype(stereoType);
         		break;
         	}
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        	
-        
-        
-        
-        
-
-        
+        }   
 
 	}
 		

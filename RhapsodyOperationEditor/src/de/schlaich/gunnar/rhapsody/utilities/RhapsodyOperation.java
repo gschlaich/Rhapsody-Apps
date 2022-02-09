@@ -38,20 +38,7 @@ public class RhapsodyOperation {
 		{
 			propertyPath = "CPP_CG.Type."+direction;
 		}
-		String pattern = argClassifier.getPropertyValue(propertyPath);
-		
-		
-		if(argClassifier instanceof IRPType)
-		{
-			pattern = argClassifier.getPropertyValue(propertyPath);
-		}
-		
-		//check if property of aArgument is overwritten
-		try 
-		{
-			pattern = aArgument.getPropertyValueExplicit(propertyPath);
-		} 
-		catch (Exception e) { }
+		String pattern =  aArgument.getPropertyValue(propertyPath);
 		
 		String argType =  pattern.replace("$type", argClassifier.getName());
 		

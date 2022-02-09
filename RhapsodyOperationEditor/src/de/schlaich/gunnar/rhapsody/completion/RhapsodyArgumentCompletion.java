@@ -7,8 +7,10 @@ import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
 import com.telelogic.rhapsody.core.IRPArgument;
+import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
@@ -43,19 +45,38 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		}
 		
 		
-		String codePattern = null;
+		String codePattern = myArgument.getPropertyValue(propertyName);
 		
-		try
-		{
-			codePattern = myArgument.getPropertyValueExplicit(propertyName);
-		}
-		catch(Exception e)
-		{
-			IRPClassifier type= myArgument.getType();
-			codePattern = type.getPropertyValue(propertyName);
-		}
-
+		//TODO hacky...
 		myIsPointer = codePattern.endsWith("*");
+		
+		//check for template...
+		if(codePattern.contains("<"))
+		{
+			//could be template...
+			int end = codePattern.indexOf("<");
+			String templateName = codePattern.substring(0,end);
+			System.out.println(templateName);
+			//search for classifier
+			
+			if(templateName.contains("::"))
+			{
+				templateName= templateName.substring(templateName.lastIndexOf(":")+1);
+			}
+			
+			IRPProject project = myArgument.getProject();
+			IRPClass template = (IRPClass)project.findNestedElementRecursive(templateName, "Class");
+			if(template!=null)
+			{
+				if(template.findNestedElement("operator->", "Operation")!=null)
+				{
+					myIsPointer = true;
+				}
+			}
+		}
+			
+		
+		myIsPointer = codePattern.startsWith("std::unique_ptr");
 		
 		
 		if((myArgument.getType()!=null)&&(abstractProvider!=null))

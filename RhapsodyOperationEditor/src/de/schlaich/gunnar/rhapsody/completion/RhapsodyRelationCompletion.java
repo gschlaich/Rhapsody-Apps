@@ -29,7 +29,7 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 			//container...
 			if(myRelation.getQualifier().equals("")==false)
 			{
-				//map...
+				
 				
 			}
 			else 

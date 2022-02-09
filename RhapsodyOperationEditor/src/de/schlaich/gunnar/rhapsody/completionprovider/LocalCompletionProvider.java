@@ -1,8 +1,15 @@
 package de.schlaich.gunnar.rhapsody.completionprovider;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.JTextComponent;
+
 import org.eclipse.cdt.core.dom.ast.ExpansionOverlapsBoundaryException;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
@@ -16,9 +23,11 @@ import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTNameSpecifier;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTTemplateId;
 import org.eclipse.cdt.core.parser.IToken;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTQualifiedName;
+import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.ParameterizedCompletion;
 import org.fife.ui.autocomplete.Util;
 import org.fife.ui.autocomplete.VariableCompletion;
 
@@ -35,9 +44,13 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 {
 	
 	private ClassifierCompletionProvider itsCompletionProvider = null;
+	
+	private ParseCompletionProvider itsParseCompletionProvider = null;
+	
 	public LocalCompletionProvider(String aOperationBody, ClassifierCompletionProvider aCompletionProvider) {
 		itsCompletionProvider = aCompletionProvider;
-		createLocalCompletions(aOperationBody,aCompletionProvider);
+		itsParseCompletionProvider = new ParseCompletionProvider();
+		createLocalCompletions(aOperationBody,aCompletionProvider);	
 	}
 	
 	private void createLocalCompletions(String aOperationBody, ClassifierCompletionProvider aCompletionProvider)
@@ -50,11 +63,29 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 		
 	}
 	
+	public void removeTempCompletions()
+	{
+		completions.clear();
+	}
+	
 	
 	
 	@Override
 	public void addCompletion(Completion aCompletion)
 	{
+		if(itsParseCompletionProvider.completionExists(aCompletion))
+		{
+			return;
+		}
+		if(checkCompletionAdded(completions, aCompletion))
+		{
+			return;
+		}
+		
+		super.addCompletion(aCompletion);
+		
+		/*
+		
 		//check if completion already added
 		//TODO optimize search
 		for(Completion storedCompetion: completions)
@@ -66,6 +97,31 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 			}
 		}
 		super.addCompletion(aCompletion);
+		*/
+	}
+	
+	
+	private boolean checkCompletionAdded(List<Completion> aCompletionList, Completion aCompletion)
+	{
+		int ret = Collections.binarySearch(aCompletionList, aCompletion);
+		
+		if(ret>=0)
+		{
+			return true;
+		}
+		
+		return false;
+		
+		/*
+		for(Completion storedCompletion : aCompletionList)
+		{
+			if(storedCompletion.compareTo(aCompletion)==0)
+			{
+				return true;
+			}
+		}
+		return false;
+		*/
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -73,6 +129,15 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	public List<Completion> getCompletionByInputText(String inputText) {
 		
 		List<Completion> retVal = new ArrayList<Completion>();
+		
+		List<Completion> fromParse = itsParseCompletionProvider.getCompletionByInputText(inputText);
+		
+		if(fromParse!=null)
+		{
+			retVal.addAll(fromParse);
+		}
+
+		
 		if (inputText!=null) {
 
 			int index = Collections.binarySearch(completions, inputText, comparator);
@@ -235,8 +300,9 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         				{
         					isPointer = true;
         				}
-        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(this, declarator.getName().toString(), irpClassifier,isPointer);
-        				this.addCompletion(rlvc);
+        				RhapsodyLocalVariableCompletion rlvc = new RhapsodyLocalVariableCompletion(itsParseCompletionProvider, declarator.getName().toString(), irpClassifier,isPointer);
+        				itsParseCompletionProvider.addCompletion(rlvc);
+        				
         			}
         		}
         		else
@@ -245,15 +311,16 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         			
         			System.out.println("No Rhapsody classifier found for "+ classifierName);
         			
-        			BasicCompletion bc = new BasicCompletion(this, classifierName);
-        			this.addCompletion(bc);
+        			BasicCompletion bc = new BasicCompletion(itsParseCompletionProvider, classifierName);
+        			itsParseCompletionProvider.addCompletion(bc);
         			
         			for(IASTDeclarator declarator : declarators)
         			{
         				
-        				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(), classifierName);
+        				VariableCompletion vc = new VariableCompletion(itsParseCompletionProvider, declarator.getName().toString(), classifierName);
         				vc.setDefinedIn("local variable");
-        				this.addCompletion(vc);
+        				itsParseCompletionProvider.addCompletion(vc);
+        				
         			}
         		}
        
@@ -275,9 +342,9 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 			    			for(IASTDeclarator declarator : declarators)
 			    			{
 			    				
-			    				VariableCompletion vc = new VariableCompletion(this, declarator.getName().toString(),classifierName);
+			    				VariableCompletion vc = new VariableCompletion(itsParseCompletionProvider, declarator.getName().toString(),classifierName);
 			    				vc.setDefinedIn("local variable");
-			    				this.addCompletion(vc);
+			    				itsParseCompletionProvider.addCompletion(vc);
 			    			}
 							
 						}
@@ -301,5 +368,77 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
         	}   
         }   
 	}    
+	
+}
+
+class ParseCompletionProvider extends DefaultCompletionProvider
+{
+
+	@Override
+	public List<Completion> getCompletionByInputText(String inputText) {
+		
+		List<Completion> retVal = new ArrayList<Completion>();
+		
+		if (inputText!=null) {
+
+			@SuppressWarnings("unchecked")
+			int index = Collections.binarySearch(completions, inputText, comparator);
+			if (index<0) { // No exact match
+				index = -index - 1;
+			}
+			else {
+				// If there are several overloads for the function being
+				// completed, Collections.binarySearch() will return the index
+				// of one of those overloads, but we must return all of them,
+				// so search backward until we find the first one.
+				int pos = index - 1;
+				while (pos>0 &&
+						comparator.compare(completions.get(pos), inputText)==0) {
+					retVal.add(completions.get(pos));
+					pos--;
+				}
+			}
+
+			while (index<completions.size()) {
+				Completion c = completions.get(index);
+				if (Util.startsWithIgnoreCase(c.getInputText(), inputText)) {
+					retVal.add(c);
+					index++;
+				}
+				else {
+					break;
+				}
+			}
+
+		}
+
+		return retVal;
+	}
+	
+	@Override
+	public void addCompletion(Completion aCompletion)
+	{
+		if(completionExists(aCompletion))
+		{
+			return;
+		}
+		super.addCompletion(aCompletion);
+	}
+	
+	public boolean completionExists(Completion aCompletion)
+	{
+		if(Collections.binarySearch(completions, aCompletion)>=0)
+		{
+			return true;
+		}
+		return false;
+	}
+	
+	public List<Completion> getCompletions()
+	{
+		return completions;
+	}
+	
+	
 	
 }
