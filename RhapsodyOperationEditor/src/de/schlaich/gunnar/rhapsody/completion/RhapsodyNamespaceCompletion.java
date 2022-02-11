@@ -109,6 +109,11 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		return myPackage;
 	}
 	
+	public IRPPackage getPackage()
+	{
+		return myPackage;
+	}
+	
 	/**
 	 * Returns where this variable is defined.
 	 *

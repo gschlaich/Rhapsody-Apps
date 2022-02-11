@@ -460,24 +460,29 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		String command = e.getActionCommand();
-		if(mySelectedOperation.isReadOnly()==0)
-		{
-			if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
+		try{
+			
+		
+			if(mySelectedOperation.isReadOnly()==0)
 			{
-				String text = myTextArea.getText();
-				if(mySelectedOperation!=null)
+				if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
 				{
-					mySelectedOperation.setBody(text);
+					String text = myTextArea.getText();
+					if(mySelectedOperation!=null)
+					{
+						mySelectedOperation.setBody(text);
+					}
+					
+					DiffParser diffParser = myStartAutoCompletion.getDiffParser();
+					if(diffParser!=null)
+					{
+						diffParser.update(text);
+					}
+					
 				}
-				
-				DiffParser diffParser = myStartAutoCompletion.getDiffParser();
-				if(diffParser!=null)
-				{
-					diffParser.update(text);
-				}
-				
 			}
-		}
+		
+		
 		
 		
 		if(command.equals("cancel"))
@@ -502,6 +507,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		{	
 			if(myFrame!=null)
 			{
+
 				myFrame.dispose();
 				RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 				prefs.clearRhapsodyModelElement(mySelectedOperation);
@@ -607,6 +613,19 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 			}
 			
+		}
+		}
+		catch (Exception e1) 
+		{
+			e1.printStackTrace();
+			
+			JOptionPane.showMessageDialog(
+				    null,
+				    "Rhapsody  model already closed","Changes are irretrievably deleted",JOptionPane.ERROR_MESSAGE);
+			
+			myFrame.dispose();
+			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+			prefs.clearRhapsodyModelElement(mySelectedOperation);
 		}
 		
 	}
@@ -952,22 +971,7 @@ class AddDependency extends TextAction
         		newDependency.addSpecificStereotype(stereoType);
         		break;
         	}
-        }
-        
-        
-        
-        
-        
-        
-        
-        
-        	
-        
-        
-        
-        
-
-        
+        }   
 
 	}
 		

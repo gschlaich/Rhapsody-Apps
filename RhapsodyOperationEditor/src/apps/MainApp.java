@@ -28,7 +28,7 @@ public class MainApp extends App {
 			return;
 		}
 		
-		
+		//IRPApplication rhpApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(arg0)
 		
 		
 		try 

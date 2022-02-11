@@ -41,8 +41,8 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 			if(abstractProvider != null)
 			{
 
-				RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, argument.getType());
-				abstractProvider.addCompletion(rc);
+				//RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, argument.getType());
+				//abstractProvider.addCompletion(rc);
 			}
 			
 			ParameterizedCompletion.Parameter p = new ParameterizedCompletion.Parameter( RhapsodyOperation.getArgumentType(argument), argument.getName());

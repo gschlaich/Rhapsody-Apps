@@ -159,6 +159,10 @@ public class ASTHelper
     	
     	Map<String, String> definedMacros = new HashMap<String, String>();
     	
+    	definedMacros.put("GUARD_OPERATION","");
+    	
+    	
+    	
     	String[] includePaths = new String[0];
         IScannerInfo info = new ScannerInfo(definedMacros,includePaths);
         IParserLogService log = new DefaultLogService();
@@ -499,6 +503,8 @@ public class ASTHelper
 				{
 					IASTParameterDeclaration declaration = parameterDeclarations.get(i);
 					IASTDeclarator declarator = getDeclarator(declaration);
+					System.out.println(arguments.get(i).getName());
+					System.out.println(declarator.getName().toString());
 					if(arguments.get(i).getName().equals(declarator.getName().toString()))
 					{
 						continue;
@@ -739,6 +745,14 @@ class ASTNode<T>
 		}
 	
 		IASTNode[] nodes = aNode.getChildren();
+		//first check on higher level
+		for(IASTNode node :nodes)
+		{
+			if(myType.isAssignableFrom(node.getClass()))
+			{
+				return myType.cast(node);
+			}
+		}
 		for(IASTNode node : nodes)
 		{
 			T n =  getNode(node);

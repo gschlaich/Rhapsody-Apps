@@ -144,7 +144,7 @@ public class StartAutoCompletion extends Thread
 		IRPClass selectedClass = (IRPClass) selectedOperation.getOwner();
 		
 		// Create the provider used when typing code.
-		myClassifierCompletionProvider = new ClassifierCompletionProvider(selectedClass, visibility.v_private);
+		myClassifierCompletionProvider = ClassifierCompletionProvider.GetProvider(selectedClass, visibility.v_private);
 		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
 		
 		
