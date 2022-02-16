@@ -11,6 +11,7 @@ import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPInstance;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPRelation;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
@@ -18,7 +19,7 @@ import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 public class RhapsodyRelationCompletion extends VariableCompletion implements RhapsodyClassifier {
 
 	private IRPRelation myRelation;
-	public RhapsodyRelationCompletion(CompletionProvider provider, IRPRelation aRelation) {
+	public RhapsodyRelationCompletion(CompletionProvider provider, IRPRelation aRelation, boolean addType) {
 		super(provider, aRelation.getName(), aRelation.getOtherClass().getName());
 		myRelation = aRelation;
 		
@@ -39,12 +40,24 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 			}
 		}
 		
+		if(addType==false)
+		{
+			return;
+		}
+		
 		//add also type to completion
+		
+		IRPPackage namespace = RhapsodyOperation.getNamespacePackage(myRelation);
+		
 		
 		if((getIRPClassifier(isPointer())!=null)&&(abstractProvider!=null))
 		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier(isPointer()));
-			abstractProvider.addCompletion(rc);
+			IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(getIRPClassifier(isPointer()));
+			if((classifiernamespace==null)||(classifiernamespace==namespace))
+			{		
+				RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier(isPointer()));
+				abstractProvider.addCompletion(rc);
+			}
 		}
 		
 		

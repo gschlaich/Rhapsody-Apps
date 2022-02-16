@@ -560,7 +560,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				IRPClass selectedClass = (IRPClass) element;
 				ClassifierCompletionProvider provider = StartAutoCompletion.GetClassifierCompletionProvider();
-				provider.createClassCompletion(selectedClass, visibility.v_private);
+				provider.createClassCompletion(selectedClass, visibility.v_private,true);
 			}
 		}
 		if(command.equals("roundTrip"))

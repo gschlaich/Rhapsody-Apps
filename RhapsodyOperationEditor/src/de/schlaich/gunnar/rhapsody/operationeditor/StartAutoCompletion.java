@@ -31,6 +31,7 @@ import de.schlaich.gunnar.rhapsody.completion.RhapsodyArgumentCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyNamespaceCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
+import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 public class StartAutoCompletion extends Thread
@@ -144,7 +145,7 @@ public class StartAutoCompletion extends Thread
 		IRPClass selectedClass = (IRPClass) selectedOperation.getOwner();
 		
 		// Create the provider used when typing code.
-		myClassifierCompletionProvider = ClassifierCompletionProvider.GetProvider(selectedClass, visibility.v_private);
+		myClassifierCompletionProvider = ClassifierCompletionProvider.GetProvider(selectedClass, visibility.v_private,true);
 		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
 		
 		
@@ -255,6 +256,13 @@ public class StartAutoCompletion extends Thread
 		
 		if(namespacePackage!=null)
 		{
+			
+			System.out.println("Namespace Package: "+namespacePackage.getName());
+			if(namespacePackage!=selectedPackage)
+			{
+				dependencies.addAll(namespacePackage.getDependencies().toList());
+			}
+			
 			RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, namespacePackage);
 			provider.addCompletion(rnc);
 			if(namespacePackage.equals(selectedPackage)==false)
@@ -262,6 +270,7 @@ public class StartAutoCompletion extends Thread
 				dependencies.addAll(namespacePackage.getDependencies().toList());
 			}
 		}
+		
 		
 		for(IRPDependency dependency: dependencies)
 		{
@@ -272,10 +281,30 @@ public class StartAutoCompletion extends Thread
 				{
 					RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider, p); 
 					provider.addCompletion(rnc);
+					//load provider into cache....
+					NamespaceCompletionProvider ncp = NamespaceCompletionProvider.GetNameSpaceProvider(rnc);
 				}
 			}
 				
 		}
+		
+		IRPPackage packageStd = (IRPPackage)mySelectedOperation.getProject().findNestedElementRecursive("std", "Package");
+		if(packageStd!=null)
+		{
+			RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider,packageStd);
+			provider.addCompletion(rnc);
+			NamespaceCompletionProvider ncp = NamespaceCompletionProvider.GetNameSpaceProvider(rnc);		
+		}
+		
+		IRPPackage packageOssi = (IRPPackage)mySelectedOperation.getProject().findNestedElementRecursive("OSSI", "Package");
+		if(packageOssi!=null)
+		{
+			RhapsodyNamespaceCompletion rnc = new RhapsodyNamespaceCompletion(provider,packageStd);
+			provider.addCompletion(rnc);
+			NamespaceCompletionProvider ncp = NamespaceCompletionProvider.GetNameSpaceProvider(rnc);		
+		}
+		
+		
 		
 	}
 

@@ -14,6 +14,7 @@ import de.schlaich.gunnar.rhapsody.completion.RhapsodyOperationCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyRelationCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyTypeCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
+import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.operationeditor.StartAutoCompletion;
 
 public class RhapsodyTokenMaker extends CPlusPlusTokenMaker 
@@ -51,6 +52,11 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 				else if(myClassifierCompletionProvider!=null)
 				{
 					Completion c = myClassifierCompletionProvider.getFirstCompletion(text);
+					
+					if(c==null)
+					{
+						c = NamespaceCompletionProvider.GetCompletion(text);
+					}
 					
 					if(c!=null)
 					{

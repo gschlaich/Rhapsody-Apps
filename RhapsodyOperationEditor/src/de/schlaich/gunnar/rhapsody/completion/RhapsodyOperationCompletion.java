@@ -12,6 +12,7 @@ import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
@@ -19,14 +20,26 @@ import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 public class RhapsodyOperationCompletion extends FunctionCompletion implements RhapsodyClassifier {
 
 	IRPInterfaceItem myInterfaceItem;
+	IRPPackage myNameSpacePackage = null;
 	
 	
-	@SuppressWarnings("unchecked")
 	public RhapsodyOperationCompletion(CompletionProvider aProvider, IRPInterfaceItem aOperation) {
 		super(aProvider, aOperation.getName(),aOperation instanceof IRPOperation ?  RhapsodyOperation.getReturnType((IRPOperation)aOperation):"void");
+		init(aProvider, aOperation, true);
+		
+	}
+	
+	public RhapsodyOperationCompletion(CompletionProvider aProvider, IRPInterfaceItem aOperation, boolean addType) {
+		super(aProvider, aOperation.getName(),aOperation instanceof IRPOperation ?  RhapsodyOperation.getReturnType((IRPOperation)aOperation):"void");
+		init(aProvider, aOperation, addType);
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	private void init(CompletionProvider aProvider, IRPInterfaceItem aOperation, boolean addType) {
 		myInterfaceItem = aOperation;
 		
-		List<IRPArgument> arguments = myInterfaceItem.getArguments().toList();
+		
 		List<Parameter> parameters = new ArrayList<Parameter>();
 		
 		setIcon(RhapsodyOperation.getIcon(aOperation));
@@ -35,14 +48,24 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		
 		setShortDescription(myInterfaceItem.getDescription());
 		
+		myNameSpacePackage = RhapsodyOperation.getNamespacePackage(myInterfaceItem);
 		
+		
+		List<IRPArgument> arguments = myInterfaceItem.getArguments().toList();
 		for(IRPArgument argument : arguments)
 		{
 			if(abstractProvider != null)
 			{
-
-				//RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, argument.getType());
-				//abstractProvider.addCompletion(rc);
+				if(addType)
+				{
+					IRPPackage argNameSpace = RhapsodyOperation.getNamespacePackage(argument);
+					if((argNameSpace==null)||(argNameSpace==myNameSpacePackage))
+					{
+							
+						RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, argument.getType());
+						abstractProvider.addCompletion(rc);
+					}
+				}
 			}
 			
 			ParameterizedCompletion.Parameter p = new ParameterizedCompletion.Parameter( RhapsodyOperation.getArgumentType(argument), argument.getName());
@@ -50,17 +73,23 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 			parameters.add(p);
 		}
 		
-		if((getIRPClassifier(false)!=null)&&(abstractProvider!=null))
+		if(addType)
 		{
-			RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, getIRPClassifier(false));
-			abstractProvider.addCompletion(rc);
+			
+			if((getIRPClassifier(false)!=null)&&(abstractProvider!=null))
+			{
+				IRPPackage retNameSpace = RhapsodyOperation.getNamespacePackage(getIRPClassifier(false));
+				if((retNameSpace==null)||(retNameSpace==myNameSpacePackage))
+				{
+					RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, getIRPClassifier(false));
+					abstractProvider.addCompletion(rc);
+				}
+			}
 		}
-		
 		
 		
 		super.setShortDescription(myInterfaceItem.getDescription());
 		super.setParams(parameters);
-		
 	}
 	
 	@Override
