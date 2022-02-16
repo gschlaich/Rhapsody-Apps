@@ -25,6 +25,7 @@ import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
+import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
@@ -128,26 +129,29 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				String typeName = astName.toString();
 				if(myClassifierCompletionProvider.getFirstCompletion(typeName)==null)
 				{
-					//unknown type
-					
-					int length = 0;
-					int pos = 0;
-					
-					IASTNodeLocation[] locations = astName.getNodeLocations();
-					
-					if(locations.length>0)
+					if(NamespaceCompletionProvider.GetCompletion(typeName)==null)
 					{
-						length = locations[0].getNodeLength();
-						pos = locations[0].getNodeOffset()-ASTHelper.Prolog.length();
+						//unknown type
+						
+						int length = 0;
+						int pos = 0;
+						
+						IASTNodeLocation[] locations = astName.getNodeLocations();
+						
+						if(locations.length>0)
+						{
+							length = locations[0].getNodeLength();
+							pos = locations[0].getNodeOffset()-ASTHelper.Prolog.length();
+						}
+						
+						
+						
+						System.out.println("unknown type: " + typeName);
+						notice = new DefaultParserNotice(this, "unknown type: "+typeName, 0, pos, length);
+						notice.setColor(Color.ORANGE);
+						
+						myResult.addNotice(notice);
 					}
-					
-					
-					
-					System.out.println("unknown type: " + typeName);
-					notice = new DefaultParserNotice(this, "unknown type: "+typeName, 0, pos, length);
-					notice.setColor(Color.ORANGE);
-					
-					myResult.addNotice(notice);
 				}
 				
 			}

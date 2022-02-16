@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<jardesc>
+    <jar path="C:/Rhapsody/v840/Share/RhapsodyApps/apps/appfbb0897628884b8da4ff76e3791fea95.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/OperationalRoundtrip/rhapsodyAppProject.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="true"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="false" manifestLocation="/OperationalRoundtrip/META-INF/MANIFEST.MF" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <file path="/OperationalRoundtrip/.project"/>
+        <file path="/OperationalRoundtrip/.classpath"/>
+		<javaElement handleIdentifier="=OperationalRoundtrip/src"/>
+		<file path="/OperationalRoundtrip/rhapsodyAppProject.jardesc"/>
+    </selectedElements>
+</jardesc>

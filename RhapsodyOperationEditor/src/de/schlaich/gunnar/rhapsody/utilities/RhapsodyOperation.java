@@ -112,8 +112,7 @@ public class RhapsodyOperation {
 			return null;
 		}
 		
-		String namespaceName = p.getNamespace();
-		if((namespaceName==null)||(namespaceName.equals("")))
+		if(p.getPropertyValue("CPP_CG.Package.DefineNameSpace").equals("False"))
 		{
 			return getNamespacePackage(p.getOwner());
 		}

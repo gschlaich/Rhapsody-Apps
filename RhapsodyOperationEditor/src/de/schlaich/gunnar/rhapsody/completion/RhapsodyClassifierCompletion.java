@@ -20,8 +20,8 @@ import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 public class RhapsodyClassifierCompletion extends BasicCompletion implements RhapsodyClassifier {
 
 	
-	private IRPClassifier myClassifier;
-	private IRPClassifier myClassifierPointer;
+	private IRPClassifier myClassifier=null;
+	private IRPClassifier myClassifierPointer=null;
 	private boolean myIsPointer = false;
 	private boolean myIsValue = true;
 	
@@ -33,9 +33,20 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 		this(aProvider,aClassifier,true);
 	}
 	
-	@SuppressWarnings("unchecked")
+	
 	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier, boolean aExtractEnum) {
 		super(aProvider, aClassifier.getName());
+		init(aProvider, aClassifier, aExtractEnum, true);	
+	}
+	
+	public RhapsodyClassifierCompletion( CompletionProvider aProvider, IRPClassifier aClassifier, boolean aExtractEnum, boolean addType) {
+		super(aProvider, aClassifier.getName());
+		init(aProvider, aClassifier, aExtractEnum, addType);	
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	private void init(CompletionProvider aProvider, IRPClassifier aClassifier, boolean aExtractEnum, boolean addType) {
 		myClassifier = aClassifier;	
 		setSummary( aClassifier.getDescription());
 		setShortDescription(aClassifier.getDescription());
@@ -45,16 +56,14 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 		setDefinedIn(aClassifier.getOwner().getFullPathNameIn());
 		
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)aProvider;
-		if(abstractProvider!=null)
-		{
-			List<IRPGeneralization> gs = myClassifier.getGeneralizations().toList();
-			for(IRPGeneralization g : gs)
-			{
-				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(aProvider, g.getBaseClass());
-				abstractProvider.addCompletion(rcc);
-			}
-		}
 		
+		
+		/*
+		if(addType == false)
+		{
+			return;
+		}
+		*/
 		
 		if(myClassifier instanceof IRPType)
 		{
@@ -168,8 +177,6 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 				}
 			}
 		}
-	
-		
 	}
 
 	@Override
@@ -266,8 +273,19 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 	 * @param sb The buffer to append to.
 	 * @return Whether there was a description to add.
 	 */
-	protected boolean possiblyAddDescription(StringBuilder sb) {
-		if (getShortDescription()!=null) {
+	protected boolean possiblyAddDescription(StringBuilder sb) 
+	{
+		if(myClassifier instanceof IRPType)
+		{
+			IRPType t = (IRPType)myClassifier;
+			if(t.getIsPredefined()==1)
+			{
+				return false;
+			}
+		}
+		
+		if (getShortDescription()!=null) 
+		{
 			sb.append("<hr><br>");
 			sb.append(myClassifier.getToolTipHTML());
 			//sb.append(getShortDescription());

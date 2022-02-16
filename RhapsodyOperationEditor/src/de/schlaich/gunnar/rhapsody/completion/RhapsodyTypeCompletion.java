@@ -2,6 +2,7 @@ package de.schlaich.gunnar.rhapsody.completion;
 
 import java.util.List;
 
+import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
 
@@ -22,7 +23,16 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 		
 		if(myType.isKindLanguage()==1)
 		{
-			ASTHelper.parseLanguageEnumType(myType);
+			String[] literals = ASTHelper.parseLanguageEnumType(myType);
+			if((provider instanceof AbstractCompletionProvider)&&(literals!=null))
+			{
+				AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
+				for(String literal : literals)
+				{
+					RhapsodyEnumLiteralCompletion relc = new RhapsodyEnumLiteralCompletion(provider, myType, literal);
+					abstractProvider.addCompletion(relc);
+				}
+			}
 		}
 		
 		setIcon( RhapsodyOperation.getIcon(myType));

@@ -10,11 +10,19 @@ import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.Util;
 
+import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPFile;
+import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPType;
+import com.telelogic.rhapsody.core.IRPVariable;
 
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifierCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyNamespaceCompletion;
+import de.schlaich.gunnar.rhapsody.completion.RhapsodyOperationCompletion;
+import de.schlaich.gunnar.rhapsody.completion.RhapsodyTypeCompletion;
+import de.schlaich.gunnar.rhapsody.completion.RhapsodyVariableCompletion;
 
 public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 
@@ -39,19 +47,85 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		return ret;
 	}
 	
+	public static Completion GetCompletion(String aToken)
+	{
+		List<Completion> l = GetCompletions(aToken);
+		if((l!=null)&&(l.isEmpty()==false))
+		{
+			return l.get(0);
+		}
+		return null;
+	}
+	
+	public static List<Completion> GetCompletions(String aToken)
+	{
+		for(NamespaceCompletionProvider provider: NamespaceCompletionProviders.values())
+		{
+			List<Completion> l = provider.getCompletionByInputText(aToken);
+			if((l!=null)&&(l.isEmpty()==false))
+			{
+				return l;
+			}
+			
+		}	
+		return null;
+	}
+	
 	
 	private NamespaceCompletionProvider(IRPPackage aPackage, RhapsodyNamespaceCompletion aRhapsodyNamespaceCompletion)
 	{
 		myPackage = aPackage;
-		List<IRPClassifier> classifiers = aRhapsodyNamespaceCompletion.getClassifiers();
-		for(IRPClassifier classifier:classifiers)
+		addElements(aPackage);
+	
+	}
+	
+	private void addElements(IRPPackage aPackage)
+	{
+		for(IRPClass rclass : (List<IRPClass>)aPackage.getClasses().toList())
 		{
-			if(classifier!=null)
+			if(rclass!=null)
 			{
-				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier, true);
+				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, rclass, false, false );
 				addCompletion(rcc);
 			}
 		}
+		for(IRPPackage p : (List<IRPPackage>)aPackage.getPackages().toList())
+		{
+			if(p!=null)
+			{
+				String namespacename = p.getNamespace();
+				if((namespacename==null)||(namespacename.equals("")))
+				{
+					addElements(p);
+				}
+			}
+		}
+		for(IRPType t : (List<IRPType>)aPackage.getTypes().toList())
+		{
+			if(t!=null)
+			{
+				RhapsodyTypeCompletion rtc = new RhapsodyTypeCompletion(this, t);
+				addCompletion(rtc);
+			}
+		}
+		for(IRPVariable v: (List<IRPVariable>)aPackage.getGlobalVariables().toList())
+		{
+			if(v!=null)
+			{
+				RhapsodyVariableCompletion rvc = new RhapsodyVariableCompletion(this, v, false);
+				addCompletion(rvc);
+				
+			}
+		}
+		
+		for(IRPOperation f: (List<IRPOperation>)aPackage.getGlobalFunctions().toList())
+		{
+			if(f!=null)
+			{
+				RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(this, f, false);
+			}
+		}
+					
 	}
 	
 	
