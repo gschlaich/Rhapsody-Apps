@@ -13,10 +13,15 @@ import com.telelogic.rhapsody.core.IRPObjectModelDiagram;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPRelation;
+import com.telelogic.rhapsody.core.IRPState;
+import com.telelogic.rhapsody.core.IRPStateVertex;
+import com.telelogic.rhapsody.core.IRPStatechart;
 import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiation;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiationParameter;
 import com.telelogic.rhapsody.core.IRPTemplateParameter;
+import com.telelogic.rhapsody.core.IRPTransition;
+import com.telelogic.rhapsody.core.IRPTrigger;
 
 import net.sourceforge.plantuml.activitydiagram3.InstructionPartition;
 
@@ -26,10 +31,14 @@ import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPClassifierRole;
+import com.telelogic.rhapsody.core.IRPConnector;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPGeneralization;
+import com.telelogic.rhapsody.core.IRPGraphElement;
+import com.telelogic.rhapsody.core.IRPGraphicalProperty;
+import com.telelogic.rhapsody.core.IRPGuard;
 import com.telelogic.rhapsody.core.IRPMessage;
 
 public class PlantUMLGenerator {
@@ -38,7 +47,11 @@ public class PlantUMLGenerator {
 	
 	private String myPlantUml;
 	private int myRootLevel;
-	private boolean myFromDiagram;
+	private IRPDiagram myDiagram = null;
+	
+	private enum viewElement { viewNone, viewPublic, viewProtected, viewAll, viewVirtual };
+	
+	
 	
 	private List<String> myClasses = new ArrayList<String>();
 			
@@ -59,7 +72,7 @@ public class PlantUMLGenerator {
 	public PlantUMLGenerator(IRPModelElement aIRPElement) 
 	{
 		myRootLevel = 2;
-		myFromDiagram = false;
+		
 		
 		
 		StringBuffer plantStringBuffer = new StringBuffer();
@@ -70,9 +83,13 @@ public class PlantUMLGenerator {
 		{
 			generate((IRPObjectModelDiagram) aIRPElement, plantStringBuffer, myRootLevel);
 		}
+		else if(aIRPElement instanceof IRPStatechart)
+		{
+			generate((IRPStatechart) aIRPElement, plantStringBuffer, myRootLevel);
+		}
 		else if(aIRPElement instanceof IRPDiagram)
 		{
-			myFromDiagram = true;
+			
 			generate((IRPDiagram) aIRPElement, plantStringBuffer, myRootLevel);
 		}
 		else
@@ -154,17 +171,25 @@ public class PlantUMLGenerator {
 			{
 				generate(p,aPlantStringBuffer,aLevel-1);
 				
-				if((aLevel>-1)&&(aLevel!=myRootLevel))
+				if((aLevel>-1))
 				{
-				//hidden link between all nested packages
-				if(linkPackage!=null)
-				{
-					aPlantStringBuffer.append(linkPackage.getName());
-					aPlantStringBuffer.append(PlantUMLElements.myHiddenLink);
-					aPlantStringBuffer.append(p.getName());
-					aPlantStringBuffer.append("\n");
-				}
-				linkPackage = p;
+					//hidden link between all nested packages
+					if(linkPackage!=null)
+					{
+						aPlantStringBuffer.append(linkPackage.getName());
+						if(aLevel==myRootLevel)
+						{
+							aPlantStringBuffer.append(PlantUMLElements.myHiddenDownLink);
+						}
+						else
+						{
+							aPlantStringBuffer.append(PlantUMLElements.myHiddenLeftLink);
+						}
+						
+						aPlantStringBuffer.append(p.getName());
+						aPlantStringBuffer.append("\n");
+					}
+					linkPackage = p;
 				}
 			}
 
@@ -196,6 +221,41 @@ public class PlantUMLGenerator {
 		{
 			return false;
 		}
+		myDiagram = aObjectModelDiagramm;
+		
+		/*
+		
+		List<IRPModelElement> nes = aObjectModelDiagramm.getNestedElements().toList();
+		System.out.println(".............");
+		for(IRPModelElement ne:nes)
+		{
+			System.out.print(ne.getClass().getName());
+			System.out.print(" ");
+			System.out.println(ne.getName());
+			
+		}
+		System.out.println(".............");
+		
+		List<IRPGraphElement> ges= aObjectModelDiagramm.getGraphicalElements().toList();
+		for(IRPGraphElement ge:ges)
+		{
+			System.out.print(ge.getClass().getName());
+			System.out.print(" ");
+			System.out.println(ge.getInterfaceName());
+			
+			List<IRPGraphicalProperty> gps = ge.getAllGraphicalProperties().toList();
+			for(IRPGraphicalProperty gp:gps)
+			{
+				System.out.print(" "+gp.getInterfaceName());
+				System.out.print(" "+gp.getKey());
+				System.out.print(" ");
+				System.out.println(gp.getValue());
+			}
+			
+			
+		}
+		
+		*/
 		
 		List<IRPModelElement> elements = aObjectModelDiagramm.getElementsInDiagram().toList();
 		for(IRPModelElement element:elements)
@@ -234,10 +294,14 @@ public class PlantUMLGenerator {
 			return false;
 		}
 		
+		myDiagram = aDiagramm;
+
 		
 		Map<Integer,String> messages = new HashMap<Integer, String>();
 		
 		List<IRPModelElement> elements = aDiagramm.getElementsInDiagram().toList();
+		
+		
 		for(IRPModelElement element:elements)
 		{
 			System.out.print(element.getClass().getName());
@@ -372,6 +436,18 @@ public class PlantUMLGenerator {
 	
 	private boolean generate(IRPClassifier aClassifier, StringBuffer aPlantStringBuffer, long aLevel)
 	{
+		
+		
+		viewElement viewAttribute = viewElement.viewPublic;
+		viewElement viewOperation = viewElement.viewPublic;
+		
+		if(aLevel<=0)
+		{
+			viewAttribute = viewElement.viewNone;
+			viewOperation = viewElement.viewVirtual;
+		}
+		
+		
 		if(aClassifier==null)
 		{
 			return false;
@@ -382,6 +458,28 @@ public class PlantUMLGenerator {
 		{
 			return false;
 		}
+		
+		if(myDiagram!=null)
+		{
+			List<IRPGraphElement> graphElements = myDiagram.getCorrespondingGraphicElements(aClassifier).toList();
+			if(graphElements.size()>0)
+			{
+				IRPGraphElement graphElement = graphElements.get(0);
+				
+				
+				IRPGraphicalProperty p = graphElement.getGraphicalProperty("OperationsDisplay");
+				viewOperation = getViewElement(p);
+				p=graphElement.getGraphicalProperty("AttributeDisplay");
+				viewAttribute = getViewElement(p);
+
+			}
+			else
+			{
+				//diagram does not show class...
+				return false;
+			}
+		}
+		
 
 		String nameSpace = getNameSpace(aClassifier);
 		
@@ -426,16 +524,48 @@ public class PlantUMLGenerator {
 		aPlantStringBuffer.append(PlantUMLElements.myBraceOpen);
 		
 		//attributes
+		
 		List<IRPAttribute> attributes = aClassifier.getAttributes().toList();
-		for(IRPAttribute attribute:attributes)
+		if(viewAttribute!=viewElement.viewNone)
 		{
-			generate(attribute, aPlantStringBuffer, aLevel);
+			for(IRPAttribute attribute:attributes)
+			{
+				if(viewAttribute==viewElement.viewPublic)
+				{
+					if(attribute.getVisibility().equals("public")==false)
+					{
+						continue;
+					}
+				}
+				generate(attribute, aPlantStringBuffer, aLevel);
+			}
 		}
 		//operations
 		List<IRPOperation> operations = aClassifier.getOperations().toList();
-		for(IRPOperation operation:operations)
+		if(viewOperation!=viewElement.viewNone)
 		{
-			generate(operation, aPlantStringBuffer, aLevel);
+			for(IRPOperation operation:operations)
+			{
+				if(viewOperation==viewElement.viewPublic)
+				{
+					if(operation.getVisibility().equals("public")==false)
+					{
+						continue;
+					}
+				}
+				else if(viewOperation == viewElement.viewVirtual)
+				{
+					if(operation.getIsVirtual()!=1)
+					{
+						continue;
+					}
+					if(operation.getVisibility().equals("public")==false)
+					{
+						continue;
+					}
+				}
+				generate(operation, aPlantStringBuffer, aLevel);
+			}
 		}
 		
 		
@@ -535,6 +665,34 @@ public class PlantUMLGenerator {
 		return true;
 	}
 
+	private viewElement getViewElement(IRPGraphicalProperty p) {
+		viewElement ret;
+		String value = p.getValue();
+		
+		if(value.equals("None"))
+		{
+			ret = viewElement.viewNone;
+		}
+		else if(value.equals("Explicit"))
+		{
+			ret = viewElement.viewNone;
+		}
+		else if(value.equals("All"))
+		{
+			ret = viewElement.viewAll;
+		}
+		else if(value.equals("Public"))
+		{
+			ret = viewElement.viewPublic;
+		}
+		else
+		{
+			ret = viewElement.viewNone;
+		}
+		
+		return ret;
+	}
+
 	private void generateDependentClassifier(IRPClassifier aClassifierSource, IRPClassifier aClassifierDependent,
 			StringBuffer aPlantStringBuffer) {
 		if((aClassifierDependent instanceof IRPClass)==false)
@@ -593,13 +751,13 @@ public class PlantUMLGenerator {
 		//at the moment only classes..
 		if((dependent instanceof IRPClass)&&(dependsOn instanceof IRPClass))
 		{
-			generate((IRPClassifier)dependent,aPlantStringBuffer,aLevel+1);
-			generate((IRPClassifier)dependsOn,aPlantStringBuffer,aLevel+1);
+			generate((IRPClassifier)dependent,aPlantStringBuffer,0);
+			generate((IRPClassifier)dependsOn,aPlantStringBuffer,0);
 		}
 		else if((dependent instanceof IRPPackage)&&(dependsOn instanceof IRPPackage))
 		{
-			generate((IRPPackage)dependent,aPlantStringBuffer,aLevel+1);
-			generate((IRPPackage)dependsOn,aPlantStringBuffer,aLevel+1);
+			generate((IRPPackage)dependent,aPlantStringBuffer,0);
+			generate((IRPPackage)dependsOn,aPlantStringBuffer,0);
 		}
 		else
 		{
@@ -687,19 +845,6 @@ public class PlantUMLGenerator {
 		}
 		
 		
-		/*
-		if(aOperation.getIsVirtual()==0)
-		{
-			return false;
-		}
-		*/
-		if(aOperation.getVisibility().equals("public")==false)
-		{
-			if(aOperation.getIsVirtual()==0)
-			{
-				return false;
-			}	
-		}
 		
 		String operationName = aOperation.getName();
 		IRPClassifier ret = aOperation.getReturns();
@@ -744,11 +889,6 @@ public class PlantUMLGenerator {
 		{
 			return false;
 		}
-		if(aAttribute.getVisibility().equals("public")==false)
-		{
-			return false;
-		}
-		
 		
 		aPlantStringBuffer.append(getVisibility(aAttribute.getVisibility()));
 		
@@ -791,13 +931,180 @@ public class PlantUMLGenerator {
 		return ret.getNamespace();
 	}
 	
+	private boolean generate(IRPStatechart aStatechart, StringBuffer aPlantStringBuffer, int aLevel)
+	{
+		if(aStatechart==null)
+		{
+			return false;
+		}
+		
+		List<IRPModelElement> elements = aStatechart.getElementsInDiagram().toList();
+		
+		
+		for(IRPModelElement element:elements)
+		{
+			System.out.println("Element Type: " + element.getClass().getName() + " Name: " + element.getName());
+
+			if(element instanceof IRPStateVertex)
+			{
+				generate((IRPStateVertex)element, aPlantStringBuffer, aLevel);
+			}
+			
+			
+			
+			if(element instanceof IRPTransition)
+			{
+				IRPTransition transition = (IRPTransition)element;
+				if(transition.getItsStatechart().equals(aStatechart))
+				{
+					generate((IRPTransition)element,aPlantStringBuffer, aLevel);
+				}
+			}
+			
+			
+		}
+		
+		return true;
+	}
+	
+	private boolean generate(IRPTransition aTransition, StringBuffer aPlantStringBuffer, int aLevel)
+	{
+		if(aTransition==null)
+		{
+			return false;
+		}
+		
+		if(aTransition.isDefaultTransition()==1)
+		{
+			IRPState defaultState = aTransition.getOfState();
+			if(defaultState.isRoot()==1)
+			{
+				aPlantStringBuffer.append(PlantUMLElements.myRootState);
+				aPlantStringBuffer.append(PlantUMLElements.myTransition);
+				aPlantStringBuffer.append(aTransition.getItsTarget().getName());
+				aPlantStringBuffer.append("\n");
+			}
+			else
+			{
+				aPlantStringBuffer.append(PlantUMLElements.myState);
+				aPlantStringBuffer.append(defaultState.getName());
+				aPlantStringBuffer.append(PlantUMLElements.myBraceOpen);
+				aPlantStringBuffer.append(PlantUMLElements.myRootState);
+				aPlantStringBuffer.append(PlantUMLElements.myTransition);
+				aPlantStringBuffer.append(aTransition.getItsTarget().getName());
+				aPlantStringBuffer.append(PlantUMLElements.myBraceClose);
+				aPlantStringBuffer.append("\n");
+				
+			}
+		}
+		else
+		{
+			aPlantStringBuffer.append(aTransition.getItsSource().getName());
+			aPlantStringBuffer.append(PlantUMLElements.myTransition);
+			aPlantStringBuffer.append(aTransition.getItsTarget().getName());
+			IRPTrigger trigger = aTransition.getItsTrigger();
+			if(trigger!=null)
+			{
+				aPlantStringBuffer.append(" : ");
+				aPlantStringBuffer.append(aTransition.getItsTrigger().getBody());
+			}
+			IRPGuard guard = aTransition.getItsGuard();
+			if(guard!=null)
+			{
+				if(trigger==null)
+				{
+					aPlantStringBuffer.append(" : ");
+				}
+				aPlantStringBuffer.append(" [");
+				aPlantStringBuffer.append(guard.getBody());
+				aPlantStringBuffer.append("] ");
+	
+			}
+			aPlantStringBuffer.append("\n");
+		}
+
+		return true;
+	}
+	
+	private boolean generate(IRPStateVertex aState, StringBuffer aPlantStringBuffer, int aLevel)
+	{
+		if(aState==null)
+		{
+			return false;
+		}
+		
+		if(aState instanceof IRPState)
+		{
+			IRPState state = (IRPState)aState;
+			if(state.isRoot()==1)
+			{
+				return true;
+			}
+		}
+				
+		
+		
+		drawStateOpen(aState.getParent(), aPlantStringBuffer);
+		
+		aPlantStringBuffer.append(PlantUMLElements.myState);
+		aPlantStringBuffer.append(aState.getName());
+		if(aState instanceof IRPConnector)
+		{
+			IRPConnector connector = (IRPConnector)aState;
+			if(connector.getConnectorType().equals("Condition"))
+			{
+				aPlantStringBuffer.append(PlantUMLElements.myConditional);
+			}
+			else if(connector.getConnectorType().equals("History"))
+			{
+				aPlantStringBuffer.append(PlantUMLElements.myHistory);
+			}
+		}
+		aPlantStringBuffer.append("\n");
+		
+		drawStateClose(aState.getParent(), aPlantStringBuffer);
+		
+
+		return true;
+	}
+	
+	private void drawStateOpen(IRPState aState, StringBuffer aPlantStringBuffer)
+	{
+		if(aState.isRoot()==1)
+		{
+			return;
+		}
+		IRPState parentState = aState.getParent();
+		drawStateOpen(parentState, aPlantStringBuffer);
+		
+		aPlantStringBuffer.append(PlantUMLElements.myState);
+		aPlantStringBuffer.append(aState.getName());
+		aPlantStringBuffer.append(PlantUMLElements.myBraceOpen);
+		
+	}
+	
+	private void drawStateClose(IRPState aState, StringBuffer aPlantStringBuffer)
+	{
+		if(aState.isRoot()==1)
+		{
+			return;
+		}
+		IRPState parentState = aState.getParent();
+		drawStateClose(parentState, aPlantStringBuffer);
+		
+		
+		aPlantStringBuffer.append(PlantUMLElements.myBraceClose);
+		
+	}
+	
 	
 
 }
 
 class PlantUMLElements {
 	
-	public static String myStartUML = "\n@startuml\n\n";
+	//public static String myStartUML = "\n@startuml\nskinparam handwritten true\n";
+	public static String myStartUML = "\n@startuml\n";
 	public static String myEndUML = "\n\n@enduml\n";
 	public static String myClass = "class ";
 	public static String myInterface = "interface ";
@@ -824,7 +1131,15 @@ class PlantUMLElements {
 	public static String myRCreateMessage = " <-- ";
 	public static String myParticipant = " participant ";
 	public static String myActor = " actor ";
-	public static String myHiddenLink = "  -[hidden]--> ";
+	public static String myState = "state ";
+	public static String myRootState = "[*] ";
+	public static String myTerminationState = "[*] ";
+	public static String myTransition = " --> ";
+	//public static String myHiddenLink = "  -[hidden]--> ";
+	public static String myHiddenDownLink = " -[hidden]d--> ";
+	public static String myHiddenLeftLink = " -[hidden]l--> ";
+	public static String myConditional = " <<choice>> ";
+	public static String myHistory = " <<choice>> ";
 	
 	
 	

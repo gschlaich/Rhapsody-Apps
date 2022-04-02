@@ -13,7 +13,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
-public class RhapsodyNamespaceCompletion extends BasicCompletion implements RhapsodyClassifier
+public class RhapsodyNamespaceCompletion extends BasicCompletion implements RhapsodyClassifier 
 {
 	
 	IRPPackage myPackage;

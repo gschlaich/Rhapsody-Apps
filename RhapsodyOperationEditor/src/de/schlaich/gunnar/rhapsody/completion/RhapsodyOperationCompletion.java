@@ -17,7 +17,7 @@ import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
-public class RhapsodyOperationCompletion extends FunctionCompletion implements RhapsodyClassifier {
+public class RhapsodyOperationCompletion extends FunctionCompletion implements RhapsodyClassifier{
 
 	IRPInterfaceItem myInterfaceItem;
 	IRPPackage myNameSpacePackage = null;
@@ -59,7 +59,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 				if(addType)
 				{
 					IRPPackage argNameSpace = RhapsodyOperation.getNamespacePackage(argument);
-					if((argNameSpace==null)||(argNameSpace==myNameSpacePackage))
+					if((argNameSpace==null)||(argNameSpace.equals(myNameSpacePackage)))
 					{
 							
 						RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, argument.getType());
@@ -79,7 +79,7 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 			if((getIRPClassifier(false)!=null)&&(abstractProvider!=null))
 			{
 				IRPPackage retNameSpace = RhapsodyOperation.getNamespacePackage(getIRPClassifier(false));
-				if((retNameSpace==null)||(retNameSpace==myNameSpacePackage))
+				if((retNameSpace==null)||(retNameSpace.equals(myNameSpacePackage)))
 				{
 					RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(aProvider, getIRPClassifier(false));
 					abstractProvider.addCompletion(rc);

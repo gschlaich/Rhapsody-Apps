@@ -15,7 +15,7 @@ import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
-public class RhapsodyArgumentCompletion extends VariableCompletion implements RhapsodyClassifier {
+public class RhapsodyArgumentCompletion extends VariableCompletion implements RhapsodyClassifier{
 	
 	IRPArgument myArgument;
 	IRPClassifier myClassifier;

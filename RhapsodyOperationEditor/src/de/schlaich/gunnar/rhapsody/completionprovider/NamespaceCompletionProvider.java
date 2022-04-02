@@ -74,6 +74,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 	
 	private NamespaceCompletionProvider(IRPPackage aPackage, RhapsodyNamespaceCompletion aRhapsodyNamespaceCompletion)
 	{
+		super.setParameterizedCompletionParams('(', ", ", ')');
 		myPackage = aPackage;
 		addElements(aPackage);
 	
@@ -122,7 +123,9 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		{
 			if(f!=null)
 			{
+				System.out.println(f.getName());
 				RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(this, f, false);
+				addCompletion(roc);
 			}
 		}
 					

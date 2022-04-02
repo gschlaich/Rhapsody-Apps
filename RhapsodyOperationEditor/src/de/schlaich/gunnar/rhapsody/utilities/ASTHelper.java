@@ -230,7 +230,10 @@ public class ASTHelper
 		ASTNode<ICPPASTTemplateId> parseTemplate = new ASTNode<ICPPASTTemplateId>(ICPPASTTemplateId.class);
 		
 		ICPPASTTemplateId templateId = parseTemplate.getNode(translationUnit);
-		
+		/*
+		ASTNode<ICPPASTQualifiedName> parseQualifiedName = new ASTNode<ICPPASTQualifiedName>(ICPPASTQualifiedName.class);
+		ICPPASTQualifiedName qualifiedName = parseQualifiedName.getNode(translationUnit);
+		*/
 		if(templateId!=null)
 		{
 			return templateId.getTemplateName().toString();
