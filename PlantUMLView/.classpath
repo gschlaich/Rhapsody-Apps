@@ -11,6 +11,6 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/plantuml.1.2021.6.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/plantuml.1.2021.6.jar" sourcepath="C:/Users/schl591/git/plantuml"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

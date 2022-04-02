@@ -1,6 +1,8 @@
 package de.schlaich.gunnar.rhapsody.completionprovider;
 
 import java.awt.Point;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -26,12 +28,14 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPEvent;
 import com.telelogic.rhapsody.core.IRPEventReception;
+import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPRelation;
 import com.telelogic.rhapsody.core.IRPStereotype;
+import com.telelogic.rhapsody.core.IRPUnit;
 
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyAttributeCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
@@ -59,6 +63,8 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	private IRPPackage myNameSpace = null;
 	
+	private boolean myAddType = false;
+	
 	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProviders = null;
 	
 	public enum visibility {
@@ -77,8 +83,14 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		RhapsodyLocalVariableCompletion thisCompletion = new RhapsodyLocalVariableCompletion(this, "this", myClassifier, addType);
 		addCompletion(thisCompletion);
 		myNameSpace = RhapsodyOperation.getNamespacePackage(myClassifier);
+		myAddType = addType;
+		if(addType==false)
+		{
+			createClassCompletion(myClassifier, myVisibility, myAddType);	
+		}
 		
-		createClassCompletion(myClassifier, myVisibility, addType);		
+		
+		
 	}
 	
 	private ClassifierCompletionProvider()
@@ -118,6 +130,11 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		return myClassifier;
 	}
 	
+	public void createClassCompletion()
+	{
+		createClassCompletion(myClassifier, myVisibility, myAddType);
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	public void createClassCompletion(IRPClassifier aClassifier, visibility aVisibility, boolean addType) {
@@ -126,7 +143,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		if(addType)
 		{
 			IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(aClassifier);
-			if((classifiernamespace==null)||(classifiernamespace==myNameSpace))
+			if((classifiernamespace==null)||(classifiernamespace.equals(myNameSpace)))
 			{
 				RhapsodyClassifierCompletion rcm = new RhapsodyClassifierCompletion(this, aClassifier);
 				addCompletion(rcm);
@@ -177,7 +194,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 							IRPEvent ev = er.getEvent();
 							
 							IRPPackage evNameSpace = RhapsodyOperation.getNamespacePackage(ev);
-							if((evNameSpace==null)||(evNameSpace==myNameSpace))
+							if((evNameSpace==null)||(evNameSpace.equals(myNameSpace)))
 							{
 								RhapsodyClassifierCompletion ercc = new RhapsodyClassifierCompletion(this, ev);
 								this.addCompletion(ercc);
@@ -256,7 +273,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 						if(addType)
 						{
 							IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(classifier);
-							if((classifiernamespace==null)||(classifiernamespace==myNameSpace))
+							if((classifiernamespace==null)||(classifiernamespace.equals(myNameSpace)))
 							{
 								RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier,false,false);
 								rcc.setRelevance(myBaseRelevance-10);
@@ -264,6 +281,51 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 							}
 						}
 					}
+				}
+				else if(modelElement instanceof IRPFile)
+				{
+					IRPFile f = (IRPFile)modelElement;
+					List<IRPModelElement> elements = f.getElements().toList();
+					//check for global functions and attributes
+					for(IRPModelElement e : elements)
+					{
+						if( e instanceof IRPDependency)
+						{
+							
+							IRPDependency fdependency = (IRPDependency)e;
+							IRPModelElement dO = fdependency.getDependsOn();
+							if(dO instanceof IRPOperation)
+							{
+								IRPOperation op = (IRPOperation)fdependency.getDependsOn();
+								RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(this, op);
+								roc.setShortDescription(fdependency.getDescription());
+
+								roc.setRelevance(myBaseRelevance);
+								addCompletion(roc);
+							}
+							/*
+							else
+							{
+								System.out.println(e.getName()+" "+e.toString());
+							}
+							*/
+							
+						}					
+						else if(e instanceof IRPAttribute)
+						{
+							IRPAttribute a = (IRPAttribute)e;
+							RhapsodyAttributeCompletion rac = new RhapsodyAttributeCompletion(this, a);
+							rac.setRelevance(myBaseRelevance-10);
+							addCompletion(rac);
+						}
+						/*
+						else
+						{					
+							System.out.println(e.getName()+" "+e.toString());
+						}
+						*/
+					}
+					
 				}
 				else
 				{
@@ -289,7 +351,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				if(addType)
 				{
 					IRPPackage baseclassnamespace = RhapsodyOperation.getNamespacePackage(baseClass);
-					if((baseclassnamespace==null)||(baseclassnamespace==myNameSpace))
+					if((baseclassnamespace==null)||(baseclassnamespace.equals(myNameSpace)))
 					{
 						RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, baseClass);
 						rcc.setIcon(new ImageIcon(generalization.getIconFileName().replace("\\","/")));

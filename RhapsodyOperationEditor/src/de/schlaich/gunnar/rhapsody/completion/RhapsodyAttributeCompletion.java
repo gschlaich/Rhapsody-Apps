@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.swing.Icon;
 
-import org.apache.commons.imaging.icc.IccProfileParser;
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;

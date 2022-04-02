@@ -3,12 +3,15 @@ package de.schlaich.gunnar.rhapsody.utilities;
 import java.util.List;
 
 import javax.swing.Icon;
+
+import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
 
 public class RhapsodyOperation {
@@ -223,11 +226,23 @@ public class RhapsodyOperation {
 			}
 		}
 		
-		
-		
+		if(ret == null)
+		{
+			//search in the whole model
+			IRPProject proj = aClassifier.getProject();
+			
+			if(proj!=null)
+			{
+				ret = (IRPClassifier)proj.findAllByName(aName, "Class");
+			}
+		}
+
 		return ret;
 		
 	}
+	
+	
+	
 	
 	public static IRPClassifier findClassifier(IRPPackage aPackage, String aName)
 	{

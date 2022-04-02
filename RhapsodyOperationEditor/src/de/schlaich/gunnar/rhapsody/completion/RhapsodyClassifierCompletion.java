@@ -8,7 +8,6 @@ import org.fife.ui.autocomplete.CompletionProvider;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPEnumerationLiteral;
-import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiation;
 import com.telelogic.rhapsody.core.IRPTemplateInstantiationParameter;

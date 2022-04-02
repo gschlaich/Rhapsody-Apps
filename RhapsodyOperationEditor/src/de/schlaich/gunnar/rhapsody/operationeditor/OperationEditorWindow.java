@@ -182,8 +182,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		SwingUtilities.invokeLater(focusInWindow); 
 		
-
-		
 		
 	}
 	
@@ -275,6 +273,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		if(selected instanceof IRPOperation)
 		{	
+			
+			ApplicationListener listener = new ApplicationListener();
+			listener.connect(rhapsody);
+			
 			
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			
@@ -370,6 +372,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			JButton revertButton = new JButton("Revert");
 			buttonPanel.add(revertButton);
 			
+			JButton formatButton = new JButton("Format(draft)");
+			buttonPanel.add(formatButton);
+			
 			JButton applyButton = new JButton("Apply");
 			buttonPanel.add(applyButton);
 			
@@ -412,6 +417,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			revertButton.setActionCommand("revert");
 			revertButton.addActionListener(oew);
+			
+			formatButton.setActionCommand("format");
+			formatButton.addActionListener(oew);
 			
 			
 			//frame.add(editorPanel);
@@ -613,6 +621,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 			}
 			
+		}
+		if(command.equals("format"))
+		{
+			EditorCodeFormatter f = new EditorCodeFormatter();
+			String body = myTextArea.getText();
+			String formatted = f.format(body);
+			myTextArea.setText(formatted);
 		}
 		}
 		catch (Exception e1) 

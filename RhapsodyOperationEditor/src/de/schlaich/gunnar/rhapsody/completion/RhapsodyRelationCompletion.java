@@ -16,7 +16,7 @@ import com.telelogic.rhapsody.core.IRPRelation;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
-public class RhapsodyRelationCompletion extends VariableCompletion implements RhapsodyClassifier {
+public class RhapsodyRelationCompletion extends VariableCompletion implements RhapsodyClassifier{
 
 	private IRPRelation myRelation;
 	public RhapsodyRelationCompletion(CompletionProvider provider, IRPRelation aRelation, boolean addType) {
@@ -50,10 +50,12 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		IRPPackage namespace = RhapsodyOperation.getNamespacePackage(myRelation);
 		
 		
+		
 		if((getIRPClassifier(isPointer())!=null)&&(abstractProvider!=null))
 		{
 			IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(getIRPClassifier(isPointer()));
-			if((classifiernamespace==null)||(classifiernamespace==namespace))
+			
+			if((classifiernamespace==null)||(classifiernamespace.equals(namespace)))
 			{		
 				RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier(isPointer()));
 				abstractProvider.addCompletion(rc);

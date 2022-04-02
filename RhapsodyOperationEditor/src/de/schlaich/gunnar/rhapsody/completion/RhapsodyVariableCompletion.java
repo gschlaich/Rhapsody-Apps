@@ -4,7 +4,6 @@ import java.util.List;
 
 import javax.swing.Icon;
 
-import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPVariable;
