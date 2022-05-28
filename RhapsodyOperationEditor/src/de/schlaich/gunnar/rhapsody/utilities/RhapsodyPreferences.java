@@ -41,6 +41,11 @@ public class RhapsodyPreferences {
 		
 	}
 	
+	public void clearRhapsodyModelElement(String aGuid)
+	{
+		myPrefs.remove(aGuid);
+	}
+	
 	private boolean isDebug()
 	{
 		 boolean ret = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("-agentlib:jdwp") > 0;

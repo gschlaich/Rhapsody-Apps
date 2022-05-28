@@ -59,6 +59,10 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 	
 	public static List<Completion> GetCompletions(String aToken)
 	{
+		if(NamespaceCompletionProviders==null)
+		{
+			return null;
+		}
 		for(NamespaceCompletionProvider provider: NamespaceCompletionProviders.values())
 		{
 			List<Completion> l = provider.getCompletionByInputText(aToken);
@@ -77,7 +81,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		super.setParameterizedCompletionParams('(', ", ", ')');
 		myPackage = aPackage;
 		addElements(aPackage);
-	
+		
 	}
 	
 	private void addElements(IRPPackage aPackage)
@@ -95,7 +99,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 			if(p!=null)
 			{
 				String namespacename = p.getNamespace();
-				if((namespacename==null)||(namespacename.equals("")))
+				if((namespacename==null)||(namespacename.equals(myPackage.getNamespace())))
 				{
 					addElements(p);
 				}

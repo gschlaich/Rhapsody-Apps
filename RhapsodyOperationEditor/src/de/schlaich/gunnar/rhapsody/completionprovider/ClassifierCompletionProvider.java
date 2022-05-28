@@ -395,7 +395,11 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			myCompletionCount++;
 			Date date = new Date();
 			double time = (double)(date.getTime()-myStartTime)/1000;
-			System.out.println("Insert(" + myCompletionCount +") " + aCompletion.getInputText() + ": " + time);
+			System.out.println("Insert(" + myCompletionCount +") " 
+					+ aCompletion.getInputText() 
+					+ "["+aCompletion.getClass().toString()+"]"
+					+ "/" 
+					+ aCompletion.toString() + ": " + time);
 			try
 			{
 				super.addCompletion(aCompletion);
@@ -403,7 +407,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			catch(Exception e)
 			{
 				e.printStackTrace();
-				System.out.println("Sort failed Completion: "+ aCompletion.getInputText());
+				System.out.println("Sort failed Completion: "+ aCompletion.toString());
 			}
 			completions.sort(comparator);
 		}
