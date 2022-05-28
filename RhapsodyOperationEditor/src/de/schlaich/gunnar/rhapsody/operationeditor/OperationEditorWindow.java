@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -86,6 +87,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private IRPApplication myApplication;
 	private SyntaxScheme myScheme;
 	private StartAutoCompletion myStartAutoCompletion;
+	private String myGuid;
 	
 	
 	/**
@@ -93,39 +95,150 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	public OperationEditorWindow(IRPApplication rhapsody, IRPModelElement selected) {
+	public OperationEditorWindow(IRPApplication rhapsody, IRPOperation aOperation) {
 		
+		
+		JFrame frame = new JFrame (RhapsodyOperation.getOperation(aOperation));
+		frame.setLayout(new BorderLayout());
+		
+		JPanel buttonPanel = new JPanel();
+		
+		JButton locateButton = new JButton("Locate");
+		buttonPanel.add(locateButton);
+		
+		JButton explorerButton = new JButton("Explorer");
+		buttonPanel.add(explorerButton);
+		
+		JButton updateButton = new JButton("Update");
+		buttonPanel.add(updateButton);
+	
+		JButton generateButton = new JButton("Generate");
+		buttonPanel.add(generateButton);
+		
+		JButton roundTripButton = new JButton("RoundTrip");
+		buttonPanel.add(roundTripButton);
+		
+		JButton revertButton = new JButton("Revert");
+		buttonPanel.add(revertButton);
+		/*
+		JButton formatButton = new JButton("Format(draft)");
+		buttonPanel.add(formatButton);
+		*/
+		JButton applyButton = new JButton("Apply");
+		buttonPanel.add(applyButton);
+		
+		JButton okButton = new JButton("ok");
+		buttonPanel.add(okButton);
+			
+		JButton cancelButton = new JButton("Cancel");
+		buttonPanel.add(cancelButton);
+		
+		buttonPanel.setVisible(true);
+		
+		
+		OperationEditorWindow oew = this;
+		oew.setFrame(frame);
+					
+		frame.add(oew);
+
+		okButton.setActionCommand("ok");
+		okButton.addActionListener(oew);
+		
+		applyButton.setActionCommand("apply");
+		applyButton.addActionListener(oew);
+		
+		cancelButton.setActionCommand("cancel");
+		cancelButton.addActionListener(oew);
+		
+		locateButton.setActionCommand("locate");
+		locateButton.addActionListener(oew);
+		
+		generateButton.setActionCommand("generate");
+		generateButton.addActionListener(oew);
+		
+		explorerButton.setActionCommand("explorer");
+		explorerButton.addActionListener(oew);
+		
+		updateButton.setActionCommand("update");
+		updateButton.addActionListener(oew);
+		
+		roundTripButton.setActionCommand("roundTrip");
+		roundTripButton.addActionListener(oew);
+		
+		revertButton.setActionCommand("revert");
+		revertButton.addActionListener(oew);
+		
+		//formatButton.setActionCommand("format");
+		//formatButton.addActionListener(oew);
+		
+		
+		//frame.add(editorPanel);
+		frame.add(buttonPanel,BorderLayout.SOUTH);
+		
+		String imageName = aOperation.getIconFileName();
+		imageName = imageName.replace("\\", "/");
+		
+		List<BufferedImage> icons = new ArrayList<BufferedImage>();
+		File f = new File(imageName);
+		try 
+		{
+			icons = Imaging.getAllBufferedImages(f);
+			
+		} 
+		catch (ImageReadException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+			
+			
+		Image img = null;
+		
+		if(icons.size()>0)
+		{
+			img = icons.get(icons.size()-1);
+		}
+		
+		
+		if(img!=null)
+		{
+			frame.setIconImage(img);
+		}
+		
+	    frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+	    
+	    Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+		
+		
+	  	int factorW = 7;
+	  	int factorH = 16;
+	  		    
+	  			
+	  			
+	  	int rows = (int)(dim.height/factorH*0.7);
+	  	int cols = (int)(dim.width/factorW*0.5);
+	  			
+	  	
+        if(aOperation.isReadOnly()!=0)
+		{
+			okButton.setEnabled(false);			
+			applyButton.setEnabled(false);
+		}
+	
 		myApplication = rhapsody;
 		mySelectedOperation = null;
 		
 		AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
 		atmf.putMapping("text/RhapsodyCPP", "de.schlaich.gunnar.parser.RhapsodyTokenMaker");
-		
-		
-		
-		
-	    if(selected instanceof IRPOperation )
-		{
-			mySelectedOperation = (IRPOperation) selected;	
-		}
-	    else
-	    {
-	    	//only operations work...
-	    	return;
-	    }
+
 	   
-	    int factorW = 7;
-	    int factorH = 16;
-	    
-		Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-		
-		int rows = (int)(dim.height/factorH*0.7);
-		int cols = (int)(dim.width/factorW*0.5);
-		
-		this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
-		
-		
-		
+		mySelectedOperation = aOperation;	
+		myGuid = aOperation.getGUID();
 		
 		myTextArea = new RSyntaxTextArea(rows, cols);
 	    myTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
@@ -168,6 +281,15 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.requestFocusInWindow();
 		
 		setRhapsodyStyle();
+		
+
+	    ScreenMonitor.Instance.registerFrame(frame);
+
+	  	frame.pack();
+	  	
+	  	frame.setLocationRelativeTo(null);
+ 
+        frame.setVisible(true);
 		
 
 				
@@ -297,39 +419,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());	
 			aMainApp.printToRhapsody(timeStamp);
 			
-			String imageName = op.getIconFileName();
-			imageName = imageName.replace("\\", "/");
 			
-			List<BufferedImage> icons = new ArrayList<BufferedImage>();
-			File f = new File(imageName);
-			try 
-			{
-				icons = Imaging.getAllBufferedImages(f);
-				
-			} 
-			catch (ImageReadException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} 
-			catch (IOException e)
-			{
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-				
-				//icons =  ICODecoder.read(f);
-			
-			Image img = null;
-			
-			if(icons.size()>0)
-			{
-				img = icons.get(icons.size()-1);
-			}
-			
-			
-			//Toolkit kit = Toolkit.getDefaultToolkit();
-			//Image img = kit.createImage(imageName);
+	
 
 			String lufSystem = UIManager.getSystemLookAndFeelClassName();
 			
@@ -349,102 +440,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				e.printStackTrace();
 			}
 			
-			JFrame frame = new JFrame (RhapsodyOperation.getOperation(op));
-			frame.setLayout(new BorderLayout());
+			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,op);
 			
-			JPanel buttonPanel = new JPanel();
-			
-			JButton locateButton = new JButton("Locate");
-			buttonPanel.add(locateButton);
-			
-			JButton explorerButton = new JButton("Explorer");
-			buttonPanel.add(explorerButton);
-			
-			JButton updateButton = new JButton("Update");
-			buttonPanel.add(updateButton);
-		
-			JButton generateButton = new JButton("Generate");
-			buttonPanel.add(generateButton);
-			
-			JButton roundTripButton = new JButton("RoundTrip");
-			buttonPanel.add(roundTripButton);
-			
-			JButton revertButton = new JButton("Revert");
-			buttonPanel.add(revertButton);
-			
-			JButton formatButton = new JButton("Format(draft)");
-			buttonPanel.add(formatButton);
-			
-			JButton applyButton = new JButton("Apply");
-			buttonPanel.add(applyButton);
-			
-			JButton okButton = new JButton("ok");
-			buttonPanel.add(okButton);
-				
-			JButton cancelButton = new JButton("Cancel");
-			buttonPanel.add(cancelButton);
-			
-			buttonPanel.setVisible(true);
-			
-			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,selected);
-			oew.setFrame(frame);
-						
-			frame.add(oew);
-
-			okButton.setActionCommand("ok");
-			okButton.addActionListener(oew);
-			
-			applyButton.setActionCommand("apply");
-			applyButton.addActionListener(oew);
-			
-			cancelButton.setActionCommand("cancel");
-			cancelButton.addActionListener(oew);
-			
-			locateButton.setActionCommand("locate");
-			locateButton.addActionListener(oew);
-			
-			generateButton.setActionCommand("generate");
-			generateButton.addActionListener(oew);
-			
-			explorerButton.setActionCommand("explorer");
-			explorerButton.addActionListener(oew);
-			
-			updateButton.setActionCommand("update");
-			updateButton.addActionListener(oew);
-			
-			roundTripButton.setActionCommand("roundTrip");
-			roundTripButton.addActionListener(oew);
-			
-			revertButton.setActionCommand("revert");
-			revertButton.addActionListener(oew);
-			
-			formatButton.setActionCommand("format");
-			formatButton.addActionListener(oew);
-			
-			
-			//frame.add(editorPanel);
-			frame.add(buttonPanel,BorderLayout.SOUTH);
-			if(img!=null)
-			{
-				frame.setIconImage(img);
-			}
-			
-		    frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
-		    //frame.getContentPane().add (new OperationEditorWindow(rhapsody,selected));
-		    frame.pack();
-		    ScreenMonitor.Instance.registerFrame(frame);
-
-			Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
-			frame.setLocation(dim.width/2-frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
-			
-		    
-	        frame.setVisible(true);
-	        if(op.isReadOnly()!=0)
-			{
-				okButton.setEnabled(false);			
-				applyButton.setEnabled(false);
-			}
-	        
 	        
 	        
 		}
@@ -515,11 +512,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		{	
 			if(myFrame!=null)
 			{
-
 				myFrame.dispose();
-				RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-				prefs.clearRhapsodyModelElement(mySelectedOperation);
 			}
+			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+			prefs.clearRhapsodyModelElement(myGuid);
+			System.exit(0);
 		}
 		
 		if(command.equals("locate"))
@@ -640,7 +637,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			myFrame.dispose();
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-			prefs.clearRhapsodyModelElement(mySelectedOperation);
+			prefs.clearRhapsodyModelElement(myGuid);
+			System.exit(0);
 		}
 		
 	}
