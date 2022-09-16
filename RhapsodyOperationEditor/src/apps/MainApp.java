@@ -2,6 +2,9 @@ package apps;
 
 
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 import com.ibm.rhapsody.apps.*;
@@ -72,8 +75,47 @@ public class MainApp extends App {
 	 *  Note: Select an element in Rhapsody in order to simulate launching app on a selected element in the browser.
      */	
 	public static void main(String[] args) {
+		
+		String pid = "";
+		
+		String name = ManagementFactory.getRuntimeMXBean().getName();
+		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+		
+		String[] pidHost = name.split("@");
+		if(pidHost.length==2)
+		{
+			pid = pidHost[0];
+		}
+		
+		System.out.println("Pid: "+pid);
+		
+		List<String> applicationIDList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
+		
+		
+		for(String applicationID : applicationIDList)
+		{
+			System.out.println("ApplicationID: "+applicationID);
+			IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplicationByID(applicationID);
+			String connectingString = app.getApplicationConnectionString();
+			System.out.println("ConnectiongString: "+ connectingString);
+			app.writeToOutputWindow("log", "Pid: "+pid+" ApplicationID: "+applicationID + "\n");
+			System.out.println("Selected Element " + app.getSelectedElement().getClass().toString());
+			System.out.println("Application Status: " + app.getApplicationStatus());
+			
+			
+		}
+		
+		
+	
+		
+		
+		
 		MainApp app = new MainApp();
 		app.invokeFromMain();
+		
+		
+		
+		
 	}
 	
 	

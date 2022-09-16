@@ -646,6 +646,8 @@ public class ASTHelper
 	public static String getSourceText(IRPOperation aOperation, IRPApplication aApplication)
 	{
 		
+		
+			
 		IRPModelElement element = aOperation.getOwner();
 		if (element instanceof IRPClass==false) 
 		{
@@ -695,7 +697,14 @@ public class ASTHelper
 		{
 			if(scopeElement.equals(selectedElement))
 			{
-				filePath = filePath+"\\"+selectedElement.getName()+".cpp";
+				if(aOperation.isATemplate()==1)
+				{
+					filePath = filePath+"\\"+selectedElement.getName()+".h";
+				}
+				else
+				{
+					filePath = filePath+"\\"+selectedElement.getName()+".cpp";
+				}
 				isActive = true;
 				break;
 			}	

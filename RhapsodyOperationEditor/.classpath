@@ -2,26 +2,26 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.runtime-3.15.0.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/jdom.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.runtime-3.15.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/jdom.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar"/>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/JavaAPI/rhapsody.jar">
 		<attributes>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Rhapsody/v840/Share/JavaAPI"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/autocomplete-3.1.1.jar" sourcepath="/AutoComplete"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/git/org.eclipse.cdt"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox.common.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/rsyntaxtextarea-3.1.2.jar" sourcepath="/RSyntaxTextArea"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/Downloads/java-diff-utils-4.0.jar">
+	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/autocomplete-3.1.1.jar" sourcepath="/AutoComplete"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/git/org.eclipse.cdt"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox.common.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/rsyntaxtextarea-3.1.2.jar" sourcepath="/RSyntaxTextArea"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/Downloads/java-diff-utils-4.0.jar">
 		<attributes>
 			<attribute name="javadoc_location" value="jar:file:/C:/Users/schl591/Downloads/java-diff-utils-4.0-javadoc.jar!/"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/commons-imaging-1.0-alpha2.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.text-3.8.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/commons-imaging-1.0-alpha2.jar"/>
+	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.text-3.8.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
