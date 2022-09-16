@@ -4,6 +4,7 @@ package apps;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
@@ -91,6 +92,9 @@ public class MainApp extends App {
 		
 		List<String> applicationIDList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
 		
+		List<IRPApplication> possibleApplications = new ArrayList<IRPApplication>();
+		
+		IRPApplication actualApp = null;
 		
 		for(String applicationID : applicationIDList)
 		{
@@ -102,8 +106,50 @@ public class MainApp extends App {
 			System.out.println("Selected Element " + app.getSelectedElement().getClass().toString());
 			System.out.println("Application Status: " + app.getApplicationStatus());
 			
+			if(app.getSelectedElement() instanceof IRPOperation)
+			{
+				possibleApplications.add(app);
+			}
 			
 		}
+		
+		if(possibleApplications.size()==0)
+		{
+			RhapsodyAppServer.getActiveRhapsodyApplication().writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
+		}
+		
+		if(possibleApplications.size()==1)
+		{
+			actualApp = possibleApplications.get(0);
+		}
+		else
+		{
+			for(IRPApplication app:possibleApplications)
+			{
+				IRPInterfaceItem iitem = (IRPInterfaceItem) app.getSelectedElement();
+				if(iitem==null)
+				{
+					break;
+				}
+				
+				IRPUnit unit = iitem.getSaveUnit();
+				//IRPComponent = unit.get
+			}
+		}
+		
+		if(actualApp==null)
+		{
+			actualApp = RhapsodyAppServer.getActiveRhapsodyApplication();
+			if(actualApp==null)
+			{
+				System.out.println("No Rhapsody instance running");
+				return;
+			}
+			actualApp.writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
+			return;
+		}
+
+		
 		
 		
 	
