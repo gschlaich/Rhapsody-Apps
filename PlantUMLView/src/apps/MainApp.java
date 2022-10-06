@@ -1,5 +1,6 @@
 package apps;
 
+import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Point;
@@ -55,12 +56,10 @@ public class MainApp extends App {
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-			Point location = MouseInfo.getPointerInfo().getLocation(); 
-			int x = (int) location.getX();
-			int y = (int) location.getY();
+			
 			showPNG sp = new showPNG(image);
 			//sp.setContentPane(pane);
-			sp.setLocation(location);
+			//sp.setLocation(location);
 			sp.setIconImage(img);
 			sp.setTitle(selected.getName());
 			sp.setVisible(true);
@@ -77,7 +76,56 @@ public class MainApp extends App {
 	 *  Note: Select an element in Rhapsody in order to simulate launching app on a selected element in the browser.
      */	
 	public static void main(String[] args) {
-		MainApp app = new MainApp();
-		app.invokeFromMain();
+		MainApp myApp = new MainApp();
+		String connectionstring = null;
+		
+		if (args.length >= 1) {
+			connectionstring = args[0];
+
+		}
+		
+		IRPApplication actualApp = null;
+		
+		if(connectionstring!=null)
+		{
+			try
+			{
+				actualApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(connectionstring);
+			}
+			catch(Exception e)
+			{
+				System.out.println("connectionstring "+ connectionstring + " is not an active rhapsody application ");
+			}
+		}
+		else
+		{
+			System.out.println("no connectionstring set");
+		}
+		
+		if(actualApp==null)
+		{
+        
+			myApp.invokeFromMain();
+			return;
+		}
+		
+		IRPModelElement selectedElement = actualApp.getSelectedElement();
+		
+		
+		if(connectionstring!=null)
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString: " + connectionstring + "\n");
+		}
+		else
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
+		}
+		
+		actualApp.writeToOutputWindow("log", "start...\n");
+		
+		//mainApp.setRhapsody(actualApp);
+		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
+		//mainApp.invoke(selectedElement);
+		myApp.execute(actualApp, selectedElement);
 	}		
 }

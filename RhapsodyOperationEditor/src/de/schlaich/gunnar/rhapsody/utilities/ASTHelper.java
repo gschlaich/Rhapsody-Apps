@@ -453,6 +453,17 @@ public class ASTHelper
 	public static String getOperationBody(String aPath, String aNameSpace, String aClassName, IRPOperation aOperation)
 	{
 		
+		String operationSignature = aOperation.getImplementationSignature();
+		int startIndex = operationSignature.indexOf(aOperation.getName());
+		if(startIndex>=0)
+		{
+			operationSignature = operationSignature.substring(startIndex);
+			operationSignature = aClassName+"::"+operationSignature;
+		}
+		
+		//System.out.println("Op. Signature: " + operationSignature);
+		operationSignature = operationSignature.replaceAll("\\s+", "");
+		
 		IASTTranslationUnit translationUnit = getTranslationUnit(aPath);
 		
 		IASTNode source = translationUnit;
@@ -487,52 +498,77 @@ public class ASTHelper
 		{
 			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
 			
-			String operationName = functionDeclarator.getName().toString();
-			
-			if((aClassName+"::"+aOperation.getName()).equals(operationName))
+			String rawSignature = functionDeclarator.getRawSignature();
+			/*
+			startIndex = rawSignature.indexOf(functionDeclarator.getName().toString());
+
+			if(startIndex>=0)
 			{
-				//check for parameters...
-				List<IRPArgument> arguments = aOperation.getArguments().toList();
-				List<IASTParameterDeclaration> parameterDeclarations = getParameterDeclaration(functionDeclarator);
-				
-				if(arguments.size()!=parameterDeclarations.size())
+				rawSignature = rawSignature.substring(startIndex);
+				startIndex = rawSignature.indexOf("::");
+				if(startIndex>=0)
 				{
-					continue;
+					rawSignature = rawSignature.substring(startIndex+2);
 				}
-				
-				boolean isEqual = true;
-				//check for names...
-				for(int i=0; i<arguments.size();i++)
-				{
-					IASTParameterDeclaration declaration = parameterDeclarations.get(i);
-					IASTDeclarator declarator = getDeclarator(declaration);
-					System.out.println(arguments.get(i).getName());
-					System.out.println(declarator.getName().toString());
-					if(arguments.get(i).getName().equals(declarator.getName().toString()))
-					{
-						continue;
-						//should we also check type?
-						
-					}
-					else
-					{
-						isEqual=false;
-						break;
-					}
-					
-				}
-				
-				
-				if(isEqual==false)
-				{
-					continue;
-				}
-				
-				
+			}
+			*/
+			rawSignature = rawSignature.replaceAll("\\s+", "");
+			
+			if(rawSignature.equals(operationSignature))
+			{
 				theFunctionDefinition = functionDefinition;
 				break;
 			}
 		}
+			
+//			
+//				
+//			String operationName = functionDeclarator.getName().toString();
+//			
+//			if((aClassName+"::"+aOperation.getName()).equals(operationName))
+//			{
+//				//check for parameters...
+//				List<IRPArgument> arguments = aOperation.getArguments().toList();
+//				List<IASTParameterDeclaration> parameterDeclarations = getParameterDeclaration(functionDeclarator);
+//				
+//				if(arguments.size()!=parameterDeclarations.size())
+//				{
+//					continue;
+//				}
+//				
+//				boolean isEqual = true;
+//				//check for names...
+//				for(int i=0; i<arguments.size();i++)
+//				{
+//					IASTParameterDeclaration declaration = parameterDeclarations.get(i);
+//					IASTDeclarator declarator = getDeclarator(declaration);
+//					System.out.println(arguments.get(i).getName());
+//					System.out.println(declarator.getName().toString());
+//					if(arguments.get(i).getName().equals(declarator.getName().toString()))
+//					{
+//						continue;
+//						//should we also check type?
+//						
+//					}
+//					else
+//					{
+//						isEqual=false;
+//						break;
+//					}
+//					
+//				}
+//				
+//				
+//				if(isEqual==false)
+//				{
+//					continue;
+//				}
+//				
+//				
+//				theFunctionDefinition = functionDefinition;
+//				break;
+//			}
+//		}
 		
 		if(theFunctionDefinition==null)
 		{
@@ -551,9 +587,44 @@ public class ASTHelper
 			return null;
 		}
 		
+		IASTFunctionDeclarator theFunctionDeclarator = theFunctionDefinition.getDeclarator();
+		
+		String rawSignature = theFunctionDeclarator.getRawSignature();
+		/*
+		startIndex = rawSignature.indexOf(theFunctionDeclarator.getName().toString());
+		
+		
+		if(startIndex>=0)
+		{
+			rawSignature = rawSignature.substring(startIndex);
+			startIndex = rawSignature.indexOf("::");
+			if(startIndex>=0)
+			{
+				rawSignature = rawSignature.substring(startIndex+2);
+			}
+		}
+		
+		*/
+		
+		
+		//System.out.println("Raw Signature: "+ rawSignature);
+
+		
+		rawSignature = rawSignature.replaceAll("\\s+", "");
+		
+		if(rawSignature.equals(operationSignature)==false)
+		{
+			System.out.println("different Signatures:");
+			System.out.println("Raw Signature: " + rawSignature);
+			System.out.println("Op. Signature: " + operationSignature);		
+		
+		}
+		
+		
 		
 		// get the operation body
 		IASTStatement functionBody = theFunctionDefinition.getBody();
+		
 		IASTFileLocation fileLocation = functionBody.getFileLocation();
 		
 		
@@ -594,18 +665,23 @@ public class ASTHelper
 			for(String checkTab:sl)
 			{
 				tabPos = checkTab.indexOf("//#[");
+				i++;
 				if(tabPos!=(-1))
 				{
 					break;
 				}
-				i++;
 			}
 			
-			i++;
 			
-			for(; i<(sl.size()-2); i++)
+			
+			for(; i<sl.size(); i++)
 			{
+				
 				line = sl.get(i);
+				if(line.contains("//#]"))
+				{
+					break;
+				}
 				if(line.length()>tabPos)
 				{
 					if(line.getBytes()[0]!=0x09)
@@ -614,9 +690,10 @@ public class ASTHelper
 					}
 					else if(line.getBytes()[1]==0x09)
 					{
-						line = line.substring(2);
-						
+						line = line.substring(2);					
 					}
+					
+						
 				}
 				
 				ret = ret+line+"\n";
@@ -645,7 +722,6 @@ public class ASTHelper
 	@SuppressWarnings("unchecked")
 	public static String getSourceText(IRPOperation aOperation, IRPApplication aApplication)
 	{
-		
 		
 			
 		IRPModelElement element = aOperation.getOwner();

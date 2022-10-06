@@ -79,85 +79,189 @@ public class MainApp extends App {
 		
 		String pid = "";
 		
-		String name = ManagementFactory.getRuntimeMXBean().getName();
-		RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+		String connectionstring = null;
 		
-		String[] pidHost = name.split("@");
-		if(pidHost.length==2)
-		{
-			pid = pidHost[0];
+		if (args.length >= 1) {
+			connectionstring = args[0];
+
 		}
-		
-		System.out.println("Pid: "+pid);
-		
-		List<String> applicationIDList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
-		
-		List<IRPApplication> possibleApplications = new ArrayList<IRPApplication>();
 		
 		IRPApplication actualApp = null;
 		
-		for(String applicationID : applicationIDList)
+		if(connectionstring!=null)
 		{
-			System.out.println("ApplicationID: "+applicationID);
-			IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplicationByID(applicationID);
-			String connectingString = app.getApplicationConnectionString();
-			System.out.println("ConnectiongString: "+ connectingString);
-			app.writeToOutputWindow("log", "Pid: "+pid+" ApplicationID: "+applicationID + "\n");
-			System.out.println("Selected Element " + app.getSelectedElement().getClass().toString());
-			System.out.println("Application Status: " + app.getApplicationStatus());
-			
-			if(app.getSelectedElement() instanceof IRPOperation)
+			try
 			{
-				possibleApplications.add(app);
+				actualApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(connectionstring);
 			}
-			
-		}
-		
-		if(possibleApplications.size()==0)
-		{
-			RhapsodyAppServer.getActiveRhapsodyApplication().writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
-		}
-		
-		if(possibleApplications.size()==1)
-		{
-			actualApp = possibleApplications.get(0);
+			catch(Exception e)
+			{
+				System.out.println("connectionstring "+ connectionstring + " is not an active rhapsody application ");
+			}
 		}
 		else
 		{
-			for(IRPApplication app:possibleApplications)
+			System.out.println("no connectionstring set");
+		}
+		
+		if(actualApp == null)
+		{
+		
+			String name = ManagementFactory.getRuntimeMXBean().getName();
+			RuntimeMXBean bean = ManagementFactory.getRuntimeMXBean();
+			
+			String[] pidHost = name.split("@");
+			if(pidHost.length==2)
 			{
-				IRPInterfaceItem iitem = (IRPInterfaceItem) app.getSelectedElement();
-				if(iitem==null)
+				pid = pidHost[0];
+			}
+			
+			System.out.println("Pid: "+pid);
+			
+			List<String> applicationIDList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
+			
+			List<IRPApplication> possibleApplications = new ArrayList<IRPApplication>();
+			
+			
+			
+			for(String applicationID : applicationIDList)
+			{
+				System.out.println("ApplicationID: "+applicationID);
+				IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplicationByID(applicationID);
+				String connectingString = app.getApplicationConnectionString();
+				System.out.println("ConnectiongString: "+ connectingString);
+				app.writeToOutputWindow("log", "Pid: "+pid+" ApplicationID: "+applicationID + "\n");
+				System.out.println("Selected Element " + app.getSelectedElement().getClass().toString());
+				System.out.println("Application Status: " + app.getApplicationStatus());
+				
+				if(app.getSelectedElement() instanceof IRPOperation)
 				{
-					break;
+					possibleApplications.add(app);
+					app.writeToOutputWindow("log", "Possible Operation: " + app.getSelectedElement().getName()+"\n" );
 				}
 				
-				IRPUnit unit = iitem.getSaveUnit();
-				//IRPComponent = unit.get
 			}
-		}
-		
-		if(actualApp==null)
-		{
-			actualApp = RhapsodyAppServer.getActiveRhapsodyApplication();
+			
+			if(possibleApplications.size()==0)
+			{
+				RhapsodyAppServer.getActiveRhapsodyApplication().writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
+			}
+			
+			if(possibleApplications.size()==1)
+			{
+				actualApp = possibleApplications.get(0);
+			}
+			
+			else
+			{
+				for(IRPApplication app:possibleApplications)
+				{
+					if(app.getIsHiddenUI()==1)
+					{
+						//app without ui is never the selected app
+						possibleApplications.remove(app);
+						continue;
+					}
+					if(app.isRhapsodyCL()==1)
+					{
+						possibleApplications.remove(app);
+						continue;
+					}
+					
+					IRPInterfaceItem iitem = (IRPInterfaceItem) app.getSelectedElement();
+					if(iitem==null)
+					{
+						break;
+					}
+					
+					IRPModelElement owner = iitem.getOwner();
+					
+					
+					
+					
+					IRPProject project = iitem.getProject();
+					IRPComponent activeComponent = project.getActiveComponent();
+					List<IRPModelElement> scopeElements =  activeComponent.getScopeElements().toList();
+					for(IRPModelElement element:scopeElements)
+					{
+						if(owner.equals(element))
+						{
+							System.out.println("ScopeElement: " + element.getName());
+							actualApp = app;
+							break;
+						}
+						
+					}
+					
+					if(actualApp!=null)
+					{
+						break;
+					}
+					
+				}
+			
+				
+				if(actualApp==null)
+				{
+					if(possibleApplications.size()>=1)
+					{
+						actualApp = possibleApplications.get(0);
+					}
+					
+				}
+				
+			}
+			
+			
 			if(actualApp==null)
 			{
-				System.out.println("No Rhapsody instance running");
+				actualApp = RhapsodyAppServer.getActiveRhapsodyApplication();
+				if(actualApp==null)
+				{
+					System.out.println("No Rhapsody instance running");
+					return;
+				}
+				actualApp.writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
 				return;
 			}
-			actualApp.writeToOutputWindow("log", "Could not start Editor. Wrong element selected\n");
+		}
+			
+		
+		
+		MainApp mainApp = new MainApp();
+		IRPModelElement selectedElement = actualApp.getSelectedElement();
+		
+		/*
+		IRPProject project = actualApp.activeProject();
+		if(project==null)
+		{
 			return;
 		}
-
+		IRPComponent activeComponent = project.getActiveComponent();
+		if(activeComponent!=null)
+		{
+			actualApp.selectModelElements(null);
+		}
+		
+		*/
+		if(connectionstring!=null)
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString: " + connectionstring + "\n");
+		}
+		else
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
+		}
+		
+		actualApp.writeToOutputWindow("log", "start...\n");
+		
+		//mainApp.setRhapsody(actualApp);
+		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
+		//mainApp.invoke(selectedElement);
+		mainApp.execute(actualApp, selectedElement);
 		
 		
-		
-	
-		
-		
-		
-		MainApp app = new MainApp();
-		app.invokeFromMain();
+		//mainApp.invokeFromMain();
 		
 		
 		

@@ -18,6 +18,7 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
@@ -59,6 +60,8 @@ public class MainApp extends App implements ActionListener {
 	private String myDiffResults;
 	private static MainApp myApp;
 	private static JFrame myFrame;
+	private List<IRPOperation> myChangedOperations;
+	
 	
 	@SuppressWarnings("unchecked")
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) 
@@ -70,21 +73,22 @@ public class MainApp extends App implements ActionListener {
 		}
 		
 		myClass = (IRPClass)selected;
-		
-		//look for active component...
+
 		List<IRPOperation> operations = myClass.getOperations().toList();
-		
-		
+				
 		DiffRowGenerator generator;
 		
 		StringBuilder diffStringBuilder = new StringBuilder();
 		
 		diffStringBuilder.append("<html>\n<body>\n");
+		
+		myChangedOperations = new ArrayList<IRPOperation>(); 
 	
 		
 		try
 		{
 		
+			int foundOperations = 0;
 			DiffRowGenerator.Builder builder = DiffRowGenerator.create();
 			builder.showInlineDiffs(true);
 			builder.inlineDiffByWord(true);
@@ -94,6 +98,16 @@ public class MainApp extends App implements ActionListener {
 			for(IRPOperation operation:operations)
 			{
 				String sourceCode = ASTHelper.getSourceText(operation, rhapsody);
+				if(sourceCode==null)
+				{
+					rhapsody.writeToOutputWindow("log", "Operation: \" " + operation.getImplementationSignature() + " \" not found/component active!\n");
+					diffStringBuilder.append("<table>\n <tbody>\n");
+					diffStringBuilder.append("<tr>no source found / component inactive on " + operation.getImplementationSignature() +"</tr>\n");
+					diffStringBuilder.append("</table>\n </tbody>\n");
+					continue;
+				}
+				
+				foundOperations++;
 				
 				List<String> sourceLines = ASTHelper.getLines(sourceCode);
 				
@@ -117,36 +131,73 @@ public class MainApp extends App implements ActionListener {
 				
 				if(hasDiff(rows)==false)
 				{
+					diffStringBuilder.append("<table>\n <tbody>\n");
+					diffStringBuilder.append("<tr>no changes: " + operation.getImplementationSignature() +"</tr>\n");
+					diffStringBuilder.append("</table>\n </tbody>\n");
+					
 					continue;
 				}
+				
+				
+				
 				diffStringBuilder.append("<table>\n <tbody>\n");
-				diffStringBuilder.append("<tr><th>"+RhapsodyOperation.getOperation(operation)+"</th></tr>\n");		
+				//diffStringBuilder.append("<tr><th>"+RhapsodyOperation.getOperation(operation)+"</th></tr>\n");
+				diffStringBuilder.append("<tr><th>"+operation.getImplementationSignature()+"</th></tr>\n");
 				diffStringBuilder.append("</table>\n </tbody>\n");
 				diffStringBuilder.append("<table>\n <tbody>\n");
-				diffStringBuilder.append("<tr><th style=\"width: 50px;\"></th><th>Action</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th></tr>\n");
+				diffStringBuilder.append("<tr><th style=\"width: 50px;\">Line</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th><th>Action</th></tr>\n");
 				int line = 0;
+				int changes = 0;
 				for (DiffRow row : rows) 
 				{
 				   line++;
-					Tag tag = row.getTag();
+				   Tag tag = row.getTag();
+					
 				   if(tag==tag.EQUAL)
 				   {
 					   continue;
 				   }
+				  
 				   if(row.getOldLine().trim().isEmpty()&&row.getNewLine().trim().isEmpty())
 				   {
 					   continue;
 				   }
+				    
+				   if(row.getNewLine().contains("<span class=\"editNewInline\"></span>"))
+				   {
+					   continue;
+				   }
+				  
+				    
 				   //diffOperator.append()
-				   diffStringBuilder.append("<tr><td style=\"width: 50px;\">"+line+"</td><td>"+tag.name()+"</td><td>" + row.getOldLine() + "</td><td>" + row.getNewLine() + "</td></tr>\n");
-				   
+				   diffStringBuilder.append("<tr><td style=\"width: 50px;\">"+line+"</td><td>" + row.getOldLine() + "</td><td>" + row.getNewLine() + "</td><td>"+tag.name()+"</td></tr>\n");
+				   changes++;
 				}
 				
 				diffStringBuilder.append("</tbody>\n </table>\n");
+				if(changes==0)
+				{
+					continue;
+				}
+				myChangedOperations.add(operation);
+				
 		
 			}
 			
 			diffStringBuilder.append("</body> </html>\n");
+			
+			if(foundOperations==0)
+			{
+				rhapsody.writeToOutputWindow("log", "Class not active\n");
+				JOptionPane.showMessageDialog(null, "Class not active");
+				return;
+			}
+			if(myChangedOperations.size()==0)
+			{
+				rhapsody.writeToOutputWindow("log", "No operation changed\n");
+				JOptionPane.showMessageDialog(null, "No operation changed");
+				return;
+			}
 			
 			
 			createWindow(myClass.getName(),diffStringBuilder.toString());
@@ -220,8 +271,59 @@ public class MainApp extends App implements ActionListener {
      */	
 	public static void main(String[] args) {
 		myApp = new MainApp();
+		
+		String connectionstring = null;
+		
+		if (args.length >= 1) {
+			connectionstring = args[0];
+
+		}
+		
+		IRPApplication actualApp = null;
+		
+		if(connectionstring!=null)
+		{
+			try
+			{
+				actualApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(connectionstring);
+			}
+			catch(Exception e)
+			{
+				System.out.println("connectionstring "+ connectionstring + " is not an active rhapsody application ");
+			}
+		}
+		else
+		{
+			System.out.println("no connectionstring set");
+		}
+		
+		if(actualApp==null)
+		{
         
-		myApp.invokeFromMain();
+			myApp.invokeFromMain();
+			return;
+		}
+		
+		IRPModelElement selectedElement = actualApp.getSelectedElement();
+		
+		
+		if(connectionstring!=null)
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString: " + connectionstring + "\n");
+		}
+		else
+		{
+			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
+		}
+		
+		actualApp.writeToOutputWindow("log", "start...\n");
+		
+		//mainApp.setRhapsody(actualApp);
+		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
+		//mainApp.invoke(selectedElement);
+		myApp.execute(actualApp, selectedElement);
+		
+		
 	}
 	
 	
@@ -372,8 +474,7 @@ public class MainApp extends App implements ActionListener {
 		{
 			if(command.equals("ok"))
 			{
-				List<IRPOperation> operations = myClass.getOperations().toList();
-				for(IRPOperation operation:operations)
+				for(IRPOperation operation:myChangedOperations)
 				{
 					if(hasDiff(operation))
 					{
