@@ -499,19 +499,7 @@ public class ASTHelper
 			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
 			
 			String rawSignature = functionDeclarator.getRawSignature();
-			/*
-			startIndex = rawSignature.indexOf(functionDeclarator.getName().toString());
-
-			if(startIndex>=0)
-			{
-				rawSignature = rawSignature.substring(startIndex);
-				startIndex = rawSignature.indexOf("::");
-				if(startIndex>=0)
-				{
-					rawSignature = rawSignature.substring(startIndex+2);
-				}
-			}
-			*/
+			
 			rawSignature = rawSignature.replaceAll("\\s+", "");
 			
 			if(rawSignature.equals(operationSignature))
@@ -521,54 +509,6 @@ public class ASTHelper
 			}
 		}
 			
-//			
-//				
-//			String operationName = functionDeclarator.getName().toString();
-//			
-//			if((aClassName+"::"+aOperation.getName()).equals(operationName))
-//			{
-//				//check for parameters...
-//				List<IRPArgument> arguments = aOperation.getArguments().toList();
-//				List<IASTParameterDeclaration> parameterDeclarations = getParameterDeclaration(functionDeclarator);
-//				
-//				if(arguments.size()!=parameterDeclarations.size())
-//				{
-//					continue;
-//				}
-//				
-//				boolean isEqual = true;
-//				//check for names...
-//				for(int i=0; i<arguments.size();i++)
-//				{
-//					IASTParameterDeclaration declaration = parameterDeclarations.get(i);
-//					IASTDeclarator declarator = getDeclarator(declaration);
-//					System.out.println(arguments.get(i).getName());
-//					System.out.println(declarator.getName().toString());
-//					if(arguments.get(i).getName().equals(declarator.getName().toString()))
-//					{
-//						continue;
-//						//should we also check type?
-//						
-//					}
-//					else
-//					{
-//						isEqual=false;
-//						break;
-//					}
-//					
-//				}
-//				
-//				
-//				if(isEqual==false)
-//				{
-//					continue;
-//				}
-//				
-//				
-//				theFunctionDefinition = functionDefinition;
-//				break;
-//			}
-//		}
 		
 		if(theFunctionDefinition==null)
 		{
@@ -590,21 +530,6 @@ public class ASTHelper
 		IASTFunctionDeclarator theFunctionDeclarator = theFunctionDefinition.getDeclarator();
 		
 		String rawSignature = theFunctionDeclarator.getRawSignature();
-		/*
-		startIndex = rawSignature.indexOf(theFunctionDeclarator.getName().toString());
-		
-		
-		if(startIndex>=0)
-		{
-			rawSignature = rawSignature.substring(startIndex);
-			startIndex = rawSignature.indexOf("::");
-			if(startIndex>=0)
-			{
-				rawSignature = rawSignature.substring(startIndex+2);
-			}
-		}
-		
-		*/
 		
 		
 		//System.out.println("Raw Signature: "+ rawSignature);
@@ -620,8 +545,7 @@ public class ASTHelper
 		
 		}
 		
-		
-		
+				
 		// get the operation body
 		IASTStatement functionBody = theFunctionDefinition.getBody();
 		
