@@ -66,6 +66,7 @@ public class MainApp extends App implements ActionListener {
 	@SuppressWarnings("unchecked")
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) 
 	{
+		this.rhapsody = rhapsody;
 		//first only with classes
 		if(selected instanceof IRPClass == false)
 		{
@@ -152,11 +153,14 @@ public class MainApp extends App implements ActionListener {
 				{
 				   line++;
 				   Tag tag = row.getTag();
-					
+				
+				   
 				   if(tag==tag.EQUAL)
 				   {
 					   continue;
 				   }
+				   
+				   
 				  
 				   if(row.getOldLine().trim().isEmpty()&&row.getNewLine().trim().isEmpty())
 				   {
@@ -189,6 +193,25 @@ public class MainApp extends App implements ActionListener {
 			if(foundOperations==0)
 			{
 				rhapsody.writeToOutputWindow("log", "Class not active\n");
+				
+				String lufSystem = UIManager.getSystemLookAndFeelClassName();
+				
+				try {
+					UIManager.setLookAndFeel(lufSystem);
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (UnsupportedLookAndFeelException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 				JOptionPane.showMessageDialog(null, "Class not active");
 				return;
 			}
@@ -279,6 +302,10 @@ public class MainApp extends App implements ActionListener {
 
 		}
 		
+		//test
+		//connectionstring = "RHAPSODY2.8.4.0.0:21468";
+
+		
 		IRPApplication actualApp = null;
 		
 		if(connectionstring!=null)
@@ -296,6 +323,8 @@ public class MainApp extends App implements ActionListener {
 		{
 			System.out.println("no connectionstring set");
 		}
+		
+		
 		
 		if(actualApp==null)
 		{

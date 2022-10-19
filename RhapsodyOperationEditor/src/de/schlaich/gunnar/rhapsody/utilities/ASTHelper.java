@@ -454,6 +454,24 @@ public class ASTHelper
 	{
 		
 		String operationSignature = aOperation.getImplementationSignature();
+		
+		//check for constructor of an reactive class
+		if(aOperation.getIsCtor()==1)
+		{
+			IRPModelElement owner = aOperation.getOwner();
+			if(owner instanceof IRPClass)
+			{
+				IRPClass ownerClass = (IRPClass)owner;
+				if(ownerClass.getIsReactive()==1)
+				{
+					operationSignature = operationSignature.substring(0, operationSignature.length()-1)+", IOxfActive* theActiveContext )";
+					System.out.println("Reactive Constructor: " + operationSignature);
+					
+				}
+			}
+		}
+		
+		
 		int startIndex = operationSignature.indexOf(aOperation.getName());
 		if(startIndex>=0)
 		{

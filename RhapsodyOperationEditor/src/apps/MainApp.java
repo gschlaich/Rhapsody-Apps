@@ -12,6 +12,7 @@ import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 
 public class MainApp extends App {
@@ -23,6 +24,7 @@ public class MainApp extends App {
 	*/
 	
 	private String myGuid;
+	
 	
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 	
@@ -68,6 +70,7 @@ public class MainApp extends App {
 	{
 		println(aText);
 	}
+	
 	
 
 
@@ -121,7 +124,6 @@ public class MainApp extends App {
 			List<String> applicationIDList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
 			
 			List<IRPApplication> possibleApplications = new ArrayList<IRPApplication>();
-			
 			
 			
 			for(String applicationID : applicationIDList)
@@ -231,6 +233,7 @@ public class MainApp extends App {
 		MainApp mainApp = new MainApp();
 		IRPModelElement selectedElement = actualApp.getSelectedElement();
 		
+		
 		/*
 		IRPProject project = actualApp.activeProject();
 		if(project==null)
@@ -247,6 +250,10 @@ public class MainApp extends App {
 		if(connectionstring!=null)
 		{
 			actualApp.writeToOutputWindow("log", "ConnectiongString: " + connectionstring + "\n");
+			
+			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+			prefs.setConnectingString(connectionstring);
+			
 		}
 		else
 		{
