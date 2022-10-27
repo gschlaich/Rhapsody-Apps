@@ -39,6 +39,7 @@ import org.eclipse.cdt.core.model.ITranslationUnit;
 import org.eclipse.cdt.core.parser.DefaultLogService;
 import org.eclipse.cdt.core.parser.FileContent;
 import org.eclipse.cdt.core.parser.IParserLogService;
+import org.eclipse.cdt.core.parser.IProblem;
 import org.eclipse.cdt.core.parser.IScannerInfo;
 import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
 import org.eclipse.cdt.core.parser.ScannerInfo;
@@ -450,37 +451,94 @@ public class ASTHelper
 	
 	*/
 	
+	public static Map<String,String> getFunctiondefinitions(String aSourcePath, String aNameSpace)
+	{
+		
+		HashMap<String,String> ret = new HashMap<>();
+		
+		IASTTranslationUnit translationUnit = getTranslationUnit(aSourcePath);
+		
+		IASTNode source = translationUnit;
+		
+		if(aNameSpace!=null)
+		{
+			//parse for namespace
+			ASTNode<ICPPASTNamespaceDefinition> parseNameSpace = new ASTNode<ICPPASTNamespaceDefinition>(ICPPASTNamespaceDefinition.class);
+			List<ICPPASTNamespaceDefinition> nameSpaceDefinitions = parseNameSpace.getNodes(translationUnit);
+			ICPPASTNamespaceDefinition theNameSpaceDefinition=null;
+			for(ICPPASTNamespaceDefinition nameSpaceDefiniton:nameSpaceDefinitions)
+			{
+				if(aNameSpace.equals(nameSpaceDefiniton.getName().toString()))
+				{
+					theNameSpaceDefinition = nameSpaceDefiniton;
+					break;
+				}
+			}
+			
+			if(theNameSpaceDefinition==null)
+			{
+				//namespace not found
+				return ret;
+			}
+			source = theNameSpaceDefinition;
+		}
+		
+		ASTNode<IASTFunctionDefinition> parseFunctionDefinition = new ASTNode<IASTFunctionDefinition>(IASTFunctionDefinition.class);
+		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(source);
+		for(IASTFunctionDefinition functionDefinition:functionDefinitions)
+		{
+			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
+			
+			String rawSignature = functionDeclarator.getRawSignature();
+			
+			if(rawSignature.startsWith("*"))
+			{
+				rawSignature = rawSignature.substring(1);
+			}
+			
+			rawSignature = rawSignature.replaceAll("\\s+", "");
+			
+			String functionSource = getSourceFromFunction(functionDefinition, aSourcePath);
+			
+			System.out.println("Map Signature: "+rawSignature);
+			
+			ret.put(rawSignature, functionSource);
+			
+		}
+
+		return ret;
+		
+	}
+	
+	public static String getSourceFromMap(Map<String,String> aMap, IRPOperation aOperation)
+	{
+		
+		IRPModelElement element = aOperation.getOwner();
+		if (element instanceof IRPClass==false) 
+		{
+			System.out.println("owner of operation is not a class!");
+			return null;
+		}
+		
+		IRPClass selectedClass = (IRPClass) element;
+		
+		String operationSignature = getOperationSignature(aOperation, selectedClass.getName());
+		
+		String ret = aMap.get(operationSignature);
+		if(ret==null)
+		{
+			System.out.println("Not found signature " + operationSignature);
+		}
+		
+		
+		return ret;
+		
+	}
+	
 	public static String getOperationBody(String aPath, String aNameSpace, String aClassName, IRPOperation aOperation)
 	{
 		
-		String operationSignature = aOperation.getImplementationSignature();
-		
-		//check for constructor of an reactive class
-		if(aOperation.getIsCtor()==1)
-		{
-			IRPModelElement owner = aOperation.getOwner();
-			if(owner instanceof IRPClass)
-			{
-				IRPClass ownerClass = (IRPClass)owner;
-				if(ownerClass.getIsReactive()==1)
-				{
-					operationSignature = operationSignature.substring(0, operationSignature.length()-1)+", IOxfActive* theActiveContext )";
-					System.out.println("Reactive Constructor: " + operationSignature);
-					
-				}
-			}
-		}
-		
-		
-		int startIndex = operationSignature.indexOf(aOperation.getName());
-		if(startIndex>=0)
-		{
-			operationSignature = operationSignature.substring(startIndex);
-			operationSignature = aClassName+"::"+operationSignature;
-		}
-		
-		//System.out.println("Op. Signature: " + operationSignature);
-		operationSignature = operationSignature.replaceAll("\\s+", "");
+		String operationSignature = getOperationSignature(aOperation, aClassName);
 		
 		IASTTranslationUnit translationUnit = getTranslationUnit(aPath);
 		
@@ -536,14 +594,19 @@ public class ASTHelper
 		
 		
 		//check for syntax error
-		
+		/*
 		List<IASTProblem> problems = ASTHelper.getProblems(source);
 		
 		if(problems.isEmpty()==false)
 		{
 			//there is a syntax error in the source... no roundtrip
+			for(IProblem problem:problems)
+			{
+				System.out.println("Error: "+ problem.getMessageWithLocation());
+			}
 			return null;
 		}
+		*/
 		
 		IASTFunctionDeclarator theFunctionDeclarator = theFunctionDefinition.getDeclarator();
 		
@@ -562,10 +625,46 @@ public class ASTHelper
 			System.out.println("Op. Signature: " + operationSignature);		
 		
 		}
-		
-				
+			
 		// get the operation body
-		IASTStatement functionBody = theFunctionDefinition.getBody();
+		return getSourceFromFunction(theFunctionDefinition, aPath);
+	}
+
+	public static String getOperationSignature(IRPOperation aOperation, String aClassName) 
+	{
+		String operationSignature = aOperation.getImplementationSignature();
+		
+		//check for constructor of an reactive class
+		if(aOperation.getIsCtor()==1)
+		{
+			IRPModelElement owner = aOperation.getOwner();
+			if(owner instanceof IRPClass)
+			{
+				IRPClass ownerClass = (IRPClass)owner;
+				if(ownerClass.getIsReactive()==1)
+				{
+					operationSignature = operationSignature.substring(0, operationSignature.length()-1)+", IOxfActive* theActiveContext )";
+					//System.out.println("Reactive Constructor: " + operationSignature);
+					
+				}
+			}
+		}
+		
+		
+		int startIndex = operationSignature.indexOf(aOperation.getName());
+		if(startIndex>=0)
+		{
+			operationSignature = operationSignature.substring(startIndex);
+			operationSignature = aClassName+"::"+operationSignature;
+		}
+		
+		//System.out.println("Op. Signature: " + operationSignature);
+		operationSignature = operationSignature.replaceAll("\\s+", "");
+		return operationSignature;
+	}
+
+	private static String getSourceFromFunction(IASTFunctionDefinition aFunctionDefinition, String aPath) {
+		IASTStatement functionBody = aFunctionDefinition.getBody();
 		
 		IASTFileLocation fileLocation = functionBody.getFileLocation();
 		
@@ -661,11 +760,10 @@ public class ASTHelper
 	}
 	
 	
-	@SuppressWarnings("unchecked")
+	
 	public static String getSourceText(IRPOperation aOperation, IRPApplication aApplication)
 	{
-		
-			
+	
 		IRPModelElement element = aOperation.getOwner();
 		if (element instanceof IRPClass==false) 
 		{
@@ -674,12 +772,40 @@ public class ASTHelper
 		}
 		
 		IRPClass selectedClass = (IRPClass) element;
-		IRPUnit unit = selectedClass.getSaveUnit();
+		String filePath = getSourcePath(selectedClass, aApplication);
+		if((aOperation.isATemplate()==1)||(aOperation.getIsInline()==1))
+		{
+			filePath = filePath+".h";
+		}
+		else
+		{
+			filePath = filePath+".cpp";
+		}
+
+		if((filePath.endsWith("cpp")||filePath.endsWith("h"))==false)
+		{
+			System.out.println("file not found / component not active: " + selectedClass.getName());
+			return null;
+		}
 		
-		//System.out.println("UnitLast modified: " + unit.getLastModifiedTime());
+		String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
 		
-		IRPUnit unitOwner = unit.getOwner().getSaveUnit();
-			
+		String className = selectedClass.getName();
+		IRPModelElement owner = selectedClass.getOwner();
+		while(owner instanceof IRPClass)
+		{
+			className = owner.getName()+"::"+className;
+			owner = owner.getOwner();
+		}
+		
+		String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, aOperation);
+		return roundTripText;
+	}
+
+	
+	@SuppressWarnings("unchecked")
+	public static String getSourcePath(IRPClass aClass, IRPApplication aApplication) 
+	{	
 		List<IRPProject> projects = aApplication.getProjects().toList();
 		
 		IRPComponent activeComponent = null;
@@ -701,9 +827,9 @@ public class ASTHelper
 		}
 		
 		List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
-		boolean isActive = false;
 		
-		IRPModelElement selectedElement = selectedClass;
+		
+		IRPModelElement selectedElement = aClass;
 		
 		while(selectedElement.getOwner() instanceof IRPClass)
 		{
@@ -715,37 +841,13 @@ public class ASTHelper
 		{
 			if(scopeElement.equals(selectedElement))
 			{
-				if(aOperation.isATemplate()==1)
-				{
-					filePath = filePath+"\\"+selectedElement.getName()+".h";
-				}
-				else
-				{
-					filePath = filePath+"\\"+selectedElement.getName()+".cpp";
-				}
-				isActive = true;
+				
+				filePath = filePath+"\\"+selectedElement.getName();
+				
 				break;
 			}	
 		}
-		
-		if(isActive==false)
-		{
-			System.out.println("file not found / component not active: " + selectedClass.getName());
-			return null;
-		}
-		
-		String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
-		
-		String className = selectedClass.getName();
-		IRPModelElement owner = selectedClass.getOwner();
-		while(owner instanceof IRPClass)
-		{
-			className = owner.getName()+"::"+className;
-			owner = owner.getOwner();
-		}
-		
-		String roundTripText = ASTHelper.getOperationBody(filePath, nameSpace, className, aOperation);
-		return roundTripText;
+		return filePath;
 	}
 	
 	

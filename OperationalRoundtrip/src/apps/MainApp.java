@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -95,10 +96,29 @@ public class MainApp extends App implements ActionListener {
 			builder.inlineDiffByWord(true);
 			generator = builder.build();
 			
+			String nameSpace = RhapsodyOperation.getNamespace(myClass);
+			String sourcePath = ASTHelper.getSourcePath(myClass, rhapsody);
+			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+".cpp", nameSpace);
+			
 			
 			for(IRPOperation operation:operations)
 			{
-				String sourceCode = ASTHelper.getSourceText(operation, rhapsody);
+				if(operation.getIsAbstract()==1)
+				{
+					continue;
+				}
+				String sourceCode = "";
+				
+				if((operation.isATemplate()==1)||(operation.getIsInline()==1))
+				{
+					sourceCode = ASTHelper.getSourceText(operation, rhapsody);
+				}
+				else
+				{
+					sourceCode = ASTHelper.getSourceFromMap(functions, operation);
+				}
+				
+				
 				if(sourceCode==null)
 				{
 					rhapsody.writeToOutputWindow("log", "Operation: \" " + operation.getImplementationSignature() + " \" not found/component active!\n");
@@ -256,6 +276,7 @@ public class MainApp extends App implements ActionListener {
 	
 	private boolean hasDiff(IRPOperation operation)
 	{
+		
 		boolean ret = false;
 		DiffRowGenerator.Builder builder = DiffRowGenerator.create();
 		builder.showInlineDiffs(true);
