@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -498,11 +499,16 @@ public class ASTHelper
 			
 			rawSignature = rawSignature.replaceAll("\\s+", "");
 			
-			String functionSource = getSourceFromFunction(functionDefinition, aSourcePath);
+			//String functionSource = getSourceFromFunction(functionDefinition, aSourcePath);
 			
-			System.out.println("Map Signature: "+rawSignature);
+			Map.Entry<String, String> e = getSourceFromFunction(functionDefinition, aSourcePath);
 			
-			ret.put(rawSignature, functionSource);
+			
+			System.out.println("Map Signature: "+e.getKey());
+			
+			ret.put(e.getKey(),e.getValue());
+			
+			//ret.put(rawSignature, functionSource);
 			
 		}
 
@@ -569,28 +575,23 @@ public class ASTHelper
 		
 		ASTNode<IASTFunctionDefinition> parseFunctionDefinition = new ASTNode<IASTFunctionDefinition>(IASTFunctionDefinition.class);
 		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(source);
-		IASTFunctionDefinition theFunctionDefinition=null;
+		
+		Map.Entry<String, String> theFunctionEntry = null;
 		for(IASTFunctionDefinition functionDefinition:functionDefinitions)
 		{
-			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
 			
-			String rawSignature = functionDeclarator.getRawSignature();
+			Map.Entry<String, String> functionEntry = getSourceFromFunction(functionDefinition, aPath);
 			
-			rawSignature = rawSignature.replaceAll("\\s+", "");
+			String rawSignature = functionEntry.getKey();
 			
 			if(rawSignature.equals(operationSignature))
 			{
-				theFunctionDefinition = functionDefinition;
+				theFunctionEntry = functionEntry;
 				break;
 			}
 		}
 			
 		
-		if(theFunctionDefinition==null)
-		{
-			
-			return null;
-		}
 		
 		
 		//check for syntax error
@@ -608,31 +609,27 @@ public class ASTHelper
 		}
 		*/
 		
-		IASTFunctionDeclarator theFunctionDeclarator = theFunctionDefinition.getDeclarator();
-		
-		String rawSignature = theFunctionDeclarator.getRawSignature();
-		
-		
-		//System.out.println("Raw Signature: "+ rawSignature);
-
-		
-		rawSignature = rawSignature.replaceAll("\\s+", "");
-		
-		if(rawSignature.equals(operationSignature)==false)
+		if(theFunctionEntry==null)
 		{
-			System.out.println("different Signatures:");
-			System.out.println("Raw Signature: " + rawSignature);
-			System.out.println("Op. Signature: " + operationSignature);		
-		
+			System.out.println("different Signatures");
+			return "";
 		}
-			
-		// get the operation body
-		return getSourceFromFunction(theFunctionDefinition, aPath);
+		
+		
+		return theFunctionEntry.getValue();
 	}
-
+	
+	public static String getOperationSignature(IRPOperation aOperation, String aClassName) 
+	{
+		return aOperation.getSignatureNoArgNames();
+	}
+	
+	/*
 	public static String getOperationSignature(IRPOperation aOperation, String aClassName) 
 	{
 		String operationSignature = aOperation.getImplementationSignature();
+		
+		//System.out.println("Test Signature: " +aOperation.getSignature());
 		
 		//check for constructor of an reactive class
 		if(aOperation.getIsCtor()==1)
@@ -644,8 +641,7 @@ public class ASTHelper
 				if(ownerClass.getIsReactive()==1)
 				{
 					operationSignature = operationSignature.substring(0, operationSignature.length()-1)+", IOxfActive* theActiveContext )";
-					//System.out.println("Reactive Constructor: " + operationSignature);
-					
+					//System.out.println("Reactive Constructor: " + operationSignature);	
 				}
 			}
 		}
@@ -662,10 +658,15 @@ public class ASTHelper
 		operationSignature = operationSignature.replaceAll("\\s+", "");
 		return operationSignature;
 	}
+	
+	*/
 
-	private static String getSourceFromFunction(IASTFunctionDefinition aFunctionDefinition, String aPath) {
-		IASTStatement functionBody = aFunctionDefinition.getBody();
+	@SuppressWarnings("rawtypes")
+	private static Map.Entry<String, String> getSourceFromFunction(IASTFunctionDefinition aFunctionDefinition, String aPath) {
 		
+		
+		
+		IASTStatement functionBody = aFunctionDefinition.getBody();
 		IASTFileLocation fileLocation = functionBody.getFileLocation();
 		
 		
@@ -693,7 +694,8 @@ public class ASTHelper
 			
 			
 			String line; 
-			String ret = "";
+			String value = "";
+			String signature = "";
 			
 			while((line = br.readLine())!=null)
 			{
@@ -709,6 +711,20 @@ public class ASTHelper
 				i++;
 				if(tabPos!=(-1))
 				{
+					//get signature - parse   //#[ operation adapterEnabled(std::string)
+					int startSignature = -1;
+					String operationMarker = "//#[ operation ";
+					startSignature = checkTab.indexOf(operationMarker);
+					if(startSignature>0)
+					{
+						startSignature = tabPos+operationMarker.length();
+						signature = checkTab.substring(startSignature);
+						
+					}
+					
+					
+					
+					
 					break;
 				}
 			}
@@ -737,12 +753,15 @@ public class ASTHelper
 						
 				}
 				
-				ret = ret+line+"\n";
+				value = value+line+"\n";
 			}
 			
-			
 			in.close();
-		
+			
+			Map.Entry<String, String> ret;
+			
+			ret = new AbstractMap.SimpleEntry(signature, value);
+
 			return ret;
 		
 		} 
@@ -756,7 +775,7 @@ public class ASTHelper
 			e.printStackTrace();
 		}
 		
-		return "";
+		return null;
 	}
 	
 	
