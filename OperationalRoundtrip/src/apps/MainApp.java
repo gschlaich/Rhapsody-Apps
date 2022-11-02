@@ -45,6 +45,7 @@ import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 import com.ibm.rhapsody.apps.TriggerAdapter.Trigger;
@@ -318,60 +319,12 @@ public class MainApp extends App implements ActionListener {
 		
 		String connectionstring = null;
 		
-		if (args.length >= 1) {
+		if (args.length >= 1) 
+		{
 			connectionstring = args[0];
-
 		}
 		
-		//test
-		//connectionstring = "RHAPSODY2.8.4.0.0:21468";
-
-		
-		IRPApplication actualApp = null;
-		
-		if(connectionstring!=null)
-		{
-			try
-			{
-				actualApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(connectionstring);
-			}
-			catch(Exception e)
-			{
-				System.out.println("connectionstring "+ connectionstring + " is not an active rhapsody application ");
-			}
-		}
-		else
-		{
-			System.out.println("no connectionstring set");
-		}
-		
-		
-		
-		if(actualApp==null)
-		{
-        
-			myApp.invokeFromMain();
-			return;
-		}
-		
-		IRPModelElement selectedElement = actualApp.getSelectedElement();
-		
-		
-		if(connectionstring!=null)
-		{
-			actualApp.writeToOutputWindow("log", "ConnectiongString: " + connectionstring + "\n");
-		}
-		else
-		{
-			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
-		}
-		
-		actualApp.writeToOutputWindow("log", "start...\n");
-		
-		//mainApp.setRhapsody(actualApp);
-		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
-		//mainApp.invoke(selectedElement);
-		myApp.execute(actualApp, selectedElement);
+		RhapsodyHelper.executeApp(myApp, connectionstring);
 		
 		
 	}
