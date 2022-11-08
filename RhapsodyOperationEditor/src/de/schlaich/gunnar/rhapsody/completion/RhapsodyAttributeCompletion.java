@@ -79,6 +79,7 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 		if((myAttribute.getIsReference()==1))
 		{
 			myIsPointer = true;
+			
 		}
 	}
 	

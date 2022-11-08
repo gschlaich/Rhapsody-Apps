@@ -14,10 +14,12 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.UIManager;
@@ -43,6 +45,7 @@ import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 import com.ibm.rhapsody.apps.TriggerAdapter.Trigger;
@@ -59,10 +62,13 @@ public class MainApp extends App implements ActionListener {
 	private String myDiffResults;
 	private static MainApp myApp;
 	private static JFrame myFrame;
+	private List<IRPOperation> myChangedOperations;
+	
 	
 	@SuppressWarnings("unchecked")
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) 
 	{
+		this.rhapsody = rhapsody;
 		//first only with classes
 		if(selected instanceof IRPClass == false)
 		{
@@ -70,30 +76,60 @@ public class MainApp extends App implements ActionListener {
 		}
 		
 		myClass = (IRPClass)selected;
-		
-		//look for active component...
+
 		List<IRPOperation> operations = myClass.getOperations().toList();
-		
-		
+				
 		DiffRowGenerator generator;
 		
 		StringBuilder diffStringBuilder = new StringBuilder();
 		
 		diffStringBuilder.append("<html>\n<body>\n");
+		
+		myChangedOperations = new ArrayList<IRPOperation>(); 
 	
 		
 		try
 		{
 		
+			int foundOperations = 0;
 			DiffRowGenerator.Builder builder = DiffRowGenerator.create();
 			builder.showInlineDiffs(true);
 			builder.inlineDiffByWord(true);
 			generator = builder.build();
 			
+			String nameSpace = RhapsodyOperation.getNamespace(myClass);
+			String sourcePath = ASTHelper.getSourcePath(myClass, rhapsody);
+			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+".cpp", nameSpace);
+			
 			
 			for(IRPOperation operation:operations)
 			{
-				String sourceCode = ASTHelper.getSourceText(operation, rhapsody);
+				if(operation.getIsAbstract()==1)
+				{
+					continue;
+				}
+				String sourceCode = "";
+				
+				if((operation.isATemplate()==1)||(operation.getIsInline()==1))
+				{
+					sourceCode = ASTHelper.getSourceText(operation, rhapsody);
+				}
+				else
+				{
+					sourceCode = ASTHelper.getSourceFromMap(functions, operation);
+				}
+				
+				
+				if(sourceCode==null)
+				{
+					rhapsody.writeToOutputWindow("log", "Operation: \" " + operation.getImplementationSignature() + " \" not found/component active!\n");
+					diffStringBuilder.append("<table>\n <tbody>\n");
+					diffStringBuilder.append("<tr>no source found / component inactive on " + operation.getImplementationSignature() +"</tr>\n");
+					diffStringBuilder.append("</table>\n </tbody>\n");
+					continue;
+				}
+				
+				foundOperations++;
 				
 				List<String> sourceLines = ASTHelper.getLines(sourceCode);
 				
@@ -117,36 +153,95 @@ public class MainApp extends App implements ActionListener {
 				
 				if(hasDiff(rows)==false)
 				{
+					diffStringBuilder.append("<table>\n <tbody>\n");
+					diffStringBuilder.append("<tr>no changes: " + operation.getImplementationSignature() +"</tr>\n");
+					diffStringBuilder.append("</table>\n </tbody>\n");
+					
 					continue;
 				}
+				
+				
+				
 				diffStringBuilder.append("<table>\n <tbody>\n");
-				diffStringBuilder.append("<tr><th>"+RhapsodyOperation.getOperation(operation)+"</th></tr>\n");		
+				//diffStringBuilder.append("<tr><th>"+RhapsodyOperation.getOperation(operation)+"</th></tr>\n");
+				diffStringBuilder.append("<tr><th>"+operation.getImplementationSignature()+"</th></tr>\n");
 				diffStringBuilder.append("</table>\n </tbody>\n");
 				diffStringBuilder.append("<table>\n <tbody>\n");
-				diffStringBuilder.append("<tr><th style=\"width: 50px;\"></th><th>Action</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th></tr>\n");
+				diffStringBuilder.append("<tr><th style=\"width: 50px;\">Line</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th><th>Action</th></tr>\n");
 				int line = 0;
+				int changes = 0;
 				for (DiffRow row : rows) 
 				{
 				   line++;
-					Tag tag = row.getTag();
+				   Tag tag = row.getTag();
+				
+				   
 				   if(tag==tag.EQUAL)
 				   {
 					   continue;
 				   }
+				   
+				   
+				  
 				   if(row.getOldLine().trim().isEmpty()&&row.getNewLine().trim().isEmpty())
 				   {
 					   continue;
 				   }
+				    
+				   if(row.getNewLine().contains("<span class=\"editNewInline\"></span>"))
+				   {
+					   continue;
+				   }
+				  
+				    
 				   //diffOperator.append()
-				   diffStringBuilder.append("<tr><td style=\"width: 50px;\">"+line+"</td><td>"+tag.name()+"</td><td>" + row.getOldLine() + "</td><td>" + row.getNewLine() + "</td></tr>\n");
-				   
+				   diffStringBuilder.append("<tr><td style=\"width: 50px;\">"+line+"</td><td>" + row.getOldLine() + "</td><td>" + row.getNewLine() + "</td><td>"+tag.name()+"</td></tr>\n");
+				   changes++;
 				}
 				
 				diffStringBuilder.append("</tbody>\n </table>\n");
+				if(changes==0)
+				{
+					continue;
+				}
+				myChangedOperations.add(operation);
+				
 		
 			}
 			
 			diffStringBuilder.append("</body> </html>\n");
+			
+			if(foundOperations==0)
+			{
+				rhapsody.writeToOutputWindow("log", "Class not active\n");
+				
+				String lufSystem = UIManager.getSystemLookAndFeelClassName();
+				
+				try {
+					UIManager.setLookAndFeel(lufSystem);
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (UnsupportedLookAndFeelException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				JOptionPane.showMessageDialog(null, "Class not active");
+				return;
+			}
+			if(myChangedOperations.size()==0)
+			{
+				rhapsody.writeToOutputWindow("log", "No operation changed\n");
+				JOptionPane.showMessageDialog(null, "No operation changed");
+				return;
+			}
 			
 			
 			createWindow(myClass.getName(),diffStringBuilder.toString());
@@ -182,6 +277,7 @@ public class MainApp extends App implements ActionListener {
 	
 	private boolean hasDiff(IRPOperation operation)
 	{
+		
 		boolean ret = false;
 		DiffRowGenerator.Builder builder = DiffRowGenerator.create();
 		builder.showInlineDiffs(true);
@@ -220,8 +316,17 @@ public class MainApp extends App implements ActionListener {
      */	
 	public static void main(String[] args) {
 		myApp = new MainApp();
-        
-		myApp.invokeFromMain();
+		
+		String connectionstring = null;
+		
+		if (args.length >= 1) 
+		{
+			connectionstring = args[0];
+		}
+		
+		RhapsodyHelper.executeApp(myApp, connectionstring);
+		
+		
 	}
 	
 	
@@ -372,8 +477,7 @@ public class MainApp extends App implements ActionListener {
 		{
 			if(command.equals("ok"))
 			{
-				List<IRPOperation> operations = myClass.getOperations().toList();
-				for(IRPOperation operation:operations)
+				for(IRPOperation operation:myChangedOperations)
 				{
 					if(hasDiff(operation))
 					{

@@ -1,22 +1,19 @@
 package apps;
 
 import java.awt.Image;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
 import javax.swing.JScrollPane;
 
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
+
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import net.sourceforge.plantuml.*;
+
 
 
 
@@ -55,12 +52,10 @@ public class MainApp extends App {
 			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
-			Point location = MouseInfo.getPointerInfo().getLocation(); 
-			int x = (int) location.getX();
-			int y = (int) location.getY();
+			
 			showPNG sp = new showPNG(image);
 			//sp.setContentPane(pane);
-			sp.setLocation(location);
+			//sp.setLocation(location);
 			sp.setIconImage(img);
 			sp.setTitle(selected.getName());
 			sp.setVisible(true);
@@ -77,7 +72,16 @@ public class MainApp extends App {
 	 *  Note: Select an element in Rhapsody in order to simulate launching app on a selected element in the browser.
      */	
 	public static void main(String[] args) {
-		MainApp app = new MainApp();
-		app.invokeFromMain();
-	}		
+		MainApp myApp = new MainApp();
+		String connectionstring = null;
+		
+		if (args.length >= 1) {
+			connectionstring = args[0];
+
+		}
+		
+		RhapsodyHelper.executeApp(myApp, connectionstring);
+	}
+
+	
 }

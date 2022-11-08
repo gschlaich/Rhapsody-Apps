@@ -1,0 +1,9 @@
+<OBJECT>
+  <CCmdComposite ID="0" VERSION="0">
+    <Commands SIZE="1">
+      <Element TYPE="CCmdMsg">
+        <Message TYPE="CMsgWIFIDisconnectNetwork"></Message>
+      </Element>
+    </Commands>
+  </CCmdComposite>
+</OBJECT>

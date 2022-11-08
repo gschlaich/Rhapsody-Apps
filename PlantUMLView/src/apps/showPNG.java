@@ -2,6 +2,8 @@ package apps;
 
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Toolkit;
 
 import javax.swing.ImageIcon;
@@ -41,6 +43,14 @@ public class showPNG extends JFrame {
 			 height = size.height;
 		 }
 		 
+		 
+	
+			
+		setLocation(size.width/2-width/2,size.height/2-height/2);
+			
+			
+			
+			
 		 
 		 
 		 this.setSize(width,height);
