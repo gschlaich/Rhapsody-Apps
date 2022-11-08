@@ -1,18 +1,11 @@
 package apps;
 
-import java.awt.Dimension;
 import java.awt.Image;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
-
 import javax.swing.JScrollPane;
 
 import com.ibm.rhapsody.apps.*;
