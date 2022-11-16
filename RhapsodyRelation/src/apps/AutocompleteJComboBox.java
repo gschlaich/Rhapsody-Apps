@@ -35,7 +35,7 @@ public class AutocompleteJComboBox extends JComboBox {
 
     static final long serialVersionUID = 4321421L;
 
-    private final Searchable<RhapsodyClassifierItem, String> mySearchable;
+    private final Searchable<RhapsodyModelElementItem, String> mySearchable;
 
     /**
      *
@@ -44,7 +44,7 @@ public class AutocompleteJComboBox extends JComboBox {
      * @param s
      *
      */
-    public AutocompleteJComboBox(Searchable<RhapsodyClassifierItem, String> aSearchable) 
+    public AutocompleteJComboBox(Searchable<RhapsodyModelElementItem, String> aSearchable) 
     {
         super();
         this.mySearchable = aSearchable;
@@ -61,19 +61,19 @@ public class AutocompleteJComboBox extends JComboBox {
 
                 @Override
                 public void insertUpdate(DocumentEvent arg0) {
-                    System.out.println("Insert: " + arg0.getLength());
+     
                     if (arg0.getLength() == 1) {
-                        System.out.println("Update");
+                        
                         update();
                     }
                 }
 
                 @Override
                 public void removeUpdate(DocumentEvent arg0) {
-                    System.out.println("Remove: " + arg0.getLength());
+                   
                     if (arg0.getLength() == 1) {
                         if (tc.getText().length() > 0) {
-                            System.out.println("Update2: " + tc.getText().length());
+                            
                             update();
                         }
                     }
@@ -88,11 +88,11 @@ public class AutocompleteJComboBox extends JComboBox {
                         @SuppressWarnings("unchecked")
 						@Override
                         public void run() {
-                            List<RhapsodyClassifierItem> founds = new ArrayList<>(mySearchable.search(tc.getText()));
-                            Set<RhapsodyClassifierItem> foundSet = new HashSet<>();
+                            List<RhapsodyModelElementItem> founds = new ArrayList<>(mySearchable.search(tc.getText()));
+                            Set<RhapsodyModelElementItem> foundSet = new HashSet<>();
 
-                            for (RhapsodyClassifierItem classifier  : founds) {
-                                foundSet.add(classifier);
+                            for (RhapsodyModelElementItem modelEltemtenItem  : founds) {
+                                foundSet.add(modelEltemtenItem);
                             }
 
                             Collections.sort(founds);//sort alphabetically
@@ -104,7 +104,7 @@ public class AutocompleteJComboBox extends JComboBox {
                                 addItem(tc.getText());
                             }
 
-                            for (RhapsodyClassifierItem s : founds) {
+                            for (RhapsodyModelElementItem s : founds) {
                                 addItem(s);
                             }
 
