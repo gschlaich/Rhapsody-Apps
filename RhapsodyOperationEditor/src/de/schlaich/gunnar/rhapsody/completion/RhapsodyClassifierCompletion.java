@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.BasicCompletion;
+import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -310,11 +311,8 @@ public class RhapsodyClassifierCompletion extends BasicCompletion implements Rha
 		
 		return myIsValue;
 	}
-
 	
 	
-
-
 	
 
 }

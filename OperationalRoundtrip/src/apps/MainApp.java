@@ -61,7 +61,9 @@ public class MainApp extends App implements ActionListener {
 	private static IRPClass myClass = null;
 	private String myDiffResults;
 	private static MainApp myApp;
+	private static IRPProject myProject;
 	private static JFrame myFrame;
+	private static IRPComponent myActiveComponent;
 	private List<IRPOperation> myChangedOperations;
 	
 	
@@ -76,6 +78,21 @@ public class MainApp extends App implements ActionListener {
 		}
 		
 		myClass = (IRPClass)selected;
+		
+		
+		myProject = rhapsody.activeProject();
+		if(myProject==null)
+		{
+			return;
+		}
+		
+		myActiveComponent = myProject.getActiveComponent();
+		
+		if(RhapsodyHelper.setActive(myClass, rhapsody)==false)
+		{
+			rhapsody.writeToOutputWindow("log", "Could not set Class " + myClass.getName() + " active \n");
+			
+		}
 
 		List<IRPOperation> operations = myClass.getOperations().toList();
 				
@@ -99,7 +116,12 @@ public class MainApp extends App implements ActionListener {
 			
 			String nameSpace = RhapsodyOperation.getNamespace(myClass);
 			String sourcePath = ASTHelper.getSourcePath(myClass, rhapsody);
-			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+".cpp", nameSpace);
+			String fileEnding = ".cpp";
+			if(myClass.isATemplate()==1)
+			{
+				fileEnding = ".h";
+			}
+			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+fileEnding, nameSpace);
 			
 			
 			for(IRPOperation operation:operations)
@@ -240,6 +262,7 @@ public class MainApp extends App implements ActionListener {
 			{
 				rhapsody.writeToOutputWindow("log", "No operation changed\n");
 				JOptionPane.showMessageDialog(null, "No operation changed");
+				resetActiveComponent();
 				return;
 			}
 			
@@ -337,7 +360,7 @@ public class MainApp extends App implements ActionListener {
 	      
 	     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	     
-	     String imageName = myClass.getIconFileName();
+	    String imageName = myClass.getIconFileName();
 		imageName = imageName.replace("\\", "/");
 		
 		List<BufferedImage> icons = new ArrayList<BufferedImage>();
@@ -490,6 +513,7 @@ public class MainApp extends App implements ActionListener {
 					}
 				}
 				
+				resetActiveComponent();				
 				myFrame.dispose();
 			}
 			
@@ -497,11 +521,22 @@ public class MainApp extends App implements ActionListener {
 		
 		if(command.equals("Cancel"))
 		{
+			resetActiveComponent();
 			myFrame.dispose();
 		}
 		
 		
 		
-	}  
+	}
+	
+	private void resetActiveComponent()
+	{
+		if(myProject.getActiveComponent().equals(myActiveComponent))
+		{
+			return;
+		}
+		
+		myProject.setActiveComponent(myActiveComponent);
+	}
 	
 }

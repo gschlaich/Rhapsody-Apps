@@ -503,6 +503,10 @@ public class ASTHelper
 			
 			Map.Entry<String, String> e = getSourceFromFunction(functionDefinition, aSourcePath);
 			
+			if(e==null)
+			{
+				continue;
+			}
 			
 			System.out.println("Map Signature: "+e.getKey());
 			
@@ -667,6 +671,10 @@ public class ASTHelper
 		
 		
 		IASTStatement functionBody = aFunctionDefinition.getBody();
+		if(functionBody==null)
+		{
+			return null;
+		}
 		IASTFileLocation fileLocation = functionBody.getFileLocation();
 		
 		

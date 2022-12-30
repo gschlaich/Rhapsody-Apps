@@ -247,7 +247,6 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			List<IRPDependency> dependencies = aClassifier.getDependencies().toList();
 			for(IRPDependency dependency : dependencies)
 			{
-				System.out.println(dependency.getName());
 				
 				IRPModelElement modelElement = dependency.getDependsOn();
 				
@@ -257,9 +256,15 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				}
 				
 				
+				
+				
 				if(modelElement instanceof IRPClassifier)
 				{
+					
 					IRPClassifier classifier = (IRPClassifier)modelElement;
+					List<IRPModelElement> sts = classifier.getStereotypes().toList();
+					
+					
 					if(classifier.getLanguage().equals("C"))
 					{
 						//this is not a class! 
@@ -303,12 +308,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 								roc.setRelevance(myBaseRelevance);
 								addCompletion(roc);
 							}
-							/*
-							else
-							{
-								System.out.println(e.getName()+" "+e.toString());
-							}
-							*/
+							
 							
 						}					
 						else if(e instanceof IRPAttribute)
@@ -318,12 +318,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 							rac.setRelevance(myBaseRelevance-10);
 							addCompletion(rac);
 						}
-						/*
-						else
-						{					
-							System.out.println(e.getName()+" "+e.toString());
-						}
-						*/
+						
 					}
 					
 				}
@@ -402,6 +397,12 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 					+ aCompletion.toString() + ": " + time);
 			try
 			{
+				if(aCompletion.toString().equals("onMsgTimer"))
+				{
+					boolean breakHere = true;
+				}
+				
+				
 				super.addCompletion(aCompletion);
 			}
 			catch(Exception e)
@@ -719,13 +720,6 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 			RhapsodyClassifier arc = (RhapsodyClassifier)aCompletion;
 			
 			IRPModelElement are = arc.getElement();
-			/*
-			if(are==null)
-			{
-				System.out.println("no element in :" + aCompletion.getInputText());
-				return true;
-			}
-			*/
 			
 			List<Completion> foundCompletions = super.getCompletionByInputText(aCompletion.getInputText());
 			if(foundCompletions==null)

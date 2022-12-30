@@ -5,6 +5,7 @@ import java.util.List;
 import javax.swing.Icon;
 
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
+import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.VariableCompletion;
 
@@ -41,7 +42,7 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 		myAttribute = aAttribute;
 		
 		
-		setShortDescription(myAttribute.getDescription());
+		setShortDescription(myAttribute.getDescriptionPlainText());
 		setDefinedIn(myAttribute.getOwner().getFullPathNameIn());
 		
 		myClassifier = myAttribute.getType();
@@ -126,5 +127,40 @@ public class RhapsodyAttributeCompletion extends VariableCompletion implements R
 	public boolean isValue() {
 		return myIsValue;
 	}
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSummary() {
+		StringBuilder sb = new StringBuilder();
+		possiblyAddDescription(sb);
+		possiblyAddDefinedIn(sb);
+		return sb.toString();
+	}
+
+
+	
+	
+
+	/**
+	 * Adds the description text as HTML to a buffer, if a description is
+	 * defined.
+	 *
+	 * @param sb The buffer to append to.
+	 * @return Whether there was a description to add.
+	 */
+	protected boolean possiblyAddDescription(StringBuilder sb) {
+		if (getShortDescription()!=null) {
+				sb.append("<hr><br>");
+				sb.append(myAttribute.getToolTipHTML());
+				sb.append("<br><br><br>");
+				return true;	
+		}
+		return false;
+	}
+	
+	
+	
 
 }
