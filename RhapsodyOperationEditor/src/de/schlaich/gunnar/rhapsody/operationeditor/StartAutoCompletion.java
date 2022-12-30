@@ -1,10 +1,12 @@
 package de.schlaich.gunnar.rhapsody.operationeditor;
 
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import org.fife.ui.autocomplete.AutoCompletion;
@@ -45,6 +47,8 @@ public class StartAutoCompletion extends Thread
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
 	private IRPApplication myApplication;
 	private DiffParser myDiffParser;
+	private CppParser myCppParser;
+	private JFrame myFrame;
 	
 	private static StartAutoCompletion instance;
 	
@@ -52,12 +56,14 @@ public class StartAutoCompletion extends Thread
 			RSyntaxTextArea aTextArea, 
 			AutoCompletion aAutoComplete, 
 			IRPOperation aSelectedOperation,
-			IRPApplication aApplication) 
+			IRPApplication aApplication,
+			JFrame aFrame) 
 	{
 		myTextArea = aTextArea;
 		//myAutoComplete = aAutoComplete;
 		mySelectedOperation = aSelectedOperation;
 		myApplication = aApplication;
+		myFrame = aFrame;
 	}
 	
 	
@@ -84,14 +90,16 @@ public class StartAutoCompletion extends Thread
 		
 		instance = this;
 		
-		String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		Date started = new Date();
+		//String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		
 		
 		myApplication.writeToOutputWindow("Log", RhapsodyOperation.getOperation(mySelectedOperation));
 		myApplication.writeToOutputWindow("Log", " in " + mySelectedOperation.getOwner().getOwner().getFullPathName()+"\n\n");
 		
 		
 	    
-		myApplication.writeToOutputWindow("log", "Start Autocomplete collection at " + timeStamp + "\n");
+		myApplication.writeToOutputWindow("log", "Start Autocomplete collection \n");
 		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
 		
 		// Install auto-completion onto our text area.
@@ -105,15 +113,16 @@ public class StartAutoCompletion extends Thread
 		myAutoComplete.install(myTextArea);
 
 		JPopupMenu popup = myTextArea.getPopupMenu();
+
 	    popup.addSeparator();
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
+	    popup.add(new JMenuItem(new FormatSelected()) );
 	    
 	    FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
 	   
 	    
 	    myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
-	
 		myTextArea.setCodeFoldingEnabled(true);
 		
 		 //start parser
@@ -122,19 +131,61 @@ public class StartAutoCompletion extends Thread
 		gutter.setBookmarkIcon(RhapsodyOperation.getIcon("RhapsodyIcons_110.gif")); 
 		gutter.setBookmarkingEnabled(true); 
 		
-	    CppParser parser = new CppParser(myClassifierCompletionProvider, gutter);
-	    myTextArea.addParser(parser);
+	    myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
+	    myTextArea.addParser(myCppParser);
 		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
 		myTextArea.addParser(myDiffParser);
 		
 		myClassifierCompletionProvider.createClassCompletion();
-		myTextArea.forceReparsing(parser);
+		myTextArea.forceReparsing(myCppParser);
 		
-		timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection at " + timeStamp + "\n" );
+		//timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		
+		Date finished = new Date();
+		
+		double diffMs = finished.getTime()-started.getTime();
+		
+		double diffS = diffMs/1000; 
 	
 		
+		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection after " + diffS + " Seconds\n\n\n" );
+			
 	}
+	
+	public void updateCompletionProvider()
+	{
+		Date started = new Date();
+		
+		myFrame.setTitle(RhapsodyOperation.getOperation(mySelectedOperation));
+		
+		
+		myClassifierCompletionProvider.clear();
+		myApplication.writeToOutputWindow("log", "Start Autocomplete update \n");
+		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
+		myAutoComplete.setCompletionProvider(provider);
+		myClassifierCompletionProvider.createClassCompletion();
+		
+		
+		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
+		
+		myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
+	    myTextArea.addParser(myCppParser);
+		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
+		myTextArea.addParser(myDiffParser);
+		
+		myClassifierCompletionProvider.createClassCompletion();
+		myTextArea.forceReparsing(myCppParser);
+		
+		
+		
+		Date finished = new Date();
+		double diffMs = finished.getTime()-started.getTime();
+		double diffS = diffMs/1000; 
+		myApplication.writeToOutputWindow("log", "Complete Autocomplete update after " + diffS + " Seconds\n\n\n" );
+			
+	}
+	
+	
 	
 	public DiffParser getDiffParser()
 	{
@@ -167,12 +218,7 @@ public class StartAutoCompletion extends Thread
 			myClassifierCompletionProvider.addCompletion(rac);
 		}
 		
-		
-		
 		getNameSpaces(myClassifierCompletionProvider, selectedOperation);
-		
-		
-		
 		
 		createTraceCompletions(myClassifierCompletionProvider);
 		
@@ -310,18 +356,6 @@ public class StartAutoCompletion extends Thread
 		xtc.setDefinedIn("");
 		aCp.addCompletion(xtc);
 		
-		
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE3"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_ERROR)", "Error Release Trace in USMMonitor and log file"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_WARNING)", "Warning Release Trace in USMMonitor and log file"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE(X_INFO)"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_ERROR)"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_WARNING)"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG(X_INFO)"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_DEBUG3"));
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_TRACE_RELEASE"));	
-//		aCp.addCompletion(new BasicCompletion(aCp, "X_ASSERT"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_INFO","Trace Level define"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_WARNING","Trace Level define"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR","Trace Level define"));
@@ -340,6 +374,7 @@ public class StartAutoCompletion extends Thread
 		aCp.addCompletion(new BasicCompletion(aCp, "static_cast", "static cast of data type"));
 		aCp.addCompletion(new BasicCompletion(aCp, "dynamic_cast", "dynamic cast of data type"));
 		aCp.addCompletion(new BasicCompletion(aCp, "const_cast", "const cast of data type"));
+		aCp.addCompletion(new BasicCompletion(aCp, "reinterpret_cast", "Converts between types by reinterpreting the underlying bit pattern"));
 		
 		FunctionCompletion fcp = new FunctionCompletion(aCp, "GEN", "void");
 		fcp.setDefinedIn("TCSI");
@@ -398,6 +433,13 @@ public class StartAutoCompletion extends Thread
 					provider.addCompletion(rnc);
 					//load provider into cache....
 					NamespaceCompletionProvider ncp = NamespaceCompletionProvider.GetNameSpaceProvider(rnc);
+					
+					if(ncp.hasNoNamespace())
+					{
+						ncp.addToOtherProvider(provider);
+					}
+					
+					
 				}
 			}
 				

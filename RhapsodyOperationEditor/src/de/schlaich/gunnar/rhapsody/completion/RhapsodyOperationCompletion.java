@@ -3,7 +3,9 @@ package de.schlaich.gunnar.rhapsody.completion;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.imaging.common.mylzw.MyBitOutputStream;
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
+import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.FunctionCompletion;
 import org.fife.ui.autocomplete.ParameterizedCompletion;
@@ -47,6 +49,8 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)aProvider;
 		
 		setShortDescription(myInterfaceItem.getDescription());
+		
+		setDefinedIn(myInterfaceItem.getOwner().getFullPathName());
 		
 		myNameSpacePackage = RhapsodyOperation.getNamespacePackage(myInterfaceItem);
 		
@@ -131,32 +135,64 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 		return !isPointer();
 	}
 	
-	/*
-
 	@Override
-	protected void possiblyAddDefinedIn(StringBuilder sb) {
-		// TODO Auto-generated method stub
-		super.possiblyAddDefinedIn(sb);
-	}
-
-	@Override
-	protected boolean possiblyAddDescription(StringBuilder sb) {
-		
-			sb.append("<hr><br>");
-			sb.append(myInterfaceItem.getToolTipHTML());
-			//sb.append(getShortDescription());
-			sb.append("<br><br><br>");
-			return true;
-		
-	}
-
-	@Override
-	public void setDefinedIn(String definedIn) {
-		// TODO Auto-generated method stub
-		super.setDefinedIn(definedIn);
+	public int compareTo(Completion c2) {
+		if (c2==this) {
+			return 0;
+		}
+		else if (c2!=null) {
+			return toString().compareToIgnoreCase(c2.toString());
+		}
+		return -1;
 	}
 	
-	*/
+	
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String getSummary() {
+		StringBuilder sb = new StringBuilder();
+		possiblyAddDescription(sb);
+		possiblyAddDefinedIn(sb);
+		return sb.toString();
+	}
+	
+	/**
+	 * Adds some HTML describing where this package is defined, if this
+	 * information is known.
+	 *
+	 * @param sb The buffer to append to.
+	 */
+	protected void possiblyAddDefinedIn(StringBuilder sb) {
+		
+			sb.append("<hr>Defined in:"); // TODO: Localize me
+			sb.append(" <em>");
+			sb.append(getDefinedIn());
+			sb.append("</em>");
+		
+	}
+
+
+	
+	
+
+	/**
+	 * Adds the description text as HTML to a buffer, if a description is
+	 * defined.
+	 *
+	 * @param sb The buffer to append to.
+	 * @return Whether there was a description to add.
+	 */
+	protected boolean possiblyAddDescription(StringBuilder sb) {
+		if (getShortDescription()!=null) {
+				sb.append("<hr><br>");
+				sb.append(myInterfaceItem.getToolTipHTML());
+				sb.append("<br><br><br>");
+				return true;	
+		}
+		return false;
+	}
 	
 	
 	

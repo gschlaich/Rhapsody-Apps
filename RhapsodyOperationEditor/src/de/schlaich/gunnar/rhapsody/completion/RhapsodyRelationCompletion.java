@@ -25,20 +25,8 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		
 		
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
-		if(myRelation.getMultiplicity().equals("*"))
-		{
-			//container...
-			if(myRelation.getQualifier().equals("")==false)
-			{
-				
-				
-			}
-			else 
-			{
-				//list or vector... assume vector
-				//if()
-			}
-		}
+		
+		myRelation.getDescription();
 		
 		if(addType==false)
 		{
@@ -49,8 +37,8 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		
 		IRPPackage namespace = RhapsodyOperation.getNamespacePackage(myRelation);
 		
-		
-		
+		//TODO: clean up this chaos with container an otherClass...
+
 		if((getIRPClassifier(isPointer())!=null)&&(abstractProvider!=null))
 		{
 			IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(getIRPClassifier(isPointer()));
@@ -58,6 +46,13 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 			if((classifiernamespace==null)||(classifiernamespace.equals(namespace)))
 			{		
 				RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider, getIRPClassifier(isPointer()));
+				abstractProvider.addCompletion(rc);
+	
+			}
+			else if(isContainer())
+			{
+				
+				RhapsodyClassifierCompletion rc = new RhapsodyClassifierCompletion(provider,myRelation.getOtherClass());
 				abstractProvider.addCompletion(rc);
 			}
 		}
@@ -67,12 +62,15 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 	
 	private boolean isVector()
 	{
+		
 		if(myRelation.getMultiplicity().equals("*"))
 		{
 			if(myRelation.getQualifier().equals(""))
 			{
-				
-				return true;
+				if(myRelation.getQualifierType()==null)
+				{
+					return true;
+				}
 				
 			}	
 		}
@@ -81,15 +79,29 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 	
 	private boolean isMap()
 	{
+		
 		if(myRelation.getMultiplicity().equals("*"))
 		{
 			if(myRelation.getQualifier().equals("")==false)
 			{
 				return true;
 				
-			}	
+			}
+			if(myRelation.getQualifierType()!=null)
+			{
+				return true;
+			}
+			
 		}
 		return false;
+	}
+	
+	@Override
+	protected void addDefinitionString(StringBuilder sb) {
+		// TODO Auto-generated method stub
+		
+		sb.append("<html><b>").append(getType()).append(" ").append(myRelation.getName()).append("</b>");
+		//super.addDefinitionString(sb);
 	}
 	
 	
@@ -98,11 +110,18 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		//TODO check if relation is Vector or List...
 		if(isVector())
 		{
-			return "vector";
+			return "std::vector ("+myRelation.getOtherClass().getName()+"*)";
 		}
 		if(isMap())
 		{
-			return "map";
+			if(myRelation.getQualifierType()!=null)
+			{
+				return "std::map ("+myRelation.getQualifierType()+", "+myRelation.getOtherClass().getName()+"*)";
+			}
+			else
+			{
+				return "std::map ("+myRelation.getQualifier()+", "+myRelation.getOtherClass().getName()+"*)";
+			}
 		}
 		return getIRPClassifier(isPointer()).getName();	
 	}
@@ -123,6 +142,19 @@ public class RhapsodyRelationCompletion extends VariableCompletion implements Rh
 		}
 		return myRelation.getOtherClass();
 		
+	}
+	
+	private boolean isContainer() 
+	{
+		if(isVector())
+		{
+			return true;
+		}
+		if(isMap())
+		{
+			return true;
+		}
+		return false;
 	}
 
 

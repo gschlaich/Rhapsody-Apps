@@ -8,8 +8,10 @@ import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPModule;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStatechart;
@@ -38,6 +40,35 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 		myModelElementItems = new ArrayList<RhapsodyModelElementItem>();
 		
 		
+		createRelationList();
+		
+	
+		
+			
+	}
+
+
+	public void createRelationList() 
+	{
+		
+		if(myModelElement instanceof IRPPackage)
+		{
+			//select all packages...
+			IRPProject project = myModelElement.getProject();
+			
+			List<IRPModelElement> elements = project.getNestedElementsByMetaClass("Package", 1).toList();
+			
+			for(IRPModelElement e:elements)
+			{
+				myModelElementItems.add(new RhapsodyModelElementItem(e, e.getName() + "   ["+e.getMetaClass()+"]"));
+			}
+		
+			
+			Collections.sort(myModelElementItems);
+			return;
+			
+		}
+		
 		IRPModelElement owner = myModelElement.getOwner();
 		
 		
@@ -47,34 +78,72 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 		}
 		
 		IRPPackage classifierPackage = (IRPPackage)owner;
-		
+			
 		while((classifierPackage.getNamespace()==null)||(classifierPackage.getNamespace().equals("")))
 		{
-			classifierPackage = (IRPPackage)classifierPackage.getOwner();
+			classifierPackage = (IRPPackage)classifierPackage.getOwner();	
 		}
 		
+		String nameSpace = classifierPackage.getNamespace();
 		
-		collectItems("",classifierPackage,true);
-		
-		
-		
-		//add also classieriers from dependencies
-		List<IRPDependency> dependencies = classifierPackage.getDependencies().toList();
 		boolean ossiIncluded = false;
-		for(IRPDependency dependency:dependencies)
+		
+		while(classifierPackage.getNamespace().equals(nameSpace))
 		{
-			IRPModelElement p = dependency.getDependsOn();
-			if(p.getName().equals("OSSI"))
+		
+			collectItems("",classifierPackage,true);
+			collectItems(classifierPackage.getNamespace()+"::",classifierPackage,true);
+		
+		
+		
+			//add also classifiers from dependencies
+			List<IRPDependency> dependencies = classifierPackage.getDependencies().toList();
+			
+			for(IRPDependency dependency:dependencies)
 			{
-				ossiIncluded = true;
-			}
+				IRPModelElement p = dependency.getDependsOn();
+				if(p.getName().equals("OSSI"))
+				{
+					ossiIncluded = true;
+				}
 				
-			collectItems(p.getName()+"::",p,true);
+				if(p instanceof IRPPackage)
+				{
+					IRPPackage pa = (IRPPackage)p;
+					String pNamespace = pa.getNamespace();
+					if((pNamespace ==null)||(pNamespace.equals("")))
+					{
+						//not sure what's better:
+						//collectItems(pa.getName()+"::", pa, true);
+						collectItems("", pa, true);
+						
+					}
+					else
+					{
+						collectItems(pNamespace+"::",pa,true);
+					}
+							
+					
+				}
+				else
+				{
+					collectItems(p.getName()+"::",p,true);
+				}
+			}
+			owner = classifierPackage.getOwner();
+			if(owner instanceof IRPPackage)
+			{
+				classifierPackage =(IRPPackage)owner;
+			}
+			else
+			{
+				break;
+			}
 		}
 		
 		
 		//add special packages which don't need dependencies...
-		IRPProject project = aModelElement.getProject();
+		IRPProject project = myModelElement.getProject();
 		if(ossiIncluded==false)
 		{
 			IRPModelElement ossiPackage = project.findNestedElementRecursive("OSSI", "Package");
@@ -83,17 +152,27 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 				collectItems("OSSI::",ossiPackage,true);
 			}
 		}
+		/*
 		IRPModelElement stdPackage = project.findNestedElementRecursive("std", "Package");
 		if(stdPackage!=null)
 		{
 			collectItems("std::",stdPackage,true);
 		}
+		*/
+		
+		IRPModelElement predefined = project.findNestedElement("MyPredefinedTypes", "Package");
+		if(predefined!=null)
+		{
+			collectItems("",predefined,true);
+		}
+		
 		
 		Collections.sort(myModelElementItems);
-		
+	}
 	
-		
-			
+	public void clearRelationList()
+	{
+		myModelElementItems.clear();
 	}
 	
 	
@@ -111,9 +190,23 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			
 			if(aRecursive)
 			{
-				collectItems(prefix+e.getName()+"::",e,true);
+				if(e.getOwner() instanceof IRPModule)
+				{
+					collectItems(prefix,e,true);
+				}
+				else
+				{
+					collectItems(prefix+e.getName()+"::",e,true);
+				}
 			}
-			myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+e.getMetaClass()+"]"));
+			if(e.getOwner() instanceof IRPModule)
+			{
+				
+			}
+			else
+			{
+				myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
+			}
 			
 		}
 		
@@ -152,7 +245,7 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			{
 				continue;
 			}
-			myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+kind+"]"));
+			myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+kind+" in "+e.getOwner().getName()+"]"));
 		}
 		
 		elements = aModelElement.getNestedElementsByMetaClass("Package", 0).toList();
@@ -161,9 +254,48 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			if(aRecursive)
 			{
 				IRPPackage p = (IRPPackage)e;
-				collectItems(p.getNamespace()+"::",e,true);
+				String pNamespace = p.getNamespace();
+				if((pNamespace==null)||(pNamespace.equals("")))
+				{
+					//not sure what's better:
+					//collectItems(prefix+p.getName()+"::",e,true);
+					collectItems("",e,true);
+				}
+				else
+				{
+					collectItems(prefix+pNamespace+"::",e,true);
+				}
+				
+			}
+			myModelElementItems.add(new RhapsodyModelElementItem(e, prefix+e.getName()+"    ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
+		}
+		
+		if(aModelElement instanceof IRPPackage)
+		{
+			IRPPackage p = (IRPPackage)aModelElement;
+			List<IRPModule> modules = p.getModules().toList();
+			for(IRPModule m:modules)
+			{
+				if(aRecursive)
+				{
+					
+					
+					String pNamespace = p.getNamespace();
+					if((pNamespace==null)||(pNamespace.equals("")))
+					{
+						//what's correct?
+						collectItems("",m,true);
+					}
+					else
+					{
+						collectItems(prefix,m,true);
+					}
+				}
+				myModelElementItems.add(new RhapsodyModelElementItem(m, prefix+m.getName()+"   [File in "+p.getName()+"]"));
+				
 			}
 		}
+
 		
 	}
 

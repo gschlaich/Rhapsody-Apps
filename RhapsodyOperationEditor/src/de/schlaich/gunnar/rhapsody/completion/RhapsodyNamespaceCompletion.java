@@ -24,7 +24,7 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		super(aProvider, aPackage.getNamespace());
 		
 		setSummary( aPackage.getDescription());
-		setShortDescription(aPackage.getDescription());
+		setShortDescription(aPackage.getDescriptionPlainText());
 		
 		
 		myPackage = aPackage;
@@ -172,10 +172,11 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 	 */
 	protected boolean possiblyAddDescription(StringBuilder sb) {
 		if (getShortDescription()!=null) {
-			sb.append("<hr><br>");
-			sb.append(getShortDescription());
-			sb.append("<br><br><br>");
-			return true;
+				sb.append("<hr><br>");
+				sb.append(myPackage.getToolTipHTML());
+				//sb.append(getShortDescription());
+				sb.append("<br><br><br>");
+				return true;	
 		}
 		return false;
 	}
@@ -185,6 +186,13 @@ public class RhapsodyNamespaceCompletion extends BasicCompletion implements Rhap
 		// TODO Auto-generated method stub
 		return true;
 	}
+	
+	@Override
+	public String toString() {
+		
+		return getInputText();
+	}
+
 
 
 }

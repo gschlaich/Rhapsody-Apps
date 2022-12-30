@@ -6,15 +6,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
 import org.fife.ui.autocomplete.Util;
 
+import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPFile;
+import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPModule;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPVariable;
 
@@ -27,6 +32,8 @@ import de.schlaich.gunnar.rhapsody.completion.RhapsodyVariableCompletion;
 public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 
 	private IRPPackage myPackage = null;
+	private String myPackageName = null;
+	private String myNamespaceName = null;
 	
 	private static Map<IRPPackage,NamespaceCompletionProvider> NamespaceCompletionProviders = null;
 	
@@ -80,28 +87,79 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 	{
 		super.setParameterizedCompletionParams('(', ", ", ')');
 		myPackage = aPackage;
-		addElements(aPackage);
+		
+		myNamespaceName = myPackage.getNamespace();
+		myPackageName = myPackage.getName();
+		if(hasNoNamespace())
+		{
+			//leave empty!
+			return;
+		}
+		addElements(aPackage,this);
 		
 	}
 	
-	private void addElements(IRPPackage aPackage)
+	public boolean hasNoNamespace()
 	{
-		for(IRPClass rclass : (List<IRPClass>)aPackage.getClasses().toList())
+		return(myNamespaceName.equals(""));
+	}
+	
+	
+	public void addToOtherProvider(AbstractCompletionProvider aProvider)
+	{
+		addElements(myPackage, aProvider);
+	}
+	
+	
+	@SuppressWarnings("unchecked")
+	private void addElements(IRPPackage aPackage, AbstractCompletionProvider aProvider)
+	{
+		String namespacename = aPackage.getNamespace();
+		List<IRPModule> modules = aPackage.getModules().toList();
+		for(IRPModule module:modules)
 		{
+			List<IRPModelElement> elements = module.getAllNestedElements().toList();
+			for(IRPModelElement element:elements)
+			{
+				String metaClass = element.getMetaClass();
+
+				if(metaClass.equals("Operation"))
+				{
+					IRPOperation function = (IRPOperation)element;
+					RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(aProvider, function, false);
+					aProvider.addCompletion(roc);					
+				}
+				if(metaClass.equals("Type"))
+				{
+					IRPType type = (IRPType)element;
+					RhapsodyTypeCompletion rtc = new RhapsodyTypeCompletion(aProvider, type);
+					aProvider.addCompletion(rtc);
+				}
+				if(metaClass.equals("Attribute"))
+				{
+					IRPAttribute variable = (IRPAttribute)element;
+					RhapsodyVariableCompletion rvc = new RhapsodyVariableCompletion(aProvider, variable, false);
+					aProvider.addCompletion(rvc);
+				}
+				
+			}
+		}
+			
+		for(IRPClass rclass : (List<IRPClass>)aPackage.getClasses().toList())
+		{	
 			if(rclass!=null)
 			{
-				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, rclass, false, false );
-				addCompletion(rcc);
+				RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(aProvider, rclass, false, false );
+				aProvider.addCompletion(rcc);
 			}
 		}
 		for(IRPPackage p : (List<IRPPackage>)aPackage.getPackages().toList())
 		{
 			if(p!=null)
 			{
-				String namespacename = p.getNamespace();
-				if((namespacename==null)||(namespacename.equals(myPackage.getNamespace())))
+				if((namespacename==null)||(namespacename.equals(myNamespaceName)))
 				{
-					addElements(p);
+					addElements(p,aProvider);
 				}
 			}
 		}
@@ -109,16 +167,16 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		{
 			if(t!=null)
 			{
-				RhapsodyTypeCompletion rtc = new RhapsodyTypeCompletion(this, t);
-				addCompletion(rtc);
+				RhapsodyTypeCompletion rtc = new RhapsodyTypeCompletion(aProvider, t);
+				aProvider.addCompletion(rtc);
 			}
 		}
 		for(IRPVariable v: (List<IRPVariable>)aPackage.getGlobalVariables().toList())
 		{
 			if(v!=null)
 			{
-				RhapsodyVariableCompletion rvc = new RhapsodyVariableCompletion(this, v, false);
-				addCompletion(rvc);
+				RhapsodyVariableCompletion rvc = new RhapsodyVariableCompletion(aProvider, v, false);
+				aProvider.addCompletion(rvc);
 				
 			}
 		}
@@ -127,9 +185,8 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		{
 			if(f!=null)
 			{
-				System.out.println(f.getName());
-				RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(this, f, false);
-				addCompletion(roc);
+				RhapsodyOperationCompletion roc = new RhapsodyOperationCompletion(aProvider, f, false);
+				aProvider.addCompletion(roc);
 			}
 		}
 					

@@ -8,11 +8,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import javax.management.InstanceAlreadyExistsException;
@@ -44,8 +47,22 @@ public class MainApp extends App {
 	
 	private JFrame myFrame;
 	private AutocompleteJComboBox myCombobox;
-	private IRPClassifier mySelectedClassifier;
+	private IRPClassifier mySelectedClassifier = null;
+	private IRPOperation mySelectedOperation = null;
+	private IRPPackage mySelectedPackage = null;
+	private IRPUnit mySelectedUnit = null;
 	private IRPProject myActiveProject;
+	private RPApplicationListener myRelationListener;
+	private RhapsodyModelElementSearchable myRhapsodyModelSearchable;
+	private JButton myFeaturesButton = null;
+	private JButton myAddDependencyButton = null;
+	private JButton myAddAssociationButton = null;
+	private JButton myAddGeneralizationButton = null;
+	private JButton myAddArgumentButton = null;
+	private JButton myAddAttributeButton = null;
+	private JButton myChangeReturnButton = null;
+	private boolean myIsWritable = false; 
+	
 	
 	
 	/*
@@ -57,8 +74,10 @@ public class MainApp extends App {
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		
-		/*
 		
+		/*
+		 * Text search does not work correct... with windows
+		 * 
 		String lufSystem = UIManager.getSystemLookAndFeelClassName();
 		
 		
@@ -72,11 +91,12 @@ public class MainApp extends App {
 			e.printStackTrace();
 		} 
 		
+		
 		*/
 		
-
-		
 		myFrame = new JFrame();
+		
+		
 		
 		
 		
@@ -123,30 +143,213 @@ public class MainApp extends App {
         
         myActiveProject = rhapsody.activeProject();
         
-        if(selected instanceof IRPClassifier == false)
+        if(selected instanceof IRPOperation)
+        {
+        	mySelectedOperation = (IRPOperation)selected;
+        }
+        
+        else if(selected instanceof IRPClassifier)
+        {
+        	mySelectedClassifier = (IRPClassifier)selected;
+        }
+        
+        else if(selected instanceof IRPPackage)
+        {
+        	mySelectedPackage = (IRPPackage)selected;
+        }
+        else 
         {
         	return;
         }
+        
+        mySelectedUnit = (IRPUnit)selected;
  
       
-        mySelectedClassifier = (IRPClassifier)selected;
         
-        RhapsodyModelElementSearchable rcs = new RhapsodyModelElementSearchable(mySelectedClassifier);
         
-        myCombobox = new AutocompleteJComboBox(rcs);
+     
+        
+        myRhapsodyModelSearchable = new RhapsodyModelElementSearchable(mySelectedUnit);
+        
+        myRelationListener = new RelationListener(myFrame, mySelectedUnit ,myRhapsodyModelSearchable);
+     	myRelationListener.connect(rhapsody);
+       
+        
+        myCombobox = new AutocompleteJComboBox(myRhapsodyModelSearchable);
         myCombobox.setSize(600, 100);
         
-        //JComboBox wird Panel hinzugefügt
+        myCombobox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+				if(myCombobox.getSelectedItem()==null)
+				{
+					myFeaturesButton.setEnabled(false);
+					myAddDependencyButton.setEnabled(false);
+					if(myAddAssociationButton!=null)
+					{
+						myAddAssociationButton.setEnabled(false);
+					}
+					if(myAddGeneralizationButton!=null)
+					{
+						myAddGeneralizationButton.setEnabled(false);
+					}
+					if(myAddArgumentButton!=null)
+					{
+						myAddArgumentButton.setEnabled(false);
+					}
+					if(myAddAttributeButton!=null)
+					{
+						myAddAttributeButton.setEnabled(false);
+					}
+					if(myChangeReturnButton!=null)
+					{
+						myChangeReturnButton.setEnabled(false);
+					}
+					return;
+				}
+				
+				
+				
+				Collection<RhapsodyModelElementItem> c =  myRhapsodyModelSearchable.search(myCombobox.getSelectedItem().toString());
+				if(c.size()==1)
+				{
+					RhapsodyModelElementItem item = (RhapsodyModelElementItem)c.toArray()[0];
+					myFeaturesButton.setEnabled(true);
+					myAddDependencyButton.setEnabled(myIsWritable);
+					if(myAddAssociationButton!=null)
+					{
+						if(item.getModelElement() instanceof IRPClassifier)
+						{
+							myAddAssociationButton.setEnabled(myIsWritable);
+						}
+						
+					}
+					if(myAddGeneralizationButton!=null)
+					{
+						if(item.getModelElement() instanceof IRPClass)
+						{
+							myAddGeneralizationButton.setEnabled(myIsWritable);
+						}
+					}
+					if(myAddArgumentButton!=null)
+					{
+						if(item.getModelElement() instanceof IRPClassifier)
+						{
+							myAddArgumentButton.setEnabled(myIsWritable);
+						}
+					}
+					if(myChangeReturnButton!=null)
+					{
+						if(item.getModelElement() instanceof IRPClassifier)
+						{
+							myChangeReturnButton.setEnabled(myIsWritable);
+						}
+					}
+					if(myAddAttributeButton!=null)
+					{
+						if(item.getModelElement() instanceof IRPClassifier)
+						{
+							myAddAttributeButton.setEnabled(myIsWritable);
+						}
+					}
+					
+				}
+				else
+				{
+					myFeaturesButton.setEnabled(false);
+					myAddDependencyButton.setEnabled(false);
+					if(myAddAssociationButton!=null)
+					{
+						myAddAssociationButton.setEnabled(false);
+					}
+					if(myAddGeneralizationButton!=null)
+					{
+						myAddGeneralizationButton.setEnabled(false);
+					}
+					if(myAddArgumentButton!=null)
+					{
+						myAddArgumentButton.setEnabled(false);
+					}
+					if(myChangeReturnButton!=null)
+					{
+						myChangeReturnButton.setEnabled(false);
+					}
+					if(myAddAttributeButton!=null)
+					{
+						myAddAttributeButton.setEnabled(false);
+					}
+				}
+				
+				
+			}
+		});
+        
+        
         panel.add(myCombobox);
         
         myFrame.setLayout(new BorderLayout());
         
+        
+        myFrame.addMouseListener(new MouseListener() {
+        	
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				
+				if(e.getButton()>1)
+				{
+					mySelectedClassifier.locateInBrowser();
+					
+					if(myRhapsodyModelSearchable!=null)
+					{
+						myRhapsodyModelSearchable.clearRelationList();
+						myRhapsodyModelSearchable.createRelationList();
+					}
+					
+				}
+				
+			}
+
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+				
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+        });
+        
+        
+        
+       
+        
 		JPanel buttonPanel = new JPanel(); 
 		
-		boolean isWritable = mySelectedClassifier.isReadOnly()==0;
 		
-		JButton featuresButton = new JButton("Features..."); 
-        featuresButton.addActionListener(new ActionListener() { 
+		myIsWritable = mySelectedUnit.isReadOnly()==0;
+		
+		myFeaturesButton = new JButton("Features..."); 
+		myFeaturesButton.setEnabled(false);
+		myFeaturesButton.addActionListener(new ActionListener() { 
       	  public void actionPerformed(ActionEvent e) {    
   		    IRPModelElement selectedElement = getSelectedElement();
   		    if(selectedElement==null)
@@ -157,46 +360,83 @@ public class MainApp extends App {
   		    
   		  } 
   		} );
-        buttonPanel.add(featuresButton);
+        buttonPanel.add(myFeaturesButton);
         
         
 		
-        JButton addDependencyButton = new JButton("Add Dependency"); 
-        addDependencyButton.addActionListener(new ActionListener() { 
+        myAddDependencyButton = new JButton("Add Dependency"); 
+        myAddDependencyButton.setEnabled(false);
+        myAddDependencyButton.addActionListener(new ActionListener() { 
       	  public void actionPerformed(ActionEvent e) {    
   		    addDependency();
   		  } 
   		} );
-        addDependencyButton.setEnabled(isWritable);
-        buttonPanel.add(addDependencyButton);
         
-        JButton addAssociationButton = new JButton("Add Association");
+        buttonPanel.add(myAddDependencyButton);
         
-        addAssociationButton.addActionListener(new ActionListener() { 
-      	  public void actionPerformed(ActionEvent e) {    
-  		    addAssociation();
-  		  } 
-  		} );
-        addAssociationButton.setEnabled(isWritable);
-        buttonPanel.add(addAssociationButton);
+        if(mySelectedClassifier!=null)
+        {
+        	myAddAssociationButton = new JButton("Add Association");
+        	myAddAssociationButton.setEnabled(false);
+        	myAddAssociationButton.addActionListener(new ActionListener() { 
+        		public void actionPerformed(ActionEvent e) {    
+        			addAssociation();
+        		} 
+        	} );
         
-        JButton addAttributeButton = new JButton("Add Attribute");
-        addAttributeButton.addActionListener(new ActionListener() { 
-        	  public void actionPerformed(ActionEvent e) {    
-        		    addAttribute();
-        		  } 
-        		} );
-        addAttributeButton.setEnabled(isWritable);
-        buttonPanel.add(addAttributeButton);
+        	
+        	buttonPanel.add(myAddAssociationButton);
+       
         
-        JButton addGeneralizationButton = new JButton("Add Generalization");
-        addGeneralizationButton.addActionListener(new ActionListener() { 
-        	  public void actionPerformed(ActionEvent e) {    
-        		    addGeneralization();
-        		  } 
-        		} );
-        addGeneralizationButton.setEnabled(isWritable);
-        buttonPanel.add(addGeneralizationButton);
+	        myAddAttributeButton = new JButton("Add Attribute");
+	        myAddAttributeButton.setEnabled(false);
+	        myAddAttributeButton.addActionListener(new ActionListener() { 
+	        	  public void actionPerformed(ActionEvent e) {    
+	        		    addAttribute();
+	        		  } 
+	        		} );
+	       
+	        buttonPanel.add(myAddAttributeButton);
+	        
+	        if(mySelectedClassifier instanceof IRPClass)
+	        {
+	        
+	        	myAddGeneralizationButton = new JButton("Add Generalization");
+	        	myAddGeneralizationButton.setEnabled(false);
+	        	myAddGeneralizationButton.addActionListener(new ActionListener() { 
+	        	  public void actionPerformed(ActionEvent e) {    
+	        		    addGeneralization();
+	        		  } 
+	        		} );
+	        	
+	        	buttonPanel.add(myAddGeneralizationButton);
+	        }
+        }
+        else if(mySelectedOperation!=null)
+        {
+        	myAddArgumentButton = new JButton("Add Argument");
+        	myAddArgumentButton.setEnabled(false);
+        	myAddArgumentButton.addActionListener(new ActionListener() {
+        		  public void actionPerformed(ActionEvent e) {    
+        		addArgument();
+        		  }
+        	});
+        	
+        	buttonPanel.add(myAddArgumentButton);
+        	
+        	myChangeReturnButton = new JButton("Change Return type (" + mySelectedOperation.getReturns().getName() +")");
+        	myChangeReturnButton.setEnabled(false);
+        	myChangeReturnButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					changeReturnType();
+					
+				}
+        		
+        	});
+        	buttonPanel.add(myChangeReturnButton);
+        }
         
         
         myFrame.setLocation(dim.width/2-myFrame.getSize().width/2, dim.height/2-myFrame.getSize().height/2);
@@ -261,7 +501,7 @@ public class MainApp extends App {
 		}
 		else
 		{
-			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
+			actualApp.writeToOutputWindow("log", "ConnectionString was null\n");
 		}
 		
 		//actualApp.writeToOutputWindow("log", "start...\n");
@@ -347,13 +587,12 @@ public class MainApp extends App {
 		
 		RhapsodyModelElementItem selectedElementItem = (RhapsodyModelElementItem)selectedItem;			
 		
-		 //check if dependency already there...
-		
 		IRPModelElement selectedElement = selectedElementItem.getModelElement();
 		return selectedElement;
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private void addDependency() 
 	{
 		IRPModelElement selectedElement = getSelectedElement();
@@ -363,7 +602,7 @@ public class MainApp extends App {
 			return;
 		}
 		
-		List<IRPDependency> dependencies = mySelectedClassifier.getDependencies().toList();
+		List<IRPDependency> dependencies = mySelectedUnit.getDependencies().toList();
 		
 		for(IRPDependency dependency:dependencies)
 		{
@@ -374,7 +613,7 @@ public class MainApp extends App {
 			}
 		}
 		
-		IRPDependency newDependency = mySelectedClassifier.addDependencyTo(selectedElement);
+		IRPDependency newDependency = mySelectedUnit.addDependencyTo(selectedElement);
 		List<IRPStereotype> stereoTypes = myActiveProject.getAllStereotypes().toList();
 		for(IRPStereotype stereoType:stereoTypes)
 		{
@@ -461,9 +700,9 @@ public class MainApp extends App {
 		{
 			return;
 		}
-		if(selectedElement instanceof IRPClassifier == false)
+		if(selectedElement instanceof IRPClass == false)
 		{
-			System.out.println("Associations only with Classifiers");
+			System.out.println("Generalizations only with Classifiers");
 			return;
 		}
 		IRPClassifier selectedClassifier = (IRPClassifier) selectedElement;
@@ -471,8 +710,148 @@ public class MainApp extends App {
 		mySelectedClassifier.addGeneralization(selectedClassifier);
 		IRPGeneralization newGeneralization = mySelectedClassifier.findGeneralization(selectedClassifier.getName());
 		newGeneralization.openFeaturesDialog(0);
-		
-		
-
+	
 	}
+	private void addArgument()
+	{
+		IRPModelElement selectedElement = getSelectedElement();
+		if(selectedElement==null)
+		{
+			return;
+		}
+		if(selectedElement instanceof IRPClassifier == false)
+		{
+			System.out.println("Arguments only with classifiers");
+			return;
+		}
+		
+		IRPClassifier selectedClassifier = (IRPClassifier) selectedElement;
+		
+		String argumentName = "a"+selectedClassifier.getName();
+		
+		IRPArgument argument = mySelectedOperation.addArgument(argumentName);
+		
+		argument.setType(selectedClassifier);
+		mySelectedOperation.openFeaturesDialog(0);
+		
+	}
+	
+	private void changeReturnType()
+	{
+		IRPModelElement selectedElement = getSelectedElement();
+		if(selectedElement==null)
+		{
+			return;
+		}
+		if(selectedElement instanceof IRPClassifier == false)
+		{
+			System.out.println("Return type only classifiers");
+			return;
+		}
+		
+		mySelectedOperation.setReturns((IRPClassifier)selectedElement);
+		myChangeReturnButton.setText("Change Return type ("+selectedElement.getName()+")");
+		mySelectedOperation.openFeaturesDialog(0);
+		
+		
+	}
+	
+}
+
+class RelationListener extends RPApplicationListener
+{
+
+	
+	private IRPModelElement mySelectedElement;
+	private JFrame myFrame;
+	private RhapsodyModelElementSearchable myRhapsodyModelElementSearchable;
+	
+	public RelationListener(JFrame aFrame, IRPModelElement aSelectedModelElement, RhapsodyModelElementSearchable aRhapsodyModelElementSearchable) 
+	{
+		myFrame = aFrame;
+		mySelectedElement = aSelectedModelElement;
+		myRhapsodyModelElementSearchable = aRhapsodyModelElementSearchable;
+	}
+	
+	@Override
+	public boolean afterAddElement(IRPModelElement pModelElement) {
+		
+		
+		return false;
+	}
+
+	@Override
+	public boolean afterProjectClose(String bstrProjectName) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean beforeProjectClose(IRPProject pProject) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public String getId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean onDiagramOpen(IRPDiagram pDiagram) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean onDoubleClick(IRPModelElement pModelElement) {
+		// TODO Auto-generated method stub
+		if(pModelElement==null)
+		{
+			return false;
+		}
+		if(mySelectedElement==null)
+		{
+			return false;
+		}
+		
+		
+		if(pModelElement.equals(mySelectedElement))
+		{
+			if(myFrame.getState()==java.awt.Frame.ICONIFIED)
+			{
+				myFrame.setState(java.awt.Frame.NORMAL);
+			}
+			
+			myFrame.setAlwaysOnTop(true);
+			new java.util.Timer().schedule( 
+			        new java.util.TimerTask() {
+			            @Override
+			            public void run() {
+			               myFrame.setAlwaysOnTop(false);
+			               myFrame.toFront();
+			            }
+			        }, 
+			        1000 
+			);
+			//refresh relations
+			if(myRhapsodyModelElementSearchable!=null)
+			{
+				myRhapsodyModelElementSearchable.clearRelationList();
+				myRhapsodyModelElementSearchable.createRelationList();
+			}
+			return true;
+			
+		}
+		
+		return false;
+	}
+
+	@Override
+	public boolean onFeaturesOpen(IRPModelElement pModelElement) {
+		return false;
+	
+	}
+	
 }

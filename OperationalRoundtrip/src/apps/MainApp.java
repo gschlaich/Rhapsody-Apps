@@ -116,7 +116,12 @@ public class MainApp extends App implements ActionListener {
 			
 			String nameSpace = RhapsodyOperation.getNamespace(myClass);
 			String sourcePath = ASTHelper.getSourcePath(myClass, rhapsody);
-			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+".cpp", nameSpace);
+			String fileEnding = ".cpp";
+			if(myClass.isATemplate()==1)
+			{
+				fileEnding = ".h";
+			}
+			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+fileEnding, nameSpace);
 			
 			
 			for(IRPOperation operation:operations)

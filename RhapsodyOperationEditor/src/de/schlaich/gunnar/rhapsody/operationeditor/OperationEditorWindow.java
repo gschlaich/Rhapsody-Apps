@@ -7,6 +7,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -56,16 +58,19 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
+import com.ibm.rhapsody.apps.ui.SearchRunDialog;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPUnit;
+import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.MainApp;
 import de.schlaich.gunnar.parser.CppParser;
@@ -120,10 +125,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		JButton revertButton = new JButton("Revert");
 		buttonPanel.add(revertButton);
-		/*
-		JButton formatButton = new JButton("Format(draft)");
+		
+		JButton formatButton = new JButton("Format");
 		buttonPanel.add(formatButton);
-		*/
+		
 		JButton applyButton = new JButton("Apply");
 		buttonPanel.add(applyButton);
 		
@@ -168,8 +173,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		revertButton.setActionCommand("revert");
 		revertButton.addActionListener(oew);
 		
-		//formatButton.setActionCommand("format");
-		//formatButton.addActionListener(oew);
+		formatButton.setActionCommand("format");
+		formatButton.addActionListener(oew);
 		
 		
 		//frame.add(editorPanel);
@@ -267,13 +272,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		scrollPane.setIconRowHeaderEnabled(true);
 		
 		myTextArea.setText(mySelectedOperation.getBody());
+		myTextArea.convertTabsToSpaces();
 		
 		TaskTagParser taskTagParser = new TaskTagParser();
 		myTextArea.addParser(taskTagParser);
 		
 		
 		
-		myStartAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication);
+		myStartAutoCompletion = new StartAutoCompletion(myTextArea, myAutoComplete, mySelectedOperation, myApplication, myFrame);
 		
 		myStartAutoCompletion.start();
 		
@@ -290,6 +296,47 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	  	frame.setLocationRelativeTo(null);
  
         frame.setVisible(true);
+        
+    	//now add rhapsodyListener
+		ApplicationListener listener = new ApplicationListener(myFrame,mySelectedOperation,myApplication,myTextArea,myStartAutoCompletion);
+		listener.connect(myApplication);
+		/*
+		frame.addMouseListener(new MouseListener() {
+			
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				
+					myFrame.setAlwaysOnTop(false);
+				
+			}
+			
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		*/
+		
+		
 		
 
 				
@@ -386,8 +433,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	        }
 
 	    });
-		
-		
+
 	}
 	
 	public static void Run(IRPApplication rhapsody, IRPModelElement selected, MainApp aMainApp)
@@ -396,8 +442,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		if(selected instanceof IRPOperation)
 		{	
 			
-			ApplicationListener listener = new ApplicationListener();
-			listener.connect(rhapsody);
 			
 			
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
@@ -441,6 +485,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,op);
+			
+			
 			
 	        
 	        
@@ -557,7 +603,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				e1.printStackTrace();
 			}
 		}
-		if(command.equals("update")||command.equals("generate"))
+		if(command.equals("generate"))
 		{
 			//may start in a worker thread?
 			IRPModelElement element = mySelectedOperation.getOwner();
@@ -568,6 +614,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				provider.createClassCompletion(selectedClass, visibility.v_private,true);
 			}
 		}
+		if(command.equals("update"))
+		{
+			myStartAutoCompletion.updateCompletionProvider();
+		}
+		
 		if(command.equals("roundTrip"))
 		{
 			if(textChanged())
@@ -701,6 +752,7 @@ class OpenFeature extends TextAction
            if (selStart != selEnd) 
            {
               elementName = tc.getText(selStart, selEnd - selStart);
+              
            } 
            else 
            {
@@ -989,4 +1041,34 @@ class AddDependency extends TextAction
 	}
 		
 }
+
+class FormatSelected extends TextAction
+{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8665373931943623988L;
+	
+	public FormatSelected() 
+	{
+		super("Format Selected");
+		// TODO Auto-generated constructor stub
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		JTextComponent tc = getTextComponent(e);
+		String selectedText = tc.getSelectedText();
+		
+		EditorCodeFormatter formatter = new EditorCodeFormatter();
+		selectedText = formatter.format(selectedText);
+		tc.replaceSelection(selectedText);
+
+	}
+		
+}
+
+
 

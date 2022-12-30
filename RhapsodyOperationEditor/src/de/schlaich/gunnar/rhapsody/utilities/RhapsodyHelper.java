@@ -42,7 +42,7 @@ public class RhapsodyHelper
 		
 		if(aConnectionstring!=null)
 		{
-			actualApp.writeToOutputWindow("log", "ConnectiongString: " + aConnectionstring + "\n");
+			//actualApp.writeToOutputWindow("log", "ConnectiongString: " + aConnectionstring + "\n");
 		}
 		else
 		{
