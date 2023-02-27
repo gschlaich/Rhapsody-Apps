@@ -14,6 +14,7 @@ import org.fife.ui.autocomplete.Util;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPEvent;
 import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPModule;
@@ -180,6 +181,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 				
 			}
 		}
+		
 		
 		for(IRPOperation f: (List<IRPOperation>)aPackage.getGlobalFunctions().toList())
 		{
