@@ -1,3 +1,2 @@
 # Rhapsody Apps
-
-Some Utilities for IBM Rhapsody
+Some utilities for IBM Rhapsody
