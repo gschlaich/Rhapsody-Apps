@@ -191,14 +191,21 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 							
 							IRPEventReception er = (IRPEventReception)e;
 							
-							IRPEvent ev = er.getEvent();
+							//IRPEvent ev = er.getEvent();
 							
+							RhapsodyOperationCompletion evcc = new RhapsodyOperationCompletion(this, er);
+							this.addCompletion(evcc);
+							/*
 							IRPPackage evNameSpace = RhapsodyOperation.getNamespacePackage(ev);
 							if((evNameSpace==null)||(evNameSpace.equals(myNameSpace)))
 							{
-								RhapsodyClassifierCompletion ercc = new RhapsodyClassifierCompletion(this, ev);
-								this.addCompletion(ercc);
+								
+								RhapsodyOperationCompletion evcc = new RhapsodyOperationCompletion(this, er);
+								this.addCompletion(evcc);
+								//RhapsodyClassifierCompletion ercc = new RhapsodyClassifierCompletion(this, ev);
+								//this.addCompletion(ercc);
 							}
+							*/
 							
 						}
 					}

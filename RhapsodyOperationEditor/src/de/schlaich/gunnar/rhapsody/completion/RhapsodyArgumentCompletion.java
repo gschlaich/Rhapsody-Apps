@@ -37,15 +37,21 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		AbstractCompletionProvider abstractProvider = (AbstractCompletionProvider)provider;
 		
 		String direction = myArgument.getArgumentDirection();
+	
+		String propertyName = "CPP_CG."+myArgument.getType().getMetaClass() +"."+direction;
+
+		String codePattern = myArgument.getType().getPropertyValue(propertyName);
 		
-		String propertyName = "CPP_CG.Class."+direction;
-		if(getIRPClassifier(false) instanceof IRPType)
+		try
 		{
-			propertyName = "CPP_CG.Type."+direction;
+			codePattern = myArgument.getPropertyValueExplicit(propertyName);
+		}
+		catch (Exception e) {
+			System.out.println("Property "+ propertyName + " in " + myArgument.getName() + " was not overridden (" +e.getMessage()+")");
 		}
 		
 		
-		String codePattern = myArgument.getPropertyValue(propertyName);
+		
 		
 		//TODO hacky...
 		myIsPointer = codePattern.endsWith("*");
@@ -76,7 +82,10 @@ public class RhapsodyArgumentCompletion extends VariableCompletion implements Rh
 		}
 			
 		
-		myIsPointer = codePattern.startsWith("std::unique_ptr");
+		if(codePattern.startsWith("std::unique_ptr"))
+		{
+			myIsPointer = true;
+		}
 		
 		
 		if((myArgument.getType()!=null)&&(abstractProvider!=null))

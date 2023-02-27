@@ -125,6 +125,11 @@ public class ApplicationListener extends RPApplicationListener {
 	public boolean onElementsChanged(String GUIDs) 
 	{
 		
+		if(myOperation==null)
+		{
+			return false;
+		}
+		
 		if (GUIDs.trim().length() == 0)
 		{
 			return true;
@@ -140,6 +145,7 @@ public class ApplicationListener extends RPApplicationListener {
 			{
 				continue;
 			}
+			
 			if(currElement.equals(myOperation))
 			{
 				

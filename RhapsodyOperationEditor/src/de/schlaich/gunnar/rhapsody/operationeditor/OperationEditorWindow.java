@@ -59,16 +59,27 @@ import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 import com.ibm.rhapsody.apps.ui.SearchRunDialog;
+import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPArgument;
+import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
+import com.telelogic.rhapsody.core.IRPEvent;
+import com.telelogic.rhapsody.core.IRPEventReception;
+import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPStatechart;
 import com.telelogic.rhapsody.core.IRPStereotype;
+import com.telelogic.rhapsody.core.IRPTransition;
+import com.telelogic.rhapsody.core.IRPTrigger;
+import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
@@ -93,6 +104,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private SyntaxScheme myScheme;
 	private StartAutoCompletion myStartAutoCompletion;
 	private String myGuid;
+	private IRPAction myAction = null;
+	private ApplicationListener myApplicationListener = null;
 	
 	
 	/**
@@ -100,10 +113,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	public OperationEditorWindow(IRPApplication rhapsody, IRPOperation aOperation) {
+	public OperationEditorWindow(IRPApplication rhapsody, IRPOperation aOperation, IRPAction aAction) {
 		
+		myAction = aAction;
 		
 		JFrame frame = new JFrame (RhapsodyOperation.getOperation(aOperation));
+		
 		frame.setLayout(new BorderLayout());
 		
 		JPanel buttonPanel = new JPanel();
@@ -176,6 +191,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		formatButton.setActionCommand("format");
 		formatButton.addActionListener(oew);
 		
+		
+		if(myAction!=null)
+		{
+			locateButton.setEnabled(false);
+			generateButton.setEnabled(false);
+			roundTripButton.setEnabled(false);
+		}
 		
 		//frame.add(editorPanel);
 		frame.add(buttonPanel,BorderLayout.SOUTH);
@@ -298,8 +320,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
         frame.setVisible(true);
         
     	//now add rhapsodyListener
-		ApplicationListener listener = new ApplicationListener(myFrame,mySelectedOperation,myApplication,myTextArea,myStartAutoCompletion);
-		listener.connect(myApplication);
+		myApplicationListener = new ApplicationListener(myFrame,mySelectedOperation,myApplication,myTextArea,myStartAutoCompletion);
+		myApplicationListener.connect(myApplication);
 		/*
 		frame.addMouseListener(new MouseListener() {
 			
@@ -352,6 +374,67 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		SwingUtilities.invokeLater(focusInWindow); 
 		
 		
+	}
+	
+	private void removeActionOperation()
+	{
+
+		if(myAction==null)
+		{
+			return;
+		}
+		
+		if(myApplicationListener!=null)
+		{
+			myApplicationListener.disconnect();
+		}
+		
+		
+		IRPClass owner = (IRPClass)mySelectedOperation.getOwner();
+		if(owner==null)
+		{
+			return;
+		}
+		
+		IRPClassifier argType = null;
+		
+		List<IRPArgument> args = mySelectedOperation.getArguments().toList();
+		if(args.size()==1)
+		{
+			argType = args.get(0).getType();
+		}
+		
+		
+
+		owner.deleteOperation(mySelectedOperation);
+		
+		
+		if(argType!=null)
+		{
+			owner.deleteType(argType.getName());
+		}
+		
+				
+	}
+	
+	private void setActionbody(String aText)
+	{
+		if(myAction==null)
+		{
+			return;
+		}
+		
+		if(aText.isEmpty()==false)
+		{
+			if(aText.charAt(0)!='\n')
+			{
+				aText="\n"+aText;
+			}
+			
+		}
+		
+		
+		myAction.setBody(aText);
 	}
 	
 	
@@ -426,8 +509,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 					}
 				}
 	        	
+	        	
 	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 				prefs.clearRhapsodyModelElement(mySelectedOperation);
+				
+				removeActionOperation();
 	        	
 	        	
 	        }
@@ -439,24 +525,167 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	public static void Run(IRPApplication rhapsody, IRPModelElement selected, MainApp aMainApp)
 	{
 		
-		if(selected instanceof IRPOperation)
+		IRPOperation op = null;
+		IRPAction action = null;
+		
+		if(selected instanceof IRPTransition)
+		{
+			
+			if(selected.getSaveUnit().isReadOnly()==1)
+			{
+
+				return;
+			}
+			
+			IRPTransition transition = (IRPTransition)selected;
+			
+			
+			//find class...
+			IRPStatechart statechart = transition.getItsStatechart();
+
+			action = transition.getItsAction();
+			if(action==null)
+			{
+				transition.setItsAction("\n");
+			}
+			
+			IRPClass statechartclass = (IRPClass)statechart.getItsClass();
+			
+			//find params...
+			IRPTrigger trigger = transition.getItsTrigger();
+			
+			String operationName = "__action_of_transition_"+transition.getName();
+			
+			//check if operation already exists...
+			op = (IRPOperation)statechartclass.findNestedElement(operationName, "Operation");
+			if(op!=null)
+			{
+				statechartclass.deleteOperation(op);
+			}
+			
+			op = statechartclass.addOperation(operationName);
+			
+			op.setBody(action.getBody());
+
+			op.setPropertyValue("CG.Operation.Generate", "None");
+			
+			if((trigger!=null)&&(trigger.isTimeout()==0))
+			{
+				String triggerSource = trigger.getBody();
+				
+				
+				IRPModelElement element = statechartclass.findNestedElement(triggerSource, "EventReception");
+				
+				if(element==null)
+				{
+					element = statechartclass.findNestedElement(triggerSource, "TriggeredOperation");
+				}
+				
+				if(element!=null)
+				{
+					 
+					IRPInterfaceItem eventReception = (IRPInterfaceItem)element;
+					
+					
+					
+					List<IRPArgument> arguments = eventReception.getArguments().toList();
+					
+					String triggerSourceName = "_"+triggerSource;
+					
+					IRPType paramsType = null;
+					
+					paramsType = (IRPType)statechartclass.findNestedElement(triggerSourceName, "Type");
+					if(paramsType!=null)
+					{
+						statechartclass.deleteType(triggerSourceName);
+					}
+					
+					paramsType = statechartclass.addType("_"+triggerSource);
+					paramsType.setKind("Structure");
+					paramsType.setPropertyValue("CG.Type.Generate", "False");
+					
+					
+					for(IRPArgument argument:arguments)
+					{
+						IRPAttribute attribute = paramsType.addAttribute(argument.getName());
+						attribute.setType(argument.getType());
+					}
+
+					IRPArgument params = op.addArgument("params");
+					
+					params.setType(paramsType);
+					params.setPropertyValue("CPP_CG.Type.In", "$type*");
+					
+					
+					
+				}
+				
+			}
+			
+		}
+		else if(selected instanceof IRPAction)
+		{
+			if(selected.getSaveUnit().isReadOnly()==1)
+			{
+				return;
+			}
+			
+			
+			action = (IRPAction)selected;
+			IRPModelElement owner = action.getOwner();
+			String actionOf = owner.getName();
+			while((owner!=null)&&(owner instanceof IRPClass ==false))
+			{
+				owner = owner.getOwner();
+			}
+			
+			if(owner==null)
+			{
+				return;
+			}
+			
+			if(owner instanceof IRPStatechart)
+			{
+				owner = owner.getOwner();
+			}
+			
+			if(owner==null)
+			{
+				return;
+			}
+			
+			
+			IRPClass actionClass = (IRPClass)owner;
+			
+			String operationName = "__"+actionOf+"_"+action.getName();
+			
+			
+			op = (IRPOperation)actionClass.findNestedElement(operationName, "Operation");
+			
+			if(op==null)
+			{
+				op = actionClass.addOperation(operationName);
+			}
+			op.setBody(action.getBody());
+		}
+		else if(selected instanceof IRPOperation)
 		{	
-			
-			
+			op = (IRPOperation)selected;
+		}
 			
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			
-			if(prefs.checkRhapsodyModelElement(selected))
+			if(prefs.checkRhapsodyModelElement(op))
 			{
 				aMainApp.printToRhapsody("Operation already open");
 				return;
 			}
 			
-			prefs.setRhapsodyModelElement(selected);
+			prefs.setRhapsodyModelElement(op);
 			
-			IRPOperation op = (IRPOperation)selected;
-
-			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
+			
+			
+			aMainApp.printToRhapsody("Edit Operation of " + op.getName());
 			
 			aMainApp.printToRhapsody("Java Version: " + System.getProperty("java.vm.version"));
 			aMainApp.printToRhapsody(System.getProperty("java.version"));
@@ -484,17 +713,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				e.printStackTrace();
 			}
 			
-			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,op);
-			
-			
+			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,op,action);
 			
 	        
 	        
-		}
-		else
-		{
-			//aMainApp.printToRhapsody("no operation - exit");
-		}
+		
 	}
 	
 	
@@ -519,6 +742,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
 				{
 					String text = myTextArea.getText();
+					setActionbody(text);
 					if(mySelectedOperation!=null)
 					{
 						mySelectedOperation.setBody(text);
@@ -552,6 +776,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 				myTextArea.setText(mySelectedOperation.getBody());
 			}
+	
+			
 		}
 		
 		if(command.equals("ok")||command.equals("cancel"))
@@ -562,6 +788,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			prefs.clearRhapsodyModelElement(myGuid);
+			removeActionOperation();
 			System.exit(0);
 		}
 		
@@ -662,7 +889,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 					return;
 				}
 				
-				if(mySelectedOperation!=null)
+				if(myAction!=null)
+				{
+					String body = myAction.getBody();
+					myTextArea.setText(body);
+				}
+				else if(mySelectedOperation!=null)
 				{
 					String body = mySelectedOperation.getBody();
 					myTextArea.setText(body);
