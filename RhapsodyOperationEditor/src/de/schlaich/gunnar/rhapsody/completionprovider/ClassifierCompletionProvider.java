@@ -88,9 +88,13 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		{
 			createClassCompletion(myClassifier, myVisibility, myAddType);	
 		}
-		
-		
-		
+	
+	}
+	
+	
+	public LocalCompletionProvider getLocalCompletionProvider()
+	{
+		return myLocalCompletionProvider;
 	}
 	
 	private ClassifierCompletionProvider()
