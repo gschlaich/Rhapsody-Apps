@@ -14,6 +14,7 @@ import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNodeLocation;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTProblem;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.parser.AbstractParser;
@@ -24,6 +25,7 @@ import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 
+import de.schlaich.gunnar.chatGPT.AskIssues;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
@@ -37,6 +39,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	private Gutter myGutter = null;
 	private Icon myErrorIcon = null;
 	private List<GutterIconInfo> myInfos = null;
+	private AskIssues myAskIssues = null;
 	
 	
 	public CppParser(ClassifierCompletionProvider aProvider, Gutter aGutter)
@@ -46,6 +49,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 		myGutter = aGutter;
 		myErrorIcon = RhapsodyOperation.getIcon("RhapsodyIcons_110.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
+		
 		
 	}
 	
@@ -75,8 +79,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 			for(IASTProblem problem : problems)
 			{
 				
-				
-				String message = "C++ Syntax ";
+				String message = "C++ ";
 				
 				if(problem.isError())
 				{
@@ -87,14 +90,33 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 					message = message + "Warning: ";
 				}
 				
-				int id = problem.getID();
-				message = message + Integer.toString(id);
+				
+				message = message + problem.getMessage();
 				
 				int length = problem.getSourceEnd() - problem.getSourceStart();
 				int pos = problem.getSourceStart()-ASTHelper.Prolog.length();
 				int line = problem.getSourceLineNumber()-2;
 				
+				//System.out.println("Problem RawSignature: "+ unit.);
 				System.out.println(line+ " " + pos + " " + length);
+				
+				int start = pos;
+				
+				while(text.charAt(start)!='\n')
+				{
+					start--;
+					if(start<0)
+					{
+						//begin of text
+						break;
+					}
+				}
+				
+				int end = pos;
+				
+				
+				
+				
 				
 				GutterIconInfo info = myGutter.addLineTrackingIcon(line,myErrorIcon, message);
 				myInfos.add(info);
@@ -114,6 +136,8 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				{
 					notice = new DefaultParserNotice(this, message, line, pos, length);
 				}
+				
+				
 
 				
 				myResult.addNotice(notice);
@@ -174,6 +198,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	@Override
 	public void linkClicked(RSyntaxTextArea arg0, HyperlinkEvent arg1) {
 		// TODO Auto-generated method stub
+		System.out.println("Link Clicked ");
 		
 	}
 	

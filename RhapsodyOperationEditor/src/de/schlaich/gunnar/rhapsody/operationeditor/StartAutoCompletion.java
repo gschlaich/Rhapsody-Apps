@@ -9,10 +9,17 @@ import java.util.List;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.event.HyperlinkEvent;
+
 import org.fife.ui.autocomplete.AutoCompletion;
+import org.fife.ui.autocomplete.AutoCompletionEvent;
+import org.fife.ui.autocomplete.AutoCompletionListener;
 import org.fife.ui.autocomplete.BasicCompletion;
+import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
+import org.fife.ui.autocomplete.DescWindowCallback;
+import org.fife.ui.autocomplete.ExternalURLHandler;
 import org.fife.ui.autocomplete.FunctionCompletion;
 import org.fife.ui.autocomplete.LanguageAwareCompletionProvider;
 import org.fife.ui.autocomplete.ParameterizedCompletion.Parameter;
@@ -22,20 +29,26 @@ import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
 import org.fife.ui.rtextarea.Gutter;
+
+import com.github.difflib.algorithm.myers.MyersDiff;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProject;
 
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyArgumentCompletion;
+import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyNamespaceCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
+import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
@@ -45,6 +58,7 @@ public class StartAutoCompletion extends Thread
 	private AutoCompletion myAutoComplete;
 	private IRPOperation mySelectedOperation;
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
+	private LocalCompletionProvider myLocalCompletionProvider = null;
 	private IRPApplication myApplication;
 	private DiffParser myDiffParser;
 	private CppParser myCppParser;
@@ -79,6 +93,19 @@ public class StartAutoCompletion extends Thread
 	}
 	
 	
+	public static LocalCompletionProvider GetLocalCompletionProvider()
+	{
+		if(instance!=null)
+		{
+			return instance.myLocalCompletionProvider;
+		}
+		
+		return null;
+	}
+	
+
+	
+	
 	
 	public void run()
 	{
@@ -111,13 +138,114 @@ public class StartAutoCompletion extends Thread
 		myAutoComplete.setAutoActivationEnabled(true);
 		myAutoComplete.setAutoActivationDelay(750);
 		myAutoComplete.install(myTextArea);
+		
+		
+		myAutoComplete.setAutoCompleteSingleChoices(false);
+		myAutoComplete.addAutoCompletionListener(new AutoCompletionListener() {
+			
+			@Override
+			public void autoCompleteUpdate(AutoCompletionEvent e) 
+			{
+				System.out.println("AutoCompletionUpdate " + e.toString());
+				
+			}
+		});
+		
+		
+		
+		myAutoComplete.setExternalURLHandler(new ExternalURLHandler() {
+			
+			@Override
+			public void urlClicked(HyperlinkEvent e, Completion c, DescWindowCallback callback) {
+				
+				System.out.println(c.getSummary());
+				IRPProject project = myApplication.activeProject();
+				
+				System.out.println(mySelectedOperation.getToolTipHTML());
+				
+				
+				if(project==null)
+				{
+					return;
+				}
+				
+				List<IRPHyperLink> links = mySelectedOperation.getHyperLinks().toList();
+				
+				for(IRPHyperLink link:links)
+				{
+					System.out.println(link.getURL());
+				}
+				
+				
+				
+				/*
+				project.view
+				
+				
+				
+				
+				String elementName = c.toString();
+				
+				
+				if(c instanceof RhapsodyClassifier)
+				{
+					RhapsodyClassifier rc = (RhapsodyClassifier)c;
+					
+					IRPModelElement element = rc.getElement();
+					if(element==null)
+					{
+						return;
+					}
+					element.openFeaturesDialog(1);
+				}
+				
+				*/
+			
+				
+				/*
+				System.out.println(elementName);
+				
+				IRPProject project = myApplication.activeProject();
+				
+				
+				if(project==null)
+				{
+					return;
+				}
+				
+				
+				
+				
+				IRPModelElement clickedElement = project.fin
+				
+				if(clickedElement==null)
+				{
+					System.out.println(guid + " is not a GUID?!");
+					return;
+				}
+				
+				clickedElement.openFeaturesDialog(1);
+				*/
+
+
+				
+			}
+		});
+		
+
+	
 
 		JPopupMenu popup = myTextArea.getPopupMenu();
 
 	    popup.addSeparator();
+	    popup.add(new JMenuItem(new GetInfo(myAutoComplete)));
+	    popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider,myApplication)));
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
-	    popup.add(new JMenuItem(new FormatSelected()) );
+	    popup.addSeparator();
+	    popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
+	    popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
+	    
 	    
 	    FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
 	   
@@ -138,6 +266,9 @@ public class StartAutoCompletion extends Thread
 		
 		myClassifierCompletionProvider.createClassCompletion();
 		myTextArea.forceReparsing(myCppParser);
+		
+		myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(), myClassifierCompletionProvider);
+		
 		
 		//timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
 		

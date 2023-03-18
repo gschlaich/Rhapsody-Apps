@@ -84,6 +84,7 @@ import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.MainApp;
+import de.schlaich.gunnar.chatGPT.AskIssues;
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
@@ -91,6 +92,7 @@ import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvid
 import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
@@ -278,6 +280,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
+		
+		
 		RTextScrollPane scrollPane = new RTextScrollPane(myTextArea, true);
 		ErrorStrip es = new ErrorStrip(myTextArea);
 		JPanel temp = new JPanel(new BorderLayout());
@@ -309,6 +313,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.requestFocusInWindow();
 		
 		setRhapsodyStyle();
+		
 		
 
 	    ScreenMonitor.Instance.registerFrame(frame);
@@ -727,7 +732,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	@Override
 	public void hyperlinkUpdate(HyperlinkEvent arg0) {
-		// TODO Auto-generated method stub
+		System.out.println("Hyperlink!");
 		
 	}
 
@@ -1274,18 +1279,92 @@ class AddDependency extends TextAction
 		
 }
 
+class SearchElement extends TextAction
+{
+	private ClassifierCompletionProvider myCompletionProvider = null;
+	private IRPApplication myRhapsodyApplication = null;
+	
+	public SearchElement(ClassifierCompletionProvider aCompletionProvider, IRPApplication aRhapsodyApplication) {
+		super("Search Element");	
+		myCompletionProvider = aCompletionProvider;
+		myRhapsodyApplication = aRhapsodyApplication;
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		JTextComponent tc = getTextComponent(e);
+        String elementName = null;
+        
+        LocalCompletionProvider localCompletionProvider = new LocalCompletionProvider(tc.getText(), myCompletionProvider);
+        
+        try 
+        {
+           int selStart = tc.getSelectionStart();
+           int selEnd = tc.getSelectionEnd();
+           
+           if (selStart != selEnd) 
+           {
+              elementName = tc.getText(selStart, selEnd - selStart);
+              
+           } 
+           else 
+           {
+              elementName = OpenFeature.getElementNameAtCaret(tc);
+           }
+        } 
+        catch (BadLocationException ble) 
+        {
+           ble.printStackTrace();
+           UIManager.getLookAndFeel().provideErrorFeedback(tc);
+           return;
+        }
+        
+        
+        if(myCompletionProvider!=null)
+        {
+        	
+        	IRPModelElement element = null;
+        	Completion c = myCompletionProvider.getFirstCompletion(elementName);
+        	if((c!=null) &&( c instanceof RhapsodyClassifier))
+        	{
+        		RhapsodyClassifier rc = (RhapsodyClassifier)c;
+        		element = rc.getElement();
+        	}
+        	if(c==null)
+        	{
+        		List<Completion> cs = localCompletionProvider.getCompletionByInputText(elementName);
+        		if((cs!=null)&&(cs.size()>0)&&(cs.get(0) instanceof RhapsodyClassifier))
+        		{
+        			c = cs.get(0);
+        			element = ((RhapsodyClassifier)c).getElement();        		
+        		}
+        	}
+        	if(c==null)
+        	{
+        		IRPClassifier classifier = myCompletionProvider.getClassifier();
+        		element = RhapsodyOperation.findClassifier(classifier, elementName);
+	
+        	}
+        	if(element!=null)
+        	{
+        		RhapsodyHelper.searchElement(myRhapsodyApplication, element);
+        	}
+        	
+        }
+	}
+	
+}
+
 class FormatSelected extends TextAction
 {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -8665373931943623988L;
 	
 	public FormatSelected() 
 	{
 		super("Format Selected");
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	@Override
@@ -1301,6 +1380,85 @@ class FormatSelected extends TextAction
 	}
 		
 }
+
+class GetInfo extends TextAction
+{
+
+	private static final long serialVersionUID = -4057763339265129695L;
+	private AutoCompletion myAutoCompletion = null;
+	public GetInfo(AutoCompletion aAutoCompletion) {
+		super("Show Info");
+		myAutoCompletion = aAutoCompletion;
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		myAutoCompletion.doCompletion();
+		
+	}
+	
+}
+
+
+class AskGPtIssue extends TextAction
+{
+
+	
+	private static final long serialVersionUID = 3801585512847118816L;
+	private AskIssues myAskIssues = null;
+	private IRPApplication myApplication = null;
+	
+	public AskGPtIssue(IRPApplication aApplication) {
+		super("Ask Issue ChatGPT");
+		myAskIssues = new AskIssues();
+		myApplication = aApplication;
+		
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		JTextComponent tc = getTextComponent(e);
+		String selectedText = tc.getSelectedText();
+		
+		String answere = myAskIssues.syntaxError(selectedText);
+		System.out.println("ChatGPT Answere: \n" + answere);
+		myApplication.writeToOutputWindow("Log", "\n" + answere + "\n");		
+		
+	}
+}
+
+class AskGPtOptimize extends TextAction
+{
+
+
+	private static final long serialVersionUID = 6148671876928369847L;
+	private AskIssues myAskIssues = null;
+	private IRPApplication myApplication = null;
+	
+	public AskGPtOptimize(IRPApplication aApplication) {
+		super("Optimize ChatGPT");
+		myAskIssues = new AskIssues();
+		myApplication = aApplication;
+		
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		JTextComponent tc = getTextComponent(e);
+		String selectedText = tc.getSelectedText();
+		
+		String answere = myAskIssues.optimize(selectedText);
+		System.out.println("ChatGPT Answere: \n" + answere);
+		myApplication.writeToOutputWindow("Log", "\n" + answere + "\n");		
+		
+	}
+}
+
 
 
 
