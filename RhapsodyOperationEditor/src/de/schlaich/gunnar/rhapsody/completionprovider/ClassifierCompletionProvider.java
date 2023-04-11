@@ -16,6 +16,7 @@ import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
 
+import org.apache.commons.imaging.common.mylzw.MyLzwCompressor;
 import org.apache.commons.imaging.icc.IccProfileParser;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
@@ -36,6 +37,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPRelation;
 import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPUnit;
+import com.telelogic.rhapsody.core.RhapsodyRuntimeException;
 
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyAttributeCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
@@ -65,7 +67,10 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	private boolean myAddType = false;
 	
-	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProviders = null;
+	private boolean myClassCompletionCreated = false;
+	
+	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProvidersPrivate = null;
+	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProvidersPublic = null;
 	
 	public enum visibility {
 		v_private,
@@ -91,6 +96,11 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	}
 	
+	public void resetClassCompletionCreated()
+	{
+		myClassCompletionCreated = false;
+	}
+	
 	
 	public LocalCompletionProvider getLocalCompletionProvider()
 	{
@@ -102,20 +112,65 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		super();
 	}
 	
+	public static List<ClassifierCompletionProvider> GetPrivateProviders()
+	{
+		if((ClassifierCompletionProvidersPrivate==null)||(ClassifierCompletionProvidersPrivate.size()==0))
+		{
+			return new ArrayList<ClassifierCompletionProvider>();
+		}
+		return new ArrayList<ClassifierCompletionProvider>(ClassifierCompletionProvidersPrivate.values());
+	}
+	
+	public static List<ClassifierCompletionProvider> GetPublicProviders()
+	{
+		if((ClassifierCompletionProvidersPublic==null)||(ClassifierCompletionProvidersPublic.size()==0))
+		{
+			return new ArrayList<ClassifierCompletionProvider>();
+		}
+		return new ArrayList<ClassifierCompletionProvider>(ClassifierCompletionProvidersPublic.values());
+	}
+	
 	public static ClassifierCompletionProvider GetProvider(IRPClassifier aClassifier, visibility aVisibility, boolean addType)
 	{
 		ClassifierCompletionProvider ret = null;
 		
-		if(ClassifierCompletionProviders==null)
+		if(aVisibility == visibility.v_private)
 		{
-			ClassifierCompletionProviders = new HashMap<IRPClassifier, ClassifierCompletionProvider>();
-		}
 		
-		ret = ClassifierCompletionProviders.get(aClassifier);
-		if(ret==null)
+			if(ClassifierCompletionProvidersPrivate==null)
+			{
+				ClassifierCompletionProvidersPrivate = new HashMap<IRPClassifier, ClassifierCompletionProvider>();
+			}
+		
+			ret = ClassifierCompletionProvidersPrivate.get(aClassifier);
+			if(ret==null)
+			{
+				ret = new ClassifierCompletionProvider(aClassifier, aVisibility, addType);
+				System.out.println("--------------- New private ClassifierProvider of Class "+ aClassifier.getName());
+				ClassifierCompletionProvidersPrivate.put(aClassifier, ret);
+			}
+			else
+			{
+				System.out.println("--------------- Private ClassifierProvider already Exists: "+ aClassifier.getName());
+			}
+		}
+		else
 		{
-			ret = new ClassifierCompletionProvider(aClassifier, aVisibility, addType);
-			ClassifierCompletionProviders.put(aClassifier, ret);
+			if(ClassifierCompletionProvidersPublic==null)
+			{
+				ClassifierCompletionProvidersPublic = new HashMap<IRPClassifier, ClassifierCompletionProvider>();
+			}
+			ret = ClassifierCompletionProvidersPublic.get(aClassifier);
+			if(ret==null)
+			{
+				ret = new ClassifierCompletionProvider(aClassifier, aVisibility, addType);
+				System.out.println("--------------- New public ClassifierProvider of Class "+ aClassifier.getName());
+				ClassifierCompletionProvidersPublic.put(aClassifier, ret);
+			}
+			else
+			{
+				System.out.println("--------------- Public ClassifierProvider already Exists: "+ aClassifier.getName());
+			}
 		}
 		
 		return ret;
@@ -136,7 +191,12 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	public void createClassCompletion()
 	{
+		if(myClassCompletionCreated)
+		{
+			return;
+		}
 		createClassCompletion(myClassifier, myVisibility, myAddType);
+		myClassCompletionCreated = true;
 	}
 	
 	
@@ -745,9 +805,16 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 					IRPModelElement re = rc.getElement();
 					if((are!=null)&&(re!=null))
 					{
+						try {
 						if(re.equals(are))
 						{
 							return true;	
+						}
+						}
+						catch(RhapsodyRuntimeException ex)
+						{
+							removeCompletion(c);
+							return false;
 						}
 					}
 					else
