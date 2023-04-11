@@ -6,7 +6,7 @@ public class AskIssues {
 
 	public static void main(String[] args) {
 
-		AskIssues ai = new AskIssues("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");
+		AskIssues ai = new AskIssues("");
 		
 		String errorCode = " X_TRACE_RELEASE(X_INFO) << \"credentials from \" << autoConnectSSID  \"known, do auto connect\";\r\n";
 		
