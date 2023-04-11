@@ -21,7 +21,7 @@ public class AskIssues {
 	
 	private String myApiKey = null;
 	
-	//private String myApiKey = "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";
+	
 	
 	public AskIssues(String aApiKey)
 	{
