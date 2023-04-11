@@ -50,9 +50,23 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		if(ret==null)
 		{
 			ret = new NamespaceCompletionProvider(lpackage,aRhapsodyNamespaceCompletion);
+			System.out.println("--------------- New  NamespaceCompletionProvider of Package "+ lpackage.getName());
 			NamespaceCompletionProviders.put(lpackage, ret);
 		}
+		else
+		{
+			System.out.println("--------------- NamespaceCompletionProvider already exists: "+ lpackage.getName());
+		}
 		return ret;
+	}
+	
+	public static List<NamespaceCompletionProvider> GetNameSpaceCompletionProviders()
+	{
+		if((NamespaceCompletionProviders==null)||(NamespaceCompletionProviders.isEmpty()))
+		{
+			return new ArrayList<NamespaceCompletionProvider>();
+		}
+		return new ArrayList<NamespaceCompletionProvider>(NamespaceCompletionProviders.values());
 	}
 	
 	public static Completion GetCompletion(String aToken)
@@ -98,6 +112,15 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		}
 		addElements(aPackage,this);
 		
+	}
+	
+	public String toString()
+	{
+		if(hasNoNamespace())
+		{
+			return myPackageName;
+		}
+		return myNamespaceName;
 	}
 	
 	public boolean hasNoNamespace()
@@ -194,6 +217,10 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 					
 	}
 	
+	public List<Completion> getCompletions()
+	{
+		return completions;
+	}
 	
 	
 	@Override
@@ -262,4 +289,6 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		return false;
 		
 	}
+	
+
 }

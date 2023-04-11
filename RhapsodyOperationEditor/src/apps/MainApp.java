@@ -59,7 +59,7 @@ public class MainApp extends App {
 	
 		try 
 		{
-			OperationEditorWindow.Run(rhapsody, selected, this);
+			OperationEditorWindow.Run(rhapsody, selected, true);
 		}
 		catch (Exception ex)
 		{

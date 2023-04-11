@@ -240,11 +240,11 @@ public class StartAutoCompletion extends Thread
 	    popup.addSeparator();
 	    popup.add(new JMenuItem(new GetInfo(myAutoComplete)));
 	    popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider,myApplication)));
-	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider)));
+	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider, myApplication)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
 	    popup.addSeparator();
-	    popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
-	    popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
+	    //popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
+	    //popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
 	    
 	    
 	    FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
@@ -268,6 +268,8 @@ public class StartAutoCompletion extends Thread
 		myTextArea.forceReparsing(myCppParser);
 		
 		myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(), myClassifierCompletionProvider);
+		
+		
 		
 		
 		//timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
@@ -295,8 +297,7 @@ public class StartAutoCompletion extends Thread
 		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
 		myAutoComplete.setCompletionProvider(provider);
 		myClassifierCompletionProvider.createClassCompletion();
-		
-		
+				
 		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
 		
 		myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
@@ -304,11 +305,21 @@ public class StartAutoCompletion extends Thread
 		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
 		myTextArea.addParser(myDiffParser);
 		
+		myClassifierCompletionProvider.resetClassCompletionCreated();
+		
+		getNameSpaces(myClassifierCompletionProvider, mySelectedOperation);
+
+		@SuppressWarnings("unchecked")
+		List<IRPArgument> arguments = mySelectedOperation.getArguments().toList();
+		for(IRPArgument argument : arguments)
+		{
+			RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(myClassifierCompletionProvider, argument);
+			myClassifierCompletionProvider.addCompletion(rac);
+		}
+		
 		myClassifierCompletionProvider.createClassCompletion();
 		myTextArea.forceReparsing(myCppParser);
-		
-		
-		
+				
 		Date finished = new Date();
 		double diffMs = finished.getTime()-started.getTime();
 		double diffS = diffMs/1000; 
@@ -339,6 +350,9 @@ public class StartAutoCompletion extends Thread
 		// Create the provider used when typing code.
 		myClassifierCompletionProvider = ClassifierCompletionProvider.GetProvider(selectedClass, visibility.v_private,true);
 		//LocalCompletionProvider localCP = new LocalCompletionProvider(selectedOperation.getBody());
+	
+		getNameSpaces(myClassifierCompletionProvider, selectedOperation);
+		
 		
 		
 		@SuppressWarnings("unchecked")
@@ -349,7 +363,7 @@ public class StartAutoCompletion extends Thread
 			myClassifierCompletionProvider.addCompletion(rac);
 		}
 		
-		getNameSpaces(myClassifierCompletionProvider, selectedOperation);
+		
 		
 		createTraceCompletions(myClassifierCompletionProvider);
 		
@@ -361,6 +375,8 @@ public class StartAutoCompletion extends Thread
 
 		// Create the "parent" completion provider.
 		LanguageAwareCompletionProvider provider = new LanguageAwareCompletionProvider(myClassifierCompletionProvider);
+		
+		
 		
 		provider.setStringCompletionProvider(stringCP);
 		provider.setCommentCompletionProvider(commentCP);
