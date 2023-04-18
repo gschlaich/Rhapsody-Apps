@@ -19,7 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import org.apache.commons.imaging.Imaging;
+//import org.apache.commons.imaging.Imaging;
 
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
@@ -312,6 +312,8 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 
 		}
 		
+		/*
+		
 		IRPPlugInWindow piw =  rhapsody.getPlugInWindow(1, 1, 1);
 		
 		piw.setDocking(1);
@@ -320,7 +322,7 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		long handle = piw.getWindowHandle();
 		
-		
+		*/
 				
 		
 	}

@@ -37,11 +37,19 @@ public class HistoryElement
 	}
 		
 		
-	public static void AddToHistory( IRPModelElement aModelElement)
-	{
-		for(HistoryControl control:HistoryControls)
-		{
-			control.addToHistory(aModelElement);
+	public static void AddToHistory(IRPModelElement aModelElement) {
+		if (aModelElement == null) {
+			return;
+		}
+
+		try {
+
+			for (HistoryControl control : HistoryControls) {
+
+				control.addToHistory(aModelElement);
+			}
+		} catch (Exception e) {
+
 		}
 	}
 	
@@ -61,7 +69,14 @@ public class HistoryElement
 		}
 		if(myElement instanceof IRPOperation)
 		{
-			return RhapsodyOperation.getOperation((IRPOperation)myElement);
+			try
+			{
+				return RhapsodyOperation.getOperation((IRPOperation)myElement);
+			}
+			catch(Exception e)
+			{
+				return "Empty";
+			}
 		}
 		
 		return myElement.getDisplayName();
@@ -73,8 +88,13 @@ public class HistoryElement
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         
-        HistoryElement e = (HistoryElement)o;
-        return e.getElement().equals(getElement());  
+        try {
+			HistoryElement e = (HistoryElement)o;
+			return e.getElement().equals(getElement());
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			return false;
+		}  
     }
 	
 	@Override

@@ -139,7 +139,6 @@ public class StartAutoCompletion extends Thread
 		myAutoComplete.setAutoActivationDelay(750);
 		myAutoComplete.install(myTextArea);
 		
-		
 		myAutoComplete.setAutoCompleteSingleChoices(false);
 		myAutoComplete.addAutoCompletionListener(new AutoCompletionListener() {
 			

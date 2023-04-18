@@ -6,8 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.management.InstanceAlreadyExistsException;
-
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPObjectModelDiagram;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -23,10 +21,7 @@ import com.telelogic.rhapsody.core.IRPTemplateParameter;
 import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.IRPTrigger;
 
-import net.sourceforge.plantuml.activitydiagram3.InstructionPartition;
-
 import com.telelogic.rhapsody.core.IRPArgument;
-import com.telelogic.rhapsody.core.IRPAssociationClass;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -34,7 +29,6 @@ import com.telelogic.rhapsody.core.IRPClassifierRole;
 import com.telelogic.rhapsody.core.IRPConnector;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
-import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPGraphElement;
 import com.telelogic.rhapsody.core.IRPGraphicalProperty;
@@ -50,8 +44,7 @@ public class PlantUMLGenerator {
 	private IRPDiagram myDiagram = null;
 	
 	private enum viewElement { viewNone, viewPublic, viewProtected, viewAll, viewVirtual };
-	
-	
+
 	
 	private List<String> myClasses = new ArrayList<String>();
 			
@@ -69,7 +62,119 @@ public class PlantUMLGenerator {
 		return true;
 	}
 	
-	public PlantUMLGenerator(IRPModelElement aIRPElement) 
+	public PlantUMLGenerator(IRPModelElement aIRPElement, boolean aGenerateInheritanceHierarchy) 
+	{
+		
+		if(aGenerateInheritanceHierarchy)
+		{
+			if(aIRPElement instanceof IRPClass)
+			{
+				StringBuffer plantStringBuffer = new StringBuffer();
+				plantStringBuffer.append(PlantUMLElements.myStartUML);
+				IRPClass irpClass = (IRPClass) aIRPElement;
+				generateInheritanceHierarchy(irpClass, plantStringBuffer,true,true);
+				plantStringBuffer.append(PlantUMLElements.myEndUML);
+				myPlantUml = plantStringBuffer.toString();
+			}
+			
+			
+		}
+		else
+		{
+			generateDiagram(aIRPElement);
+		}
+		
+		
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void generateInheritanceHierarchy(IRPClassifier aIRPClass, StringBuffer aPlantStringBuffer, boolean aGenerateBase, boolean aGenerateDerivated )
+	{
+		
+		
+		String className = aIRPClass.getName();
+		
+		if(addClass(className)==false)
+		{
+			return;
+		}
+		
+		
+		String nameSpace = getNameSpace(aIRPClass);
+		
+		
+		if(nameSpace.isEmpty()==false)
+		{
+		
+			aPlantStringBuffer.append(PlantUMLElements.myNamespace);
+			aPlantStringBuffer.append(nameSpace);
+			aPlantStringBuffer.append(PlantUMLElements.myBraceOpen);
+		}
+		if(className.startsWith("I"))
+		{
+			aPlantStringBuffer.append(PlantUMLElements.myInterface);
+		}
+		else
+		{
+			aPlantStringBuffer.append(PlantUMLElements.myClass);
+		}
+		
+		aPlantStringBuffer.append(className);
+		
+		if(nameSpace.isEmpty()==false)
+		{
+			aPlantStringBuffer.append(PlantUMLElements.myBraceClose);
+		}
+		else
+		{
+			aPlantStringBuffer.append("\n");
+		}
+		
+		List<IRPGeneralization> generalizations = aIRPClass.getGeneralizations().toList();
+		
+		if(aGenerateBase)
+		{
+			for(IRPGeneralization generalization : generalizations)
+			{
+				IRPClassifier baseClass =  generalization.getBaseClass();
+				
+					generateInheritanceHierarchy(baseClass, aPlantStringBuffer, true, false);		
+					aPlantStringBuffer.append(baseClass.getName());
+					aPlantStringBuffer.append(PlantUMLElements.myGeneralization);
+					aPlantStringBuffer.append(className);
+					aPlantStringBuffer.append("\n");
+	
+			}
+		}
+		
+		if(aGenerateDerivated)
+		{	
+			List<IRPModelElement> references = aIRPClass.getReferences().toList();
+			for(IRPModelElement reference : references)
+			{
+				if(reference instanceof IRPGeneralization)
+				{
+					IRPGeneralization generalization = (IRPGeneralization)reference;
+					
+					IRPClassifier derivatedClass = generalization.getDerivedClass();
+
+					generateInheritanceHierarchy(derivatedClass, aPlantStringBuffer, false, true);
+					
+					aPlantStringBuffer.append(className);
+					aPlantStringBuffer.append(PlantUMLElements.myGeneralization);
+					aPlantStringBuffer.append(derivatedClass.getName());
+					aPlantStringBuffer.append("\n");
+					
+				}
+				
+			}
+		}
+	}
+			
+
+	
+	
+	private void generateDiagram(IRPModelElement aIRPElement)
 	{
 		myRootLevel = 2;
 		
@@ -100,8 +205,6 @@ public class PlantUMLGenerator {
 		plantStringBuffer.append(PlantUMLElements.myEndUML);
 		
 		myPlantUml = plantStringBuffer.toString();
-		
-		
 		
 	}
 
@@ -144,7 +247,7 @@ public class PlantUMLGenerator {
 		}
 	}
 	
-	public String getPlanUml()
+	public String getPlantUml()
 	{
 		return myPlantUml;
 	}
@@ -1113,6 +1216,7 @@ class PlantUMLElements {
 	public static String myComposition = " *--> ";
 	public static String myAggregation = " o--> ";
 	public static String myPackage = "Package ";
+	public static String myNamespace = "namespace ";
 	public static String myBraceOpen = " { \n";
 	public static String myBraceClose = "\n } \n";
 	public static String myContent = " : ";

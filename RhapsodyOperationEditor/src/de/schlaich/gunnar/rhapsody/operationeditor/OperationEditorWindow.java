@@ -1022,7 +1022,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			EditorCodeFormatter f = new EditorCodeFormatter();
 			String body = myTextArea.getText();
 			String formatted = f.format(body);
+			
 			myTextArea.setText(formatted);
+			
 		}
 		}
 		catch (Exception e1) 

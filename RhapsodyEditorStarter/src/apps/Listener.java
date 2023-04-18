@@ -102,9 +102,18 @@ public class Listener extends RPApplicationListener {
 			
 			try
 			{
+				if(entryAction==null)
+				{
+					state.setEntryAction("");
+				}
+				entryAction.setName("entryAction");
 				OperationEditorWindow.Run(myApplication, entryAction, false);
 				
-				
+				if(exitAction==null)
+				{
+					state.setExitAction("");
+				}
+				exitAction.setName("exitAction");
 				OperationEditorWindow.Run(myApplication, exitAction, false);
 				
 			}

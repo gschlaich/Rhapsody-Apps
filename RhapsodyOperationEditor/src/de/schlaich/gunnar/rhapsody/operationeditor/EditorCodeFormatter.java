@@ -95,6 +95,7 @@ public class EditorCodeFormatter {
 		catch (IOException e) 
 		{
 			e.printStackTrace();
+			ret = aSource;
 		}
 		return ret;
 	}
