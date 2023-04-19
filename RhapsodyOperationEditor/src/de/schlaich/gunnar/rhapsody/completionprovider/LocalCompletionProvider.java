@@ -173,6 +173,19 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 		return retVal;
 	}
 	
+	
+	public Completion getFirstCompletion(final String aCompletionName)
+	{
+		
+		List<Completion> completions = getCompletionByInputText(aCompletionName);
+		if(completions==null||completions.isEmpty())
+		{
+			return null;
+		}
+		return completions.get(0);
+		
+	}
+	
 	private void collectCompletions(IASTNode aNode)
 	{
         

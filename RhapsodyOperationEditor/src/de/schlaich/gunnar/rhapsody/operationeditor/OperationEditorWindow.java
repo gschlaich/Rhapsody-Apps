@@ -7,6 +7,8 @@ import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
@@ -17,7 +19,9 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.Icon;
 import javax.swing.JButton;
@@ -59,20 +63,32 @@ import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 import com.ibm.rhapsody.apps.ui.SearchRunDialog;
+import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPArgument;
+import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
+import com.telelogic.rhapsody.core.IRPEvent;
+import com.telelogic.rhapsody.core.IRPEventReception;
+import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPStatechart;
 import com.telelogic.rhapsody.core.IRPStereotype;
+import com.telelogic.rhapsody.core.IRPTransition;
+import com.telelogic.rhapsody.core.IRPTrigger;
+import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.MainApp;
+import de.schlaich.gunnar.chatGPT.AskIssues;
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
@@ -80,6 +96,9 @@ import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvid
 import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.HistoryControl;
+import de.schlaich.gunnar.rhapsody.utilities.HistoryElement;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
@@ -93,17 +112,39 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private SyntaxScheme myScheme;
 	private StartAutoCompletion myStartAutoCompletion;
 	private String myGuid;
+	private IRPAction myAction = null;
+	private ApplicationListener myApplicationListener = null;
+	private boolean myExitOnClose = true;
+
+	private static Map<IRPModelElement,OperationEditorWindow>  myOperationWindows = null;
 	
-	
-	/**
-	 * 
-	 */
+
 	private static final long serialVersionUID = 1L;
 	
-	public OperationEditorWindow(IRPApplication rhapsody, IRPOperation aOperation) {
+	
+	public static OperationEditorWindow Get(IRPModelElement aModelElement) {
 		
+		if(myOperationWindows==null)
+		{
+			return null;
+		}
+		return myOperationWindows.get(aModelElement);
+	}
+	
+	public OperationEditorWindow(IRPApplication rhapsody, IRPOperation aOperation, IRPAction aAction, boolean aExitOnClose) {
+		
+		if(myOperationWindows==null)
+		{
+			myOperationWindows = new HashMap<IRPModelElement,OperationEditorWindow>();
+		}
+		
+		myOperationWindows.put(aOperation, this);
+		
+		myAction = aAction;
+		myExitOnClose = aExitOnClose;
 		
 		JFrame frame = new JFrame (RhapsodyOperation.getOperation(aOperation));
+		
 		frame.setLayout(new BorderLayout());
 		
 		JPanel buttonPanel = new JPanel();
@@ -177,6 +218,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		formatButton.addActionListener(oew);
 		
 		
+		if(myAction!=null)
+		{
+			locateButton.setEnabled(false);
+			generateButton.setEnabled(false);
+			roundTripButton.setEnabled(false);
+		}
+		
 		//frame.add(editorPanel);
 		frame.add(buttonPanel,BorderLayout.SOUTH);
 		
@@ -215,7 +263,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			frame.setIconImage(img);
 		}
 		
-	    frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		if(aExitOnClose)
+		{
+			frame.setDefaultCloseOperation (JFrame.EXIT_ON_CLOSE);
+		}
+		else
+		{
+			frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		}
 	    
 	    Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 		
@@ -256,6 +311,24 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
 		
+		myTextArea.addFocusListener(new FocusListener() {
+			
+			@Override
+			public void focusLost(FocusEvent e) {
+				
+			}
+			
+			@Override
+			public void focusGained(FocusEvent e) {
+				HistoryElement.AddToHistory(mySelectedOperation);
+	
+			}
+		});
+		
+		
+		
+		
+		
 		RTextScrollPane scrollPane = new RTextScrollPane(myTextArea, true);
 		ErrorStrip es = new ErrorStrip(myTextArea);
 		JPanel temp = new JPanel(new BorderLayout());
@@ -288,7 +361,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		setRhapsodyStyle();
 		
-
 	    ScreenMonitor.Instance.registerFrame(frame);
 
 	  	frame.pack();
@@ -298,8 +370,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
         frame.setVisible(true);
         
     	//now add rhapsodyListener
-		ApplicationListener listener = new ApplicationListener(myFrame,mySelectedOperation,myApplication,myTextArea,myStartAutoCompletion);
-		listener.connect(myApplication);
+        
+        myApplicationListener = new ApplicationListener(myFrame,mySelectedOperation,myApplication,myTextArea,myStartAutoCompletion,myExitOnClose);
+        myApplicationListener.connect(myApplication);
+        
+        
+       
 		/*
 		frame.addMouseListener(new MouseListener() {
 			
@@ -354,6 +430,74 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 	
+	public void setFocus()
+	{
+		myFrame.toFront();
+	}
+	
+	
+	
+	private void removeActionOperation()
+	{
+
+		if(myAction==null)
+		{
+			return;
+		}
+		
+		if(myApplicationListener!=null)
+		{
+			myApplicationListener.disconnect();
+		}
+		
+		
+		IRPClass owner = (IRPClass)mySelectedOperation.getOwner();
+		if(owner==null)
+		{
+			return;
+		}
+		
+		IRPClassifier argType = null;
+		
+		List<IRPArgument> args = mySelectedOperation.getArguments().toList();
+		if(args.size()==1)
+		{
+			argType = args.get(0).getType();
+		}
+		
+		
+
+		owner.deleteOperation(mySelectedOperation);
+		
+		
+		if(argType!=null)
+		{
+			owner.deleteType(argType.getName());
+		}
+		
+				
+	}
+	
+	private void setActionbody(String aText)
+	{
+		if(myAction==null)
+		{
+			return;
+		}
+		
+		if(aText.isEmpty()==false)
+		{
+			if(aText.charAt(0)!='\n')
+			{
+				aText="\n"+aText;
+			}
+			
+		}
+		
+		
+		myAction.setBody(aText);
+	}
+	
 	
 
 
@@ -362,6 +506,39 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		//settings should be similar to rhapsody
 		myTextArea.setBackground(new Color(0xffffff));
 		myTextArea.setCaretColor(new Color(0x000000));
+		myTextArea.setCurrentLineHighlightColor(new Color(0xe8f2fe));
+		myTextArea.setFadeCurrentLineHighlight(false);
+		myTextArea.setMarginLineColor(new Color(0xb0b4b9));
+		myTextArea.setMarkAllHighlightColor(new Color(0x6b8189));
+		myTextArea.setMatchedBracketBorderColor(new Color(0xdbe0cc));
+		myTextArea.setBracketMatchingEnabled(true);
+		myScheme = myTextArea.getSyntaxScheme();
+		
+		int colorComment = 0x30a030;
+		
+		setTokenFgColor(SyntaxScheme.IDENTIFIER, 0x00000);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD, 0x0000ff);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD_2, 0x0000ff);
+		setTokenFgColor(SyntaxScheme.ANNOTATION, 0x80f080);
+		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_EOL, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_MULTILINE, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_MARKUP, colorComment);
+		setTokenFgColor(SyntaxScheme.COMMENT_KEYWORD, 0xae9fbf);
+		setTokenFgColor(SyntaxScheme.DATA_TYPE, 0x4040ff);
+		setTokenFgColor(SyntaxScheme.VARIABLE, 0x5050a0);
+		setTokenFgColor(SyntaxScheme.LITERAL_STRING_DOUBLE_QUOTE, 0xA31515);
+
+		
+		myTextArea.setSyntaxScheme(myScheme);
+	}
+	
+	private void setDarkStyle() 
+	{
+		//settings should be similar to rhapsody
+		myTextArea.setBackground(new Color(0x000000));
+		myTextArea.setCaretColor(new Color(0xffffff));
 		myTextArea.setCurrentLineHighlightColor(new Color(0xe8f2fe));
 		myTextArea.setFadeCurrentLineHighlight(false);
 		myTextArea.setMarginLineColor(new Color(0xb0b4b9));
@@ -426,8 +603,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 					}
 				}
 	        	
+	        	myOperationWindows.remove(mySelectedOperation);
 	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 				prefs.clearRhapsodyModelElement(mySelectedOperation);
+				
+				removeActionOperation();
 	        	
 	        	
 	        }
@@ -436,35 +616,189 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 
 	}
 	
-	public static void Run(IRPApplication rhapsody, IRPModelElement selected, MainApp aMainApp)
+	public static void Run(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose)
 	{
 		
-		if(selected instanceof IRPOperation)
-		{	
+		IRPOperation op = null;
+		IRPAction action = null;
+		
+		if(selected instanceof IRPTransition)
+		{
 			
-			
-			
-			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-			
-			if(prefs.checkRhapsodyModelElement(selected))
+			if(selected.getSaveUnit().isReadOnly()==1)
 			{
-				aMainApp.printToRhapsody("Operation already open");
+
 				return;
 			}
 			
-			prefs.setRhapsodyModelElement(selected);
+			IRPTransition transition = (IRPTransition)selected;
 			
-			IRPOperation op = (IRPOperation)selected;
+			
+			//find class...
+			IRPStatechart statechart = transition.getItsStatechart();
 
-			aMainApp.printToRhapsody("Edit Operation of " + selected.getName());
+			action = transition.getItsAction();
+			if(action==null)
+			{
+				transition.setItsAction("\n");
+			}
 			
-			aMainApp.printToRhapsody("Java Version: " + System.getProperty("java.vm.version"));
-			aMainApp.printToRhapsody(System.getProperty("java.version"));
+			IRPClass statechartclass = (IRPClass)statechart.getItsClass();
+			
+			//find params...
+			IRPTrigger trigger = transition.getItsTrigger();
+			
+			String operationName = "__action_of_transition_"+transition.getName();
+			
+			//check if operation already exists...
+			op = (IRPOperation)statechartclass.findNestedElement(operationName, "Operation");
+			if(op!=null)
+			{
+				statechartclass.deleteOperation(op);
+			}
+			
+			op = statechartclass.addOperation(operationName);
+			
+			op.setBody(action.getBody());
+
+			op.setPropertyValue("CG.Operation.Generate", "None");
+			
+			if((trigger!=null)&&(trigger.isTimeout()==0))
+			{
+				String triggerSource = trigger.getBody();
+				
+				
+				IRPModelElement element = statechartclass.findNestedElement(triggerSource, "EventReception");
+				
+				if(element==null)
+				{
+					element = statechartclass.findNestedElement(triggerSource, "TriggeredOperation");
+				}
+				
+				if(element!=null)
+				{
+					 
+					IRPInterfaceItem eventReception = (IRPInterfaceItem)element;
+					
+					
+					
+					List<IRPArgument> arguments = eventReception.getArguments().toList();
+					
+					String triggerSourceName = "_"+triggerSource;
+					
+					IRPType paramsType = null;
+					
+					paramsType = (IRPType)statechartclass.findNestedElement(triggerSourceName, "Type");
+					if(paramsType!=null)
+					{
+						statechartclass.deleteType(triggerSourceName);
+					}
+					
+					paramsType = statechartclass.addType("_"+triggerSource);
+					paramsType.setKind("Structure");
+					paramsType.setPropertyValue("CG.Type.Generate", "False");
+					
+					
+					for(IRPArgument argument:arguments)
+					{
+						IRPAttribute attribute = paramsType.addAttribute(argument.getName());
+						attribute.setType(argument.getType());
+					}
+
+					IRPArgument params = op.addArgument("params");
+					
+					params.setType(paramsType);
+					params.setPropertyValue("CPP_CG.Type.In", "$type*");
+					
+					
+					
+				}
+				
+			}
+			
+		}
+		else if(selected instanceof IRPAction)
+		{
+			if(selected.getSaveUnit().isReadOnly()==1)
+			{
+				return;
+			}
+			
+			
+			action = (IRPAction)selected;
+			IRPModelElement owner = action.getOwner();
+			String actionOf = owner.getName();
+			while((owner!=null)&&(owner instanceof IRPClass ==false))
+			{
+				owner = owner.getOwner();
+			}
+			
+			if(owner==null)
+			{
+				return;
+			}
+			
+			if(owner instanceof IRPStatechart)
+			{
+				
+				IRPStatechart sc = (IRPStatechart)owner;
+				owner = sc.getItsClass();
+				//owner = owner.getOwner();
+			}
+			
+			if(owner==null)
+			{
+				return;
+			}
+			
+			
+			IRPClass actionClass = (IRPClass)owner;
+			
+			String operationName = "__"+actionOf+"_"+action.getName();
+			
+			
+			op = (IRPOperation)actionClass.findNestedElement(operationName, "Operation");
+			
+			if(op==null)
+			{
+				op = actionClass.addOperation(operationName);
+			}
+			op.setBody(action.getBody());
+		}
+		else if(selected instanceof IRPOperation)
+		{	
+			op = (IRPOperation)selected;
+		}
+			
+		
+		//HistoryElement.AddToHistory(op);
+		
+		
+		OperationEditorWindow win = Get(op);
+		if(win!=null)
+		{
+			win.setFocus();
+			
+			return;
+		}
+		
+		
+			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+			
+			if(prefs.checkRhapsodyModelElement(op))
+			{
+				print(rhapsody, "Operation already open");
+				return;
+			}
+			
+			prefs.setRhapsodyModelElement(op);
+			
+			print(rhapsody, "Edit Operation of " + op.getName());
+			
+			print(rhapsody, "Java Version: " + System.getProperty("java.vm.version"));
+			print(rhapsody, System.getProperty("java.version"));
 			String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());	
-			aMainApp.printToRhapsody(timeStamp);
-			
-			
-	
+			print(rhapsody, timeStamp);
 
 			String lufSystem = UIManager.getSystemLookAndFeelClassName();
 			
@@ -484,17 +818,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				e.printStackTrace();
 			}
 			
-			OperationEditorWindow oew = new OperationEditorWindow(rhapsody,op);
-			
-			
-			
-	        
-	        
-		}
-		else
-		{
-			//aMainApp.printToRhapsody("no operation - exit");
-		}
+			OperationEditorWindow oew = new OperationEditorWindow(rhapsody, op, action, aExitOnClose);
+	
+	}
+	
+	private static void print(IRPApplication aApplication, String aMessage)
+	{
+		aApplication.writeToOutputWindow("log", aMessage + "\n");
+		System.out.println(aMessage);
 	}
 	
 	
@@ -504,7 +835,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	@Override
 	public void hyperlinkUpdate(HyperlinkEvent arg0) {
-		// TODO Auto-generated method stub
+		System.out.println("Hyperlink!");
 		
 	}
 
@@ -519,6 +850,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
 				{
 					String text = myTextArea.getText();
+					setActionbody(text);
 					if(mySelectedOperation!=null)
 					{
 						mySelectedOperation.setBody(text);
@@ -552,6 +884,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 				myTextArea.setText(mySelectedOperation.getBody());
 			}
+	
+			
 		}
 		
 		if(command.equals("ok")||command.equals("cancel"))
@@ -560,9 +894,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				myFrame.dispose();
 			}
+			
+			
+			myOperationWindows.remove(mySelectedOperation);
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			prefs.clearRhapsodyModelElement(myGuid);
-			System.exit(0);
+			removeActionOperation();
+			
+			if(myExitOnClose)
+			{
+				System.exit(0);
+			}
 		}
 		
 		if(command.equals("locate"))
@@ -662,7 +1004,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 					return;
 				}
 				
-				if(mySelectedOperation!=null)
+				if(myAction!=null)
+				{
+					String body = myAction.getBody();
+					myTextArea.setText(body);
+				}
+				else if(mySelectedOperation!=null)
 				{
 					String body = mySelectedOperation.getBody();
 					myTextArea.setText(body);
@@ -675,7 +1022,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			EditorCodeFormatter f = new EditorCodeFormatter();
 			String body = myTextArea.getText();
 			String formatted = f.format(body);
+			
 			myTextArea.setText(formatted);
+			
 		}
 		}
 		catch (Exception e1) 
@@ -689,7 +1038,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			myFrame.dispose();
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			prefs.clearRhapsodyModelElement(myGuid);
-			System.exit(0);
+			if(myExitOnClose)
+			{
+				System.exit(0);
+			}
 		}
 		
 	}
@@ -731,10 +1083,12 @@ class OpenFeature extends TextAction
 	private static final long serialVersionUID = -8665373931943623988L;
 	
 	private ClassifierCompletionProvider myCompletionProvider;
+	private IRPApplication myApplication = null;
 
-	public OpenFeature(ClassifierCompletionProvider aCompletionProvider) {
+	public OpenFeature(ClassifierCompletionProvider aCompletionProvider, IRPApplication aApplication) {
 		super("Open feature");	
 		myCompletionProvider = aCompletionProvider;
+		myApplication = aApplication;
 	}
 
 	@Override
@@ -774,7 +1128,7 @@ class OpenFeature extends TextAction
         	{
         		RhapsodyClassifier rc = (RhapsodyClassifier)c;
         		IRPModelElement element = rc.getElement();
-        		element.openFeaturesDialog(1);
+        		openFeatureDialog(element);
         		return;
 	
         	}
@@ -785,7 +1139,7 @@ class OpenFeature extends TextAction
         		{
         			c = cs.get(0);
         			IRPModelElement element = ((RhapsodyClassifier)c).getElement();
-        			element.openFeaturesDialog(1);
+        			openFeatureDialog(element);
             		return;
         		}
         	}
@@ -795,7 +1149,8 @@ class OpenFeature extends TextAction
         		IRPClassifier cl = RhapsodyOperation.findClassifier(classifier, elementName);
         		if(cl!=null)
         		{
-        			cl.openFeaturesDialog(1);
+        			
+        			openFeatureDialog(cl);
         			return;
         		}
         		
@@ -865,18 +1220,33 @@ class OpenFeature extends TextAction
 			
 				if(me.getName().equals(aElementName))
 				{
-					me.openFeaturesDialog(1);
+					openFeatureDialog(me);
 					return true;
 				}
 				
 			}
 			//not found...
-			element.openFeaturesDialog(1);
+			
+			openFeatureDialog(element);
 			return true;
+		
 				
 		}
 		return false;
 	}
+
+	public void openFeatureDialog(IRPModelElement aElement) {
+		if(aElement instanceof IRPOperation)
+		{
+			OperationEditorWindow.Run(myApplication, aElement, false);
+		}
+		else
+		{
+			aElement.openFeaturesDialog(1);
+		}
+	}
+	
+
 	
 	 /**
      * Gets the filename that the caret is sitting on. Note that this is a
@@ -1042,18 +1412,92 @@ class AddDependency extends TextAction
 		
 }
 
+class SearchElement extends TextAction
+{
+	private ClassifierCompletionProvider myCompletionProvider = null;
+	private IRPApplication myRhapsodyApplication = null;
+	
+	public SearchElement(ClassifierCompletionProvider aCompletionProvider, IRPApplication aRhapsodyApplication) {
+		super("Search Element");	
+		myCompletionProvider = aCompletionProvider;
+		myRhapsodyApplication = aRhapsodyApplication;
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		// TODO Auto-generated method stub
+		JTextComponent tc = getTextComponent(e);
+        String elementName = null;
+        
+        LocalCompletionProvider localCompletionProvider = new LocalCompletionProvider(tc.getText(), myCompletionProvider);
+        
+        try 
+        {
+           int selStart = tc.getSelectionStart();
+           int selEnd = tc.getSelectionEnd();
+           
+           if (selStart != selEnd) 
+           {
+              elementName = tc.getText(selStart, selEnd - selStart);
+              
+           } 
+           else 
+           {
+              elementName = OpenFeature.getElementNameAtCaret(tc);
+           }
+        } 
+        catch (BadLocationException ble) 
+        {
+           ble.printStackTrace();
+           UIManager.getLookAndFeel().provideErrorFeedback(tc);
+           return;
+        }
+        
+        
+        if(myCompletionProvider!=null)
+        {
+        	
+        	IRPModelElement element = null;
+        	Completion c = myCompletionProvider.getFirstCompletion(elementName);
+        	if((c!=null) &&( c instanceof RhapsodyClassifier))
+        	{
+        		RhapsodyClassifier rc = (RhapsodyClassifier)c;
+        		element = rc.getElement();
+        	}
+        	if(c==null)
+        	{
+        		List<Completion> cs = localCompletionProvider.getCompletionByInputText(elementName);
+        		if((cs!=null)&&(cs.size()>0)&&(cs.get(0) instanceof RhapsodyClassifier))
+        		{
+        			c = cs.get(0);
+        			element = ((RhapsodyClassifier)c).getElement();        		
+        		}
+        	}
+        	if(c==null)
+        	{
+        		IRPClassifier classifier = myCompletionProvider.getClassifier();
+        		element = RhapsodyOperation.findClassifier(classifier, elementName);
+	
+        	}
+        	if(element!=null)
+        	{
+        		RhapsodyHelper.searchElement(myRhapsodyApplication, element);
+        	}
+        	
+        }
+	}
+	
+}
+
 class FormatSelected extends TextAction
 {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = -8665373931943623988L;
 	
 	public FormatSelected() 
 	{
 		super("Format Selected");
-		// TODO Auto-generated constructor stub
+		
 	}
 	
 	@Override
@@ -1069,6 +1513,119 @@ class FormatSelected extends TextAction
 	}
 		
 }
+
+class GetInfo extends TextAction
+{
+
+	private static final long serialVersionUID = -4057763339265129695L;
+	private AutoCompletion myAutoCompletion = null;
+	public GetInfo(AutoCompletion aAutoCompletion) {
+		super("Show Info");
+		myAutoCompletion = aAutoCompletion;
+		
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		myAutoCompletion.doCompletion();
+		
+	}
+	
+}
+
+
+class AskGPtIssue extends TextAction
+{
+
+	
+	private static final long serialVersionUID = 3801585512847118816L;
+	private AskIssues myAskIssues = null;
+	private IRPApplication myApplication = null;
+	
+	public AskGPtIssue(IRPApplication aApplication) {
+		super("Ask Issue ChatGPT");
+		
+		RhapsodyPreferences rp = RhapsodyPreferences.Get();
+		
+		String apiKey = rp.getGPTApiKey();
+		if(apiKey == null)
+		{
+			return;
+		}
+		
+		
+		myAskIssues = new AskIssues(apiKey);
+		myApplication = aApplication;
+		
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		JTextComponent tc = getTextComponent(e);
+		String selectedText = tc.getSelectedText();
+		
+		if(myAskIssues==null)
+		{
+			
+			String apiKey = JOptionPane.showInputDialog(null, "Enter GPT3 api Key:");
+			RhapsodyPreferences rp = RhapsodyPreferences.Get();
+			rp.setGPTApiKey(apiKey);
+			myAskIssues = new AskIssues(apiKey);
+			
+		}
+		
+		String answere = myAskIssues.syntaxError(selectedText);
+		System.out.println("ChatGPT Answere: \n" + answere);
+		myApplication.writeToOutputWindow("Log", "\n" + answere + "\n");		
+		
+	}
+}
+
+class AskGPtOptimize extends TextAction
+{
+
+
+	private static final long serialVersionUID = 6148671876928369847L;
+	private AskIssues myAskIssues = null;
+	private IRPApplication myApplication = null;
+	
+	public AskGPtOptimize(IRPApplication aApplication) {
+		super("Optimize ChatGPT");
+		
+		RhapsodyPreferences rp = RhapsodyPreferences.Get();
+		String apiKey = rp.getGPTApiKey();
+		if(apiKey!=null)
+		{
+			myAskIssues = new AskIssues(apiKey);
+		}
+		myApplication = aApplication;
+		
+	}
+
+	
+	@Override
+	public void actionPerformed(ActionEvent e) 
+	{
+		JTextComponent tc = getTextComponent(e);
+		String selectedText = tc.getSelectedText();
+		
+		if(myAskIssues==null)
+		{
+			String apiKey = JOptionPane.showInputDialog(null, "Enter GPT3 api Key:");
+			RhapsodyPreferences rp = RhapsodyPreferences.Get();
+			rp.setGPTApiKey(apiKey);
+			myAskIssues = new AskIssues(apiKey);
+		}
+		
+		String answere = myAskIssues.optimize(selectedText);
+		System.out.println("ChatGPT Answere: \n" + answere);
+		myApplication.writeToOutputWindow("Log", "\n" + answere + "\n");		
+		
+	}
+}
+
 
 
 

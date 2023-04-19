@@ -2,6 +2,7 @@ package de.schlaich.gunnar.parser;
 
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
+import org.fife.ui.autocomplete.VariableCompletion;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.modes.CPlusPlusTokenMaker;
 
@@ -14,6 +15,7 @@ import de.schlaich.gunnar.rhapsody.completion.RhapsodyOperationCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyRelationCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyTypeCompletion;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
+import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.operationeditor.StartAutoCompletion;
 
@@ -21,6 +23,7 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 {
 	
 	private ClassifierCompletionProvider myClassifierCompletionProvider;
+	
 	
 	public RhapsodyTokenMaker()
 	{
@@ -36,7 +39,7 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 			myClassifierCompletionProvider = StartAutoCompletion.GetClassifierCompletionProvider();
 		}
 		
-		
+	
 		if(tokenType==Token.IDENTIFIER)
 		{
 			//check if this is a type...
@@ -56,6 +59,20 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 					if(c==null)
 					{
 						c = NamespaceCompletionProvider.GetCompletion(text);
+					}
+					
+					if(c==null)
+					{
+						LocalCompletionProvider localProvider =  myClassifierCompletionProvider.getLocalCompletionProvider();
+						if(localProvider==null)
+						{
+							localProvider = StartAutoCompletion.GetLocalCompletionProvider();
+						}
+					
+						if(localProvider!=null)
+						{
+							c=localProvider.getFirstCompletion(text);
+						}
 					}
 					
 					if(c!=null)
@@ -107,6 +124,10 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 						{
 							tokenType = Token.VARIABLE;
 						}
+						else if(c instanceof VariableCompletion)
+						{
+							tokenType = Token.VARIABLE;
+						}
 						else if(c instanceof RhapsodyNamespaceCompletion)
 						{
 							tokenType = Token.DATA_TYPE;
@@ -122,8 +143,6 @@ public class RhapsodyTokenMaker extends CPlusPlusTokenMaker
 			}
 			
 			
-			
-			//System.out.println(text);
 		}
 		super.addToken(array, start,end, tokenType, startOffset);
 		

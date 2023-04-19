@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.operationeditor;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
@@ -20,13 +21,15 @@ public class ApplicationListener extends RPApplicationListener {
 	private IRPProject myProject;
 	private RSyntaxTextArea myTextarea;
 	private StartAutoCompletion myStartAutoCompletion;
+	private boolean myExitOnClose = true;
 	
 	
 	 public ApplicationListener(JFrame aFrame, 
 			 IRPOperation aOperation, 
 			 IRPApplication aRhapsody, 
 			 RSyntaxTextArea aTextarea, 
-			 StartAutoCompletion aStartAutoCompletion ) {
+			 StartAutoCompletion aStartAutoCompletion,
+			 boolean aExitOnClose) {
 		myOperation = aOperation;
 		
 		myFrame = aFrame;
@@ -40,6 +43,7 @@ public class ApplicationListener extends RPApplicationListener {
 		
 		myTextarea = aTextarea;
 		myStartAutoCompletion = aStartAutoCompletion;
+		myExitOnClose = aExitOnClose;
 		
 	}
 	
@@ -64,7 +68,29 @@ public class ApplicationListener extends RPApplicationListener {
 
 	@Override
 	public boolean beforeProjectClose(IRPProject pProject) {
-		// TODO Auto-generated method stub
+		if(myProject.equals(pProject))
+		{
+			int n = JOptionPane.showConfirmDialog(
+				    null,
+				    "Apply Changes on "+myOperation.getName()+"?",
+				    "Project Close",
+				    JOptionPane.YES_NO_OPTION);
+			
+			if(n==0)
+			{
+				myOperation.setBody(myTextarea.getText());
+			}
+			
+			myFrame.dispose();
+			
+			if(myExitOnClose)
+			{
+				System.exit(0);
+			}
+			
+			
+			
+		}
 		return false;
 	}
 
@@ -125,6 +151,11 @@ public class ApplicationListener extends RPApplicationListener {
 	public boolean onElementsChanged(String GUIDs) 
 	{
 		
+		if(myOperation==null)
+		{
+			return false;
+		}
+		
 		if (GUIDs.trim().length() == 0)
 		{
 			return true;
@@ -140,6 +171,7 @@ public class ApplicationListener extends RPApplicationListener {
 			{
 				continue;
 			}
+			
 			if(currElement.equals(myOperation))
 			{
 				

@@ -45,14 +45,21 @@ public class MainApp extends App {
 			rhapsody.writeToOutputWindow("log", "\nOperationEditor Compile Date: " + timeStamp + "\n\n");
 		}
 		
+		
 		if((selected instanceof IRPOperation) == false)
 		{
-			return;
+			if(selected instanceof IRPTransition == false)
+			{
+				if(selected instanceof IRPAction ==false)
+				{
+					return;
+				}
+			}
 		}
 	
 		try 
 		{
-			OperationEditorWindow.Run(rhapsody, selected, this);
+			OperationEditorWindow.Run(rhapsody, selected, true);
 		}
 		catch (Exception ex)
 		{
@@ -82,6 +89,7 @@ public class MainApp extends App {
 	public void printToRhapsody(String aText)
 	{
 		println(aText);
+		System.out.println(aText);
 	}
 	
 	
@@ -154,6 +162,16 @@ public class MainApp extends App {
 				{
 					possibleApplications.add(app);
 					app.writeToOutputWindow("log", "Possible Operation: " + app.getSelectedElement().getName()+"\n" );
+				}
+				else if(app.getSelectedElement() instanceof IRPTransition)
+				{
+					possibleApplications.add(app);
+					app.writeToOutputWindow("log", "Possible Transition: " + app.getSelectedElement().getName()+"\n" );
+				}
+				else if(app.getSelectedElement() instanceof IRPState)
+				{
+					possibleApplications.add(app);
+					app.writeToOutputWindow("log", "Possible State: " + app.getSelectedElement().getName()+"\n" );
 				}
 				
 			}
@@ -248,6 +266,8 @@ public class MainApp extends App {
 		IRPModelElement selectedElement = actualApp.getSelectedElement();
 		
 		
+		
+		
 		/*
 		IRPProject project = actualApp.activeProject();
 		if(project==null)
@@ -274,16 +294,53 @@ public class MainApp extends App {
 			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
 		}
 		
-		//actualApp.writeToOutputWindow("log", "start...\n");
 		
-		//mainApp.setRhapsody(actualApp);
-		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
-		//mainApp.invoke(selectedElement);
-		mainApp.execute(actualApp, selectedElement);
+		if(selectedElement instanceof IRPState)
+		{
+			String actionStr = null;
+			if(args.length>1)
+			{
+				actionStr = args[1];
+			}
+			IRPState state = (IRPState)selectedElement;
+			IRPAction action = null;
+			
+			
+			
+			if((actionStr!=null)&&(actionStr.equals("exit")))
+			{
+				action = state.getTheExitAction();
+				 if(action==null)
+				 {
+						state.setExitAction("");
+				 }
+				 action = state.getTheExitAction();
+				action.setName("onExit");
+			}
+			else
+			{
+				 action = state.getTheEntryAction();
+				 if(action==null)
+				 {
+						state.setEntryAction("");
+				 }
+				 action = state.getTheEntryAction();
+				 action.setName("onEntry");
+				 
+			}
+			
+			mainApp.execute(actualApp, action);
+						
+		}
+		else
+		{
 		
 		
-		//mainApp.invokeFromMain();
+			mainApp.execute(actualApp, selectedElement);
+		}
 		
+		
+
 		
 		
 		

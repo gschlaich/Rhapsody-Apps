@@ -1,5 +1,7 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -7,12 +9,36 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 
 public class RhapsodyPreferences {
 	
-	private Preferences myPrefs;
+	private Preferences myPrefs = null;
 	private String myConnectingString = "";
 	static RhapsodyPreferences myRhapsodyPreferences = null;
+	private boolean myUseLocalGUID = false;
+	private Set<String> myGUIDSet = null;
 	
 	public RhapsodyPreferences() {
 		myPrefs = Preferences.userRoot().node(this.getClass().getName());
+	}
+	
+	
+	public RhapsodyPreferences(boolean aUseLocalGUID)
+	{
+		myPrefs = Preferences.userRoot().node(this.getClass().getName());
+		
+		if(aUseLocalGUID)
+		{
+			setUseLocalGUID();
+		}
+		
+	}
+	
+	public void setUseLocalGUID()
+	{
+		myUseLocalGUID = true;
+		
+		if(myGUIDSet==null)
+		{
+			myGUIDSet = new HashSet<String>();
+		}
 	}
 	
 	public void setConnectingString(String aConnectingString)
@@ -25,11 +51,53 @@ public class RhapsodyPreferences {
 		return myConnectingString+aGuid;
 	}
 	
+	public void setGPTApiKey(String aApiKey)
+	{
+		myPrefs.put("GPTApiKey", aApiKey);
+	}
 	
+	public String getGPTApiKey()
+	{
+		return myPrefs.get("GPTApiKey", null);
+	}
+	
+	public boolean getStartEditorOnDoubleClick()
+	{
+		return myPrefs.getBoolean("StartEditorOnDoubleClick", true);
+	}
+	
+	public void setStartEditorOnDoubleClick(boolean aStart)
+	{
+		myPrefs.putBoolean("StartEditorOnDoubleClick", aStart);
+	}
+	
+	public boolean getStartEditorOnFeatureOpen()
+	{
+		return myPrefs.getBoolean("StartEditorOnFeaturesOpen", false);
+	}
+	
+	public void setStartEditorOnFeatureOpen(boolean aStart)
+	{
+		myPrefs.putBoolean("StartEditorOnFeaturesOpen", aStart);
+	}
+	
+	public boolean getStartEditorAfterElementAdded()
+	{
+		return myPrefs.getBoolean("StartEditorAfterElementAdded", false);
+	}
+	
+	public void setStartEditorAfterElementAdded(boolean aStart)
+	{
+		myPrefs.putBoolean("StartEditorAfterElementAdded", aStart);
+	}
+
 	public void setRhapsodyModelElement(IRPModelElement aModelElement)
 	{
 		String guid = aModelElement.getGUID();
-	
+		if(myUseLocalGUID)
+		{
+			myGUIDSet.add(guid);
+		}
 		myPrefs.putBoolean(setKey(guid), true);
 
 	}
@@ -42,6 +110,10 @@ public class RhapsodyPreferences {
 			return false;
 		}
 		String guid = aModelElement.getGUID();
+		if(myUseLocalGUID)
+		{
+			return myGUIDSet.contains(guid);
+		}
 		return myPrefs.getBoolean(setKey(guid),false);
 	}
 	
@@ -51,24 +123,40 @@ public class RhapsodyPreferences {
 	{
 		String guid = aModelElement.getGUID();
 		
+		if(myUseLocalGUID)
+		{
+			myGUIDSet.remove(guid);
+			return;
+		}
+		
 		myPrefs.remove(setKey(guid));
+		return;
 		
 	}
 	
 	public void clearRhapsodyModelElement(String aGuid)
 	{
+		if(myUseLocalGUID)
+		{
+			myGUIDSet.remove(aGuid);
+			return;
+		}
 		myPrefs.remove(setKey(aGuid));
 		
 	}
 	
 	public void clear()
 	{
+		String gptApiKey = getGPTApiKey();
+		
 		try {
 			myPrefs.clear();
 		} catch (BackingStoreException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		//restore API key
+		setGPTApiKey(gptApiKey);
 	}
 	
 	private boolean isDebug()
@@ -87,6 +175,23 @@ public class RhapsodyPreferences {
 		
 		return myRhapsodyPreferences;
 		
+	}
+	
+	public static RhapsodyPreferences Get(boolean aUseLocalGUID)
+	{
+		if(myRhapsodyPreferences==null)
+		{
+			myRhapsodyPreferences = new RhapsodyPreferences(aUseLocalGUID);	
+		}
+		else
+		{
+			if(aUseLocalGUID)
+			{
+				myRhapsodyPreferences.setUseLocalGUID();
+			}
+		}
+		return myRhapsodyPreferences;
+				
 	}
 
 }

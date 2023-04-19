@@ -33,5 +33,7 @@
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.runtime-3.1.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.text-3.8.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox-common-3.2.0.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/icu4j-72.1.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/ChatGPTCaller"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

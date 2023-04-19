@@ -72,7 +72,12 @@ public class MainApp extends App {
 		
 		compDep.addStereotype("Usage", "Dependency");
 		rhapsody.writeToOutputWindow("log", "Added Dependency from " + componentName + "to" + dependsOnName + "\n");
-	
+		rhapsody.writeToOutputWindow("log", "Generate and build " + componentName + "\n");
+		
+		project.setActiveComponent(component);
+		rhapsody.generate();
+		rhapsody.build();
+		
 	}	
     /*
      *  Debug app by launching it as "Java Application" is Eclipse.
