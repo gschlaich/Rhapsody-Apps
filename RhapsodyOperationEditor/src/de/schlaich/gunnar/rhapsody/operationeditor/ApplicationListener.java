@@ -117,12 +117,15 @@ public class ApplicationListener extends RPApplicationListener {
 			}
 			
 			myFrame.setAlwaysOnTop(true);
+			
 			new java.util.Timer().schedule( 
 			        new java.util.TimerTask() {
 			            @Override
 			            public void run() {
-			               myFrame.setAlwaysOnTop(false);
-			               myFrame.toFront();
+			            	myFrame.requestFocus();
+			            	myFrame.toFront();
+			            	myFrame.setAlwaysOnTop(false);
+			               
 			            }
 			        }, 
 			        1000 

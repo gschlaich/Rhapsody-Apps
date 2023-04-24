@@ -90,8 +90,27 @@ public class Listener extends RPApplicationListener {
 		return false;
 		
 	}
+	
+	
+	private boolean startEditorThread(IRPModelElement aModelElement)
+	{
+		
+		Thread t = new Thread(new Runnable() {
+		    public void run() {
+		        
+		        startEditor(aModelElement);
+		    }
+		});
+
+		t.start(); // Thread starten
+
+		return false;
+	}
+	
+	
 
 	private boolean startEditor(IRPModelElement aModelElement) {
+		
 		myApplication.writeToOutputWindow("log", "Start Editor on " + aModelElement.getName()+" Type: " + aModelElement.getMetaClass()+"\n");
 		
 		if(aModelElement instanceof IRPState)

@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayList;
@@ -44,8 +46,18 @@ public class MainApp extends App  implements HistoryControl{
 	private JComboBox<HistoryElement> myHistoryComboBox = null;
 	private List<HistoryElement> myHistoryList = null;
 	private int myHistoryListPos = 0;
+	private String myConnectingString = null;
 	
 	
+	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
+		execute(rhapsody, selected, false);
+	}
+	
+	@Override
+	protected void println(String text) {
+		System.out.println(text);
+		super.println(text);
+	}
 	
 	
 	/*
@@ -54,11 +66,52 @@ public class MainApp extends App  implements HistoryControl{
 	* selected - Selected element in Rhapsody
 	*/
 @SuppressWarnings("unchecked")
-public void execute(IRPApplication rhapsody, IRPModelElement selected) {
+public void execute(IRPApplication rhapsody, IRPModelElement selected, boolean onStartup) {
 		
-		
-		
+		RhapsodyPreferences prefs = RhapsodyPreferences.Get(true);
 	
+		if(myConnectingString==null)
+		{
+			myConnectingString = "develop";
+			if( prefs.isStarted(myConnectingString))
+			{
+				//editorstarter is already running...
+				//rhapsody.writeToOutputWindow("Log", "EditorStarter is already running");
+				println("EditorStarter is already running");
+				return;
+			}
+					
+		}
+	
+		if(onStartup)
+		{
+			//check if user wants to work with the editor..
+			
+			if(prefs.getEditorOnStartup()==false)
+			{
+				return;
+			}
+			
+		}
+		
+		if((selected instanceof IRPOperation) == false)
+		{
+			if(selected instanceof IRPTransition == false)
+			{
+				if(selected instanceof IRPAction ==false)
+				{
+
+					if(prefs.getEditorOnStartup()==false)
+					{
+						System.out.println("Selected no editor item - exit");
+						return;
+					}
+				}
+			}
+		}
+		
+		
+		
 		rhapsody.writeToOutputWindow("Log", "EditorStarter starts RhapsodyOperationEditor on double click\n");
 		
 		myListener = new Listener(rhapsody,this);
@@ -241,6 +294,51 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
         panel.add(myButtonConfig);
         myFrame.add(panel);
 		
+        myFrame.addWindowListener(new WindowListener() {
+			
+			@Override
+			public void windowOpened(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void windowIconified(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void windowClosing(WindowEvent e) {
+				// TODO Auto-generated method stub
+				prefs.removeStarter();
+				
+			}
+			
+			@Override
+			public void windowClosed(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void windowActivated(WindowEvent e) {
+				// TODO Auto-generated method stub
+				
+			}
+		});
       
 	    myFrame.setIconImage(icon.getImage());
 		
@@ -250,6 +348,8 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
         myFrame.setSize(900, 75);
         
         myFrame.setVisible(true);
+        
+        
         
         try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -269,10 +369,15 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
         
         
         //set local guid set
-        RhapsodyPreferences prefs = RhapsodyPreferences.Get(true);
+       
 
        
         myListener.connect(rhapsody);
+        
+        if(selected==null)
+        {
+        	return;
+        }
         
         rhapsody.writeToOutputWindow("log", "Start Editor on " + selected.getName()+"\n");
 		if((selected instanceof IRPOperation) == false)
@@ -395,16 +500,29 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		MainApp app = new MainApp();
 		String connectionstring = null;
+		boolean onStartup = false;
 		
 		if (args.length >= 1) 
 		{
 			connectionstring = args[0];
 		}
-		executeApp(app, connectionstring);
 		
-	}	
+		if (args.length >= 2)
+		{
+			if(args[1].equals("true"))
+			{
+				onStartup = true;
+			}
+		}
+		
+		executeApp(app, connectionstring, onStartup);
+		
+		
+	}
 	
-	public static void executeApp(App aApp, String aConnectionstring)
+	
+	
+	public static void executeApp(MainApp aApp, String aConnectionstring, boolean onStartup)
 	{
 		IRPApplication actualApp = null;
 		
@@ -437,6 +555,8 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		if(aConnectionstring!=null)
 		{
 			actualApp.writeToOutputWindow("log", "ConnectiongString: " + aConnectionstring + "\n");
+			aApp.myConnectingString = aConnectionstring;
+			
 		}
 		else
 		{
@@ -445,8 +565,12 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		actualApp.writeToOutputWindow("log", "start...\n");
 		
-		aApp.execute(actualApp, selectedElement);
+		
+		
+		aApp.execute(actualApp, selectedElement, onStartup);
 	}
+	
+	
 
 
 

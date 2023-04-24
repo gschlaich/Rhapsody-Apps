@@ -432,8 +432,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	public void setFocus()
 	{
+		if(myFrame.getState()==java.awt.Frame.ICONIFIED)
+		{
+			myFrame.setState(java.awt.Frame.NORMAL);
+		}
+		
+		
+		
 		myFrame.toFront();
 	}
+	
+	
 	
 	
 	
@@ -604,7 +613,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 	        	
 	        	myOperationWindows.remove(mySelectedOperation);
-	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get(false);
 				prefs.clearRhapsodyModelElement(mySelectedOperation);
 				
 				removeActionOperation();
@@ -777,6 +786,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		OperationEditorWindow win = Get(op);
 		if(win!=null)
 		{
+			
 			win.setFocus();
 			
 			return;
@@ -1046,7 +1056,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 	
-	private boolean textChanged()
+	public boolean textChanged()
 	{
 		List<String> editorLines = ASTHelper.getLines(myTextArea.getText());
 		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody());

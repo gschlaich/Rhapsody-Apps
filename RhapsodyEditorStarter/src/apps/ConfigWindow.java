@@ -32,6 +32,7 @@ public class ConfigWindow {
 	private ButtonGroup myStyleButtonGroup = null;
 	private JRadioButton myStyleRhapsodyRadioButton = null;
 	private JRadioButton myStyleDarkRadioButton = null;
+	private JCheckBox myCheckboxEditorOnStartup = null;
 	
 	
 	private RhapsodyPreferences myPrefs = null;
@@ -64,6 +65,8 @@ public class ConfigWindow {
         myCheckboxAfterCreate = new JCheckBox("Editor after Create an Operation", myPrefs.getStartEditorAfterElementAdded());
         myStyleButtonGroup = new ButtonGroup();
         
+        myCheckboxEditorOnStartup = new JCheckBox("Start EditorStarter on startup", myPrefs.getEditorOnStartup());
+        
         myStyleRhapsodyRadioButton = new JRadioButton("Rhapsody Style", true);
         myStyleRhapsodyRadioButton.setEnabled(false);
         myStyleDarkRadioButton = new JRadioButton("Dark Style", false);
@@ -80,7 +83,7 @@ public class ConfigWindow {
 				myPrefs.setStartEditorOnDoubleClick(myCheckboxDoubleClick.isSelected());
 				myPrefs.setStartEditorOnFeatureOpen(myCheckboxOpenFeatures.isSelected());
 				myPrefs.setStartEditorAfterElementAdded(myCheckboxAfterCreate.isSelected());
-				
+				myPrefs.setEditorOnStartup(myCheckboxEditorOnStartup.isSelected());
 				myFrame.dispose();
 				
 				
@@ -104,6 +107,7 @@ public class ConfigWindow {
         centerPanel.add(myCheckboxDoubleClick);
         centerPanel.add(myCheckboxOpenFeatures);
         centerPanel.add(myCheckboxAfterCreate);
+        centerPanel.add(myCheckboxEditorOnStartup);
         
         centerPanel.add(Box.createVerticalGlue());
         centerPanel.add(myStyleRhapsodyRadioButton);
