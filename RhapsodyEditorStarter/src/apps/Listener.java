@@ -45,7 +45,7 @@ public class Listener extends RPApplicationListener {
 	public boolean afterAddElement(IRPModelElement pModelElement) {
 		if(myPrefs.getStartEditorAfterElementAdded())
 		{
-			return startEditor(pModelElement);
+			return startEditorThread(pModelElement);
 		}
 		return false;
 	}
@@ -85,7 +85,7 @@ public class Listener extends RPApplicationListener {
 	{
 		if(myPrefs.getStartEditorOnDoubleClick())
 		{
-			return startEditor(pModelElement);
+			return startEditorThread(pModelElement);
 		}
 		return false;
 		
@@ -189,7 +189,7 @@ public class Listener extends RPApplicationListener {
 	public boolean onFeaturesOpen(IRPModelElement pModelElement) {
 		if(myPrefs.getStartEditorOnFeatureOpen())
 		{
-			startEditor(pModelElement);
+			startEditorThread(pModelElement);
 		}
 		return false;
 	}
