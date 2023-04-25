@@ -1,16 +1,23 @@
 package de.schlaich.gunnar.rhapsody.operationeditor;
 
+import java.util.List;
+
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
+import com.github.difflib.DiffUtils;
+import com.github.difflib.algorithm.DiffException;
+import com.github.difflib.patch.Patch;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.RPApplicationListener;
+
+import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 
 public class ApplicationListener extends RPApplicationListener {
 
@@ -65,20 +72,48 @@ public class ApplicationListener extends RPApplicationListener {
 		
 		return false;
 	}
+	
+	
+	public boolean textChanged()
+	{
+		List<String> editorLines = ASTHelper.getLines(myTextarea.getText());
+		List<String> bodyLines = ASTHelper.getLines(myOperation.getBody());
+		try 
+		{
+			if((bodyLines==null)||(editorLines==null))
+			{
+				return false;
+			}
+			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
+			return(patch.getDeltas().isEmpty()==false);
+		} 
+		catch (DiffException e) {
+			
+			e.printStackTrace();
+		}
+		
+		return false;
+		
+		
+	}
+
 
 	@Override
 	public boolean beforeProjectClose(IRPProject pProject) {
 		if(myProject.equals(pProject))
 		{
-			int n = JOptionPane.showConfirmDialog(
-				    null,
-				    "Apply Changes on "+myOperation.getName()+"?",
-				    "Project Close",
-				    JOptionPane.YES_NO_OPTION);
-			
-			if(n==0)
+			if(textChanged())
 			{
-				myOperation.setBody(myTextarea.getText());
+				int n = JOptionPane.showConfirmDialog(
+					    null,
+					    "Apply Changes on "+myOperation.getName()+"?",
+					    "Project Close",
+					    JOptionPane.YES_NO_OPTION);
+				
+				if(n==0)
+				{
+					myOperation.setBody(myTextarea.getText());
+				}
 			}
 			
 			myFrame.dispose();
@@ -163,38 +198,50 @@ public class ApplicationListener extends RPApplicationListener {
 		{
 			return true;
 		}
-	
-		String[] GUIDsArray = GUIDs.split(",");
 		
+		//start Thread...
 		
-		for (int i = 0;  i < GUIDsArray.length; i++)
-		{
-			IRPModelElement currElement = myProject.findElementByGUID(GUIDsArray[i].trim());
-			if(currElement==null)
-			{
-				continue;
-			}
+		Thread elementChangeThread = new Thread(new Runnable() {
 			
-			if(currElement.equals(myOperation))
-			{
+			@Override
+			public void run() {
 				
-				if(myTextarea.getText().equals(myOperation.getBody()))
+				String[] GUIDsArray = GUIDs.split(",");
+				
+				
+				for (int i = 0;  i < GUIDsArray.length; i++)
 				{
-					return false;
+					IRPModelElement currElement = myProject.findElementByGUID(GUIDsArray[i].trim());
+					if(currElement==null)
+					{
+						continue;
+					}
+					
+					if(currElement.equals(myOperation))
+					{
+						
+						if(myTextarea.getText().equals(myOperation.getBody()))
+						{
+							return;
+						}
+						
+						myRhapsody.writeToOutputWindow("log", "Operation \"" + myOperation.getImplementationSignature() + "\" changed!\n");
+						
+						myTextarea.setText(myOperation.getBody());
+						myStartAutoCompletion.updateCompletionProvider();
+						
+						
+						return;
+					}
 				}
 				
-				myRhapsody.writeToOutputWindow("log", "Operation \"" + myOperation.getImplementationSignature() + "\" changed!\n");
 				
-				myTextarea.setText(myOperation.getBody());
-				myStartAutoCompletion.updateCompletionProvider();
-				
-				
-				return true;
 			}
-		}
+		});
 		
 		
-		
+		elementChangeThread.run();
+	
 		return false;
 	}
 	
