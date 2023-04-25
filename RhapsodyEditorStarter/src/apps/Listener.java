@@ -56,6 +56,9 @@ public class Listener extends RPApplicationListener {
 	public boolean afterProjectClose(String bstrProjectName) {
 		if(bstrProjectName.equals(myProjectName))
 		{
+			
+			myPrefs.removeStarter();
+			
 			System.exit(0);
 		}
 		
