@@ -15,9 +15,7 @@ public class RhapsodyPreferences {
 	private boolean myUseLocalGUID = false;
 	private Set<String> myGUIDSet = null;
 	
-	public RhapsodyPreferences() {
-		myPrefs = Preferences.userRoot().node(this.getClass().getName());
-	}
+	
 	
 	
 	public RhapsodyPreferences(boolean aUseLocalGUID)
@@ -28,6 +26,7 @@ public class RhapsodyPreferences {
 		{
 			setUseLocalGUID();
 		}
+
 		
 	}
 	
@@ -38,6 +37,44 @@ public class RhapsodyPreferences {
 		if(myGUIDSet==null)
 		{
 			myGUIDSet = new HashSet<String>();
+		}
+	}
+	
+	public boolean isStarted(String aConnectingString)
+	{
+		myConnectingString =aConnectingString;
+		
+		boolean ret = myPrefs.getBoolean("Starter_" + aConnectingString, false);
+		
+		if(isDebug())
+		{
+			return false;
+		}
+		
+		if(ret==false)
+		{
+			myPrefs.putBoolean("Starter_"+ aConnectingString, true);
+		}
+		return ret;
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+		
+		if(myConnectingString!=null)
+		{
+			removeStarter();
+		}
+		
+		super.finalize();
+	}
+	
+	public void removeStarter()
+	{
+		if(myConnectingString!=null)
+		{
+			myPrefs.remove("Starter_"+myConnectingString);
+			myConnectingString = null;
 		}
 	}
 	
@@ -90,6 +127,16 @@ public class RhapsodyPreferences {
 	{
 		myPrefs.putBoolean("StartEditorAfterElementAdded", aStart);
 	}
+	
+	public boolean getEditorOnStartup()
+	{
+		return myPrefs.getBoolean("GetEditorOnStart", false);
+	}
+	
+	public void setEditorOnStartup(boolean onStart)
+	{
+		myPrefs.putBoolean("GetEditorOnStart", onStart);
+	}
 
 	public void setRhapsodyModelElement(IRPModelElement aModelElement)
 	{
@@ -116,6 +163,8 @@ public class RhapsodyPreferences {
 		}
 		return myPrefs.getBoolean(setKey(guid),false);
 	}
+	
+	
 	
 	
 	
@@ -170,12 +219,14 @@ public class RhapsodyPreferences {
 	{
 		if(myRhapsodyPreferences==null)
 		{
-			myRhapsodyPreferences = new RhapsodyPreferences();
+			myRhapsodyPreferences = new RhapsodyPreferences(false);
 		}
 		
 		return myRhapsodyPreferences;
 		
 	}
+	
+	
 	
 	public static RhapsodyPreferences Get(boolean aUseLocalGUID)
 	{

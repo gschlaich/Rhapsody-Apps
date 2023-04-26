@@ -62,6 +62,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import com.github.difflib.DiffUtils;
 import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
+import com.ibm.icu.util.ULocale.Minimize;
 import com.ibm.rhapsody.apps.ui.SearchRunDialog;
 import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPApplication;
@@ -152,6 +153,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		JButton locateButton = new JButton("Locate");
 		buttonPanel.add(locateButton);
 		
+		JButton openFeatureButton = new JButton("Open Feature");
+		buttonPanel.add(openFeatureButton);
+		
 		JButton explorerButton = new JButton("Explorer");
 		buttonPanel.add(explorerButton);
 		
@@ -198,6 +202,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		locateButton.setActionCommand("locate");
 		locateButton.addActionListener(oew);
+		
+		openFeatureButton.setActionCommand("openFeature");
+		openFeatureButton.addActionListener(oew);
 		
 		generateButton.setActionCommand("generate");
 		generateButton.addActionListener(oew);
@@ -432,8 +439,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	public void setFocus()
 	{
+		if(myFrame.getState()==java.awt.Frame.ICONIFIED)
+		{
+			myFrame.setState(java.awt.Frame.NORMAL);
+		}
+		
+		
+		
 		myFrame.toFront();
 	}
+	
+	
 	
 	
 	
@@ -604,7 +620,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				}
 	        	
 	        	myOperationWindows.remove(mySelectedOperation);
-	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get();
+	        	RhapsodyPreferences prefs = RhapsodyPreferences.Get(false);
 				prefs.clearRhapsodyModelElement(mySelectedOperation);
 				
 				removeActionOperation();
@@ -777,6 +793,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		OperationEditorWindow win = Get(op);
 		if(win!=null)
 		{
+			
 			win.setFocus();
 			
 			return;
@@ -915,6 +932,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 		}
 		
+		if(command.equals("openFeature"))
+		{
+			if(mySelectedOperation!=null)
+			{
+				mySelectedOperation.openFeaturesDialog(1);
+			}
+		}
+		
 		if(command.equals("generate"))
 		{
 			//find class
@@ -1046,7 +1071,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 	}
 	
-	private boolean textChanged()
+	public boolean textChanged()
 	{
 		List<String> editorLines = ASTHelper.getLines(myTextArea.getText());
 		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody());

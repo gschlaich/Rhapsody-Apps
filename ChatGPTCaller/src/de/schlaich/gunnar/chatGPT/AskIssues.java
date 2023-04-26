@@ -19,7 +19,7 @@ public class AskIssues {
 	
 	private ChatGPT myChatGPT = null;
 	
-	private String myApiKey = null;
+	private String myApiKey = "";
 	
 	
 	

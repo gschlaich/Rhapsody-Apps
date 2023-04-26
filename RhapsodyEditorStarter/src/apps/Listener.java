@@ -45,7 +45,7 @@ public class Listener extends RPApplicationListener {
 	public boolean afterAddElement(IRPModelElement pModelElement) {
 		if(myPrefs.getStartEditorAfterElementAdded())
 		{
-			return startEditor(pModelElement);
+			return startEditorThread(pModelElement);
 		}
 		return false;
 	}
@@ -56,6 +56,9 @@ public class Listener extends RPApplicationListener {
 	public boolean afterProjectClose(String bstrProjectName) {
 		if(bstrProjectName.equals(myProjectName))
 		{
+			
+			myPrefs.removeStarter();
+			
 			System.exit(0);
 		}
 		
@@ -85,13 +88,32 @@ public class Listener extends RPApplicationListener {
 	{
 		if(myPrefs.getStartEditorOnDoubleClick())
 		{
-			return startEditor(pModelElement);
+			return startEditorThread(pModelElement);
 		}
 		return false;
 		
 	}
+	
+	
+	private boolean startEditorThread(IRPModelElement aModelElement)
+	{
+		
+		Thread t = new Thread(new Runnable() {
+		    public void run() {
+		        
+		        startEditor(aModelElement);
+		    }
+		});
+
+		t.start(); // Thread starten
+
+		return false;
+	}
+	
+	
 
 	private boolean startEditor(IRPModelElement aModelElement) {
+		
 		myApplication.writeToOutputWindow("log", "Start Editor on " + aModelElement.getName()+" Type: " + aModelElement.getMetaClass()+"\n");
 		
 		if(aModelElement instanceof IRPState)
@@ -170,7 +192,7 @@ public class Listener extends RPApplicationListener {
 	public boolean onFeaturesOpen(IRPModelElement pModelElement) {
 		if(myPrefs.getStartEditorOnFeatureOpen())
 		{
-			startEditor(pModelElement);
+			startEditorThread(pModelElement);
 		}
 		return false;
 	}
