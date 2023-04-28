@@ -89,7 +89,7 @@ import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.MainApp;
-import de.schlaich.gunnar.chatGPT.AskIssues;
+
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
@@ -1558,7 +1558,7 @@ class GetInfo extends TextAction
 	
 }
 
-
+/*
 class AskGPtIssue extends TextAction
 {
 
@@ -1607,6 +1607,9 @@ class AskGPtIssue extends TextAction
 		
 	}
 }
+*/
+
+/*
 
 class AskGPtOptimize extends TextAction
 {
@@ -1650,6 +1653,8 @@ class AskGPtOptimize extends TextAction
 		
 	}
 }
+
+*/
 
 
 
