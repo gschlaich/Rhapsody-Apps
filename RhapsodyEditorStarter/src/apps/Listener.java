@@ -82,10 +82,36 @@ public class Listener extends RPApplicationListener {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	private boolean checkModel(IRPModelElement pModelElement)
+	{
+		if((pModelElement instanceof IRPOperation) == false)
+		{
+			if(pModelElement instanceof IRPTransition == false)
+			{
+				if(pModelElement instanceof IRPAction == false)
+				{
+					
+					if(pModelElement instanceof IRPState == false)
+					{
+						return false;
+					}
+				}
+			}
+		}
+		
+		return true;
+	}
 
 	@Override
 	public boolean onDoubleClick(IRPModelElement pModelElement) 
 	{
+		
+		if(checkModel(pModelElement)==false)
+		{
+			return false;
+		}
+		
 		if(myPrefs.getStartEditorOnDoubleClick())
 		{
 			return startEditorThread(pModelElement);
@@ -107,7 +133,7 @@ public class Listener extends RPApplicationListener {
 
 		t.start(); // Thread starten
 
-		return false;
+		return true;
 	}
 	
 	

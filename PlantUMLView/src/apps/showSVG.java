@@ -130,7 +130,7 @@ public class showSVG extends JFrame {
 						}
 
 						catch (Exception ex) {
-							ex.printStackTrace();
+							MainApp.StackTrace(ex);
 						}
 	                }
 					
@@ -152,8 +152,9 @@ public class showSVG extends JFrame {
 	        
 		}
 		catch (Exception e) {
-			// TODO: handle exception
-			e.printStackTrace();
+			
+			MainApp.StackTrace(e);
+			
 		}
 		
 		

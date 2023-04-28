@@ -29,6 +29,7 @@ public class ApplicationListener extends RPApplicationListener {
 	private RSyntaxTextArea myTextarea;
 	private StartAutoCompletion myStartAutoCompletion;
 	private boolean myExitOnClose = true;
+	private boolean myAutomaticUpdate = false;
 	
 	
 	 public ApplicationListener(JFrame aFrame, 
@@ -188,6 +189,12 @@ public class ApplicationListener extends RPApplicationListener {
 	@Override
 	public boolean onElementsChanged(String GUIDs) 
 	{
+		
+		//no automatic update...
+		if(myAutomaticUpdate==false)
+		{
+			return false;
+		}
 		
 		if(myOperation==null)
 		{

@@ -25,7 +25,7 @@ import org.fife.ui.rsyntaxtextarea.parser.ParseResult;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 
-import de.schlaich.gunnar.chatGPT.AskIssues;
+//import de.schlaich.gunnar.chatGPT.AskIssues;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
@@ -39,7 +39,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	private Gutter myGutter = null;
 	private Icon myErrorIcon = null;
 	private List<GutterIconInfo> myInfos = null;
-	private AskIssues myAskIssues = null;
+	//private AskIssues myAskIssues = null;
 	
 	
 	public CppParser(ClassifierCompletionProvider aProvider, Gutter aGutter)

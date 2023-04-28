@@ -28,8 +28,12 @@ public class MainApp extends App {
 	* rhapsody - Instance of an active Rhapsody application 
 	* selected - Selected element in Rhapsody
 	*/
+	
+	static IRPApplication myRhapsody = null;
+	
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
+		myRhapsody = rhapsody;
 		PlantUMLGenerator gen = new PlantUMLGenerator(selected, false);
 		//System.out.print(gen.getPlanUml());
 		StringSelection stringSelection = new StringSelection(gen.getPlantUml());
@@ -116,6 +120,25 @@ public class MainApp extends App {
 		
 		RhapsodyHelper.executeApp(myApp, connectionstring);
 	}
-
 	
+	public static void StackTrace(Exception e)
+	{
+		e.printStackTrace();
+		
+		if(myRhapsody==null)
+		{
+			
+			return;
+		}
+		
+		StackTraceElement[] elements = e.getStackTrace();
+		
+		for(StackTraceElement element: elements)
+		{
+			myRhapsody.writeToOutputWindow("Log", element.toString()); 
+		}
+		
+
+	}
+
 }
