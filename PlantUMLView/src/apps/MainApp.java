@@ -61,6 +61,9 @@ public class MainApp extends App {
 			final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
 			showSVG sv = new showSVG(svg);
 			sv.setVisible(true);
+			
+			//showSVGHtml svHtml = new showSVGHtml(svg);
+			//svHtml.setVisible(true);
 		
 		}
 		catch(IOException e)
