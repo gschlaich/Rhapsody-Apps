@@ -261,6 +261,10 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 					//collectItems(prefix+p.getName()+"::",e,true);
 					collectItems("",e,true);
 				}
+				else if(prefix.equals(pNamespace+"::"))
+				{
+					collectItems(prefix,e,true);
+				}
 				else
 				{
 					collectItems(prefix+pNamespace+"::",e,true);
