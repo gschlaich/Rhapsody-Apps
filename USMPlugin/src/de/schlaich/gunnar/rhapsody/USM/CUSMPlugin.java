@@ -20,6 +20,7 @@ import com.telelogic.rhapsody.core.RPUserPlugin;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 
 public class CUSMPlugin extends RPUserPlugin {
 
@@ -29,6 +30,7 @@ public class CUSMPlugin extends RPUserPlugin {
 	
 	public static final String PlantUmlCmd = "PlantUML";
 	public static final String RoundtripCmd = "Operational Roundtrip";
+	public static final String SearchElementCmd = "Search Element";
 	
 	public CUSMPlugin() {
 		// TODO Auto-generated constructor stub
@@ -83,7 +85,14 @@ public class CUSMPlugin extends RPUserPlugin {
 		{
 			COperationalRoundtrip roundtrip = new COperationalRoundtrip();
 			roundtrip.startRoundtrip(myRhapsody, selected);
+			return;
 		}
+		if(menuItem.equals(SearchElementCmd))
+		{
+			RhapsodyHelper.searchElement(myRhapsody, selected);
+			return;
+		}
+		
 
 	}
 	
