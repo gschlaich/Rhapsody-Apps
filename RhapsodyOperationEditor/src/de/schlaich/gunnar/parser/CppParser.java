@@ -73,7 +73,7 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 		try 
 		{
 			text = aDoc.getText(0, aDoc.getLength());
-			IASTTranslationUnit unit = ASTHelper.getTranslationUnit(text, null);	
+			IASTTranslationUnit unit = ASTHelper.getTranslationUnitFromBody(text);	
 			List<IASTProblem> problems = ASTHelper.getProblems(unit);
 			
 			for(IASTProblem problem : problems)

@@ -79,6 +79,7 @@ import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStatechart;
 import com.telelogic.rhapsody.core.IRPStereotype;
@@ -92,9 +93,11 @@ import apps.MainApp;
 
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
+import de.schlaich.gunnar.rhapsody.completion.ASTUtilities;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.LocalCompletionProvider;
+import de.schlaich.gunnar.rhapsody.ghs.MultiPlugin;
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider.visibility;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.HistoryControl;
@@ -102,6 +105,7 @@ import de.schlaich.gunnar.rhapsody.utilities.HistoryElement;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
+import de.schlaich.gunnar.rhapsody.vs.VSPlugin;
 
 public class OperationEditorWindow extends JRootPane implements HyperlinkListener, ActionListener, SyntaxConstants { 
 
@@ -159,6 +163,29 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		JButton explorerButton = new JButton("Explorer");
 		buttonPanel.add(explorerButton);
 		
+		JButton vsIdeButton = null;
+		JButton multiIdeEditButton = null;
+		JButton multiIdeDebugButton = null;
+			
+		LoadInIDE ide = LoadInIDE.Instance(myApplication);
+		
+		if(ide.isVSIde())
+		{
+			vsIdeButton = new JButton("View in VS");
+			buttonPanel.add(vsIdeButton);
+		}
+		
+		if(ide.isMultiIde())
+		{
+			multiIdeEditButton = new JButton("Multi Edit");
+			buttonPanel.add(multiIdeEditButton);
+			multiIdeDebugButton = new JButton("Multi Debug");
+			buttonPanel.add(multiIdeDebugButton);
+		}
+		
+		
+		
+		
 		JButton updateButton = new JButton("Update");
 		buttonPanel.add(updateButton);
 	
@@ -211,6 +238,24 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		explorerButton.setActionCommand("explorer");
 		explorerButton.addActionListener(oew);
+		
+		if(vsIdeButton!=null)
+		{
+			vsIdeButton.setActionCommand("IDE");
+			vsIdeButton.addActionListener(oew);
+		}
+		if(multiIdeDebugButton!=null)
+		{
+			multiIdeDebugButton.setActionCommand("IDEDebug");
+			multiIdeDebugButton.addActionListener(oew);
+		}
+		
+		if(multiIdeEditButton!=null)
+		{
+			multiIdeEditButton.setActionCommand("IDE");
+			multiIdeEditButton.addActionListener(oew);
+		}
+		
 		
 		updateButton.setActionCommand("update");
 		updateButton.addActionListener(oew);
@@ -444,9 +489,24 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			myFrame.setState(java.awt.Frame.NORMAL);
 		}
 		
+		myFrame.setAlwaysOnTop(true);
+		
+		new java.util.Timer().schedule( 
+		        new java.util.TimerTask() {
+		            @Override
+		            public void run() {
+		            	myFrame.requestFocus();
+		            	myFrame.toFront();
+		            	myFrame.setAlwaysOnTop(false);
+		               
+		            }
+		        }, 
+		        1000 
+		);
 		
 		
-		myFrame.toFront();
+		
+		
 	}
 	
 	
@@ -836,6 +896,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 			
 			OperationEditorWindow oew = new OperationEditorWindow(rhapsody, op, action, aExitOnClose);
+			oew.setFocus();
 	
 	}
 	
@@ -1051,6 +1112,26 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			myTextArea.setText(formatted);
 			
 		}
+		if(command.equals("IDE"))
+		{
+			LoadInIDE loadInIde = LoadInIDE.Instance(myApplication);
+			
+			if(loadInIde!=null)
+			{
+				loadInIde.load(mySelectedOperation, false);
+			}
+		}
+		
+		if(command.equals("IDEDebug"))
+		{
+			LoadInIDE loadInIde = LoadInIDE.Instance(myApplication);
+			
+			if(loadInIde!=null)
+			{
+				loadInIde.load(mySelectedOperation, true);
+			}
+		}
+		
 		}
 		catch (Exception e1) 
 		{
@@ -1183,7 +1264,7 @@ class OpenFeature extends TextAction
         	
         	if(c==null)
         	{
-        		IASTTranslationUnit translationUnit = ASTHelper.getTranslationUnit(tc.getText(),null);
+        		IASTTranslationUnit translationUnit = ASTUtilities.getTranslationUnit(tc.getText(),null);
         		if(translationUnit!=null)
         		{
         			IASTNode node = ASTHelper.getNodeAtPostion(tc.getSelectionStart(), tc.getSelectionEnd(), translationUnit);
@@ -1557,6 +1638,8 @@ class GetInfo extends TextAction
 	}
 	
 }
+
+
 
 /*
 class AskGPtIssue extends TextAction

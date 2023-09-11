@@ -321,44 +321,15 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 				
 				IRPModelElement modelElement = dependency.getDependsOn();
 				
+				System.out.println("Dependency name: " + dependency.getName() );
+				System.out.println("Dependends on: " + modelElement.getName() + " Type: " + modelElement.getMetaClass());
+				
 				if((aVisibility == visibility.v_public)&&(dependency.getPropertyValue("CG.Dependency.UsageType").equals("Implementation")))
 				{
 					continue;
 				}
-				
-				
-				
-				
-				if(modelElement instanceof IRPClassifier)
-				{
-					
-					IRPClassifier classifier = (IRPClassifier)modelElement;
-					List<IRPModelElement> sts = classifier.getStereotypes().toList();
-					
-					
-					if(classifier.getLanguage().equals("C"))
-					{
-						//this is not a class! 
-						if(aVisibility == visibility.v_private)
-						{
-							createClassCompletion(classifier, aVisibility, addType);
-						}
-					}
-					else
-					{
-						if(addType)
-						{
-							IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(classifier);
-							if((classifiernamespace==null)||(classifiernamespace.equals(myNameSpace)))
-							{
-								RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier,false,false);
-								rcc.setRelevance(myBaseRelevance-10);
-								addCompletion(rcc);
-							}
-						}
-					}
-				}
-				else if(modelElement instanceof IRPFile)
+
+				if(modelElement instanceof IRPFile)
 				{
 					IRPFile f = (IRPFile)modelElement;
 					List<IRPModelElement> elements = f.getElements().toList();
@@ -392,6 +363,41 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 						
 					}
 					
+				}
+				else if(modelElement instanceof IRPClassifier)
+				{
+					
+					IRPClassifier classifier = (IRPClassifier)modelElement;
+					List<IRPModelElement> sts = classifier.getStereotypes().toList();
+					
+					
+					if(classifier.getLanguage().equals("C"))
+					{
+						//this is not a class! 
+						if(aVisibility == visibility.v_private)
+						{
+							createClassCompletion(classifier, aVisibility, addType);
+						}
+					}
+					else
+					{
+						if(addType)
+						{
+							IRPPackage classifiernamespace = RhapsodyOperation.getNamespacePackage(classifier);
+							String namespacename = "";
+							if(classifiernamespace!=null)
+							{
+								namespacename = classifiernamespace.getNamespace();
+							}
+							
+							if((namespacename.equals(""))||(classifiernamespace.equals(myNameSpace)))
+							{
+								RhapsodyClassifierCompletion rcc = new RhapsodyClassifierCompletion(this, classifier);
+								rcc.setRelevance(myBaseRelevance-10);
+								addCompletion(rcc);
+							}
+						}
+					}
 				}
 				else
 				{

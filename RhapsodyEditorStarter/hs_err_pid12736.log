@@ -1,0 +1,378 @@
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (safepoint.cpp:691), pid=12736, tid=0x00006a2c
+#  fatal error: Deadlock in safepoint code.  Should have called back to the VM before blocking.
+#
+# JRE version: Java(TM) SE Runtime Environment (8.0_311-b11) (build 1.8.0_311-b11)
+# Java VM: Java HotSpot(TM) Client VM (25.311-b11 mixed mode windows-x86 )
+# Failed to write core dump. Minidumps are not enabled by default on client versions of Windows
+#
+# If you would like to submit a bug report, please visit:
+#   http://bugreport.java.com/bugreport/crash.jsp
+#
+
+---------------  T H R E A D  ---------------
+
+Current thread (0x217d1800):  JavaThread "Thread-9" [_thread_in_native_trans, id=27180, stack(0x178c0000,0x17910000)]
+
+Stack: [0x178c0000,0x17910000],  sp=0x1790e4b8,  free space=313k
+Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+V  [jvm.dll+0x1b8a8e]
+V  [jvm.dll+0x1b0c23]
+V  [jvm.dll+0x1766bf]
+V  [jvm.dll+0x185418]
+V  [jvm.dll+0x9df0]
+V  [jvm.dll+0xdced3]
+C  [rhapsody.dll+0x1de85]
+C  [rhapsody.dll+0x65ba2]
+C  [OLEAUT32.dll+0x38a6f]
+C  [rhapsody.dll+0x66d12]
+C  [rhapsody.dll+0x63880]
+C  [OLEAUT32.dll+0x15fe9]
+C  [OLEAUT32.dll+0x3c5cb]
+C  [RPCRT4.dll+0x4d8e]
+C  [combase.dll+0x872b2]
+C  [OLEAUT32.dll+0x7fcab]
+C  [combase.dll+0x87082]
+C  [combase.dll+0x86b56]
+C  [combase.dll+0xfaed1]
+C  [combase.dll+0xfca9c]
+C  [combase.dll+0x140b75]
+C  [combase.dll+0x10147d]
+C  [RPCRT4.dll+0xf630]
+C  [RPCRT4.dll+0xf575]
+C  [RPCRT4.dll+0xf338]
+C  [RPCRT4.dll+0x14263]
+C  [RPCRT4.dll+0x13f82]
+C  [RPCRT4.dll+0x14641]
+C  [RPCRT4.dll+0x3b1e7]
+C  [RPCRT4.dll+0x342c0]
+C  [ntdll.dll+0x36f81]
+C  [ntdll.dll+0x35ffa]
+C  [cyinjct.dll+0x11ef]
+C  [KERNEL32.DLL+0x200f9]
+C  [ntdll.dll+0x67bbe]
+C  [ntdll.dll+0x67b8e]
+C  0x00000000
+
+
+---------------  P R O C E S S  ---------------
+
+Java Threads: ( => current thread )
+=>0x217d1800 JavaThread "Thread-9" [_thread_in_native_trans, id=27180, stack(0x178c0000,0x17910000)]
+  0x217ca800 JavaThread "Thread-8" [_thread_blocked, id=2744, stack(0x236e0000,0x23730000)]
+  0x217ca000 JavaThread "Thread-7" [_thread_in_native, id=23916, stack(0x22090000,0x220e0000)]
+  0x1580e400 JavaThread "Thread-4" [_thread_in_native, id=22256, stack(0x17830000,0x17880000)]
+  0x00c98800 JavaThread "DestroyJavaVM" [_thread_blocked, id=3980, stack(0x01060000,0x010b0000)]
+  0x21724800 JavaThread "TimerQueue" daemon [_thread_blocked, id=14248, stack(0x21f40000,0x21f90000)]
+  0x1652a800 JavaThread "AWT-EventQueue-0" [_thread_blocked, id=26932, stack(0x20aa0000,0x20af0000)]
+  0x1593d800 JavaThread "AWT-Windows" daemon [_thread_in_native, id=13588, stack(0x168b0000,0x16900000)]
+  0x15936400 JavaThread "AWT-Shutdown" [_thread_blocked, id=23864, stack(0x167e0000,0x16830000)]
+  0x15935c00 JavaThread "Java2D Disposer" daemon [_thread_blocked, id=26768, stack(0x16750000,0x167a0000)]
+  0x152d8c00 JavaThread "Service Thread" daemon [_thread_blocked, id=20280, stack(0x15680000,0x156d0000)]
+  0x152bac00 JavaThread "C1 CompilerThread0" daemon [_thread_blocked, id=25548, stack(0x155f0000,0x15640000)]
+  0x152b1c00 JavaThread "Attach Listener" daemon [_thread_blocked, id=17248, stack(0x15560000,0x155b0000)]
+  0x152b0000 JavaThread "Signal Dispatcher" daemon [_thread_blocked, id=24372, stack(0x154d0000,0x15520000)]
+  0x00d4dc00 JavaThread "Finalizer" daemon [_thread_blocked, id=25932, stack(0x15140000,0x15190000)]
+  0x00d4b000 JavaThread "Reference Handler" daemon [_thread_blocked, id=28000, stack(0x150b0000,0x15100000)]
+
+Other Threads:
+  0x00d45800 VMThread [stack: 0x15060000,0x150b0000] [id=18488]
+  0x152f4000 WatcherThread [stack: 0x15710000,0x15760000] [id=16148]
+
+VM state:synchronizing (normal execution)
+
+VM Mutex/Monitor currently owned by a thread:  ([mutex/lock_event])
+[0x00c914a0] Threads_lock - owner thread: 0x00d45800
+[0x00c90e20] Heap_lock - owner thread: 0x217ca800
+
+Heap:
+ def new generation   total 7552K, used 6868K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,  17% used [0x05290000, 0x052b5158, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12342K, capacity 12557K, committed 12672K, reserved 12672K
+
+Card table byte_map: [0x02990000,0x02a20000] byte_map_base: 0x0296a000
+
+Polling page: 0x00f40000
+
+CodeCache: size=32768Kb used=2752Kb max_used=2752Kb free=30015Kb
+ bounds [0x02b70000, 0x02e28000, 0x04b70000]
+ total_blobs=1601 nmethods=1352 adapters=179
+ compilation: enabled
+
+Compilation events (10 events):
+Event: 69.505 Thread 0x152bac00 1355   !         java.awt.Component::firePropertyChange (59 bytes)
+Event: 69.505 Thread 0x152bac00 nmethod 1355 0x02e1dd88 code [0x02e1dec0, 0x02e1e2a0]
+Event: 69.511 Thread 0x152bac00 1356             java.util.LinkedList$ListItr::previous (70 bytes)
+Event: 69.511 Thread 0x152bac00 nmethod 1356 0x02e1e548 code [0x02e1e670, 0x02e1e808]
+Event: 69.513 Thread 0x152bac00 1357             javax.swing.JComponent::repaint (19 bytes)
+Event: 69.514 Thread 0x152bac00 nmethod 1357 0x02e1e988 code [0x02e1eac0, 0x02e1ed90]
+Event: 69.544 Thread 0x152bac00 1358             java.awt.Component::getHWPeerAboveMe (90 bytes)
+Event: 69.544 Thread 0x152bac00 nmethod 1358 0x02e1f048 code [0x02e1f220, 0x02e1f69c]
+Event: 72.342 Thread 0x152bac00 1359   !         javax.swing.RepaintManager$PaintManager::paintDoubleBuffered (294 bytes)
+Event: 72.343 Thread 0x152bac00 nmethod 1359 0x02e1fb88 code [0x02e1fd20, 0x02e20064]
+
+GC Heap History (10 events):
+Event: 18.544 GC heap before
+{Heap before GC invocations=128 (full 1):
+ def new generation   total 7552K, used 7110K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,  46% used [0x05360000, 0x053c1b70, 0x05430000)
+  to   space 832K,   0% used [0x05290000, 0x05290000, 0x05360000)
+ tenured generation   total 16672K, used 12463K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  74% used [0x0a150000, 0x0ad7bd18, 0x0ad7be00, 0x0b198000)
+ Metaspace       used 12265K, capacity 12520K, committed 12672K, reserved 12672K
+Event: 18.545 GC heap after
+Heap after GC invocations=129 (full 1):
+ def new generation   total 7552K, used 277K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K,   0% used [0x04c00000, 0x04c00000, 0x05290000)
+  from space 832K,  33% used [0x05290000, 0x052d56c8, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12466K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  74% used [0x0a150000, 0x0ad7c978, 0x0ad7ca00, 0x0b198000)
+ Metaspace       used 12265K, capacity 12520K, committed 12672K, reserved 12672K
+}
+Event: 19.739 GC heap before
+{Heap before GC invocations=129 (full 1):
+ def new generation   total 7552K, used 6997K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,  33% used [0x05290000, 0x052d56c8, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12466K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  74% used [0x0a150000, 0x0ad7c978, 0x0ad7ca00, 0x0b198000)
+ Metaspace       used 12265K, capacity 12520K, committed 12672K, reserved 12672K
+Event: 19.740 GC heap after
+Heap after GC invocations=130 (full 1):
+ def new generation   total 7552K, used 548K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K,   0% used [0x04c00000, 0x04c00000, 0x05290000)
+  from space 832K,  65% used [0x05360000, 0x053e9290, 0x05430000)
+  to   space 832K,   0% used [0x05290000, 0x05290000, 0x05360000)
+ tenured generation   total 16672K, used 12469K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  74% used [0x0a150000, 0x0ad7d5d8, 0x0ad7d600, 0x0b198000)
+ Metaspace       used 12265K, capacity 12520K, committed 12672K, reserved 12672K
+}
+Event: 20.804 GC heap before
+{Heap before GC invocations=130 (full 1):
+ def new generation   total 7552K, used 7268K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,  65% used [0x05360000, 0x053e9290, 0x05430000)
+  to   space 832K,   0% used [0x05290000, 0x05290000, 0x05360000)
+ tenured generation   total 16672K, used 12469K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  74% used [0x0a150000, 0x0ad7d5d8, 0x0ad7d600, 0x0b198000)
+ Metaspace       used 12267K, capacity 12520K, committed 12672K, reserved 12672K
+Event: 20.805 GC heap after
+Heap after GC invocations=131 (full 1):
+ def new generation   total 7552K, used 27K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K,   0% used [0x04c00000, 0x04c00000, 0x05290000)
+  from space 832K,   3% used [0x05290000, 0x05296ea0, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12267K, capacity 12520K, committed 12672K, reserved 12672K
+}
+Event: 20.830 GC heap before
+{Heap before GC invocations=131 (full 1):
+ def new generation   total 7552K, used 6747K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,   3% used [0x05290000, 0x05296ea0, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12267K, capacity 12520K, committed 12672K, reserved 12672K
+Event: 20.830 GC heap after
+Heap after GC invocations=132 (full 1):
+ def new generation   total 7552K, used 22K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K,   0% used [0x04c00000, 0x04c00000, 0x05290000)
+  from space 832K,   2% used [0x05360000, 0x05365908, 0x05430000)
+  to   space 832K,   0% used [0x05290000, 0x05290000, 0x05360000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12267K, capacity 12520K, committed 12672K, reserved 12672K
+}
+Event: 34.491 GC heap before
+{Heap before GC invocations=132 (full 1):
+ def new generation   total 7552K, used 6742K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K, 100% used [0x04c00000, 0x05290000, 0x05290000)
+  from space 832K,   2% used [0x05360000, 0x05365908, 0x05430000)
+  to   space 832K,   0% used [0x05290000, 0x05290000, 0x05360000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12315K, capacity 12552K, committed 12672K, reserved 12672K
+Event: 34.493 GC heap after
+Heap after GC invocations=133 (full 1):
+ def new generation   total 7552K, used 148K [0x04c00000, 0x05430000, 0x0a150000)
+  eden space 6720K,   0% used [0x04c00000, 0x04c00000, 0x05290000)
+  from space 832K,  17% used [0x05290000, 0x052b5158, 0x05360000)
+  to   space 832K,   0% used [0x05360000, 0x05360000, 0x05430000)
+ tenured generation   total 16672K, used 12528K [0x0a150000, 0x0b198000, 0x14c00000)
+   the space 16672K,  75% used [0x0a150000, 0x0ad8c2b0, 0x0ad8c400, 0x0b198000)
+ Metaspace       used 12315K, capacity 12552K, committed 12672K, reserved 12672K
+}
+
+Deoptimization events (0 events):
+No events
+
+Classes redefined (0 events):
+No events
+
+Internal exceptions (10 events):
+Event: 57.842 Thread 0x228d2000 Implicit null exception at 0x02d2efd3 to 0x02d2f32d
+Event: 57.844 Thread 0x228d2000 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Property CPP_CG.Type.In does not exist for this object.
+> (0x04eaa538) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, lin
+Event: 69.471 Thread 0x217ca000 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Property CPP_CG.Type.ReturnType does not exist for this object.
+> (0x05130858) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.
+Event: 69.485 Thread 0x217ca800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Property CPP_CG.Type.ReturnType does not exist for this object.
+> (0x0516a198) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.
+Event: 69.527 Thread 0x1652a800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Rhapsody missing property
+> (0x051a8930) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, line 737]
+Event: 69.532 Thread 0x1652a800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Rhapsody missing property
+> (0x051aa010) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, line 737]
+Event: 69.538 Thread 0x1652a800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Rhapsody missing property
+> (0x051ab918) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, line 737]
+Event: 69.549 Thread 0x1652a800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Rhapsody missing property
+> (0x051af078) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, line 737]
+Event: 72.834 Thread 0x217ca800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Property CPP_CG.Type.In does not exist for this object.
+> (0x051b7b80) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, lin
+Event: 72.891 Thread 0x217ca800 Exception <a 'com/telelogic/rhapsody/core/RhapsodyRuntimeException': Property CPP_CG.Type.In does not exist for this object.
+> (0x0526c918) thrown at [C:\jenkins\workspace\8-2-build-windows-i586-cygwin\jdk8u311\1894\hotspot\src\share\vm\prims\jni.cpp, lin
+
+Events (10 events):
+Event: 69.553 Executing VM operation: RevokeBias
+Event: 69.553 Executing VM operation: RevokeBias done
+Event: 72.340 Executing VM operation: RevokeBias
+Event: 72.341 Executing VM operation: RevokeBias done
+Event: 72.341 Executing VM operation: RevokeBias
+Event: 72.341 Executing VM operation: RevokeBias done
+Event: 72.342 Executing VM operation: RevokeBias
+Event: 72.342 Executing VM operation: RevokeBias done
+Event: 72.382 Thread 0x217d1800 Thread added: 0x217d1800
+Event: 72.895 Executing VM operation: GenCollectForAllocation
+
+
+Dynamic libraries:
+0x00440000 - 0x0047f000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\javaw.exe
+0x77640000 - 0x777e4000 	C:\WINDOWS\SYSTEM32\ntdll.dll
+0x774c0000 - 0x775b0000 	C:\WINDOWS\System32\KERNEL32.DLL
+0x772a0000 - 0x774bc000 	C:\WINDOWS\System32\KERNELBASE.dll
+0x75a40000 - 0x75a7a000 	C:\WINDOWS\SysWOW64\cyinjct.dll
+0x754b0000 - 0x754ba000 	C:\WINDOWS\System32\ntnativeapi.dll
+0x75490000 - 0x754aa000 	C:\WINDOWS\System32\cyvera.dll
+0x75430000 - 0x7548d000 	C:\WINDOWS\System32\cyvrtrap.dll
+0x76c80000 - 0x76cfb000 	C:\WINDOWS\System32\ADVAPI32.dll
+0x75920000 - 0x759df000 	C:\WINDOWS\System32\msvcrt.dll
+0x76540000 - 0x765b6000 	C:\WINDOWS\System32\sechost.dll
+0x76b10000 - 0x76bce000 	C:\WINDOWS\System32\RPCRT4.dll
+0x765c0000 - 0x7675d000 	C:\WINDOWS\System32\USER32.dll
+0x76490000 - 0x764a8000 	C:\WINDOWS\System32\win32u.dll
+0x764b0000 - 0x764d3000 	C:\WINDOWS\System32\GDI32.dll
+0x768d0000 - 0x769b0000 	C:\WINDOWS\System32\gdi32full.dll
+0x76840000 - 0x768bb000 	C:\WINDOWS\System32\msvcp_win.dll
+0x76370000 - 0x76490000 	C:\WINDOWS\System32\ucrtbase.dll
+0x6e580000 - 0x6e790000 	C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.19041.1110_none_a8625c1886757984\COMCTL32.dll
+0x75ac0000 - 0x75ae6000 	C:\WINDOWS\System32\IMM32.DLL
+0x52e80000 - 0x52e93000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\vcruntime140.dll
+0x51e20000 - 0x51e8f000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\msvcp140.dll
+0x506d0000 - 0x50aaf000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\client\jvm.dll
+0x768c0000 - 0x768c6000 	C:\WINDOWS\System32\PSAPI.DLL
+0x75390000 - 0x75398000 	C:\WINDOWS\SYSTEM32\WSOCK32.dll
+0x758b0000 - 0x75913000 	C:\WINDOWS\System32\WS2_32.dll
+0x6e880000 - 0x6e8a8000 	C:\WINDOWS\SYSTEM32\WINMM.dll
+0x74970000 - 0x74978000 	C:\WINDOWS\SYSTEM32\VERSION.dll
+0x74960000 - 0x7496f000 	C:\WINDOWS\SYSTEM32\kernel.appcore.dll
+0x54760000 - 0x5476d000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\verify.dll
+0x52860000 - 0x52884000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\java.dll
+0x75400000 - 0x7542d000 	C:\Program Files (x86)\Palo Alto Networks\Traps\cyjagent.dll
+0x52e20000 - 0x52e34000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\zip.dll
+0x75af0000 - 0x760a6000 	C:\WINDOWS\System32\SHELL32.dll
+0x74990000 - 0x74f9c000 	C:\WINDOWS\SYSTEM32\windows.storage.dll
+0x760b0000 - 0x76330000 	C:\WINDOWS\System32\combase.dll
+0x74080000 - 0x740a7000 	C:\WINDOWS\SYSTEM32\Wldp.dll
+0x15190000 - 0x15217000 	C:\WINDOWS\System32\SHCORE.dll
+0x15440000 - 0x15485000 	C:\WINDOWS\System32\shlwapi.dll
+0x6e170000 - 0x6e188000 	C:\WINDOWS\SYSTEM32\profapi.dll
+0x15960000 - 0x15be8000 	C:\Rhapsody\v840\Share\JavaAPI\rhapsody.dll
+0x769c0000 - 0x76aa3000 	C:\WINDOWS\System32\ole32.dll
+0x75500000 - 0x75596000 	C:\WINDOWS\System32\OLEAUT32.dll
+0x516e0000 - 0x51a7d000 	C:\WINDOWS\WinSxS\x86_microsoft.vc90.mfc_1fc8b3b9a1e18e3b_9.0.30729.6161_none_4bf7e3e2bf9ada4c\mfc90.dll
+0x547a0000 - 0x54843000 	C:\WINDOWS\WinSxS\x86_microsoft.vc90.crt_1fc8b3b9a1e18e3b_9.0.30729.9625_none_508ef7e4bcbbe589\MSVCR90.dll
+0x6e220000 - 0x6e226000 	C:\WINDOWS\SYSTEM32\MSIMG32.dll
+0x67c20000 - 0x67c94000 	C:\WINDOWS\system32\UxTheme.dll
+0x67360000 - 0x67386000 	C:\WINDOWS\system32\dwmapi.dll
+0x15230000 - 0x1523d000 	C:\WINDOWS\WinSxS\x86_microsoft.vc90.mfcloc_1fc8b3b9a1e18e3b_9.0.30729.6161_none_49768ef57548175e\MFC90ENU.DLL
+0x775d0000 - 0x7762f000 	C:\WINDOWS\System32\bcryptPrimitives.dll
+0x640f0000 - 0x6417c000 	C:\WINDOWS\SYSTEM32\sxs.dll
+0x75820000 - 0x758a3000 	C:\WINDOWS\System32\clbcatq.dll
+0x51e10000 - 0x51e1c000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\management.dll
+0x50580000 - 0x506cb000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\awt.dll
+0x74fd0000 - 0x75070000 	C:\WINDOWS\SYSTEM32\apphelp.dll
+0x501f0000 - 0x502f3000 	C:\WINDOWS\system32\opengl32.dll
+0x52e40000 - 0x52e7f000 	C:\WINDOWS\SYSTEM32\GLU32.dll
+0x76760000 - 0x76834000 	C:\WINDOWS\System32\MSCTF.dll
+0x66840000 - 0x669cf000 	C:\WINDOWS\system32\d3d9.dll
+0x7a870000 - 0x7a9e4000 	C:\WINDOWS\System32\DriverStore\FileRepository\igdlh64.inf_amd64_9671054d3bbcb1b5\igdumdim32.dll
+0x17920000 - 0x1b3e8000 	C:\WINDOWS\System32\DriverStore\FileRepository\igdlh64.inf_amd64_9671054d3bbcb1b5\igd9dxva32.dll
+0x76e60000 - 0x77294000 	C:\WINDOWS\System32\SETUPAPI.dll
+0x76330000 - 0x7636b000 	C:\WINDOWS\System32\cfgmgr32.dll
+0x755a0000 - 0x755b9000 	C:\WINDOWS\System32\bcrypt.dll
+0x60420000 - 0x60717000 	C:\WINDOWS\System32\DriverStore\FileRepository\igdlh64.inf_amd64_9671054d3bbcb1b5\igdgmm32.dll
+0x7a9f0000 - 0x7ab57000 	C:\WINDOWS\System32\DriverStore\FileRepository\u0386693.inf_amd64_e1d2c0d2124df5a8\B386135\aticfx32.dll
+0x54460000 - 0x5448a000 	C:\WINDOWS\System32\DriverStore\FileRepository\u0386693.inf_amd64_e1d2c0d2124df5a8\B386135\atiu9pag.dll
+0x16a70000 - 0x17539000 	C:\WINDOWS\System32\DriverStore\FileRepository\u0386693.inf_amd64_e1d2c0d2124df5a8\B386135\atiumdag.dll
+0x73970000 - 0x73af8000 	C:\WINDOWS\SYSTEM32\dbghelp.dll
+0x73940000 - 0x7396c000 	C:\WINDOWS\SYSTEM32\dbgcore.DLL
+0x1b3f0000 - 0x1c23c000 	C:\WINDOWS\System32\DriverStore\FileRepository\u0386693.inf_amd64_e1d2c0d2124df5a8\B386135\atiumdva.dll
+0x75130000 - 0x75174000 	C:\WINDOWS\SYSTEM32\POWRPROF.dll
+0x73e90000 - 0x73e9d000 	C:\WINDOWS\SYSTEM32\UMPDC.dll
+0x50120000 - 0x50148000 	C:\WINDOWS\SYSTEM32\amdihk32.dll
+0x63220000 - 0x6324c000 	C:\WINDOWS\SYSTEM32\dxcore.dll
+0x51220000 - 0x5125d000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\fontmanager.dll
+0x51df0000 - 0x51e07000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\net.dll
+0x74900000 - 0x74952000 	C:\WINDOWS\system32\mswsock.dll
+0x543e0000 - 0x543ef000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\nio.dll
+0x50f20000 - 0x50f57000 	C:\Program Files (x86)\Java\jre1.8.0_311\bin\t2k.dll
+0x66de0000 - 0x66e99000 	C:\WINDOWS\SYSTEM32\textinputframework.dll
+0x661e0000 - 0x6645e000 	C:\WINDOWS\System32\CoreUIComponents.dll
+0x66060000 - 0x660fb000 	C:\WINDOWS\System32\CoreMessaging.dll
+0x75100000 - 0x75129000 	C:\WINDOWS\SYSTEM32\ntmarta.dll
+0x66100000 - 0x661db000 	C:\WINDOWS\SYSTEM32\wintypes.dll
+0x67840000 - 0x679b1000 	C:\WINDOWS\SYSTEM32\WindowsCodecs.dll
+0x670f0000 - 0x67121000 	C:\WINDOWS\system32\dataexchange.dll
+0x669d0000 - 0x66bb0000 	C:\WINDOWS\system32\d3d11.dll
+0x60c30000 - 0x60d94000 	C:\WINDOWS\system32\dcomp.dll
+0x67290000 - 0x67352000 	C:\WINDOWS\system32\dxgi.dll
+0x62b90000 - 0x62d1f000 	C:\WINDOWS\system32\twinapi.appcore.dll
+
+VM Arguments:
+jvm_args: -Djava.library.path=C:\Rhapsody\v840\Share\JavaAPI;C:\Rhapsody\v840\Share\JavaAPI -Dfile.encoding=Cp1252 -agentpath:C:\Program Files (x86)\Palo Alto Networks\Traps\cyjagent.dll 
+java_command: apps.MainApp
+java_class_path (initial): C:\Users\schl591\git\RhapsodyOperationEditor\RhapsodyEditorStarter\bin;C:\Rhapsody\v840\Share\RhapsodyApps\libs\jdom.jar;C:\Rhapsody\v840\Share\RhapsodyApps\libs\swt.jar;C:\Rhapsody\v840\Share\JavaAPI\rhapsody.jar;C:\Rhapsody\v840\Share\RhapsodyApps\RhapsodyApps.jar;C:\Rhapsody\v840\Share\RhapsodyApps\apps.jar;C:\Users\schl591\git\RhapsodyOperationEditor\RhapsodyOperationEditor\bin;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\autocomplete-3.1.1.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\cdt.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\rsyntaxtextarea-3.1.2.jar;C:\Users\schl591\Downloads\java-diff-utils-4.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\commons-imaging-1.0-alpha2.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.osgi.core-6.0.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.eclipse.core.resources-3.7.100.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.eclipse.core.jobs-3.8.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.osgi.service.prefs-1.1.1.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.eclipse.osgi-3.18.100.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.eclipse.core.runtime-3.1.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\org.eclipse.text-3.8.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\equinox-common-3.2.0.jar;C:\Users\schl591\eclipse-workspace\RhapsodyAppCustom\lib\icu4j-72.1.jar
+Launcher Type: SUN_STANDARD
+
+Environment Variables:
+JAVA_HOME=C:\Program Files\Java\jdk1.8.0_202
+PATH=C:/Program Files (x86)/Java/jre1.8.0_311/bin/client;C:/Program Files (x86)/Java/jre1.8.0_311/bin;C:/Program Files (x86)/Java/jre1.8.0_311/lib/i386;C:\ProgramData\Oracle\Java\javapath;C:\Qt\5.15.2\msvc2017\bin;C:\Python39\Scripts\;C:\Python39\;C:\Program Files\AdoptOpenJDK\jre-15.0.0.36-hotspot\bin;C:\Python36\Scripts\;C:\Python36\;C:\Python38\Scripts\;C:\Python38\;C:\Python27\;C:\Python27\Scripts;C:\Program Files (x86)\Common Files\Oracle\Java\javapath;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files\dotnet\;C:\Program Files (x86)\Windows Kits\10\Windows Performance Toolkit\;C:\cygwin64\bin;C:\Program Files\PuTTY\;C:\Program Files\nodejs\;C:\ProgramData\chocolatey\bin;C:\Program Files\Git\cmd;C:\Program Files\IcedTeaWeb\WebStart\bin;C:\Program Files\doxygen\bin;C:\Program Files\Zulu\zulu-8\bin\;C:\Program Files\Java\jre1.8.0_271\bin;C:\Program Files\GitHub CLI\;C:\Strawberry\c\bin;C:\Strawberry\perl\site\bin;C:\Strawberry\perl\bin;C:\Program Files\LLVM\bin;C:\Program Files\CMake\bin;C:\Users\swgca\AppData\Local\Microsoft\WindowsApps;C:\Program Files (x86)\IDM Computer Solutions\UltraEdit\;C:\Program Files\Inkscape\bin;C:\Program Files\TortoiseSVN\bin;C:\Users\schl591\AppData\Local\Microsoft\WindowsApps;C:\Users\schl591\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\schl591\AppData\Roaming\npm;C:\Users\schl591\AppData\Local\GitHubDesktop\bin;C:\Users\schl591\AppData\Local\AtlassianSDK\bin;C:\Users\schl591\eclipse\java-2018-09\eclipse;
+USERNAME=schl591
+OS=Windows_NT
+PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 158 Stepping 10, GenuineIntel
+
+
+
+---------------  S Y S T E M  ---------------
+
+OS: Windows 10.0 , 64 bit Build 19041 (10.0.19041.2364)
+
+CPU:total 12 (initial active 12) (6 cores per cpu, 2 threads per core) family 6 model 158 stepping 10, cmov, cx8, fxsr, mmx, sse, sse2, sse3, ssse3, sse4.1, sse4.2, popcnt, avx, avx2, aes, clmul, erms, rtm, 3dnowpref, lzcnt, ht, tsc, tscinvbit, bmi1, bmi2, adx
+
+Memory: 4k page, physical 33328424k(13674744k free), swap 38309160k(7833852k free)
+
+vm_info: Java HotSpot(TM) Client VM (25.311-b11) for windows-x86 JRE (1.8.0_311-b11), built on Sep 27 2021 05:20:10 by "java_re" with MS VC++ 15.9 (VS2017)
+
+time: Wed Apr 26 13:26:29 2023
+timezone: W. Europe Daylight Time
+elapsed time: 75.154832 seconds (0d 0h 1m 15s)
+

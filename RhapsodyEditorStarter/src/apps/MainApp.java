@@ -1,6 +1,8 @@
 package apps;
 
+import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -28,6 +30,7 @@ import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
 import de.schlaich.gunnar.rhapsody.completionprovider.NamespaceCompletionProvider;
+import de.schlaich.gunnar.rhapsody.operationeditor.LoadInIDE;
 import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
 import de.schlaich.gunnar.rhapsody.utilities.HistoryControl;
 import de.schlaich.gunnar.rhapsody.utilities.HistoryElement;
@@ -69,6 +72,8 @@ public class MainApp extends App  implements HistoryControl{
 public void execute(IRPApplication rhapsody, IRPModelElement selected, boolean onStartup) {
 		
 		RhapsodyPreferences prefs = RhapsodyPreferences.Get(true);
+		
+		LoadInIDE loadInIde = LoadInIDE.Instance(rhapsody);
 	
 		if(myConnectingString==null)
 		{
@@ -345,7 +350,9 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected, boolean o
 		myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         myFrame.setTitle("Operations of "+name);
         
-        myFrame.setSize(900, 75);
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        
+        myFrame.setSize(dim.width, 75);
         
         myFrame.setVisible(true);
         

@@ -34,6 +34,7 @@ import org.fife.ui.autocomplete.VariableCompletion;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPProject;
 
+import de.schlaich.gunnar.rhapsody.completion.ASTUtilities;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifier;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyClassifierCompletion;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyLocalVariableCompletion;
@@ -55,7 +56,7 @@ public class LocalCompletionProvider extends DefaultCompletionProvider
 	
 	private void createLocalCompletions(String aOperationBody, ClassifierCompletionProvider aCompletionProvider)
 	{
-		IASTTranslationUnit astTranslationUnit = ASTHelper.getTranslationUnit(aOperationBody, aCompletionProvider);
+		IASTTranslationUnit astTranslationUnit = ASTUtilities.getTranslationUnit(aOperationBody, aCompletionProvider);
 		if(astTranslationUnit!=null)
 		{
 			collectCompletions(astTranslationUnit);

@@ -12,6 +12,8 @@
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/plantuml.1.2021.6.jar" sourcepath="C:/Users/schl591/git/plantuml"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyOperationEditor"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/batik-all-1.16.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.w3c.dom.svg_1.1.0.v201011041433-4.8.0.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtilities"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

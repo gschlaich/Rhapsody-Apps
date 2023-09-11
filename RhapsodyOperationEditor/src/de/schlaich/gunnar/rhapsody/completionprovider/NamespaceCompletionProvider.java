@@ -142,6 +142,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		List<IRPModule> modules = aPackage.getModules().toList();
 		for(IRPModule module:modules)
 		{
+			System.out.println("Module: " + module.getName());
 			List<IRPModelElement> elements = module.getAllNestedElements().toList();
 			for(IRPModelElement element:elements)
 			{

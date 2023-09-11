@@ -38,6 +38,22 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		IRPUnit selectedUnit = selected.getSaveUnit();
 		
+		System.out.println("Name saveUnit: " + selectedUnit.getName());
+		
+		IRPCollection dependencies = selectedUnit.getDependencies();
+		if(dependencies.getCount()>0)
+		{
+			List<IRPDependency> dependenciesList = dependencies.toList();
+			for(IRPDependency dependency : dependenciesList)
+			{
+				System.out.println("Dependency: " + dependency.getName());
+			}
+			
+			//rhapsody.writeToOutputWindow("Log", "Could not move Unit. There are Dependencies!");
+			//return;
+		}
+		
+		
 		
 		
 		String currentDirectory = selectedUnit.getCurrentDirectory();
@@ -67,9 +83,29 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		
 		
+		Path usmRoot = source.getParent();
+		String usmRootFileName = usmRoot.getFileName().toString();
+		
+		while(usmRoot!=null && (usmRootFileName.equals("GeneratedProjects")==false))
+		{
+			usmRoot = usmRoot.getParent();
+			usmRootFileName = usmRoot.getFileName().toString();
+			
+		}
+		
+		if(usmRoot == null)
+		{
+			System.out.println("did not found USMRoot");
+			rhapsody.writeToOutputWindow("Log", "did not found USMRoot\n");
+			return;
+		}
+		
+		usmRoot = usmRoot.getParent();
 		
 		
-		Path destination = FileSystems.getDefault().getPath("J:\\USM\\Development\\RhapsodyModel\\UniversalSewingMachine_rpy\\DesignView",relative.toString());
+		
+		
+		Path destination = FileSystems.getDefault().getPath(usmRoot.toString()+"\\Development\\RhapsodyModel\\UniversalSewingMachine_rpy\\DesignView",relative.toString());
 		Path destinationFile = FileSystems.getDefault().getPath(destination.toString(),fileName);
 		
 		System.out.println("Source: " + source.toString());
@@ -115,6 +151,8 @@ public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		}
 		
 		IRPModelElement owner = selectedUnit.getOwner();
+		
+		
 		selectedUnit.deleteFromProject();
 		
 		rhapsody.addToModelEx(destinationFile.toString(),IRPApplication.AddToModel_Mode.AS_UNIT_WITHOUT_COPY, 1, 0);
