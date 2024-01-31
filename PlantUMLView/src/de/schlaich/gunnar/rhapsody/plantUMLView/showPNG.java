@@ -14,9 +14,16 @@ import javax.swing.JScrollPane;
 
 public class showPNG extends JFrame {
 	
-	 public showPNG(byte[] aImage) 
+	 public showPNG(byte[] aImage, boolean aExitOnClose) 
 	 { 
-		 this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+		 if(aExitOnClose)
+		 {
+			 this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); 
+		 }
+		 else
+		 {
+			 this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+		 }
 		 
 		 JPanel panel = new JPanel();  
 		 //panel.setSize(500,640);

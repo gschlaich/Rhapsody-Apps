@@ -65,6 +65,8 @@ public class LoadInIDE
 		}
 	}
 	
+
+	
 	public boolean isMultiIde()
 	{
 		if(myMultiPlugin==null)
@@ -102,6 +104,22 @@ public class LoadInIDE
 			{
 				myMultiPlugin.viewInEditor(aOperation);
 			}
+		}
+	}
+	
+	public void compile(IRPOperation aOperation)
+	{
+		if(myMultiPlugin!=null)
+		{
+			myMultiPlugin.compile(aOperation);
+		}
+	}
+	
+	public void build(IRPProject aProject)
+	{
+		if(myMultiPlugin!=null)
+		{
+			myMultiPlugin.compile(aProject);
 		}
 	}
 	

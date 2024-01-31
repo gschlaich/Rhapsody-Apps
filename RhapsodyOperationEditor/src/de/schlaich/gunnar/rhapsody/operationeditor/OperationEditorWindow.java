@@ -166,6 +166,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		JButton vsIdeButton = null;
 		JButton multiIdeEditButton = null;
 		JButton multiIdeDebugButton = null;
+		JButton multiCompileButton = null;
+		JButton multiBuildButton = null;
 			
 		LoadInIDE ide = LoadInIDE.Instance(myApplication);
 		
@@ -181,8 +183,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			buttonPanel.add(multiIdeEditButton);
 			multiIdeDebugButton = new JButton("Multi Debug");
 			buttonPanel.add(multiIdeDebugButton);
+			multiCompileButton = new JButton("Compile");
+			buttonPanel.add(multiCompileButton);
+			multiBuildButton = new JButton("Build");
+			buttonPanel.add(multiBuildButton);
+			
 		}
-		
 		
 		
 		
@@ -239,6 +245,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		explorerButton.setActionCommand("explorer");
 		explorerButton.addActionListener(oew);
 		
+		
 		if(vsIdeButton!=null)
 		{
 			vsIdeButton.setActionCommand("IDE");
@@ -256,6 +263,17 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			multiIdeEditButton.addActionListener(oew);
 		}
 		
+		if(multiCompileButton!=null)
+		{
+			multiCompileButton.setActionCommand("compile");
+			multiCompileButton.addActionListener(oew);
+		}
+		
+		if(multiBuildButton!=null)
+		{
+			multiBuildButton.setActionCommand("build");
+			multiBuildButton.addActionListener(oew);
+		}		
 		
 		updateButton.setActionCommand("update");
 		updateButton.addActionListener(oew);
@@ -925,7 +943,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 			if(mySelectedOperation.isReadOnly()==0)
 			{
-				if(command.equals("ok")||command.equals("apply")||command.equals("generate"))
+				if(command.equals("ok")||command.equals("apply")||command.equals("generate")||command.equals("compile")||command.equals("build"))
 				{
 					String text = myTextArea.getText();
 					setActionbody(text);
@@ -1001,7 +1019,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			}
 		}
 		
-		if(command.equals("generate"))
+		if(command.equals("generate")|| command.equals("compile")|| command.equals("build"))
 		{
 			//find class
 			IRPModelElement element = mySelectedOperation.getOwner();
@@ -1031,7 +1049,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				e1.printStackTrace();
 			}
 		}
-		if(command.equals("generate"))
+		if(command.equals("generate")|| command.equals("compile")||command.equals("build"))
 		{
 			//may start in a worker thread?
 			IRPModelElement element = mySelectedOperation.getOwner();
@@ -1130,6 +1148,26 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				loadInIde.load(mySelectedOperation, true);
 			}
+		}
+		
+		if(command.equals("compile"))
+		{
+			LoadInIDE loadInIde = LoadInIDE.Instance(myApplication);
+			if(loadInIde!=null)
+			{
+				loadInIde.compile(mySelectedOperation);
+			}
+		
+		}
+		
+		if(command.equals("build"))
+		{
+			LoadInIDE loadInIde = LoadInIDE.Instance(myApplication);
+			if(loadInIde!=null)
+			{
+				loadInIde.build(mySelectedOperation.getProject());
+			}
+			
 		}
 		
 		}
@@ -1267,7 +1305,7 @@ class OpenFeature extends TextAction
         		IASTTranslationUnit translationUnit = ASTUtilities.getTranslationUnit(tc.getText(),null);
         		if(translationUnit!=null)
         		{
-        			IASTNode node = ASTHelper.getNodeAtPostion(tc.getSelectionStart(), tc.getSelectionEnd(), translationUnit);
+        			IASTNode node = ASTHelper.getNodeAtPosition(tc.getSelectionStart(), tc.getSelectionEnd(), translationUnit);
         			if(node!=null)
         			{
         				

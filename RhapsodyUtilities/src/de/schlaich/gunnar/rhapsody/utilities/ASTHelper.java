@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.cdt.core.dom.ast.ExpansionOverlapsBoundaryException;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier;
@@ -20,6 +22,7 @@ import org.eclipse.cdt.core.dom.ast.IASTEnumerationSpecifier.IASTEnumerator;
 import org.eclipse.cdt.core.dom.ast.IASTFileLocation;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
+import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNodeSelector;
 import org.eclipse.cdt.core.dom.ast.IASTParameterDeclaration;
@@ -29,24 +32,29 @@ import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTNameSpecifier;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTNamespaceDefinition;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTQualifiedName;
 import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTTemplateId;
 import org.eclipse.cdt.core.dom.ast.gnu.cpp.GPPLanguage;
 import org.eclipse.cdt.core.index.IIndex;
+import org.eclipse.cdt.core.model.CoreModelUtil;
 import org.eclipse.cdt.core.model.ITranslationUnit;
 import org.eclipse.cdt.core.parser.DefaultLogService;
 import org.eclipse.cdt.core.parser.FileContent;
 import org.eclipse.cdt.core.parser.IParserLogService;
 import org.eclipse.cdt.core.parser.IProblem;
 import org.eclipse.cdt.core.parser.IScannerInfo;
+import org.eclipse.cdt.core.parser.IToken;
 import org.eclipse.cdt.core.parser.IncludeFileContentProvider;
 import org.eclipse.cdt.core.parser.ScannerInfo;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTQualifiedName;
 import org.eclipse.cdt.internal.core.dom.rewrite.util.ASTNodes;
 import org.eclipse.cdt.internal.core.index.EmptyCIndex;
 import org.eclipse.cdt.internal.core.parser.scanner.CharArray;
 import org.eclipse.cdt.internal.core.parser.scanner.InternalFileContent;
 import org.eclipse.core.runtime.CoreException;
+
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
@@ -56,6 +64,7 @@ import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
@@ -128,7 +137,69 @@ public class ASTHelper
         return null;				
 	}
 	
-	public static IASTNode getNodeAtPostion(int aStart, int aEnd, IASTTranslationUnit atranslationUnit )
+	
+	public static IASTFunctionDefinition getFunctionDefinition(int aLine, IASTNode aNode)
+	{
+		IASTFileLocation nodeLocation = aNode.getFileLocation();
+		
+		if(nodeLocation.getStartingLineNumber()<= aLine)
+		{
+			if(nodeLocation.getEndingLineNumber()>= aLine)
+			{
+				if(aNode instanceof IASTFunctionDefinition)
+				{
+					return (IASTFunctionDefinition) aNode;
+				}			
+			}
+		}
+		
+		for(IASTNode node : aNode.getChildren())
+		{
+			IASTFunctionDefinition functionDefinition = getFunctionDefinition(aLine, node);
+			if(functionDefinition!=null)
+			{
+				return functionDefinition;
+			}
+		}
+		//not found...
+		return null;
+	}
+	
+	public static String getOperationName(IASTFunctionDefinition aFunctionDefinition)
+	{
+		
+		if(aFunctionDefinition==null)
+		{
+			return null;
+		}
+		
+		IASTFunctionDeclarator functionDeclarator = aFunctionDefinition.getDeclarator();
+		
+		IASTName astName = functionDeclarator.getName();
+		
+		return astName.getLastName().toString();
+		
+	}
+	
+	
+	public static int getOffset(IASTFunctionDefinition aFunctionDefinition, int aLine)
+	{
+		if(aFunctionDefinition==null)
+		{
+			return 0;
+		}
+		
+		IASTFileLocation fileLocation = aFunctionDefinition.getFileLocation();
+		
+		int startLine = fileLocation.getStartingLineNumber();
+		
+		int offset = aLine-startLine;
+		return offset;
+		
+	}
+	
+	
+	public static IASTNode getNodeAtPosition(int aStart, int aEnd, IASTTranslationUnit atranslationUnit )
 	{
 		int pos = aStart+Prolog.length();
 		int offset = aEnd-aStart;
@@ -389,7 +460,7 @@ public class ASTHelper
 	
 	*/
 	
-	public static Map<String,String> getFunctiondefinitions(String aSourcePath, String aNameSpace)
+	public static Map<String,String> getFunctiondefinitions(String aSourcePath, String aNameSpace, String aClassName)
 	{
 		
 		HashMap<String,String> ret = new HashMap<>();
@@ -421,22 +492,29 @@ public class ASTHelper
 			source = theNameSpaceDefinition;
 		}
 		
+		
+		
 		ASTNode<IASTFunctionDefinition> parseFunctionDefinition = new ASTNode<IASTFunctionDefinition>(IASTFunctionDefinition.class);
 		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(source);
 		for(IASTFunctionDefinition functionDefinition:functionDefinitions)
 		{
 			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
 			
-			String rawSignature = functionDeclarator.getRawSignature();
+			IASTName name = functionDeclarator.getName();
 			
-			if(rawSignature.startsWith("*"))
+			if(name instanceof CPPASTQualifiedName)
 			{
-				rawSignature = rawSignature.substring(1);
+				CPPASTQualifiedName qName = (CPPASTQualifiedName) name;
+				
+				ICPPASTNameSpecifier[] spec =  qName.getQualifier();
+				
+				if(spec[spec.length-1].toString().equals(aClassName)==false)
+				{
+					continue;
+				}
+				
 			}
 			
-			rawSignature = rawSignature.replaceAll("\\s+", "");
-			
-			//String functionSource = getSourceFromFunction(functionDefinition, aSourcePath);
 			
 			Map.Entry<String, String> e = getSourceFromFunction(functionDefinition, aSourcePath);
 			
@@ -449,7 +527,7 @@ public class ASTHelper
 			
 			ret.put(e.getKey(),e.getValue());
 			
-			//ret.put(rawSignature, functionSource);
+			
 			
 		}
 
@@ -523,6 +601,24 @@ public class ASTHelper
 		Map.Entry<String, String> theFunctionEntry = null;
 		for(IASTFunctionDefinition functionDefinition:functionDefinitions)
 		{
+			IASTFunctionDeclarator functionDeclarator = functionDefinition.getDeclarator();
+			
+			IASTName name = functionDeclarator.getName();
+			
+			if(name instanceof CPPASTQualifiedName)
+			{
+				CPPASTQualifiedName qName = (CPPASTQualifiedName) name;
+				
+				ICPPASTNameSpecifier[] spec =  qName.getQualifier();
+				
+				if(spec[spec.length-1].toString().equals(aClassName)==false)
+				{
+					continue;
+				}
+				
+			}
+			
+			
 			
 			Map.Entry<String, String> functionEntry = getSourceFromFunction(functionDefinition, aPath);
 			
@@ -874,64 +970,88 @@ public class ASTHelper
 		}
 		
 		return -1;
-			
-		
-		
-		
-		
+	
 	}
 
 	
 	@SuppressWarnings("unchecked")
-	public static String getSourcePath(IRPClass aClass, IRPApplication aApplication) 
-	{	
+	public static String getSourcePath(IRPClass aClass, IRPApplication aApplication) {
 		List<IRPProject> projects = aApplication.getProjects().toList();
-		
+
 		IRPComponent activeComponent = null;
-		
-		for(IRPProject project:projects)
-		{
+
+		for (IRPProject project : projects) {
 			activeComponent = project.getActiveComponent();
-			if(activeComponent!=null)
-			{
+			if (activeComponent != null) {
 				break;
 			}
 		}
 		String filePath = null;
-		
+
 		List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
-		for(IRPConfiguration configuration:configurations)
-		{
-			filePath = configuration.getDirectory(1,"");
+		for (IRPConfiguration configuration : configurations) {
+			filePath = configuration.getDirectory(1, "");
 		}
-		
+
 		List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
-		
-		
+
 		IRPModelElement selectedElement = aClass;
-		
-		while(selectedElement.getOwner() instanceof IRPClass)
-		{
-			
+
+		while (selectedElement.getOwner() instanceof IRPClass) {
+
 			selectedElement = selectedElement.getOwner();
 		}
-		
-		for(IRPModelElement scopeElement: scopeElements)
-		{
-			if(scopeElement.equals(selectedElement))
-			{
-				
-				filePath = filePath+"\\"+selectedElement.getName();
-				
+
+		for (IRPModelElement scopeElement : scopeElements) {
+			if (scopeElement.equals(selectedElement)) {
+
+				filePath = filePath + "\\" + selectedElement.getName();
+
 				break;
-			}	
+			}
 		}
+
 		return filePath;
 	}
 	
-	
-	
+	public static String getSourcePath(IRPPackage aPackage, IRPApplication aApplication)
+	{
+		List<IRPProject> projects = aApplication.getProjects().toList();
+		
+		IRPComponent activeComponent = null;
 
+		for (IRPProject project : projects) {
+			activeComponent = project.getActiveComponent();
+			if (activeComponent != null) {
+				break;
+			}
+		}
+		
+		String filePath = null;
+				
+		List<IRPConfiguration> configurations = activeComponent.getConfigurations().toList();
+		for (IRPConfiguration configuration : configurations) {
+			filePath = configuration.getDirectory(1, "");
+		}
+
+		if(filePath==null)
+		{
+			return null;
+		}
+		
+		List<IRPModelElement> scopeElements = activeComponent.getScopeElements().toList();
+		for(IRPModelElement scopeElement : scopeElements)
+		{
+			if(scopeElement.equals(aPackage))
+			{
+				filePath = filePath+"\\"+activeComponent.getName();
+				return filePath;
+			}
+		}
+		
+		return null;
+	}
+	
 }
 
 class ASTNode<T>

@@ -5,6 +5,8 @@ import java.util.List;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+
 
 public class MainApp extends App {
 	
@@ -15,38 +17,7 @@ public class MainApp extends App {
 	*/
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
-		IRPComponent component = null;
-		
-		if(selected instanceof IRPComponent)
-		{
-			component = (IRPComponent)selected;
-			
-		}
-		else
-		{
-			IRPProject project  = rhapsody.activeProject();
-			
-			if(project==null)
-			{
-				return;
-			}
-			
-			component = project.getActiveComponent();
-		}
-		
-		if(component==null)
-		{
-			return;
-		}
-		
-		@SuppressWarnings("unchecked")
-		List<IRPModelElement> elements = component.getScopeElements().toList();
-		rhapsody.selectModelElements(component.getScopeElements());
-		if(elements.isEmpty()==false)
-		{
-			elements.get(0).locateInBrowser();
-		}
-		
+		RhapsodyHelper.locateActivePackage(rhapsody, selected);
 	}
 	
     /*

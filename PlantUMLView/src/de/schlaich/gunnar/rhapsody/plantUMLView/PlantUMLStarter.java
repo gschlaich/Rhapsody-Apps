@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.rhapsody.plantUMLView;
 
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -23,9 +24,9 @@ public class PlantUMLStarter {
 		// TODO Auto-generated constructor stub
 	}
 	
-public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected) {
+public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose) {
 		
-		
+		boolean showInSVG = false;
 		PlantUMLGenerator gen = new PlantUMLGenerator(selected, false);
 		//System.out.print(gen.getPlanUml());
 		StringSelection stringSelection = new StringSelection(gen.getPlantUml());
@@ -39,61 +40,66 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		final ByteArrayOutputStream os = new ByteArrayOutputStream();
 		// Write the first image to "os"
-		
-		try
+		if(showInSVG==true)
 		{
+			try
+			{
+			
+				@SuppressWarnings("deprecation")
+				String descSVG = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
+				DiagramDescription descc = reader.generateDiagramDescription(new FileFormatOption(FileFormat.SVG));
+				String descSVG2 = descc.getDescription();
+				os.close();
 		
-			@SuppressWarnings("deprecation")
-			String descSVG = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
-			DiagramDescription descc = reader.generateDiagramDescription(new FileFormatOption(FileFormat.SVG));
-			String descSVG2 = descc.getDescription();
-			os.close();
-	
-			// The XML is stored into svg
-			final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
-			showSVG sv = new showSVG(svg);
-			sv.setVisible(true);
-		
+				// The XML is stored into svg
+				final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
+				showSVG sv = new showSVG(svg);
+				sv.setVisible(true);
+			
+			}
+			catch(IOException e)
+			{
+				System.out.println("SVG generation failed");
+				e.printStackTrace();
+			}
 		}
-		catch(IOException e)
+		else
 		{
-			System.out.println("SVG generation failed");
+	
+		
+		String imageName = selected.getIconFileName();
+		imageName = imageName.replace("\\", "/");
+		Toolkit kit = Toolkit.getDefaultToolkit();
+		Image img = kit.createImage(imageName);
+		
+		
+		try 
+		{
+			String desc = reader.outputImage(png).getDescription();
+			byte[] image = png.toByteArray();
+			
+			
+			/*
+			JScrollPane pane = new JScrollPane(
+			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+			*/
+			
+			
+			
+			showPNG sp = new showPNG(image, aExitOnClose);
+			//sp.setContentPane(pane);
+			//sp.setLocation(location);
+			sp.setIconImage(img);
+			sp.setTitle(selected.getName());
+			sp.setVisible(true);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	
+		}
 		
-//		String imageName = selected.getIconFileName();
-//		imageName = imageName.replace("\\", "/");
-//		Toolkit kit = Toolkit.getDefaultToolkit();
-//		Image img = kit.createImage(imageName);
-//		
-//		
-//		try 
-//		{
-//			String desc = reader.outputImage(png).getDescription();
-//			byte[] image = png.toByteArray();
-//			
-//			
-//			/*
-//			JScrollPane pane = new JScrollPane(
-//			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-//			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-//			*/
-//			
-//			
-//			
-//			showPNG sp = new showPNG(image);
-//			//sp.setContentPane(pane);
-//			//sp.setLocation(location);
-//			sp.setIconImage(img);
-//			sp.setTitle(selected.getName());
-//			sp.setVisible(true);
-//			
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		
 		
 	}	
 	

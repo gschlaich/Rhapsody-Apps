@@ -7,107 +7,17 @@ import java.net.URI;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+
 
 
 public class MainApp extends App {
-	
-	String myScriptRunnerPath = "J:/Utilities/CSharpTools/Applications/ScriptRunner/bin/Release/ScriptRunner.exe";
 	
 	
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) 
 	{
 		
-		String scriptPath = "";
-		if(selected instanceof IRPControlledFile )
-		{
-			IRPControlledFile controlledFile = (IRPControlledFile)selected;
-			IRPStereotype stereoType = controlledFile.getNewTermStereotype();
-			
-			if(stereoType == null)
-			{
-				rhapsody.writeToOutputWindow("Log", "has no new Term Stereotype - not a bcl file\n");
-				return;
-			}
-			
-			if(stereoType.getName().equals("BCLScript")==false)
-			{
-				rhapsody.writeToOutputWindow("Log", "wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
-				return; 
-			}
-			
-			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + controlledFile.getName()+"\n");
-			
-			scriptPath = controlledFile.getFullPathFileName();
-			
-
-
-		}
-		else if(selected instanceof IRPHyperLink)
-		{
-			IRPHyperLink hyperLink = (IRPHyperLink)selected;
-			IRPStereotype stereoType = hyperLink.getNewTermStereotype();
-			if(stereoType==null)
-			{
-				rhapsody.writeToOutputWindow("Log", "has no new Term Stereotype - not a bcl file\n");
-				return;
-			}
-			if(stereoType.getName().equals("BCLScriptExt")==false)
-			{
-				rhapsody.writeToOutputWindow("Log", "wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
-				return; 
-			}
-			
-			
-			//check if hyperlink is an absolute path...
-			rhapsody.writeToOutputWindow("Log","Working Directory = " + System.getProperty("user.dir") +"\n");
-			rhapsody.writeToOutputWindow("Log","USM_ROOT = " + System.getenv("USM_ROOT") +"\n");
-			
-			String usm_root = System.getenv("USM_ROOT");
-			scriptPath = hyperLink.getURL();
-			if(scriptPath.startsWith(usm_root))
-			{
-				//we have an absolute path...
-				rhapsody.writeToOutputWindow("Log","change from = " + scriptPath +"\n");
-				scriptPath = "..\\.."+scriptPath.substring(usm_root.length());
-				rhapsody.writeToOutputWindow("Log","To = " + scriptPath +"\n");
-				if(hyperLink.getSaveUnit().isReadOnly()==0)
-				{
-					hyperLink.setURL(scriptPath);
-				}
-
-			}
-	
-			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + scriptPath +"\n");
-			
-			
-		}
-		else
-		{
-			return;
-		}
-		
-		
-		//call the scriptrunner...
-		/*
-		 * J:/Utilities/CSharpTools/Applications/ScriptRunner/bin/Release/ScriptRunner.exe script=j:\USM\Development\RhapsodyModel\UniversalSewingMachine_rpy\DesignView\HardwareDevices\HDInterfaces\WIFI\enableWifi.bcl
-		 */
-		String[] params = new String [2];
-		
-		params[0] = myScriptRunnerPath;
-		params[1] = "script="+scriptPath;
-		
-
-		try 
-		{
-			
-			Process p = Runtime.getRuntime().exec(params);
-			
-		} catch (IOException e) 
-		{
-			rhapsody.writeToOutputWindow("Log", "Exception: "+e.getMessage()+"\n"); 
-		}
-		
-		
+		RhapsodyHelper.scriptRunner(rhapsody, selected);	
 		
 	}	
 	

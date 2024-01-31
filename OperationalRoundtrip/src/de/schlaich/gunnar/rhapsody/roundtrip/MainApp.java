@@ -71,7 +71,7 @@ public class MainApp extends App {
 	{
 		COperationalRoundtrip opRoundtrip = new COperationalRoundtrip();
 		
-		opRoundtrip.startRoundtrip(rhapsody, selected);
+		opRoundtrip.startRoundtrip(rhapsody, selected, true);
 
 	}	
 	

@@ -32,10 +32,18 @@ public class StringSearchable implements Searchable<String,String>
 		List<String> founds = new ArrayList<String>();
 		for ( String s : terms )
 		{
+			/*
 			if ( s.indexOf(value) == 0 )
 			{
 				founds.add(s);
 			}
+			*/
+			
+			if(s.contains(value))
+			{
+				founds.add(s);
+			}
+			
 		}
 		return founds;
 	}

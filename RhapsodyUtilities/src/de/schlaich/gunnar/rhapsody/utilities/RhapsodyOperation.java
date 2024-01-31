@@ -41,7 +41,19 @@ public class RhapsodyOperation {
 		{
 			propertyPath = "CPP_CG.Type."+direction;
 		}
-		String pattern =  aArgument.getPropertyValue(propertyPath);
+		
+		
+		String pattern =  argClassifier.getPropertyValue(propertyPath);
+		
+		try
+		{
+			pattern =  aArgument.getPropertyValueExplicit(propertyPath);
+		}
+		catch(Exception e)
+		{
+			
+		}
+		
 		
 		String argType =  pattern.replace("$type", argClassifier.getName());
 		
@@ -153,8 +165,15 @@ public class RhapsodyOperation {
 		return getArgumentType(aArgument)+" "+aArgument.getName();
 	}
 	
+	
 	public static String getOperation(IRPOperation aOperation)
 	{
+		return aOperation.getImplementationSignature();
+	}
+	
+	public static String getOperation_(IRPOperation aOperation)
+	{
+
 		StringBuffer sBuffer = new StringBuffer();
 		
 		if(aOperation.getIsStatic()==1)

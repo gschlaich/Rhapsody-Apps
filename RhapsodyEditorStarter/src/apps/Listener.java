@@ -216,10 +216,24 @@ public class Listener extends RPApplicationListener {
 
 	@Override
 	public boolean onFeaturesOpen(IRPModelElement pModelElement) {
+		
+		if(myPrefs.getStartEditorOnFeatureOpen()==false)
+		{
+			return false;
+		}
+		
+		if(checkModel(pModelElement)==false)
+		{
+			return false;
+		}
+		
+		
+		
 		if(myPrefs.getStartEditorOnFeatureOpen())
 		{
 			startEditorThread(pModelElement);
 		}
+		
 		return false;
 	}
 

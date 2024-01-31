@@ -3,6 +3,7 @@ package de.schlaich.gunnar.rhapsody.ghs;
 import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
@@ -43,16 +44,15 @@ public class ApplicationStarter {
 		
 		if(app.getSelectedElement() instanceof IRPProject)
 		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.OPEN_MULTI_CMD);
+			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
+		}
+		else if(app.getSelectedElement() instanceof IRPClass)
+		{
+			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
 		}
 		else
 		{
-		
-			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_EDITOR_CMD);
+			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
 		}
-		
-
-
 	}
-
 }

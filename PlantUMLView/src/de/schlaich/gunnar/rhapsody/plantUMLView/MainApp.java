@@ -34,7 +34,7 @@ public class MainApp extends App {
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		myRhapsody = rhapsody;
-		PlantUMLStarter.startPlantUML(rhapsody, selected);
+		PlantUMLStarter.startPlantUML(rhapsody, selected, true);
 		
 	}
 		

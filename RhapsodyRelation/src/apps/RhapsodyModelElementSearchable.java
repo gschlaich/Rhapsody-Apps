@@ -4,7 +4,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -22,6 +24,7 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 
 	IRPModelElement myModelElement = null;
 	List<RhapsodyModelElementItem> myModelElementItems = null;
+	//Map<String,RhapsodyModelElementItem> myModelElementMap = null;
 	
 	
 	@SuppressWarnings("unchecked")
@@ -33,11 +36,9 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 		//IRPProject project = myClassifier.getProject();
 		//myClassifiers = project.getNestedElementsByMetaClass("Class", 1).toList();
 		//myClassifiers.sort(IRPClassfierComparator);
-		
-		
-		
-		
+
 		myModelElementItems = new ArrayList<RhapsodyModelElementItem>();
+		//myModelElementMap = new HashMap<String,RhapsodyModelElementItem>();
 		
 		
 		createRelationList();
@@ -46,8 +47,16 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 		
 			
 	}
+	
+	/*private void addToList(RhapsodyModelElementItem aItem)
+	{
+		if(myModelElementMap.containsKey(aItem.toString())==false)
+		{
+			myModelElementMap.put(aItem.toString(), aItem);
+		}
+	}
 
-
+*/
 	public void createRelationList() 
 	{
 		
@@ -60,7 +69,11 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			
 			for(IRPModelElement e:elements)
 			{
+				
+				//addToList(new RhapsodyModelElementItem(e, e.getName() + "   ["+e.getMetaClass()+"]"));
 				myModelElementItems.add(new RhapsodyModelElementItem(e, e.getName() + "   ["+e.getMetaClass()+"]"));
+				
+				
 			}
 		
 			
@@ -173,6 +186,7 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 	public void clearRelationList()
 	{
 		myModelElementItems.clear();
+		//myModelElementMap.clear();
 	}
 	
 	
@@ -205,6 +219,7 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			}
 			else
 			{
+				//addToList(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
 				myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
 			}
 			
@@ -245,6 +260,7 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 			{
 				continue;
 			}
+			//addToList(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+kind+" in "+e.getOwner().getName()+"]"));
 			myModelElementItems.add(new RhapsodyModelElementItem(e,prefix+e.getName()+"   ["+kind+" in "+e.getOwner().getName()+"]"));
 		}
 		
@@ -271,6 +287,8 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 				}
 				
 			}
+			
+			//addToList(new RhapsodyModelElementItem(e, prefix+e.getName()+"    ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
 			myModelElementItems.add(new RhapsodyModelElementItem(e, prefix+e.getName()+"    ["+e.getMetaClass()+" in "+e.getOwner().getName()+"]"));
 		}
 		
@@ -295,6 +313,8 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 						collectItems(prefix,m,true);
 					}
 				}
+				
+				//addToList(new RhapsodyModelElementItem(m, prefix+m.getName()+"   [File in "+p.getName()+"]"));
 				myModelElementItems.add(new RhapsodyModelElementItem(m, prefix+m.getName()+"   [File in "+p.getName()+"]"));
 				
 			}
@@ -312,14 +332,19 @@ public class RhapsodyModelElementSearchable implements Searchable<RhapsodyModelE
 	{
 		
 		List<RhapsodyModelElementItem> ret = new ArrayList<RhapsodyModelElementItem>();
+
+		
 		for(RhapsodyModelElementItem modelElementItem:myModelElementItems)
 		{
 			String modelElementName = modelElementItem.toString();
-			if(modelElementName.indexOf(value)==0)
+			
+			if(modelElementName.contains(value))
 			{
 				ret.add(modelElementItem);
 			}
 		}
+		
+
 		
 		return ret;
 		

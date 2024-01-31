@@ -55,6 +55,7 @@ public class COperationalRoundtrip implements ActionListener {
 	private static IRPComponent myActiveComponent;
 	private List<IRPOperation> myChangedOperations;
 	private IRPApplication myRhapsody = null;
+	private Map<String,String> myFunctions;
 	
 	
 	
@@ -64,7 +65,7 @@ public class COperationalRoundtrip implements ActionListener {
 	}
 	
 	
-	public void startRoundtrip(IRPApplication rhapsody, IRPModelElement selected) 
+	public void startRoundtrip(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose) 
 	{
 		myRhapsody = rhapsody;
 		//first only with classes
@@ -117,7 +118,7 @@ public class COperationalRoundtrip implements ActionListener {
 			{
 				fileEnding = ".h";
 			}
-			Map<String,String> functions = ASTHelper.getFunctiondefinitions(sourcePath+fileEnding, nameSpace);
+			myFunctions = ASTHelper.getFunctiondefinitions(sourcePath+fileEnding, nameSpace, myClass.getName());
 			
 			
 			for(IRPOperation operation:operations)
@@ -134,7 +135,7 @@ public class COperationalRoundtrip implements ActionListener {
 				}
 				else
 				{
-					sourceCode = ASTHelper.getSourceFromMap(functions, operation);
+					sourceCode = ASTHelper.getSourceFromMap(myFunctions, operation);
 				}
 				
 				
@@ -263,7 +264,7 @@ public class COperationalRoundtrip implements ActionListener {
 			}
 			
 			
-			createWindow(myClass.getName(),diffStringBuilder.toString());
+			createWindow(myClass.getName(),diffStringBuilder.toString(), aExitOnClose);
 			
 			
 		}
@@ -302,7 +303,7 @@ public class COperationalRoundtrip implements ActionListener {
 		builder.showInlineDiffs(true);
 		builder.inlineDiffByWord(true);
 		DiffRowGenerator generator = builder.build();
-		String sourceCode = ASTHelper.getSourceText(operation, myRhapsody);
+		String sourceCode = ASTHelper.getSourceFromMap(myFunctions, operation);
 		List<String> sourceLines = ASTHelper.getLines(sourceCode);	
 		List<String> bodyLines = ASTHelper.getLines(operation.getBody());
 		
@@ -329,10 +330,17 @@ public class COperationalRoundtrip implements ActionListener {
 		return ret;
 	}
 	
-	 private static void createWindow(String aClassName, String aContent) {    
+	 private static void createWindow(String aClassName, String aContent, boolean aExitOnClose) {    
 	     myFrame = new JFrame("Get from Source: " + aClassName);
 
-	     myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	     if(aExitOnClose)
+	     {
+	    	 myFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	     }
+	     else
+	     {
+	    	 myFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	     }
 	      
 	     Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
 	     
@@ -480,7 +488,7 @@ public class COperationalRoundtrip implements ActionListener {
 				{
 					if(hasDiff(operation))
 					{
-						String sourceCode = ASTHelper.getSourceText(operation, myRhapsody);
+						String sourceCode =  ASTHelper.getSourceFromMap(myFunctions, operation);   //ASTHelper.getSourceText(operation, myRhapsody);
 						if((sourceCode==null) ||sourceCode.isEmpty())
 						{
 							continue;

@@ -3,6 +3,8 @@ package apps;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+
 
 public class MainApp extends App {
 	
@@ -19,64 +21,8 @@ public class MainApp extends App {
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
 		
-		if((selected instanceof IRPDependency)==false)
-		{
-			return;
-		}
+		RhapsodyHelper.setComponentDependency(rhapsody, selected);
 		
-		IRPUnit unit = selected.getSaveUnit();
-		String componentName = unit.getName();
-		IRPProject project = rhapsody.activeProject();
-		
-		IRPDependency dependency = (IRPDependency)selected;
-		
-		IRPModelElement dependsOn = dependency.getDependsOn();
-		
-		if(dependsOn==null)
-		{
-			return;
-		}
-		
-		if((dependsOn instanceof IRPPackage) == false)
-		{
-			return;
-		}
-		
-		IRPUnit dependsOnUnit = dependsOn.getSaveUnit();
-		
-		String dependsOnName = dependsOnUnit.getName();
-		
-		System.out.println("Depends: " + dependsOnName);
-		
-		IRPComponent dependsOnComponent = (IRPComponent)project.findNestedElementRecursive(dependsOnName, "Component");
-		
-		if(dependsOnComponent==null)
-		{
-			return;
-		}
-		
-		IRPComponent component = (IRPComponent)project.findNestedElementRecursive(componentName, "Component");
-		
-		if(component==null)
-		{
-			return;
-		}
-		
-		
-		IRPDependency compDep = component.addDependencyTo(dependsOnComponent);
-		
-		if(compDep==null)
-		{
-			return;
-		}
-		
-		compDep.addStereotype("Usage", "Dependency");
-		rhapsody.writeToOutputWindow("log", "Added Dependency from " + componentName + "to" + dependsOnName + "\n");
-		rhapsody.writeToOutputWindow("log", "Generate and build " + componentName + "\n");
-		
-		project.setActiveComponent(component);
-		rhapsody.generate();
-		rhapsody.build();
 		
 	}	
     /*

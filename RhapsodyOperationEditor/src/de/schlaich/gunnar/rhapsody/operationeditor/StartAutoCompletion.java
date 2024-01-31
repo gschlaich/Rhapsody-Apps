@@ -41,6 +41,7 @@ import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
+import de.schlaich.gunnar.parser.CodeAnalysisParser;
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.RhapsodyArgumentCompletion;
@@ -62,6 +63,7 @@ public class StartAutoCompletion extends Thread
 	private IRPApplication myApplication;
 	private DiffParser myDiffParser;
 	private CppParser myCppParser;
+	private CodeAnalysisParser myCodeAnalysisParser;
 	private JFrame myFrame;
 	
 	private static StartAutoCompletion instance;
@@ -262,9 +264,14 @@ public class StartAutoCompletion extends Thread
 	    myTextArea.addParser(myCppParser);
 		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
 		myTextArea.addParser(myDiffParser);
+		myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
+		myTextArea.addParser(myCodeAnalysisParser);
+		
+		
 		
 		myClassifierCompletionProvider.createClassCompletion();
 		myTextArea.forceReparsing(myCppParser);
+		myTextArea.forceReparsing(myCodeAnalysisParser);
 		
 		myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(), myClassifierCompletionProvider);
 		
@@ -303,6 +310,9 @@ public class StartAutoCompletion extends Thread
 	    myTextArea.addParser(myCppParser);
 		myDiffParser = new DiffParser(myTextArea.getText(),gutter);
 		myTextArea.addParser(myDiffParser);
+		myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
+		myTextArea.addParser(myCodeAnalysisParser);
+		
 		
 		myClassifierCompletionProvider.resetClassCompletionCreated();
 		
@@ -318,6 +328,7 @@ public class StartAutoCompletion extends Thread
 		
 		myClassifierCompletionProvider.createClassCompletion();
 		myTextArea.forceReparsing(myCppParser);
+		myTextArea.forceReparsing(myCodeAnalysisParser);
 				
 		Date finished = new Date();
 		double diffMs = finished.getTime()-started.getTime();
@@ -426,7 +437,7 @@ public class StartAutoCompletion extends Thread
 		
 		List<Parameter> xtparams = new ArrayList<Parameter>();
 		Parameter level = new Parameter("TCSI::CTraceEndpoint::ETraceLevel", "Level");
-		level.setDescription("set Trace level:\nX_FATAL\nX_ERROR\nX_WARNING\nX_INFO");
+		level.setDescription("set Trace level:\nX_FATAL\nX_ERROR\nX_WARNING\nX_INFO\nX_LOG\nX_DEBUG");
 		xtparams.add(level);
 		
 		FunctionCompletion xtc = new FunctionCompletion(aCp, "X_TRACE_RELEASE", "");
@@ -436,6 +447,7 @@ public class StartAutoCompletion extends Thread
 		xtc.setParams(xtparams);
 		aCp.addCompletion(xtc);
 		
+	
 		xtc = new FunctionCompletion(aCp, "X_TRACE_DEBUG", "");	
 		xtc.setDefinedIn("TCSI::CTraceEndpoint");
 		xtc.setShortDescription("Trace to USM Monitor or log file only in Debug version");
@@ -458,6 +470,24 @@ public class StartAutoCompletion extends Thread
 		xtc.setDefinedIn("TCSI::CTraceEndpoint");
 		xtc.setShortDescription("Measure time to closing curly bracket (from constructor to destructor)");
 		xtc.setParams(xtimeparams);
+		aCp.addCompletion(xtc);
+		
+		List<Parameter> xlogparams = new ArrayList<Parameter>();
+		text = new Parameter("const char*","Filename");
+		text.setDescription("Filename where to write"
+				+ "");
+		xlogparams.add(text);	
+		
+		xtc = new FunctionCompletion(aCp, "X_LOG_FILE_DEBUG", "");	
+		xtc.setDefinedIn("TCSI::CTraceEndpoint");
+		xtc.setShortDescription("TraceEndpoint to log file");
+		xtc.setParams(xlogparams);
+		aCp.addCompletion(xtc);
+		
+		xtc = new FunctionCompletion(aCp, "X_LOG_FILE_RELEASE", "");	
+		xtc.setDefinedIn("TCSI::CTraceEndpoint");
+		xtc.setShortDescription("TraceEndpoint to log file");
+		xtc.setParams(xlogparams);
 		aCp.addCompletion(xtc);
 		
 		Parameter type = new Parameter("TCSI::CTraceEndpoint::ETraceType","Type");
@@ -506,6 +536,8 @@ public class StartAutoCompletion extends Thread
 		aCp.addCompletion(new BasicCompletion(aCp, "X_WARNING","Trace Level define"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_ERROR","Trace Level define"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_FATAL","Trace Level define"));
+		aCp.addCompletion(new BasicCompletion(aCp, "X_DEBUG","Trace Level define"));
+		aCp.addCompletion(new BasicCompletion(aCp, "X_LOG","Trace Level define"));
 		
 		aCp.addCompletion(new BasicCompletion(aCp, "X_DEFAULT","Trace Type define"));
 		aCp.addCompletion(new BasicCompletion(aCp, "X_OUT","Trace Type define"));

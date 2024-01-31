@@ -14,7 +14,7 @@ public class ApplicationStarter {
 	public static void main(String[] args) {
 
 		// create an instance of my plug-in
-		CUSMPlugin myVSPlugin = new CUSMPlugin();
+		CUSMPlugin myUSMPlugin = new CUSMPlugin();
 		// get Rhapsody application that is currently running
 		IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplication();
 		
@@ -33,13 +33,22 @@ public class ApplicationStarter {
 		}
 		
 		// init the plug-in
-		myVSPlugin.RhpPluginInit(app);
+		myUSMPlugin.RhpPluginInit(app);
 		// simulate a call to the plug-in
-		myVSPlugin.RhpPluginInvokeItem();
+		myUSMPlugin.RhpPluginInvokeItem();
 		
-		//myVSPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
-		myVSPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
+		//myUSMPlugin.OnMenuItemSelect("Util\\PlantUML");
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAll);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraChangedCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		
 
+		
 	}
 
 }

@@ -14,13 +14,19 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPRequirement;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
+import de.schlaich.gunnar.rhapsody.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
+import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
+import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 
 public class CUSMPlugin extends RPUserPlugin {
 
@@ -31,6 +37,17 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String PlantUmlCmd = "PlantUML";
 	public static final String RoundtripCmd = "Operational Roundtrip";
 	public static final String SearchElementCmd = "Search Element";
+	public static final String SelectRelationCmd = "Select Relation";
+	public static final String CreateMsgCmd = "Create Message";
+	public static final String MovePackageCmd = "Move Package to SVN";
+	public static final String SetActiveCmd = "Set Active";
+	public static final String LocateActiveCmd = "Locate Active";
+	public static final String SetComponentDependencyCmd="Set Component Dependency";
+	public static final String ScriptRunnerCmd = "Scriptrunner";
+	public static final String BuildAll = "Build All";
+	public static final String JiraIssueCmd = "Jira";
+	public static final String JiraChangedCmd = "Changed";
+	public static final String StaticCodeAnalyzeCmd = "Analyze";
 	
 	public CUSMPlugin() {
 		// TODO Auto-generated constructor stub
@@ -67,8 +84,15 @@ public class CUSMPlugin extends RPUserPlugin {
 	@Override
 	public void OnMenuItemSelect(String menuItem) {
 		
+		trace("Selected: "+menuItem);
 		
 		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if(menuItem.contains(LocateActiveCmd))
+		{
+			RhapsodyHelper.locateActivePackage(myRhapsody, selected);
+			return;
+		}
 		
 		if(selected==null)
 		{
@@ -76,24 +100,100 @@ public class CUSMPlugin extends RPUserPlugin {
 			return;
 		}
 		
-		if(menuItem.equals(PlantUmlCmd))
+		if(menuItem.contains(PlantUmlCmd))
 		{
-			PlantUMLStarter.startPlantUML(myRhapsody, selected);
+			PlantUMLStarter.startPlantUML(myRhapsody, selected, false);
 			return;
 		}
-		if(menuItem.equals(RoundtripCmd))
+		if(menuItem.contains(RoundtripCmd))
 		{
 			COperationalRoundtrip roundtrip = new COperationalRoundtrip();
-			roundtrip.startRoundtrip(myRhapsody, selected);
+			roundtrip.startRoundtrip(myRhapsody, selected, false);
 			return;
 		}
-		if(menuItem.equals(SearchElementCmd))
+		if(menuItem.contains(SearchElementCmd))
 		{
 			RhapsodyHelper.searchElement(myRhapsody, selected);
 			return;
 		}
+		if(menuItem.contains(SelectRelationCmd))
+		{
+			CRhapsodyRelation relation = new CRhapsodyRelation();
+			relation.execute(myRhapsody, selected, false);
+			return;
+		}
+		if(menuItem.contains(CreateMsgCmd))
+		{
+			CCreateMessage createMessage = new CCreateMessage();
+			createMessage.execute(myRhapsody, selected);
+			return;
+		}
+		if(menuItem.contains(MovePackageCmd))
+		{
+			RhapsodyHelper.movePackageToRepository(myRhapsody, selected);
+			return;
+		}
+		if(menuItem.contains(SetActiveCmd))
+		{
+			RhapsodyHelper.setActive(selected, myRhapsody);
+			return;
+		}
 		
-
+		if(menuItem.contains(ScriptRunnerCmd))
+		{
+			RhapsodyHelper.scriptRunner(myRhapsody, selected);
+			return;
+		}
+		if(menuItem.contains(BuildAll))
+		{
+			BuildTools bt = new BuildTools(myRhapsody);
+			bt.buildAll();
+			return;
+		}
+		if(menuItem.contains(SetComponentDependencyCmd))
+		{
+			RhapsodyHelper.setComponentDependency(myRhapsody, selected);
+			return;
+		}
+		
+		if(menuItem.contains(JiraIssueCmd))
+		{
+			
+			IRPRequirement jiraReq = SVNTools.setActualJiraIssue(myRhapsody, selected);
+			if(jiraReq==null)
+			{
+				trace("Could not get Jira Issue");
+				return;
+			}
+			
+			trace("Jira Issue: " + jiraReq.getName() + ": " + jiraReq.getSpecification());
+			return;
+		}
+		
+		if(menuItem.contains(JiraChangedCmd))
+		{
+			
+			SVNTools.anchorAllChanges(myRhapsody, selected);
+			return;
+			
+		}
+		
+		if(menuItem.contains(StaticCodeAnalyzeCmd))
+		{
+			String result = StaticCodeAnalysis.Analyze(selected, myRhapsody);
+			
+			if(result==null)
+			{
+				trace("Analyze failed");
+			}
+			
+			trace("Analyze: "+ result);
+			
+			return;
+		}
+		
+		trace("menue item unknown");
+		
 	}
 	
 	private void trace(String aMsg)

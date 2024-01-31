@@ -103,19 +103,6 @@ public class ApplicationListener extends RPApplicationListener {
 	public boolean beforeProjectClose(IRPProject pProject) {
 		if(myProject.equals(pProject))
 		{
-			if(textChanged())
-			{
-				int n = JOptionPane.showConfirmDialog(
-					    null,
-					    "Apply Changes on "+myOperation.getName()+"?",
-					    "Project Close",
-					    JOptionPane.YES_NO_OPTION);
-				
-				if(n==0)
-				{
-					myOperation.setBody(myTextarea.getText());
-				}
-			}
 			
 			myFrame.dispose();
 			
