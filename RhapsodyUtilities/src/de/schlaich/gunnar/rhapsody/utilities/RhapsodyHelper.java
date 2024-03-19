@@ -14,7 +14,10 @@ import com.ibm.rhapsody.apps.App;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPAttribute;
+import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
+import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPControlledFile;
@@ -27,6 +30,7 @@ import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRelation;
+import com.telelogic.rhapsody.core.IRPRequirement;
 import com.telelogic.rhapsody.core.IRPSearchManager;
 import com.telelogic.rhapsody.core.IRPSearchQuery;
 import com.telelogic.rhapsody.core.IRPStereotype;
@@ -451,8 +455,6 @@ public class RhapsodyHelper
 			
 			scriptPath = controlledFile.getFullPathFileName();
 			
-
-
 		}
 		else if(selected instanceof IRPHyperLink)
 		{
@@ -853,6 +855,95 @@ public class RhapsodyHelper
 			
 			return ret;
 			
+		}
+		
+		public List<IRPModelElement> get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column) {
+			
+			
+			cellElement.getHyperLinks().toList();
+			
+			
+			if(cellElement instanceof IRPRequirement == false)
+			{
+				return null;
+			}
+			
+			IRPRequirement req = (IRPRequirement)cellElement;
+			
+			return req.getHyperLinks().toList();
+			
+			
+			
+			/*
+			IRPModelElement msg = cellElement.getOwner();
+			
+			if(msg instanceof IRPClass == false)
+			{
+				return null;
+			}
+			
+			IRPClass cmsg = (IRPClass)msg;
+			
+			List<IRPClassifier> classifiers = cmsg.getNestedClassifiers().toList();
+			
+			for(IRPClassifier cf : classifiers)
+			{
+				
+				
+				if(cf.findGeneralization("IMsgReceiver")==null)
+				{
+					continue;
+				}
+				
+				return cf.getDerivedClassifiers().toList();
+	
+			}
+			return null;
+			
+			*/
+			
+			
+			/*
+			IRPModelElement cmd = cellElement.getOwner();
+			
+			if(cmd==null)
+			{
+				return "";
+			}
+			
+			if(cmd instanceof IRPClass)
+			{
+			
+				IRPClass ccmd = (IRPClass)cmd;
+				List<IRPOperation> ops = ccmd.getOperations().toList();
+				for(IRPOperation o:ops)
+				{
+					if(o.getName().equals("describe"))
+					{
+						return o.getBody();
+					}
+				}
+			
+			}
+			return "";
+			*/
+			/*
+			if(cellElement instanceof IRPOperation)
+			{
+				IRPOperation op = (IRPOperation)cellElement;
+				return op.getSignature();
+			}
+			return "no Operation";
+			*/
+			/*
+			if(cellElement instanceof IRPComment)
+			{
+				IRPComment comment = (IRPComment)cellElement;
+				return comment.getAnchoredByMe().toList();
+			}
+			
+			return null;
+			*/
 		}
 				
 

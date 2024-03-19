@@ -14,4 +14,11 @@
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>resource/warning.png</name>
+			<type>1</type>
+			<location>C:/Users/schl591/Documents/warning.png</location>
+		</link>
+	</linkedResources>
 </projectDescription>

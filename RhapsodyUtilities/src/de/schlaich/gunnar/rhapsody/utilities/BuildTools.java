@@ -75,6 +75,7 @@ public class BuildTools {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	private boolean buildComponent(IRPProject aProject, IRPComponent aComponent, int aLevel)
 	{
 		
@@ -86,6 +87,7 @@ public class BuildTools {
 		trace("Check for generate: "+aComponent.getName()+"...");
 		
 		IRPUnit componentUnit = aComponent.getSaveUnit();
+		
 		System.out.println("Component Unit Name: "+componentUnit.getFilename()+ " Last Modified: " + componentUnit.getLastModifiedTime());
 		
 		SimpleDateFormat dateFormat = new SimpleDateFormat("MM.dd.yyyy::HH:mm:ss");
@@ -130,36 +132,37 @@ public class BuildTools {
 		{
 			//check date and time
 			Date dateMakeFile = new Date(makeFile.lastModified());
-			
-			List<IRPPackage> packages = aComponent.getScopeElementsByCategory("Package").toList();
-			for(IRPPackage p : packages)
-			{
-				IRPUnit unit = p.getSaveUnit();
-				String modifiedString = unit.getLastModifiedTime();
-				Date dateUnit = null;
-				try 
+			List<IRPModelElement> es = aComponent.getScopeElements().toList();
+
+			for (IRPModelElement e : es) {
+				if (e instanceof IRPPackage)
+
 				{
-					dateUnit = dateFormat.parse(modifiedString);
-				} 
-				catch (ParseException e) 
-				{
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-					return false;
-				}
-				
-				if(dateUnit.compareTo(dateMakeFile)>0)
-				{
+					IRPPackage p = (IRPPackage) e;
+					IRPUnit unit = p.getSaveUnit();
+					String modifiedString = unit.getLastModifiedTime();
+					Date dateUnit = null;
+					try {
+						dateUnit = dateFormat.parse(modifiedString);
+					} catch (ParseException ex) {
+						// TODO Auto-generated catch block
+						ex.printStackTrace();
+						return false;
+					}
+
 					String formattedDate = dateFormat.format(dateMakeFile);
 
-					System.out.println("Source Class: " + makeFile.getName() + " Last Modified: " + formattedDate +
-							" Unit: " + unit.getName() + " Last Modified: " + unit.getLastModifiedTime() );
-				
-					needsBuild = true;
-					break;
+					if (dateUnit.compareTo(dateMakeFile) > 0) {
 					
+						System.out.println("Source Class: " + makeFile.getName() + " Last Modified: " + formattedDate
+								+ " Unit: " + unit.getName() + " Last Modified: " + unit.getLastModifiedTime());
+
+						needsBuild = true;
+						break;
+
+					}
+
 				}
-				
 			}
 
 		}

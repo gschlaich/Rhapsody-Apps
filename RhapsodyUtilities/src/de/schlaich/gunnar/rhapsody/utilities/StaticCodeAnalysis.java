@@ -26,6 +26,7 @@ import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
@@ -103,6 +104,7 @@ public class StaticCodeAnalysis {
 
 			sca.clang(selectedClass, project);
 			sca.cppTest(selectedClass, project);
+			sca.flawfinder(selectedClass, project);
 			return "ok";
 		}
 		else if(aSelected instanceof IRPPackage)
@@ -113,6 +115,35 @@ public class StaticCodeAnalysis {
 		}
 		
 		return "failed";	
+	}
+	
+	public static String Clear(IRPModelElement aSelected, IRPApplication aApplication)
+	{
+		if(aSelected==null)
+		{
+			return "failed";
+		}
+		
+		IRPProject project = aSelected.getProject();
+		StaticCodeAnalysis sca = get(aApplication);
+		IRPComponent component = project.getActiveComponent();
+		
+		if(component==null)
+		{
+			return "failed";
+		}
+		
+		sca.clear(component);
+		
+		return "ok";
+	}
+	
+	private void clear(IRPComponent aComponent)
+	{
+		if(myComponents.remove(aComponent)==null)
+		{
+			trace("No Component found");
+		}
 	}
 	
 	
@@ -126,6 +157,7 @@ public class StaticCodeAnalysis {
 		{
 			ret+=aSca.clang(c, aPackage.getProject());
 			ret+=aSca.cppTest(c, aPackage.getProject());
+			ret+=aSca.flawfinder(c, aPackage.getProject());
 		}
 		
 		List<IRPPackage> packages = aPackage.getPackages().toList();
@@ -145,34 +177,19 @@ public class StaticCodeAnalysis {
 		
 		trace("Clang: Class "+aClass.getName()+": ");
 		
+		
+		if(aClass.getOwner() instanceof IRPClass)
+		{
+			trace("Nested class! - exit");
+			return null;
+		}
+		
 		String fileName = aClass.getName()+".cpp";
 		
 		if(aClass.isATemplate()==1)
 		{
 			fileName = aClass.getName()+".h";
 		}
-		
-		
-		
-		/*
-		boolean isActive = false;
-		
-		List<IRPClass> classes = activeComponent.getScopeElementsByCategory("Class").toList();
-		for(IRPClass c : classes)
-		{
-			if(c.equals(aClass))
-			{
-				isActive = true;
-				break;
-			}
-		}
-		
-		if(isActive==false)
-		{
-			return null;
-		}
-		
-		*/
 		
 		
 		try {
@@ -445,12 +462,10 @@ public class StaticCodeAnalysis {
 		try 
 		{
 			
-			trace(FlawfinderCmd +" " + FlawFinderCSV + " " + fileName);
+			trace("python" + " " + FlawfinderCmd +" " + FlawFinderCSV + " " + workingFile.getAbsolutePath());
 			
 			
-			
-			
-			ProcessBuilder processBuilder = new ProcessBuilder(FlawfinderCmd, FlawFinderCSV, workingFile.getAbsolutePath());
+			ProcessBuilder processBuilder = new ProcessBuilder("python", FlawfinderCmd, FlawFinderCSV, workingFile.getAbsolutePath());
 			 
 	        processBuilder.directory(new File(FlawfinderPath));
 	   
@@ -476,9 +491,69 @@ public class StaticCodeAnalysis {
 				trace(line);
 				output.add(line);
 			}
-
+			
 
 			int exitCode = process.waitFor();
+			
+			
+			//File,Line,Column,DefaultLevel,Level,Category,Name,Warning,Suggestion,Note,CWEs,Context,Fingerprint,ToolVersion,RuleId,HelpUri
+			
+			IASTTranslationUnit translationUnit =  ASTHelper.getTranslationUnit(workingFile.getAbsolutePath());
+
+				
+			for(String l:output)
+			{
+				if(l.contains(workingFile.getAbsolutePath()))
+				{
+					
+					 String[] fields = l.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+
+	       
+					if (fields.length >= 16) 
+					{
+						String file = fields[0];
+						int lineNumber = Integer.parseInt(fields[1]);
+						int column = Integer.parseInt(fields[2]);
+						int defaultLevel = Integer.parseInt(fields[3]);
+						int level = Integer.parseInt(fields[4]);
+						String category = fields[5];
+						String name = fields[6];
+						String warning = fields[7];
+						String suggestion = fields[8];
+						String note = fields[9];
+						String cwes = fields[10];
+						String context = fields[11];
+						String fingerprint = fields[12];
+						String toolVersion = fields[13];
+						String ruleId = fields[14];
+						String helpUri = fields[15];
+						
+						String message = category+" "+name+"\n"+warning + "\n" + suggestion;
+						IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(lineNumber, translationUnit);
+				        String operationName = ASTHelper.getOperationName(operationDefinition);
+				            
+				        int offset = (ASTHelper.getOffset(operationDefinition, lineNumber)-1);
+				        
+				        IRPComment issue = createIssue(aClass, "warning", message, operationName, offset, column);
+				        
+				        if(issue!=null)
+				        {
+				        	IRPModelElement e = issue.addNewAggr("HyperLink", cwes);
+				        	if(e!=null&&e instanceof IRPHyperLink)
+				        	{
+				        		IRPHyperLink h = (IRPHyperLink)e;
+				        		h.setURL(helpUri);
+				        	}
+				        }
+						
+						
+
+					}
+					
+				}
+			}
+			
+			
 		
 		}
 		catch(Exception e)
@@ -495,28 +570,35 @@ public class StaticCodeAnalysis {
 		return null;
 	}
 	
+	
+	
 	@SuppressWarnings("unchecked")
-	public void createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName, int offset, int column) 
+	private IRPComment createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName, int offset, int column) 
 	{
 		if(operationName==null)
 		{
-			return;
+			return null;
 		}
 		
 		IRPUnit unit = aClass.getSaveUnit();
 		if(unit==null)
 		{
-			return;
+			return null;
 		}
 		
 		if(unit.isReadOnly()==1)
 		{
-			return;
+			return null;
 		}
 			
 		if(errorLevel.contains("note"))
 		{
-			return;
+			return null;
+		}
+		
+		if(offset<0)
+		{
+			offset = 0;
 		}
 			
 		        
@@ -527,7 +609,7 @@ public class StaticCodeAnalysis {
         {
         	if(issue.getName().equals(issueName))
         	{
-        		return;
+        		return null;
         	}
         }
 		                
@@ -540,15 +622,38 @@ public class StaticCodeAnalysis {
         if(staticAnalysisIssue!=null)
         {
             //get the operation...
-            List<IRPOperation> ops = aClass.getOperations().toList();
-            for(IRPOperation op:ops)
-            {
-            	if(op.getName().equals(operationName))
-            	{
-            		staticAnalysisIssue.addAnchor(op);            		
-            	}
-            }    
+            addAnchor(aClass, operationName, staticAnalysisIssue); 
+            
+           
+            
         }
+        return staticAnalysisIssue;
+	}
+
+	private void addAnchor(IRPClass aClass, String operationName, IRPComment staticAnalysisIssue) {
+		
+		
+		List<IRPOperation> ops = aClass.getOperations().toList();
+		
+		boolean foundOperation = false;
+		
+		for(IRPOperation op:ops)
+		{
+			if(op.getName().equals(operationName))
+			{
+				staticAnalysisIssue.addAnchor(op); 
+				foundOperation = true;
+			}
+		}
+		
+		if(foundOperation==false)
+		{
+			List<IRPClass> nestedClasses = aClass.getNestedElementsByMetaClass("Class", 0).toList();
+			for(IRPClass c:nestedClasses)
+			{
+				addAnchor(c, operationName, staticAnalysisIssue);
+			}
+		}	
 	}
 }
 

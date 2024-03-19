@@ -12,5 +12,7 @@
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/jdom.jar"/>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtilities"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.cdt.core.source_5.6.0.201402142303.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox-common-3.2.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

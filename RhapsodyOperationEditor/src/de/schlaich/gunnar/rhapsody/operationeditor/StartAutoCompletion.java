@@ -344,6 +344,16 @@ public class StartAutoCompletion extends Thread
 		return myDiffParser;
 	}
 	
+	public CodeAnalysisParser getCodeAnalysisParser()
+	{
+		return myCodeAnalysisParser;
+	}
+	
+	public void forceCodeAnalysisParser()
+	{
+		myTextArea.forceReparsing(myCodeAnalysisParser);
+	}
+	
 	
 	/**
 	 * Creates the completion provider for a C editor.  This provider can be

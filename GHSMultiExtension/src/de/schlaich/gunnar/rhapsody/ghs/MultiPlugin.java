@@ -3,6 +3,7 @@ package de.schlaich.gunnar.rhapsody.ghs;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
@@ -329,11 +330,25 @@ public class MultiPlugin extends RPUserPlugin {
 	
 	public void compile(IRPModelElement aElement) {
 
-		trace("Start compile");
+		trace("Generate...");
+
+		IRPCollection generateCollection = myRhapsody.getListOfSelectedElements();
+			
+			
+		trace("Start generate");
 
 		if (aElement == null) {
 			aElement = myRhapsody.getSelectedElement();
 		}
+		else
+		{
+			generateCollection.addItem(aElement);
+		}
+		
+		myRhapsody.generateElements(generateCollection);
+		
+		trace("Start compile");
+		
 
 		String path = null;
 
@@ -414,7 +429,8 @@ public class MultiPlugin extends RPUserPlugin {
 				{
 					 
 					//String pattern = "\"([^\"]+)\", line (\\d+): error #(\\d+): (.+)";
-					String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #(\\d+):(.+)?";
+					//String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #(\\d+):(.+)?";
+					String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #([^:]+)(.+)?";
 				        Pattern re = Pattern.compile(pattern);
 
 				        Matcher matcher = re.matcher(r);
@@ -469,7 +485,10 @@ public class MultiPlugin extends RPUserPlugin {
 				            	List<IRPClass> classes = p.getNestedElementsByMetaClass("Class", 1).toList();
 				            	for(IRPClass c:classes)
 				            	{
-				            		createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel, errorCode, errorMessage);
+				            		if(c.getName().equals(className))
+				            		{
+				            			createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel, errorCode, errorMessage);
+				            		}
 				            	}
 				            }
 				            else if(aElement instanceof IRPOperation)
@@ -494,42 +513,68 @@ public class MultiPlugin extends RPUserPlugin {
 
 	public void createIssue(File aWorkingFolder, IRPClass aClass, String aFileName, String aClassName, int aLineNumber,
 			String aErrorLevel, String aErrorCode, String aErrorMessage) {
-		if(aClass.getName().equals(aClassName))
+		
+		while(aClass.getOwner() instanceof IRPClass)
 		{
-			
-			File cppSource = new File(aWorkingFolder,aFileName);
-			if(cppSource.exists())
-			{
-				IASTTranslationUnit translationUnit =  ASTHelper.getTranslationUnit(cppSource.getAbsolutePath());
-				IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(aLineNumber, translationUnit);
-		        String operationName = ASTHelper.getOperationName(operationDefinition);   
-		        int offset = (ASTHelper.getOffset(operationDefinition, aLineNumber)-1);
-		        
-		        createIssue(aClass, aErrorLevel, aErrorCode+": "+aErrorMessage, operationName, offset); 
-		        
-		        
-			}
-			
+			aClass = (IRPClass)aClass.getOwner();
 		}
+
+		File cppSource = new File(aWorkingFolder,aFileName);
+		if(cppSource.exists())
+		{
+			IASTTranslationUnit translationUnit =  ASTHelper.getTranslationUnit(cppSource.getAbsolutePath());
+			IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(aLineNumber, translationUnit);
+	        String operationName = ASTHelper.getOperationName(operationDefinition);   
+	        int offset = (ASTHelper.getOffset(operationDefinition, aLineNumber)-1);
+	        
+	        createIssue(aClass, aErrorLevel, aErrorCode+": "+aErrorMessage, operationName, offset); 
+	        
+	        
+		}
+			
+		
 	}
 
 	public void deleteCompilerIssues(IRPPackage aPackage) {
+		
+		if(aPackage instanceof IRPProject)
+		{
+			return;
+		}
+		
+		trace("delete CompilerIssue from " + aPackage.getName());
+		
 		List<IRPClass> classes = aPackage.getNestedElementsByMetaClass("Class", 1).toList();
+		
+		if(aPackage.isReadOnly()==1)
+		{
+			return;
+		}
 		
 		for(IRPClass c:classes)
 		{
+			trace("delete CompilerIssue from " + c.getName());
 			deleteCompilerIssues(c);
 		}
 	}
 
 	public void deleteCompilerIssues(IRPClass aClass) {
+			
+		
+		if(aClass.isReadOnly()==1)
+		{
+			return;
+		}
+		
 		List<IRPComment> comments = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
 		 
 		for(IRPComment comment:comments)
 		{
 			if(comment.getUserDefinedMetaClass().equals(CompilerIssue))
 			{
+				
 				comment.deleteFromProject();
+				
 			}
 		}
 	}
@@ -605,7 +650,25 @@ public class MultiPlugin extends RPUserPlugin {
 				aCompilerIssue.addAnchor(op);            		
 			}
 		}
-		return foundOperation;
+		
+		if(foundOperation == false)
+		{
+			List<IRPClass> nestedClasses = aClass.getNestedElementsByMetaClass("Class", 0).toList();
+			for(IRPClass c:nestedClasses)
+			{
+				foundOperation = addCompilerIssue(c, aOperationName, aCompilerIssue);
+				if(foundOperation==true)
+				{
+					return foundOperation;
+				}
+			}
+			return false;
+			
+		}
+		else
+		{
+			return foundOperation;
+		}
 	}
 	
 	

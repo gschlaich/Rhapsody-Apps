@@ -44,10 +44,11 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String LocateActiveCmd = "Locate Active";
 	public static final String SetComponentDependencyCmd="Set Component Dependency";
 	public static final String ScriptRunnerCmd = "Scriptrunner";
-	public static final String BuildAll = "Build All";
+	public static final String BuildAllCmd = "Build All";
 	public static final String JiraIssueCmd = "Jira";
-	public static final String JiraChangedCmd = "Changed";
-	public static final String StaticCodeAnalyzeCmd = "Analyze";
+	public static final String JiraChangedCmd = "Jira Changed";
+	public static final String StaticCodeAnalyzeCmd = "Code Analyze";
+	public static final String StaticCodeAnalyzeClearCmd = "Clear Analyze";
 	
 	public CUSMPlugin() {
 		// TODO Auto-generated constructor stub
@@ -144,7 +145,7 @@ public class CUSMPlugin extends RPUserPlugin {
 			RhapsodyHelper.scriptRunner(myRhapsody, selected);
 			return;
 		}
-		if(menuItem.contains(BuildAll))
+		if(menuItem.contains(BuildAllCmd))
 		{
 			BuildTools bt = new BuildTools(myRhapsody);
 			bt.buildAll();
@@ -154,6 +155,14 @@ public class CUSMPlugin extends RPUserPlugin {
 		{
 			RhapsodyHelper.setComponentDependency(myRhapsody, selected);
 			return;
+		}
+		
+		if(menuItem.contains(JiraChangedCmd))
+		{
+			
+			SVNTools.anchorAllChanges(myRhapsody, selected);
+			return;
+			
 		}
 		
 		if(menuItem.contains(JiraIssueCmd))
@@ -170,13 +179,7 @@ public class CUSMPlugin extends RPUserPlugin {
 			return;
 		}
 		
-		if(menuItem.contains(JiraChangedCmd))
-		{
-			
-			SVNTools.anchorAllChanges(myRhapsody, selected);
-			return;
-			
-		}
+		
 		
 		if(menuItem.contains(StaticCodeAnalyzeCmd))
 		{
@@ -189,6 +192,11 @@ public class CUSMPlugin extends RPUserPlugin {
 			
 			trace("Analyze: "+ result);
 			
+			return;
+		}
+		if(menuItem.contains(StaticCodeAnalyzeClearCmd))
+		{
+			StaticCodeAnalysis.Clear(selected,myRhapsody);
 			return;
 		}
 		
@@ -220,6 +228,26 @@ public class CUSMPlugin extends RPUserPlugin {
 		// TODO Auto-generated method stub
 
 	}
+	
+	public String get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column) {
+		return cellElement.getOwner().getDescription();
+	}
+	
+	public IRPModelElement get_UserDefinedImplementation1(IRPModelElement cellElement, Integer row, Integer column) 
+	{
+		
+		IRPRequirement req = (IRPRequirement)cellElement;
+		if(req==null)
+		{
+			return null;
+		}
+		
+		req.getAnchoredByMe();
+		
+		return null;
+		
+	}
+
 	
 
 }

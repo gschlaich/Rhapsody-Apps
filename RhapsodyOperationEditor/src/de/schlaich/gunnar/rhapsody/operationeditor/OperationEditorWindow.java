@@ -90,7 +90,7 @@ import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.MainApp;
-
+import de.schlaich.gunnar.parser.CodeAnalysisParser;
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
 import de.schlaich.gunnar.rhapsody.completion.ASTUtilities;
@@ -521,10 +521,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		        }, 
 		        1000 
 		);
-		
-		
-		
-		
+	
 	}
 	
 	
@@ -871,7 +868,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		OperationEditorWindow win = Get(op);
 		if(win!=null)
 		{
-			
+			win.forceParser();
 			win.setFocus();
 			
 			return;
@@ -925,6 +922,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	}
 	
 	
+	private void forceParser()
+	{
+		myStartAutoCompletion.forceCodeAnalysisParser();
+	}
+	
+	
 	
 	
 	
@@ -956,6 +959,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 					if(diffParser!=null)
 					{
 						diffParser.update(text);
+					}
+					CodeAnalysisParser cParser = myStartAutoCompletion.getCodeAnalysisParser();
+					if(cParser!=null)
+					{
+						cParser.clear();
 					}
 					
 				}
@@ -1157,6 +1165,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				loadInIde.compile(mySelectedOperation);
 			}
+			
 		
 		}
 		

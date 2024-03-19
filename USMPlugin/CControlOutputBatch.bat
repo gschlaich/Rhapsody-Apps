@@ -1,0 +1,25 @@
+@echo off
+clang-tidy CControlOutput.cpp -- ^
+-I./../../../../Development/ExternalSource/PrecompiledHeader ^
+-I%OMROOT%/LangCpp ^
+-I../../../../../Development/ExternalSource/oxf/oxf ^
+-I../../TCSI/DefaultConfig ^
+-I../../VER/DefaultConfig ^
+-I../../ZLibExtern/DefaultConfig ^
+-I../../SERI/DefaultConfig ^
+-I../../THM/DefaultConfig ^
+-I../../BTI/DefaultConfig ^
+-I../../FSAI/DefaultConfig ^
+-I../../PLAI/DefaultConfig ^
+-I../../OSSI/DefaultConfig ^
+-I../../THMI/DefaultConfig ^
+-I../../CMDI/DefaultConfig ^
+-I../../SYM/DefaultConfig ^
+-I../../IOUI/DefaultConfig ^
+-I../../PARI/DefaultConfig ^
+-I../../MSGI/DefaultConfig ^
+-I../../SYMI/DefaultConfig ^
+-I../../IOPI/DefaultConfig ^
+-I../../IOPMgr/DefaultConfig ^
+-I../../MMU/DefaultConfig ^
+-I%OMROOT%/LangCpp/osconfig/WIN32

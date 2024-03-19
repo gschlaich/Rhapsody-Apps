@@ -22,6 +22,7 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
+import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 
 public class CodeAnalysisParser extends AbstractParser {
@@ -29,6 +30,7 @@ public class CodeAnalysisParser extends AbstractParser {
 	private IRPOperation myOperation = null;
 	private Gutter myGutter = null;
 	private Icon myErrorIcon = null;
+	private Icon myWarningIcon = null;
 	private List<GutterIconInfo> myInfos = null;
 	private DefaultParseResult myResult;
 	
@@ -37,18 +39,46 @@ public class CodeAnalysisParser extends AbstractParser {
 		myOperation = aOperation;
 		myGutter = aGutter;
 		myErrorIcon = RhapsodyOperation.getIcon("RhapsodyIcons_110.gif");
+		myWarningIcon = RhapsodyOperation.getIcon("RhapsodyIcons_205.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
 		myResult = new DefaultParseResult(this);
 		
 		
 	}
+	
+	public void clear()
+	{
+		myResult.clearNotices();
+		for(GutterIconInfo info:myInfos)
+		{
+			myGutter.removeTrackingIcon(info);
+		}
+
+	}
+
+	
+	
 
 	@Override
 	public ParseResult parse(RSyntaxDocument doc, String style) 
 	{
 		
-		IRPModelElement owner = myOperation.getOwner();
+		IRPModelElement o = myOperation.getOwner();
 		
+		
+		if(o instanceof IRPClass == false)
+		{
+			return null;
+		}
+		
+		IRPClass owner = (IRPClass)o;
+		
+		IRPModelElement oo = owner.getOwner();
+		
+		if(oo instanceof IRPClass)
+		{
+			owner = (IRPClass)oo;
+		}
 		
 		Element root = doc.getDefaultRootElement();
 		int lineCount = root.getElementCount();
@@ -88,20 +118,25 @@ public class CodeAnalysisParser extends AbstractParser {
 					            	String message;
 					            	Color messageColor = Color.RED;
 					            	
+					            	GutterIconInfo info;
+					            	
+					            	Icon showIcon = myErrorIcon;
+					            	
 					            	if(comment.getName().startsWith("error"))
 					            	{
 					            		 message = "Error: " + comment.getDescription();
+					            		 
 					            	}
 					            	else
 					            	{
 					            		message = "Warning: " + comment.getDescription();
 					            		messageColor = Color.YELLOW;
+					            		showIcon = myWarningIcon;
 					            	}
+
 					            	
-					            	
-					            	GutterIconInfo info;
 									try {
-										info = myGutter.addLineTrackingIcon(line,myErrorIcon, message);
+										info = myGutter.addLineTrackingIcon(line,showIcon, message);
 										myInfos.add(info);
 									} catch (BadLocationException e) {
 										// TODO Auto-generated catch block

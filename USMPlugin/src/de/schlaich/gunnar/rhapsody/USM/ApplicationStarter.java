@@ -41,11 +41,11 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect("Util\\PlantUML");
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAll);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraChangedCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
 		
 
 		

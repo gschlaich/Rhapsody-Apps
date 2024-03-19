@@ -236,12 +236,18 @@ public class SVNTools {
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static IRPRequirement anchorAllChanges(IRPApplication aRhapsody, IRPModelElement aSelected)
 	{
 		
 		IRPProject project = aSelected.getProject();
 		
 		IRPRequirement jiraReq = getActualJiraElement(aSelected);
+		
+		if(jiraReq == null)
+		{
+			return null;
+		}
 		
 		IRPComponent component = project.getActiveComponent();
 		

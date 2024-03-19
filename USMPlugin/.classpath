@@ -14,5 +14,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/PlantUMLView"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OperationalRoundtrip"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyRelation"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyCreateMessage"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
