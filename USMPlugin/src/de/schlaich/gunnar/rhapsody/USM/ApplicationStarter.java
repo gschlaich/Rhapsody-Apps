@@ -43,9 +43,21 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraChangedCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunMFileCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ConvertToRelativePathCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateInitCodeCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetInitCodeOfClassCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SetInitCodeOfClassCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffHeadCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.HistoryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExplorerCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkReportCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetLockCmd);
+		
 		
 
 		

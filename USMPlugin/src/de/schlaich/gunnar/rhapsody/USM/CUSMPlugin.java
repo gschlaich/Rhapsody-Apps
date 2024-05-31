@@ -1,15 +1,21 @@
 package de.schlaich.gunnar.rhapsody.USM;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
+import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
+import com.telelogic.rhapsody.core.IRPControlledFile;
+import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProfile;
@@ -27,12 +33,15 @@ import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
+import de.schlaich.gunnar.rhapsody.utilities.generateInitCode.CodeGenerator;
 
 public class CUSMPlugin extends RPUserPlugin {
 
 	
 	private IRPApplication myRhapsody = null;
 	private IRPProfile myProfile = null;
+	
+	private SVNTools mySVNTools = null;
 	
 	public static final String PlantUmlCmd = "PlantUML";
 	public static final String RoundtripCmd = "Operational Roundtrip";
@@ -42,16 +51,42 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String MovePackageCmd = "Move Package to SVN";
 	public static final String SetActiveCmd = "Set Active";
 	public static final String LocateActiveCmd = "Locate Active";
-	public static final String SetComponentDependencyCmd="Set Component Dependency";
+	public static final String SetComponentDependencyCmd = "Set Component Dependency";
 	public static final String ScriptRunnerCmd = "Scriptrunner";
 	public static final String BuildAllCmd = "Build All";
 	public static final String JiraIssueCmd = "Jira";
 	public static final String JiraChangedCmd = "Jira Changed";
 	public static final String StaticCodeAnalyzeCmd = "Code Analyze";
 	public static final String StaticCodeAnalyzeClearCmd = "Clear Analyze";
+	public static final String RunMFileCmd = "Run m File";
+	public static final String EditMFileCmd = "Edit m File";
+	public static final String ConvertToRelativePathCmd = "Relative Path";
+	public static final String GenerateInitCodeCmd = "Generate Init code";
+	public static final String GetInitCodeOfClassCmd = "Get init code of class";
+	public static final String SetInitCodeOfClassCmd = "Set init code of class";
+	public static final String DiffHeadCmd = "Diff Head";
+	public static final String DiffTrunkCmd = "Diff Trunk";
+	public static final String HistoryCmd = "History";
+	public static final String ExplorerCmd = "Explorer";
+	public static final String DiffHeadReportCmd = "Diff Report Head";
+	public static final String DiffTrunkReportCmd = "Diff Report Trunk";
+	public static final String GetLockCmd = "Get lock";
+	
+	
 	
 	public CUSMPlugin() {
 		// TODO Auto-generated constructor stub
+	}
+	
+	private SVNTools getSVNTools()
+	{
+		if(mySVNTools==null)
+		{
+			mySVNTools = new SVNTools(myRhapsody, this::trace);
+		}
+		
+		return mySVNTools;
+		
 	}
 
 	@Override
@@ -59,10 +94,7 @@ public class CUSMPlugin extends RPUserPlugin {
 		
 		myRhapsody = rpyApplication;
 		trace("started");
-		
-		
-		
-		
+
 		IRPProject activeProject = myRhapsody.activeProject();
 		
 		if(activeProject==null)
@@ -70,9 +102,35 @@ public class CUSMPlugin extends RPUserPlugin {
 			trace("no active Project!");
 			return;
 		}
-		
-		
-		
+
+	}
+	
+	public void OnElementsChanged(String GUIDsList)
+	{
+		String[] elementsGuids = GUIDsList.split(",");
+		IRPProject currentActiveProject = myRhapsody.activeProject();
+		if (currentActiveProject != null)
+		{
+			for (int i = 0; i<elementsGuids.length; i++)
+			{
+				if (elementsGuids[i].length() > 0)
+				{
+					IRPModelElement currentElement = 
+						currentActiveProject.findElementByGUID(elementsGuids[i]);
+					if (currentElement == null)
+					{
+						myRhapsody.writeToOutputWindow("Log", 
+								"Deleted element with GUID: "+elementsGuids[i]+"\n");
+					}
+					else
+					{
+						myRhapsody.writeToOutputWindow("Log", 
+								"Element: "+currentElement.getFullPathName()+" ("+
+											elementsGuids[i]+") was changed\n");
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -160,7 +218,7 @@ public class CUSMPlugin extends RPUserPlugin {
 		if(menuItem.contains(JiraChangedCmd))
 		{
 			
-			SVNTools.anchorAllChanges(myRhapsody, selected);
+			getSVNTools().anchorAllChanges(selected);
 			return;
 			
 		}
@@ -168,7 +226,7 @@ public class CUSMPlugin extends RPUserPlugin {
 		if(menuItem.contains(JiraIssueCmd))
 		{
 			
-			IRPRequirement jiraReq = SVNTools.setActualJiraIssue(myRhapsody, selected);
+			IRPRequirement jiraReq = getSVNTools().setActualJiraIssue(selected);
 			if(jiraReq==null)
 			{
 				trace("Could not get Jira Issue");
@@ -183,7 +241,7 @@ public class CUSMPlugin extends RPUserPlugin {
 		
 		if(menuItem.contains(StaticCodeAnalyzeCmd))
 		{
-			String result = StaticCodeAnalysis.Analyze(selected, myRhapsody);
+			String result = StaticCodeAnalysis.Analyze(selected, myRhapsody, this::trace);
 			
 			if(result==null)
 			{
@@ -194,11 +252,262 @@ public class CUSMPlugin extends RPUserPlugin {
 			
 			return;
 		}
+		
 		if(menuItem.contains(StaticCodeAnalyzeClearCmd))
 		{
-			StaticCodeAnalysis.Clear(selected,myRhapsody);
+			StaticCodeAnalysis.Clear(selected, myRhapsody, this::trace);
 			return;
 		}
+		
+		if(menuItem.contains(RunMFileCmd))
+		{
+			if(selected instanceof IRPHyperLink == false) 
+			{
+				trace("No m-File");
+				return;
+			}
+			
+			IRPHyperLink c = (IRPHyperLink)selected; 
+			
+			String absolutePath = RhapsodyHelper.getAbsolutePath(c);
+			
+			if(absolutePath==null)
+			{
+				trace("Could not generate absolute Path from "+ c.getURL());
+				return;
+			}
+			
+			File mFile = new File(absolutePath);
+			
+			if(mFile.exists()==false)
+			{
+				trace("File " + mFile.getPath() + " does not exist");
+				return;
+			}
+		
+			//build cmd...
+
+			String script = "\"cd('"+ mFile.getParent() + "'); run('"+mFile.getName()+"'); waitfor(h);\"";
+			
+			trace(script);
+			
+			ProcessBuilder pb = new ProcessBuilder("Octave", "--eval", script);
+				
+			try 
+			{
+				//pb.directory(mFile.getParentFile());
+				
+				trace("Execute M File");
+				Process p = pb.start();
+//				InputStream inputStream = p.getInputStream();
+//				InputStream errorStream = p.getErrorStream();
+//				BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
+//				BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
+//				String line;
+//	            StringBuilder output = new StringBuilder();
+//	            StringBuilder errorOut = new StringBuilder();
+//	            while ((line = inputReader.readLine()) != null) 
+//	            {
+//	                output.append(line);
+//	            }
+//	            while ((line = errorReader.readLine())!= null)
+//	            {
+//	            	trace(line);
+//	            }
+//	            if(output.length()>0)
+//	            {
+//	            	trace("Output:");
+//	            	trace(output.toString());
+//	            }
+	            	
+			} 
+			catch (IOException e) 
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			trace("end");
+			return;
+		}
+		
+		if(menuItem.contains(EditMFileCmd))
+		{
+			trace("not yet implementd");
+			return;
+		}
+		
+		if(menuItem.contains(ConvertToRelativePathCmd))
+		{
+			
+			if(selected instanceof IRPHyperLink == false)
+			{
+				return;
+			}
+						
+			IRPHyperLink selectedLink = (IRPHyperLink) selected;
+
+			if(selectedLink.getSaveUnit().isReadOnly()==1)
+			{
+				trace(selectedLink.getSaveUnit().getName() + " is readOnly!");
+				return;
+			}
+			
+			String relativePath = RhapsodyHelper.getRelativePath(selectedLink);
+			
+			if(relativePath==null)
+			{
+				trace("Could not generate relative Path from " + selectedLink.getURL());
+				return;
+			}
+
+			File lFile = new File(selectedLink.getURL());
+			
+			selectedLink.setURL(relativePath);
+			selectedLink.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, lFile.getName());
+			
+			return;
+		}
+		
+		if(menuItem.contains(GenerateInitCodeCmd))
+		{
+			IRPProject p = selected.getProject();
+			
+			if(p==null)
+			{
+				return;
+			}
+			
+			CodeGenerator generator = new CodeGenerator(this::trace);
+			
+			generator.generateSortedList(p);
+			
+			generator.generateInitcode();
+			
+			return;
+			
+		}
+		
+		if(menuItem.contains(GetInitCodeOfClassCmd))
+		{
+			
+			if(selected instanceof IRPClass == false)
+			{
+				return;
+			}
+			
+			IRPClass selectedClass = (IRPClass)selected;
+					
+			CodeGenerator generator = new CodeGenerator(this::trace);
+			
+			String initCode = generator.getInitCodeForClass(selectedClass);
+			
+			if(initCode==null)
+			{
+				return;
+			}
+			
+			trace(initCode);
+			
+			return;
+		}
+		
+		if(menuItem.contains(SetInitCodeOfClassCmd))
+		{
+			if(selected instanceof IRPClass == false)
+			{
+				return;
+			}
+			
+			IRPClass selectedClass = (IRPClass)selected;
+			
+			CodeGenerator generator = new CodeGenerator(this::trace);
+			
+			String initCode = generator.updateEntry(selectedClass);
+			
+			if(initCode == null)
+			{
+				return;
+			}
+			
+			trace(initCode);
+			
+			return;
+		}
+		
+		if(menuItem.contains(DiffHeadCmd))
+		{
+			
+			getSVNTools().diffmerge(selected,-1,false);
+	
+			return;
+		}
+		
+		if(menuItem.contains(DiffHeadReportCmd))
+		{
+			getSVNTools().diffmerge(selected, -1, true);
+			return;
+		}
+		
+		if(menuItem.contains(DiffTrunkCmd))
+		{
+			getSVNTools().diffMergeBase(selected, false);
+			return;
+		}
+		
+		if(menuItem.contains(DiffTrunkReportCmd))
+		{
+			getSVNTools().diffMergeBase(selected, true);
+			return;
+			
+		}
+		
+		if(menuItem.contains(GetLockCmd))
+		{
+			getSVNTools().getLock(selected);
+			return;
+		}
+		
+		if(menuItem.contains(HistoryCmd))
+		{
+			
+			
+			SVNTools svn = getSVNTools();
+			
+			List<SVNTools.logRow> list = svn.readHistory(selected, 10);
+			
+			for(SVNTools.logRow row:list)
+			{
+				trace("Revision: "+row.getRevision());
+			}
+			
+			return;
+		}
+		
+		if(menuItem.contains(ExplorerCmd))
+		{
+			IRPUnit unit = selected.getSaveUnit();
+			if(unit == null)
+			{
+				return;
+			}
+			String directory = unit.getCurrentDirectory();
+			String sbsFile = unit.getFilename();
+			System.out.println(directory);
+			try 
+			{
+				Runtime.getRuntime().exec("explorer.exe /select," + directory+"\\"+sbsFile);
+			} 
+			catch (IOException e1) 
+			{
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			return;
+			
+		}
+		
+		
 		
 		trace("menue item unknown");
 		

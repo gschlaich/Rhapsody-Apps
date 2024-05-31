@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -871,80 +873,98 @@ public class RhapsodyHelper
 			IRPRequirement req = (IRPRequirement)cellElement;
 			
 			return req.getHyperLinks().toList();
-			
-			
-			
-			/*
-			IRPModelElement msg = cellElement.getOwner();
-			
-			if(msg instanceof IRPClass == false)
+
+		}
+		
+		public static String getAbsolutePath(IRPHyperLink aLink)
+		{
+			IRPProject project = aLink.getProject();
+			if(project==null)
 			{
 				return null;
 			}
 			
-			IRPClass cmsg = (IRPClass)msg;
-			
-			List<IRPClassifier> classifiers = cmsg.getNestedClassifiers().toList();
-			
-			for(IRPClassifier cf : classifiers)
+			File lFile = new File(aLink.getURL());
+			if(lFile.exists())
 			{
-				
-				
-				if(cf.findGeneralization("IMsgReceiver")==null)
-				{
-					continue;
-				}
-				
-				return cf.getDerivedClassifiers().toList();
-	
-			}
-			return null;
-			
-			*/
-			
-			
-			/*
-			IRPModelElement cmd = cellElement.getOwner();
-			
-			if(cmd==null)
-			{
-				return "";
+				//is already absolute...
+				return aLink.getURL();
 			}
 			
-			if(cmd instanceof IRPClass)
-			{
+			File pFile = new File(project.getSaveUnit().getCurrentDirectory());
 			
-				IRPClass ccmd = (IRPClass)cmd;
-				List<IRPOperation> ops = ccmd.getOperations().toList();
-				for(IRPOperation o:ops)
-				{
-					if(o.getName().equals("describe"))
-					{
-						return o.getBody();
-					}
-				}
+			lFile = new File(pFile, aLink.getURL());
 			
-			}
-			return "";
-			*/
-			/*
-			if(cellElement instanceof IRPOperation)
+			
+			try 
 			{
-				IRPOperation op = (IRPOperation)cellElement;
-				return op.getSignature();
+				lFile = lFile.getCanonicalFile();
+			} 
+			catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
 			}
-			return "no Operation";
-			*/
-			/*
-			if(cellElement instanceof IRPComment)
+	      	      
+			if(lFile.exists()==false)
 			{
-				IRPComment comment = (IRPComment)cellElement;
-				return comment.getAnchoredByMe().toList();
+				return null;
+			}
+						
+			return lFile.getAbsolutePath();
+		}
+		
+		public static String getRelativePath(IRPHyperLink aLink)
+		{
+			File lFile = new File(aLink.getURL());
+			if(lFile.exists()==false)
+			{
+				return null;
 			}
 			
-			return null;
-			*/
+			IRPProject project = aLink.getProject();
+			if(project==null)
+			{
+				return null;
+			}
+			
+
+			Path linkPath = Paths.get(aLink.getURL());
+			
+			Path projectPath = Paths.get(project.getSaveUnit().getCurrentDirectory());
+			
+			Path relativePath = projectPath.relativize(linkPath);
+			
+			return relativePath.toString();
+
 		}
 				
-
+		public static boolean isPartOf(IRPModelElement aModel, IRPModelElement aPart)
+		{
+			IRPModelElement owner = aPart;
+			while( owner != null)
+			{
+				if(aModel.equals(owner))
+				{
+					return true;
+				}
+				owner = owner.getOwner();
+			}
+			return false;
+		}
+		
+		public static List<IRPModelElement> isPartOf(IRPModelElement aModel, List<IRPModelElement>aParts)
+		{
+			List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
+			
+			for(IRPModelElement part:aParts)
+			{
+				if(isPartOf(aModel, part)==true)
+				{
+					ret.add(part);
+				}
+					
+			}
+			
+			return ret;
+		}
 }

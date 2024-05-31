@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.utilities.generateInitCode;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPComponent;

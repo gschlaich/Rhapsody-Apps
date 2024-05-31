@@ -7,12 +7,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,6 +47,10 @@ public class StaticCodeAnalysis {
 	private static final String ClangCmd = "clang-tidy";
 	private static final String CppCheckCmd = "cppcheck";
 	private static final String CppCheckPlatform = "--platform=win32A";
+	private static final String CppCheckEnable = "--enable=warning,performance,style,portability";
+	private static final String CPPCheckWarning = "--enable=warning";
+	private static final String CppCheckVerbose = "--verbose";
+	private static final String CppCheckStd = "--std=c++14";
 	private static final String PrecompiledInclude = "-I../../../../../Development/ExternalSource/PrecompiledHeader";
 	private static final String OxfInclude = "/LangCpp";
 	private static final String OmThreadInclude = "-I../../../../../Development/ExternalSource/oxf/oxf";
@@ -53,41 +62,113 @@ public class StaticCodeAnalysis {
 	
 	public static final String ConfigName = "DefaultConfig";
 	
+	private Consumer<String> myTraceAction = null;
+	
+	private Path myUSMPath = null;
+	
 	
 	
 	private Map<IRPComponent, ComponentIncludes> myComponents = null;
 
 	private static StaticCodeAnalysis myStaticCodeAnalysis = null;
 
-	public StaticCodeAnalysis(IRPApplication aApp) {
+	public StaticCodeAnalysis(IRPApplication aApp, Consumer<String> aTraceAction) {
+		myTraceAction = aTraceAction;
 		myApplication = aApp;
+		
+		try
+		{
+			myUSMPath = getUSMPath(myApplication.activeProject());
+		}
+		catch(IOException e)
+		{
+			trace(e.getMessage());
+				
+		}
+		
+		
 		myComponents = new HashMap<IRPComponent,ComponentIncludes>();
 	}
 	
-	public static StaticCodeAnalysis get(IRPApplication aApp)
+	
+	public Path getUSMPath(IRPProject aProject) throws IOException
+	{
+		
+		if(aProject==null)
+		{
+			IOException ioException = new IOException("aProject is null");
+			throw ioException;
+		}
+		
+		IRPUnit saveUnit = aProject.getSaveUnit();
+		if(saveUnit==null)
+		{
+			IOException ioException = new IOException("aProject has no save Unit");
+			throw ioException;
+		}
+		
+		String path = saveUnit.getCurrentDirectory();
+		
+		Path usmRootFile = Paths.get(path, "USM_ROOT");
+		
+		
+		if(Files.exists(usmRootFile)==false)
+		{
+			// try to get USMPath in the way <usmRoot>/GeneratedProjects/<project>/<project>.rpy
+			
+			Path currentPath = Paths.get(path);
+			
+			Path usmPath = currentPath.getParent().getParent();
+			
+			//check if usmroot is correct
+			Path development = Paths.get(usmPath.toString(), "Development");
+			
+			
+			
+			IOException ioException = new IOException("File USM_ROOT does not exist");
+			throw ioException;
+		}
+		
+		String usmPathString = Files.readAllBytes(usmRootFile).toString();
+		
+		Path usmPath = Paths.get(usmPathString);
+			
+		return usmPath;
+				
+	}
+
+	
+	public static StaticCodeAnalysis get(IRPApplication aApp, Consumer<String> aTraceAction)
 	{
 		if(myStaticCodeAnalysis==null)
 		{
-			myStaticCodeAnalysis = new StaticCodeAnalysis(aApp);
+			myStaticCodeAnalysis = new StaticCodeAnalysis(aApp, aTraceAction);
 		}
 		
 		return myStaticCodeAnalysis;
 	}
 	
 	
-	public void trace(String aString)
+	
+	
+	private void trace(String aMessage)
 	{
-		System.out.println(aString);
-		
-		if(myApplication!=null)
+		if(myTraceAction==null)
 		{
-			myApplication.writeToOutputWindow("Log", "StaticCodeAnalysis: " + aString+"\n");
-		}		
+			//no traceaction set...
+			return;
+		}
+		
+		aMessage = "CLang: "+aMessage;
+		
+		myTraceAction.accept(aMessage);
 	}
 	
-	public static String Analyze(IRPModelElement aSelected, IRPApplication aApplication)
+	
+	
+	
+	public static String Analyze(IRPModelElement aSelected, IRPApplication aApplication, Consumer<String> aTraceAction)
 	{
-		
 		
 		if(aSelected==null)
 		{
@@ -95,7 +176,7 @@ public class StaticCodeAnalysis {
 		}
 		
 		IRPProject project = aSelected.getProject();
-		StaticCodeAnalysis sca = get(aApplication);
+		StaticCodeAnalysis sca = get(aApplication, aTraceAction);
 		
 		if(aSelected instanceof IRPClass)
 		{
@@ -117,7 +198,7 @@ public class StaticCodeAnalysis {
 		return "failed";	
 	}
 	
-	public static String Clear(IRPModelElement aSelected, IRPApplication aApplication)
+	public static String Clear(IRPModelElement aSelected, IRPApplication aApplication, Consumer<String> aTraceAction)
 	{
 		if(aSelected==null)
 		{
@@ -125,7 +206,7 @@ public class StaticCodeAnalysis {
 		}
 		
 		IRPProject project = aSelected.getProject();
-		StaticCodeAnalysis sca = get(aApplication);
+		StaticCodeAnalysis sca = get(aApplication, aTraceAction);
 		IRPComponent component = project.getActiveComponent();
 		
 		if(component==null)
@@ -223,12 +304,14 @@ public class StaticCodeAnalysis {
 			params.add("-I"+omRoot+OsConfigInclude);
 			params.addAll(componentIncludes.getIncludes());
 			
-			System.out.println("Workingfolder: "+workingFolder);
+			trace(params.toString());
 			
 			 ProcessBuilder processBuilder = new ProcessBuilder(ClangCmd);
 			 
 	         processBuilder.directory(workingFolder);
 	         processBuilder.command().addAll(params);
+	         
+	         processBuilder.redirectErrorStream(true); 
 			
 	         Process process = processBuilder.start();
 	         InputStream inputStream = process.getInputStream();
@@ -354,17 +437,54 @@ public class StaticCodeAnalysis {
 		File workingFile = new File(workingFolder,fileName);
 		
 		try {
-		
-			trace(CppCheckCmd +" " + CppCheckPlatform + " " + fileName);
 			
-			ProcessBuilder processBuilder = new ProcessBuilder(CppCheckCmd, CppCheckPlatform, fileName);
+
+			String omRoot = System.getenv("OMROOT");
+			
+			IRPComponent activeComponent = aProject.getActiveComponent(); 
+			
+			ComponentIncludes componentIncludes = null;
+			
+			if(myComponents.containsKey(activeComponent))
+			{
+				componentIncludes = myComponents.get(activeComponent);
+			}
+			else
+			{
+				componentIncludes = new ComponentIncludes(activeComponent);
+				myComponents.put(activeComponent, componentIncludes);
+			}
+			
+			
+			
+			List<String> params = new ArrayList<String>();
+			
+			
+			params.add(CppCheckPlatform);
+			params.add(CppCheckEnable);
+			params.add(CppCheckStd);
+			//params.add(PrecompiledInclude);
+			//params.add("-I"+omRoot+OxfInclude);
+			//params.add("-I../../../../../Development/ExternalSource/oxf");
+			//params.add(OmThreadInclude);
+			//params.add("-I"+omRoot+OsConfigInclude);
+			//params.addAll(componentIncludes.getIncludes());
+			params.add(fileName);
+			
+			trace(params.toString());
+			
+			 ProcessBuilder processBuilder = new ProcessBuilder(CppCheckCmd);
 			 
-	        processBuilder.directory(workingFolder.getAbsoluteFile());
+	         processBuilder.directory(workingFolder);
+	         processBuilder.command().addAll(params);
+	         
+	         processBuilder.redirectErrorStream(true); 
+	        
 	   
 	        Process process = processBuilder.start();
 		
 	        InputStream inputStream = process.getInputStream();
-	        InputStream errorStream = process.getErrorStream();
+	        
 	        
 	        BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
 			String line;
@@ -377,18 +497,12 @@ public class StaticCodeAnalysis {
 				output.add(line);
             }
 			
-			BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
-			while((line= errorReader.readLine()) != null)
-			{
-				trace(line);
-				output.add(line);
-			}
-
+			
 
 			int exitCode = process.waitFor();
 			
 			
-	        String patternString = "(.*):(\\d+):(\\d+): (error|warning): (.*)";
+	        String patternString = "(.*):(\\d+):(\\d+): (error|warning|style): (.*)";
 
 	        
 	        Pattern pattern = Pattern.compile(patternString);
@@ -424,6 +538,9 @@ public class StaticCodeAnalysis {
 			         
 				}
 			}
+			
+			
+			trace("end cppCheck");
 			
 			
 			
