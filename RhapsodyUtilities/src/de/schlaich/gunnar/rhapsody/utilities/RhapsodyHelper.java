@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.github.difflib.algorithm.myers.MyersDiff;
 import com.ibm.rhapsody.apps.App;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
@@ -527,6 +528,52 @@ public class RhapsodyHelper
 		
 	}
 	
+	public static IRPModelElement selectOperation(IRPApplication rhapsody, String aOperationName)
+	{
+		//string like IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned long &)
+		
+		//aOperationName = "IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned long &)";
+		
+		aOperationName = aOperationName.substring(0, aOperationName.indexOf('('));
+		
+		String[] elements = aOperationName.split("::");
+		
+		IRPModelElement searchIn = rhapsody.activeProject();
+		
+		rhapsody.writeToOutputWindow("Log", "selectOperation " + aOperationName+"\n"); 
+		
+		if(searchIn==null)
+		{
+			return null;
+		}
+		
+		for(String element:elements)
+		{
+			//namespace...
+			IRPModelElement f = searchIn.findNestedElementRecursive(element, "Package");
+			if(f==null)
+			{
+				f = searchIn.findNestedElementRecursive(element, "Class");
+				if(f==null)
+				{
+					f = searchIn.findNestedElementRecursive(element, "Operation");
+					if(f==null)
+					{
+						//not found
+						rhapsody.writeToOutputWindow("Log", "Did not find  " + element +"\n"); 
+						continue;
+					}		
+				}
+			}
+			searchIn = f;
+			rhapsody.writeToOutputWindow("Log", "Found  " + searchIn.getName() +" as " + searchIn.getMetaClass() + "\n"); 
+			
+		}
+		
+		return searchIn;
+		
+	}
+	
 	
 	public static void searchElement(IRPApplication rhapsody, IRPModelElement selected) {
 		Map<String,IRPModelElement> scopes = new HashMap<String,IRPModelElement>();
@@ -966,5 +1013,27 @@ public class RhapsodyHelper
 			}
 			
 			return ret;
+		}
+		public static boolean getUSMRoot(IRPProject aProject, Path aPath)
+		{
+			String projectpathStr = aProject.getCurrentDirectory();
+			
+			Path projectPath = FileSystems.getDefault().getPath(projectpathStr);
+			Path usmRootPath = projectPath.resolve("USM_ROOT");
+			
+			//open file 
+			try 
+			{
+				String usmPathString  = new String(Files.readAllBytes(usmRootPath));
+				aPath = Paths.get(usmPathString);
+				return true;
+			} 
+			catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				
+			}
+			
+			return false;
 		}
 }

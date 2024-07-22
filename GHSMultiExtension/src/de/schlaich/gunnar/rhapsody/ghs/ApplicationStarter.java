@@ -4,6 +4,9 @@ import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPComment;
+import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
@@ -42,13 +45,25 @@ public class ApplicationStarter {
 		
 		//multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
 		
-		if(app.getSelectedElement() instanceof IRPProject)
+		if(app.getSelectedElement() instanceof IRPPackage )
+		{
+			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_RHAPSODY_CMD);
+		}
+		else if(app.getSelectedElement() instanceof IRPProject)
 		{
 			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
 		}
 		else if(app.getSelectedElement() instanceof IRPClass)
 		{
 			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
+		}
+		else if(app.getSelectedElement() instanceof IRPComment)
+		{
+			multiPlugin.OnMenuItemSelect(MultiPlugin.SET_BREAKPOINT_CMD);
+		}
+		else if(app.getSelectedElement() instanceof IRPOperation)
+		{
+			multiPlugin.OnMenuItemSelect(MultiPlugin.SET_BREAKPOINT_CMD);
 		}
 		else
 		{

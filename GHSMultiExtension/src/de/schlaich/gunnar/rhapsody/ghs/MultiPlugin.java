@@ -7,11 +7,14 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
+import com.telelogic.rhapsody.core.IRPLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPRequirement;
+import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
@@ -43,12 +46,19 @@ public class MultiPlugin extends RPUserPlugin {
 	public static final String VIEW_MULTI_EDITOR_CMD = "View in Multi Editor";
 	public static final String OPEN_MULTI_CMD = "Open in GHS Multi";
 	public static final String COMPILE_MULTI_CMD = "Compile in GHS Multi";
+	public static final String VIEW_MULTI_RHAPSODY_CMD = "View in Rhapsody";
+	public static final String SET_BREAKPOINT_CMD = "Set Breakpoint";
+	
 	private static final String CompilerIssue = "CompilerIssue";
+	private static final String BREAK_POINT_META_NAME = "BreakPoint";
+	private static final String BREAK_POINT_COLLECTION_META_NAME = "BreakPointCollection";
+	
 	private String myCmd = "C:\\ghs\\multi_716\\mpythonrun";
 	private String myMultiCmd = "C:\\ghs\\multi_716\\multi.exe";
 	private String myArgsDebugView = " -s \"dw = winreg.GetDebugger()\" -s \"dw.RunCommands('e {0} ')\"";
 	private String myArgDebugView1 = "\"dw = winreg.GetDebugger()\"";
 	private String myArgDebugView2Begin = "\"dw.RunCommands('e ";
+	private String myArgSetBreakPoint2Begin = "\"dw.RunCommands('b ";
 	private String myArgDebugView2End = "')\"";
 	private String myArgEditView1 = "\"editor = GHS_Editor()\"";
 	private String myArgEditView2Begin = "\"ew = editor.OpenFile('";
@@ -62,6 +72,7 @@ public class MultiPlugin extends RPUserPlugin {
 	private String myArgCompile3 = "\"w = winreg.GetWindowByName('Build Details')\"";
 	private String myArgCompile4 = "\"w.DumpWidget('tv_messages')\"";
 	private String myArgBuldAll = "\"pw.BuildProj(False,True)\"";
+	
 	
 	
 	private IRPApplication myRhapsody = null;
@@ -89,6 +100,8 @@ public class MultiPlugin extends RPUserPlugin {
 	@Override
 	public void OnMenuItemSelect(String menuItem) {
 		
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
 		if(menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))
 		{
 			viewInDebugger(null);
@@ -107,6 +120,16 @@ public class MultiPlugin extends RPUserPlugin {
 		if(menuItem.equals(COMPILE_MULTI_CMD))
 		{
 			compile(null);
+			return;
+		}
+		if(menuItem.equals(VIEW_MULTI_RHAPSODY_CMD))
+		{
+			viewInRhapsody();
+			return;
+		}
+		if(menuItem.equals(SET_BREAKPOINT_CMD))
+		{
+			setBreakPoint(selected);
 			return;
 		}
 		trace("Unknown Command: \"" + menuItem + "\"");
@@ -261,6 +284,122 @@ public class MultiPlugin extends RPUserPlugin {
 	public void viewInDebugger(IRPOperation aOperation)
 	{
 		trace("Start viewInDebugger");
+		String component = getOperationLocation(aOperation);
+		
+		
+		String arg2 = myArgDebugView2Begin+component+myArgDebugView2End;
+		
+		//build string...
+		//String args = MessageFormat.format(myArgs, component);
+		
+		runCmd(myArgDebugView1,arg2,null,null);
+
+	}
+	
+	public void setBreakPoint(IRPOperation aOperation, int aOffset)
+	{
+		trace("Start setBreakPoint operation ");
+		String component = getOperationLocation(aOperation);
+		if(aOffset>0)
+		{
+			component = component+"#"+(aOffset+3);
+		}
+		String arg2 = myArgSetBreakPoint2Begin+component+myArgDebugView2End;
+		runCmd(myArgDebugView1,arg2,null,null);
+	}
+	
+	public void setBreakPoint(IRPComment aBreakpoint)
+	{
+		trace("Start setBeakPoint from comment");
+		
+		if(aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME)==false)
+		{
+			
+			setBreakPointCollection(aBreakpoint);
+			return;
+		}
+		
+		if(aBreakpoint.getOwner() instanceof IRPOperation == false)
+		{
+			trace("Owner has to be an operation");
+			return;
+		}
+		
+		IRPTag offsetTag = aBreakpoint.getTag("Offset");
+		
+		String offsetString = offsetTag.getValue();
+		
+		int offset = Integer.parseInt(offsetString);
+		
+		IRPOperation owner = (IRPOperation)aBreakpoint.getOwner();
+		
+		setBreakPoint(owner,offset);
+		
+	}
+	
+	public void setBreakPoint(IRPModelElement aModelElement )
+	{
+		
+		if(aModelElement instanceof IRPComment)
+		{
+			IRPComment comment = (IRPComment)aModelElement;
+			setBreakPoint(comment);
+		}
+		//search for all comments
+		List<IRPComment> comments = aModelElement.getNestedElementsByMetaClass("Comment", 1).toList();
+		
+		boolean setBreakpoint = false;
+		
+		for(IRPComment comment:comments)
+		{
+			if(comment.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
+			{
+				setBreakPoint(comment);
+				setBreakpoint = true;
+			}
+		}
+		
+		if(setBreakpoint==true)
+		{
+			return;
+		}
+		
+		if(aModelElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation)aModelElement;
+			setBreakPoint(operation, 0);
+			return;
+		}
+		
+		
+	}
+	
+	private void setBreakPointCollection(IRPComment aBreakpointCollection)
+	{
+		if(aBreakpointCollection.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME)==false)
+		{
+			return;
+		}
+		
+		List<IRPModelElement> breakPoints = aBreakpointCollection.getAnchoredByMe().toList();
+		for(IRPModelElement element:breakPoints)
+		{
+			
+			if(element instanceof IRPComment)
+			{
+				IRPComment breakpoint = (IRPComment)element;
+				setBreakPoint(breakpoint);
+			}
+		}
+		
+	}
+	
+	
+	
+	
+	
+
+	private String getOperationLocation(IRPOperation aOperation) {
 		String nameSpace = null;
 		String component = null;
 		IRPModelElement selected = aOperation;
@@ -286,17 +425,90 @@ public class MultiPlugin extends RPUserPlugin {
 		{
 			component = nameSpace+"::"+component;
 		}
-		
-		
-		String arg2 = myArgDebugView2Begin+component+myArgDebugView2End;
-		
-		//build string...
-		//String args = MessageFormat.format(myArgs, component);
-		
-		runCmd(myArgDebugView1,arg2,null,null);
+		return component;
+	}
 	
+	
+	public void viewInRhapsody()
+	{
+		String arg2 = "\"dw.GetPullDownValue('pd_proc')\"";
+		List<String> result = runCmd(myArgDebugView1,arg2,null,null);
+		
+		int i = 0;
+		
+		
+		String operationString = result.get(1);
+		
+		operationString = operationString.substring(1, operationString.length()-1);
+		
+		trace("Operation: "+operationString);
+		
+		try
+		{
+		
+			IRPModelElement selectedModel = selectOperation(operationString);
+			if(selectedModel==null)
+			{
+				trace("Operation not found");
+				return;
+			}
+			
+			trace("Selected Model:" + selectedModel.getName());
+			
+			selectedModel.locateInBrowser();
+		}
+		catch(Exception e)
+		{
+			trace("Exception: "+ e.getMessage());
+		}
+	
+	}
+	
+	private IRPModelElement selectOperation(String aOperationName)
+	{
+		
+		aOperationName = aOperationName.substring(0, aOperationName.indexOf('('));
+		
+		String[] elements = aOperationName.split("::");
+		
+		IRPModelElement searchIn = myRhapsody.activeProject();
+		
+		trace("selectOperation " + aOperationName); 
+		
+		if(searchIn==null)
+		{
+			return null;
+		}
+		
+		for(String element:elements)
+		{
+			//namespace...
+			IRPModelElement f = searchIn.findNestedElementRecursive(element, "Package");
+			if(f==null)
+			{
+				f = searchIn.findNestedElementRecursive(element, "Class");
+				if(f==null)
+				{
+					f = searchIn.findNestedElementRecursive(element, "Operation");
+					if(f==null)
+					{
+						//not found
+						trace("Did not find  " + element); 
+						continue;
+					}		
+				}
+			}
+			searchIn = f;
+			trace("Found  " + searchIn.getName() +" as " + searchIn.getMetaClass()); 
+			
+		}
+		
+		return searchIn;
 		
 	}
+	
+
+	
 	
 	public void viewInEditor(IRPOperation aOperation)
 	{
@@ -325,6 +537,7 @@ public class MultiPlugin extends RPUserPlugin {
 		runCmd(myArgEditView1, args2, args3,null);
 		
 	}
+	
 	
 	
 	public void compile(IRPModelElement aElement) {
