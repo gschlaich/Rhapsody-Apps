@@ -243,6 +243,7 @@ public class StartAutoCompletion extends Thread
 	    popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider,myApplication)));
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider, myApplication)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
+	    popup.add(new JMenuItem(new SetBreakpoint(mySelectedOperation, myTextArea)));
 	    popup.addSeparator();
 	    //popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
 	    //popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
@@ -626,6 +627,7 @@ public class StartAutoCompletion extends Thread
 					{
 						ncp.addToOtherProvider(provider);
 					}
+					
 					
 					
 				}
