@@ -86,6 +86,10 @@ public class RhapsodyVariableCompletion extends VariableCompletion implements Rh
 	public IRPModelElement getElement() {	
 		return myVariable;
 	}
+	
+	public IRPVariable getVariable() {
+		return myVariable;
+	}
 
 	@Override
 	public boolean isValue() {

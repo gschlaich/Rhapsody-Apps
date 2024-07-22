@@ -128,6 +128,10 @@ public class RhapsodyOperationCompletion extends FunctionCompletion implements R
 	public IRPModelElement getElement() {
 		return myInterfaceItem;
 	}
+	
+	public IRPInterfaceItem getOperation() {
+		return myInterfaceItem;
+	}
 
 	@Override
 	public boolean isValue() {

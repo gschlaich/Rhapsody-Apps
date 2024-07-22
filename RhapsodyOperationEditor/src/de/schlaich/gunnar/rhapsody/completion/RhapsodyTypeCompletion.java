@@ -2,6 +2,7 @@ package de.schlaich.gunnar.rhapsody.completion;
 
 import java.util.List;
 
+import org.apache.commons.imaging.formats.tiff.constants.GeoTiffTagConstants;
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.CompletionProvider;
@@ -48,6 +49,11 @@ public class RhapsodyTypeCompletion extends BasicCompletion implements RhapsodyC
 
 	@Override
 	public IRPModelElement getElement() {
+		
+		return myType;
+	}
+	
+	public IRPType getType() {
 		
 		return myType;
 	}
