@@ -45,7 +45,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraChangedCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunMFileCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ConvertToRelativePathCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateInitCodeCmd);
@@ -57,6 +57,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExplorerCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkReportCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetLockCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExportTableCmd);
 		
 		
 

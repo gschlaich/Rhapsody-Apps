@@ -2,12 +2,16 @@ package de.schlaich.gunnar.rhapsody.USM;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+
+import javax.swing.JFileChooser;
+import javax.swing.UIManager;
 
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
@@ -21,6 +25,7 @@ import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
+import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
@@ -71,6 +76,9 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String DiffHeadReportCmd = "Diff Report Head";
 	public static final String DiffTrunkReportCmd = "Diff Report Trunk";
 	public static final String GetLockCmd = "Get lock";
+	public static final String ExportTableCmd = "Export Table";
+	public static final String AddLibraryCmd = "Add Library";
+	public static final String AddIncludePathCmd = "Add include path";
 	
 	
 	
@@ -102,6 +110,16 @@ public class CUSMPlugin extends RPUserPlugin {
 			trace("no active Project!");
 			return;
 		}
+		
+		try 
+		{
+            // Setze das Look and Feel auf das System-Look-and-Feel
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } 
+		catch (Exception e) 
+		{
+            e.printStackTrace();
+        }
 
 	}
 	
@@ -332,7 +350,7 @@ public class CUSMPlugin extends RPUserPlugin {
 		
 		if(menuItem.contains(EditMFileCmd))
 		{
-			trace("not yet implementd");
+			trace("not yet implemented");
 			return;
 		}
 		
@@ -507,10 +525,104 @@ public class CUSMPlugin extends RPUserPlugin {
 			
 		}
 		
-		
-		
+		if(menuItem.contains(ExportTableCmd))
+		{
+			if(selected instanceof IRPTableView ==false)
+			{
+				trace("not tableView");
+				return;
+			}
+			
+			IRPTableView tableView = (IRPTableView)selected;
+			
+			JFileChooser fileChooser = new JFileChooser();
+		    fileChooser.setDialogTitle("Save as");
+
+	        // Filter für .csv, .html und .xml Dateien
+	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".csv", "CSV Files"));
+	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".html", "HTML Files"));
+	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".xml", "XML Files"));
+	        fileChooser.setAcceptAllFileFilterUsed(false);
+
+		    int userSelection = fileChooser.showSaveDialog(null);
+
+	        if (userSelection != JFileChooser.APPROVE_OPTION)
+	        {
+	        	trace("cancel save");
+	        	return;
+	        }
+	        
+	       
+	        File fileToSave = fileChooser.getSelectedFile();
+	        String filePath = fileToSave.getAbsolutePath();
+	        String fileType = getFileExtension(fileToSave);
+	            
+	        String contentFormat = IRPTableView.ContentFormat.CSV;    
+	        
+	        if(fileType.equals("html"))
+	        {
+	        	contentFormat =  IRPTableView.ContentFormat.HTML;
+	        }
+	        else if(fileType.equals("xml"))
+	        {
+	        	contentFormat = IRPTableView.ContentFormat.XML;
+	        }
+	        
+	        String content = tableView.getContent(contentFormat);
+	        
+	        try
+	        {
+ 
+		        FileWriter fileWriter = new FileWriter(filePath);
+		            
+		        fileWriter.write(content);
+		        
+		        fileWriter.close();
+	        }
+	        catch(IOException e)
+	        {
+	        	trace(e.getMessage());
+	        }
+
+	        trace("File "+ fileToSave.getName() + " saved");
+	        return;
+        
+	    }
+		if(menuItem.contains(AddLibraryCmd))
+		{
+			JFileChooser fileChooser = new JFileChooser();
+	        
+	        
+	        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+	        
+	        
+	        fileChooser.setAcceptAllFileFilterUsed(false);
+
+	        int userSelection = fileChooser.showOpenDialog(null);
+
+	        if (userSelection != JFileChooser.APPROVE_OPTION) 
+	        {
+	          trace("Cancel...");
+	          return;
+	        }
+	        File directoryToSave = fileChooser.getSelectedFile();
+            trace("Folder: " + directoryToSave.getAbsolutePath());
+		}
+
+
 		trace("menue item unknown");
 		
+	}
+
+	private  String getFileExtension(File file) 
+	{
+		String fileName = file.getName();
+		int lastIndexOfDot = fileName.lastIndexOf('.');
+		if (lastIndexOfDot > 0 && lastIndexOfDot < fileName.length() - 1) 
+		{
+			return fileName.substring(lastIndexOfDot + 1).toLowerCase();
+		}
+		return "";
 	}
 	
 	private void trace(String aMsg)
@@ -523,6 +635,7 @@ public class CUSMPlugin extends RPUserPlugin {
 	@Override
 	public void OnTrigger(String trigger) {
 		// TODO Auto-generated method stub
+		trace(trigger);
 
 	}
 
@@ -559,4 +672,28 @@ public class CUSMPlugin extends RPUserPlugin {
 
 	
 
+}
+
+class FileTypeFilter extends javax.swing.filechooser.FileFilter {
+
+    private String extension;
+    private String description;
+
+    public FileTypeFilter(String extension, String description) {
+        this.extension = extension;
+        this.description = description;
+    }
+
+    @Override
+    public boolean accept(File file) {
+        if (file.isDirectory()) {
+            return true;
+        }
+        return file.getName().toLowerCase().endsWith(extension);
+    }
+
+    @Override
+    public String getDescription() {
+        return description + String.format(" (*%s)", extension);
+    }
 }
