@@ -2,10 +2,14 @@ package de.schlaich.gunnar.rhapsody.completionprovider;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.commons.imaging.common.mylzw.MyBitOutputStream;
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;
@@ -35,6 +39,8 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 	private IRPPackage myPackage = null;
 	private String myPackageName = null;
 	private String myNamespaceName = null;
+	
+	Set<AbstractCompletionProvider> myOtherproviders = new HashSet<AbstractCompletionProvider>();
 	
 	private static Map<IRPPackage,NamespaceCompletionProvider> NamespaceCompletionProviders = null;
 	
@@ -105,11 +111,13 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		
 		myNamespaceName = myPackage.getNamespace();
 		myPackageName = myPackage.getName();
+		
 		if(hasNoNamespace())
 		{
 			//leave empty!
 			return;
 		}
+		
 		addElements(aPackage,this);
 		
 	}
@@ -131,7 +139,51 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 	
 	public void addToOtherProvider(AbstractCompletionProvider aProvider)
 	{
+		
+		if(myOtherproviders.contains(aProvider)==true)
+		{
+			System.out.println("Provider ("+aProvider.toString()+") already exists");
+			return;
+		}
+		
+		myOtherproviders.add(aProvider);
+
+		long started = System.currentTimeMillis();
+		
 		addElements(myPackage, aProvider);
+		
+		/*
+		for(Completion c : completions )
+		{
+			if(c instanceof RhapsodyClassifierCompletion)
+			{
+				RhapsodyClassifierCompletion rccOld = (RhapsodyClassifierCompletion) c;
+				RhapsodyClassifierCompletion rccNew = new RhapsodyClassifierCompletion(aProvider, rccOld.getIRPClassifier(rccOld.isPointer()),false,false);
+				aProvider.addCompletion(rccNew);
+			}
+			else if(c instanceof RhapsodyTypeCompletion)
+			{
+				RhapsodyTypeCompletion rtcOld = (RhapsodyTypeCompletion)c;
+				RhapsodyTypeCompletion rtcNew = new RhapsodyTypeCompletion(aProvider,rtcOld.getType());
+				aProvider.addCompletion(rtcNew);
+			}
+			else if(c instanceof RhapsodyOperationCompletion)
+			{
+				RhapsodyOperationCompletion rocOld = (RhapsodyOperationCompletion)c;
+				RhapsodyOperationCompletion rocNew = new RhapsodyOperationCompletion(aProvider, rocOld.getOperation(), false);
+			}
+			else if(c instanceof RhapsodyVariableCompletion)
+			{
+				RhapsodyVariableCompletion rvcOld = (RhapsodyVariableCompletion)c;
+				RhapsodyVariableCompletion rvcNew = new RhapsodyVariableCompletion(aProvider, rvcOld.getVariable(), false);
+			}
+		}
+		*/
+		
+		long ended = System.currentTimeMillis();
+		
+		System.out.println("addtoOtherProvider time: " + (ended-started)/1000 + "s");
+		
 	}
 	
 	
@@ -142,7 +194,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 		List<IRPModule> modules = aPackage.getModules().toList();
 		for(IRPModule module:modules)
 		{
-			System.out.println("Module: " + module.getName());
+			System.out.println("Namespace: " + namespacename + " Module: " + module.getName());
 			List<IRPModelElement> elements = module.getAllNestedElements().toList();
 			for(IRPModelElement element:elements)
 			{
