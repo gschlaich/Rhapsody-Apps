@@ -353,15 +353,21 @@ public class CCreateMessage {
 		
 		//set StandardOperations
 		String standardOperationsKey = "CG.Class.StandardOperations";
-		String standardOperations = "privateCopyCtor,privateAssignmentOp,USMMem,USMMsg";
 		
+		String standardOperations = "privateCopyCtor,privateAssignmentOp,USMMem,USMMsg";
 		msgClass.setPropertyValue(standardOperationsKey, standardOperations);
+		
+		String generateByClassFactoryKey = "CPP_CG::Class::USMIsGeneratedByClassFactory";
+		msgClass.setPropertyValue(generateByClassFactoryKey, "True");
 		
 		standardOperations = "privateCopyCtor,privateAssignmentOp,USMMsgReceiver";
 		receiverClass.setPropertyValue(standardOperationsKey, standardOperations);
 		
 		standardOperations = "privateCopyCtor,privateAssignmentOp,USMMsgSender";
 		senderClass.setPropertyValue(standardOperationsKey, standardOperations);
+		
+		
+		
 	
 	}
 
