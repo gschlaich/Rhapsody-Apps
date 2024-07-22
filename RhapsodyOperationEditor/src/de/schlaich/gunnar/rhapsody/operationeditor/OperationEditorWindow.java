@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Image;
+import java.awt.TextArea;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -71,6 +72,7 @@ import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
+import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPEvent;
@@ -83,6 +85,7 @@ import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStatechart;
 import com.telelogic.rhapsody.core.IRPStereotype;
+import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.IRPTrigger;
 import com.telelogic.rhapsody.core.IRPType;
@@ -1683,6 +1686,81 @@ class GetInfo extends TextAction
 		myAutoCompletion.doCompletion();
 		
 	}
+	
+}
+
+class SetBreakpoint extends TextAction
+{
+	private IRPOperation myOperation = null;
+	private RSyntaxTextArea myTextArea = null;
+	public SetBreakpoint(IRPOperation aOperation, RSyntaxTextArea myTextArea2)
+	{
+		super("set Breakpoint");
+		myOperation = aOperation;
+		
+		myTextArea = myTextArea2;
+		
+		
+	}
+	
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		
+		IRPProject project = myOperation.getProject();
+        
+        if(project==null)
+        {
+        	return;
+        }
+        
+        IRPModelElement breakpointMe = project.findAllByName("BreakPoint", "Stereotype");
+        
+        if(breakpointMe == null)
+        {
+        	return;
+        }
+        
+        if(breakpointMe instanceof IRPStereotype == false)
+        {
+        	return;
+        }
+        
+        IRPStereotype breakpointSt = (IRPStereotype) breakpointMe;
+        
+		
+		int caretPosition = myTextArea.getCaretPosition();
+		
+		String textUpToCursor = myTextArea.getText().substring(0, caretPosition);
+        int lineNumber = textUpToCursor.split("\n").length;
+        
+        String breakpointName = myOperation.getName()+"_"+lineNumber;
+        
+        myOperation.getNestedElementsByMetaClass("Comment", 0);
+        
+        IRPModelElement newAggr = myOperation.addNewAggr("Comment",breakpointName);
+        
+        if(newAggr == null)
+        {
+        	System.out.println("new breakpoint is null");
+        	return;
+        }
+        
+        IRPComment bpComment = (IRPComment) newAggr;
+        
+        if(bpComment == null)
+        {
+        	return;
+        }
+        
+        bpComment.addStereotype("BreakPoint", "Comment");
+        
+        IRPTag offsetTag = bpComment.getTag("Offset");
+        
+        offsetTag.setValue(Integer.toString(lineNumber-3));
+        
+
+	}
+	
 	
 }
 
