@@ -10,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.event.HyperlinkEvent;
+import javax.swing.text.BadLocationException;
 
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.AutoCompletionEvent;
@@ -29,17 +30,20 @@ import org.fife.ui.rsyntaxtextarea.folding.CurlyFoldParser;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
 import org.fife.ui.rtextarea.Gutter;
+import org.fife.ui.rtextarea.GutterIconInfo;
 
 import com.github.difflib.algorithm.myers.MyersDiff;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPTag;
 
 import de.schlaich.gunnar.parser.CodeAnalysisParser;
 import de.schlaich.gunnar.parser.CppParser;
@@ -65,6 +69,8 @@ public class StartAutoCompletion extends Thread
 	private CppParser myCppParser;
 	private CodeAnalysisParser myCodeAnalysisParser;
 	private JFrame myFrame;
+	
+	private List<GutterIconInfo> myGutterEndpoints = null;
 	
 	private static StartAutoCompletion instance;
 	
@@ -140,6 +146,8 @@ public class StartAutoCompletion extends Thread
 		myAutoComplete.setAutoActivationEnabled(true);
 		myAutoComplete.setAutoActivationDelay(750);
 		myAutoComplete.install(myTextArea);
+		
+		myGutterEndpoints = new ArrayList<GutterIconInfo>();
 		
 		myAutoComplete.setAutoCompleteSingleChoices(false);
 		myAutoComplete.addAutoCompletionListener(new AutoCompletionListener() {
@@ -243,7 +251,7 @@ public class StartAutoCompletion extends Thread
 	    popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider,myApplication)));
 	    popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider, myApplication)));
 	    popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
-	    popup.add(new JMenuItem(new SetBreakpoint(mySelectedOperation, myTextArea)));
+	    popup.add(new JMenuItem(new SetBreakpoint(mySelectedOperation, myTextArea,this)));
 	    popup.addSeparator();
 	    //popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
 	    //popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
@@ -275,6 +283,9 @@ public class StartAutoCompletion extends Thread
 		myTextArea.forceReparsing(myCodeAnalysisParser);
 		
 		myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(), myClassifierCompletionProvider);
+		
+		
+		traceBreakpoint(gutter, mySelectedOperation);
 		
 		
 		
@@ -330,6 +341,8 @@ public class StartAutoCompletion extends Thread
 		myClassifierCompletionProvider.createClassCompletion();
 		myTextArea.forceReparsing(myCppParser);
 		myTextArea.forceReparsing(myCodeAnalysisParser);
+		
+		traceBreakpoint(gutter, mySelectedOperation);
 				
 		Date finished = new Date();
 		double diffMs = finished.getTime()-started.getTime();
@@ -353,6 +366,45 @@ public class StartAutoCompletion extends Thread
 	public void forceCodeAnalysisParser()
 	{
 		myTextArea.forceReparsing(myCodeAnalysisParser);
+		traceBreakpoint(RSyntaxUtilities.getGutter(myTextArea), mySelectedOperation);
+	}
+	
+	public void traceBreakpoint(Gutter aGutter, IRPOperation aOperation) 
+	{
+		
+		for (GutterIconInfo info : myGutterEndpoints) {
+			aGutter.removeTrackingIcon(info);
+			
+		}
+		
+		
+		myGutterEndpoints.clear();
+		//check for breakpoint (IRPComment - Breakpoint)
+		List<IRPComment> comments = aOperation.getNestedElementsByMetaClass("Comment", 0).toList();
+		for (IRPComment comment : comments) 
+		{
+			if (comment.getUserDefinedMetaClass().equals("BreakPoint")) 
+			{
+				IRPTag offsetTag = comment.getTag("Offset");
+				if (offsetTag != null) 
+                {
+                    int line = Integer.parseInt(offsetTag.getValue());
+              
+                    try 
+                    {
+						GutterIconInfo info = aGutter.addLineTrackingIcon(line+2, RhapsodyOperation.getIcon("RhapsodyIcons_12.gif"),"BreakPoint "+comment.getName());
+						
+						myGutterEndpoints.add(info);
+				
+					} 
+                    catch (BadLocationException e) 
+                    {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                }
+			}
+		}
 	}
 	
 	

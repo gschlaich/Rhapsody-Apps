@@ -925,7 +925,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	}
 	
 	
-	private void forceParser()
+	public void forceParser()
 	{
 		myStartAutoCompletion.forceCodeAnalysisParser();
 	}
@@ -1693,14 +1693,13 @@ class SetBreakpoint extends TextAction
 {
 	private IRPOperation myOperation = null;
 	private RSyntaxTextArea myTextArea = null;
-	public SetBreakpoint(IRPOperation aOperation, RSyntaxTextArea myTextArea2)
-	{
+	private StartAutoCompletion myStartAutoCompletion = null;
+
+	public SetBreakpoint(IRPOperation aOperation, RSyntaxTextArea aTextArea, StartAutoCompletion aStartAutoCompletion) {
 		super("set Breakpoint");
 		myOperation = aOperation;
-		
-		myTextArea = myTextArea2;
-		
-		
+		myTextArea = aTextArea;
+		myStartAutoCompletion = aStartAutoCompletion;
 	}
 	
 	@Override
@@ -1745,19 +1744,17 @@ class SetBreakpoint extends TextAction
         	return;
         }
         
-        IRPComment bpComment = (IRPComment) newAggr;
-        
-        if(bpComment == null)
-        {
-        	return;
-        }
+        IRPComment bpComment = (IRPComment) newAggr;  
         
         bpComment.addStereotype("BreakPoint", "Comment");
         
-        IRPTag offsetTag = bpComment.getTag("Offset");
+        IRPTag offsetTag = bpComment.getTag("Offset");  
+     
+        String offsetStr = Integer.toString(lineNumber-3);
         
-        offsetTag.setValue(Integer.toString(lineNumber-3));
+        bpComment.setTagValue(offsetTag, offsetStr);
         
+        myStartAutoCompletion.forceCodeAnalysisParser();
 
 	}
 	

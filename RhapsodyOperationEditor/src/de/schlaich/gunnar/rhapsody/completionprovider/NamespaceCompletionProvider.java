@@ -199,7 +199,7 @@ public class NamespaceCompletionProvider extends DefaultCompletionProvider {
 			for(IRPModelElement element:elements)
 			{
 				String metaClass = element.getMetaClass();
-
+				
 				if(metaClass.equals("Operation"))
 				{
 					IRPOperation function = (IRPOperation)element;

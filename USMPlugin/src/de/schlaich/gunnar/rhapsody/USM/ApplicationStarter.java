@@ -57,7 +57,9 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExplorerCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkReportCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetLockCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExportTableCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExportTableCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CreateMsgCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddParamMsgCmd);
 		
 		
 
