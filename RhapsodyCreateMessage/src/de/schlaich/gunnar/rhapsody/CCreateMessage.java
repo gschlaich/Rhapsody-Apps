@@ -6,7 +6,9 @@ import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
@@ -364,11 +366,124 @@ public class CCreateMessage {
 		receiverClass.setPropertyValue(standardOperationsKey, standardOperations);
 		
 		standardOperations = "privateCopyCtor,privateAssignmentOp,USMMsgSender";
-		senderClass.setPropertyValue(standardOperationsKey, standardOperations);
-		
-		
-		
+
+	}
 	
+	public void addParameter(IRPApplication aRhapsody, IRPModelElement aSelected) 
+	{
+		myRhapsody = aRhapsody;
+		if (aSelected instanceof IRPAttribute == false) {
+			print("Selected is not an attribute");
+			return;
+		}
+		IRPAttribute attribute = (IRPAttribute) aSelected;
+		IRPClass msgClass = (IRPClass) attribute.getOwner();
+		if (msgClass == null) 
+		{
+            print("No class found");
+            return;
+		}
+		
+		boolean isMessage = false;
+		
+		@SuppressWarnings("unchecked")
+		List<IRPGeneralization> generalizations = msgClass.getGeneralizations().toList();
+		for (IRPGeneralization generalization : generalizations) 
+		{
+			IRPClassifier base = generalization.getBaseClass();
+			if (base.getName().equals("IMessage") == true) 
+			{
+				isMessage = true;
+				break;
+			}
+		}
+		
+		if (isMessage == false) {
+			print("Selected class is not a message");
+			return;
+		}
+		
+		
+		attribute.setVisibility("Private");
+		String attributeName = attribute.getName();
+		
+		if(attributeName.startsWith("my")==false)
+		{
+			attributeName = "my"+ attributeName.substring(0,1).toUpperCase()+attributeName.substring(1);
+			attribute.setName(attributeName);
+		}
+
+		String contextName = attributeName.substring(2);
+		
+		IRPOperation getter = msgClass.addOperation("get"+contextName);
+		getter.setIsConst(1);
+		String getterBody = "return "+attributeName+";";
+		
+		getter.setBody(getterBody);
+		getter.setReturns(attribute.getType());
+		
+		setAutoGen(getter);
+		
+		IRPOperation describeOperation = (IRPOperation) msgClass.findNestedElement("describe", "Operation");
+		if (describeOperation == null) {
+			print("No describe operation found");
+			return;
+		}
+		
+		StringBuffer describeBodyBuffer = new StringBuffer();
+		describeBodyBuffer.append(describeOperation.getBody());
+		describeBodyBuffer.append("\n");
+		describeBodyBuffer.append(" context.set(\""+contextName+"\", "+attributeName+"); \n");
+		
+		describeOperation.setBody(describeBodyBuffer.toString());
+		
+		IRPOperation constructor = (IRPOperation) msgClass.findNestedElement(msgClass.getName(), "Operation");
+		if (constructor == null) 
+		{
+			print("No constructor found");
+			return;
+		}
+		
+		
+		String argumentName = "a"+attribute.getName().substring(2);
+		
+		IRPArgument argument = constructor.addArgument(argumentName);
+		argument.setType(attribute.getType());
+
+		String initializer = constructor.getInitializer();
+        initializer+=","+attribute.getName()+"("+argumentName+")";
+        constructor.setInitializer(initializer);
+        
+        String msgName = msgClass.getName();
+        
+        String sendMsgName = "send"+msgName.substring(1);
+        
+        String senderName = msgName+"Sender";
+        
+        IRPClass senderClass = (IRPClass)msgClass.findNestedClassifier(senderName);
+        
+		if (senderClass == null) {
+			print("No sender class found");
+			return;
+		}
+		
+		IRPOperation sendMsg = (IRPOperation)senderClass.findNestedElement(sendMsgName, "Operation");
+		if (sendMsg == null) {
+			print("No send operation found");
+			return;
+		}
+		
+		IRPArgument arg = sendMsg.addArgument(argumentName);
+		arg.setType(attribute.getType());
+		
+		String sendMsgBody = sendMsg.getBody();
+		sendMsgBody = sendMsgBody.substring(0, sendMsgBody.length()-3);
+		sendMsgBody+=", "+argumentName+"));";
+		sendMsg.setBody(sendMsgBody);
+		
+		print("Parameter added");
+        
+		
 	}
 
 }

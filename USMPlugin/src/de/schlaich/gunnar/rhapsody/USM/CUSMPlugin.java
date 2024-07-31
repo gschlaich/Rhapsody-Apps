@@ -53,6 +53,7 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String SearchElementCmd = "Search Element";
 	public static final String SelectRelationCmd = "Select Relation";
 	public static final String CreateMsgCmd = "Create Message";
+	public static final String AddParamMsgCmd = "Add Parameter to Message";
 	public static final String MovePackageCmd = "Move Package to SVN";
 	public static final String SetActiveCmd = "Set Active";
 	public static final String LocateActiveCmd = "Locate Active";
@@ -205,6 +206,12 @@ public class CUSMPlugin extends RPUserPlugin {
 			createMessage.execute(myRhapsody, selected);
 			return;
 		}
+		if(menuItem.contains(AddParamMsgCmd))
+        {
+            CCreateMessage createMessage = new CCreateMessage();
+            createMessage.addParameter(myRhapsody, selected);
+            return;
+        }
 		if(menuItem.contains(MovePackageCmd))
 		{
 			RhapsodyHelper.movePackageToRepository(myRhapsody, selected);
@@ -607,6 +614,8 @@ public class CUSMPlugin extends RPUserPlugin {
 	        }
 	        File directoryToSave = fileChooser.getSelectedFile();
             trace("Folder: " + directoryToSave.getAbsolutePath());
+            
+            return;
 		}
 
 
