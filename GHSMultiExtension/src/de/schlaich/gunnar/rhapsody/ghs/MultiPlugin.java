@@ -1,6 +1,5 @@
 package de.schlaich.gunnar.rhapsody.ghs;
 
-
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPCollection;
@@ -19,6 +18,7 @@ import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
+//import de.schlaich.gunnar.rhapsody.USM.CUSMPlugin;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
@@ -28,8 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -38,9 +41,9 @@ import java.util.regex.Pattern;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 
+public class MultiPlugin extends RPUserPlugin
+{
 
-public class MultiPlugin extends RPUserPlugin {
-	
 	public static String PROFILE_NAME = "GHSMultiProfile";
 	public static final String VIEW_MULTI_DEBUGGER_CMD = "View in Multi Debugger";
 	public static final String VIEW_MULTI_EDITOR_CMD = "View in Multi Editor";
@@ -48,11 +51,11 @@ public class MultiPlugin extends RPUserPlugin {
 	public static final String COMPILE_MULTI_CMD = "Compile in GHS Multi";
 	public static final String VIEW_MULTI_RHAPSODY_CMD = "View in Rhapsody";
 	public static final String SET_BREAKPOINT_CMD = "Set Breakpoint";
-	
+
 	private static final String CompilerIssue = "CompilerIssue";
 	private static final String BREAK_POINT_META_NAME = "BreakPoint";
 	private static final String BREAK_POINT_COLLECTION_META_NAME = "BreakPointCollection";
-	
+
 	private String myCmd = "C:\\ghs\\multi_716\\mpythonrun";
 	private String myMultiCmd = "C:\\ghs\\multi_716\\multi.exe";
 	private String myArgsDebugView = " -s \"dw = winreg.GetDebugger()\" -s \"dw.RunCommands('e {0} ')\"";
@@ -68,66 +71,97 @@ public class MultiPlugin extends RPUserPlugin {
 	private String myArgCompile1 = "\"pw = winreg.GetProjectManagerWindow()\"";
 	private String myArgCompile2Begin = "\"pw.BuildFile('";
 	private String myArgCompile2End = "')\"";
-	//private String myArgCompile3 = "\"pw.DumpTextFieldValue('tv_status')\"";
+	// private String myArgCompile3 = "\"pw.DumpTextFieldValue('tv_status')\"";
 	private String myArgCompile3 = "\"w = winreg.GetWindowByName('Build Details')\"";
 	private String myArgCompile4 = "\"w.DumpWidget('tv_messages')\"";
 	private String myArgBuldAll = "\"pw.BuildProj(False,True)\"";
-	
-	
-	
+
 	private IRPApplication myRhapsody = null;
 	private IRPProfile myProfile = null;
 
-	public MultiPlugin() {
+	public MultiPlugin()
+	{
 		// TODO Auto-generated constructor stub
 	}
+	
+	private String getBuildDate()
+	{
+		try
+		{
+			String jarPath = MultiPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String decodedPath = URLDecoder.decode(jarPath, "UTF-8");
+			File jarFile = new File(decodedPath);
+			if (jarFile.exists())
+			{
+				long lastModified = jarFile.lastModified();
+				Date date = new Date(lastModified);
+				return date.toString();
+			}
+			else
+			{
+				return "JAR-File not found";
+			}
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+			return "Error while getting build date";
+		}
+	}
+
 
 	@Override
-	public void RhpPluginInit(IRPApplication rpyApplication) {
+	public void RhpPluginInit(IRPApplication rpyApplication)
+	{
 		// TODO Auto-generated method stub
-		
+
 		myRhapsody = rpyApplication;
 		trace("Start");
+		trace("Build Date: " + getBuildDate());
+		
+		ASTHelper.setTraceAction(this::trace);
 
 	}
 
 	@Override
-	public void RhpPluginInvokeItem() {
+	public void RhpPluginInvokeItem()
+	{
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void OnMenuItemSelect(String menuItem) {
-		
+	public void OnMenuItemSelect(String menuItem)
+	{
+
 		IRPModelElement selected = myRhapsody.getSelectedElement();
-		
-		if(menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))
+
+		if (menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))
 		{
 			viewInDebugger(null);
 			return;
 		}
-		if(menuItem.equals(VIEW_MULTI_EDITOR_CMD))
+		if (menuItem.equals(VIEW_MULTI_EDITOR_CMD))
 		{
 			viewInEditor(null);
 			return;
 		}
-		if(menuItem.equals(OPEN_MULTI_CMD))
+		if (menuItem.equals(OPEN_MULTI_CMD))
 		{
 			openGHSProject();
 			return;
 		}
-		if(menuItem.equals(COMPILE_MULTI_CMD))
+		if (menuItem.equals(COMPILE_MULTI_CMD))
 		{
 			compile(null);
 			return;
 		}
-		if(menuItem.equals(VIEW_MULTI_RHAPSODY_CMD))
+		if (menuItem.equals(VIEW_MULTI_RHAPSODY_CMD))
 		{
 			viewInRhapsody();
 			return;
 		}
-		if(menuItem.equals(SET_BREAKPOINT_CMD))
+		if (menuItem.equals(SET_BREAKPOINT_CMD))
 		{
 			setBreakPoint(selected);
 			return;
@@ -137,55 +171,56 @@ public class MultiPlugin extends RPUserPlugin {
 	}
 
 	@Override
-	public void OnTrigger(String trigger) {
+	public void OnTrigger(String trigger)
+	{
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public boolean RhpPluginCleanup() {
+	public boolean RhpPluginCleanup()
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void RhpPluginFinalCleanup() {
+	public void RhpPluginFinalCleanup()
+	{
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	private void trace(String aMsg)
 	{
-		myRhapsody.writeToOutputWindow("Log", "MultiPlugin: " + aMsg+"\n");
+		myRhapsody.writeToOutputWindow("Log", "MultiPlugin: " + aMsg + "\n");
 		System.out.println("MultiPlugin: " + aMsg);
 	}
-	
-	
-	
-	private IRPOperation getSelectedOperation(IRPOperation aOperation) 
+
+	private IRPOperation getSelectedOperation(IRPOperation aOperation)
 	{
 		IRPModelElement selected = aOperation;
-		
-		if(selected==null)
+
+		if (selected == null)
 		{
 			selected = myRhapsody.getSelectedElement();
 		}
-		if(selected instanceof IRPOperation == false)
+		if (selected instanceof IRPOperation == false)
 		{
 			trace("No Operation selected");
 			return null;
 		}
-		
-		IRPOperation selectedOperation = (IRPOperation)selected;
+
+		IRPOperation selectedOperation = (IRPOperation) selected;
 		return selectedOperation;
 	}
-	
+
 	private String getPath(IRPOperation aOperation)
 	{
-		
+
 		IRPModelElement selectedOwner = aOperation.getOwner();
-		
-		if (selectedOwner instanceof IRPClass == false) 
+
+		if (selectedOwner instanceof IRPClass == false)
 		{
 			trace("Owner is not a class");
 			return null;
@@ -193,62 +228,60 @@ public class MultiPlugin extends RPUserPlugin {
 
 		IRPClass selectedClass = (IRPClass) selectedOwner;
 		String path = ASTHelper.getSourcePath(selectedClass, myRhapsody);
-		
-		if((aOperation.isATemplate()==1)||(aOperation.getIsInline()==1))
+
+		if ((aOperation.isATemplate() == 1) || (aOperation.getIsInline() == 1))
 		{
-			path = path+".h";
+			path = path + ".h";
 		}
 		else
 		{
-			path = path+".cpp";
+			path = path + ".cpp";
 		}
-		
+
 		path = path.replace('/', '\\');
-		
-		
+
 		return path;
 	}
-	
+
 	private String getPath(IRPClass aClass)
 	{
-		String path = ASTHelper.getSourcePath(aClass, myRhapsody)+".cpp";
+		String path = ASTHelper.getSourcePath(aClass, myRhapsody) + ".cpp";
 		path = path.replace('/', '\\');
 		return path;
 	}
-	
+
 	private String getPath(IRPPackage aPackage)
 	{
-		String path = ASTHelper.getSourcePath(aPackage, myRhapsody)+".gpj";
+		String path = ASTHelper.getSourcePath(aPackage, myRhapsody) + ".gpj";
 		path = path.replace('/', '\\');
 		return path;
 	}
-	
-	
-	private List<String> runCmd(String aArgs1, String aArgs2, String aArgs3, String aArgs4) 
+
+	private List<String> runCmd(String aArgs1, String aArgs2, String aArgs3, String aArgs4)
 	{
-		
+
 		List<String> ret = new ArrayList<String>();
-		if(aArgs3==null)
+		if (aArgs3 == null)
 		{
-			trace("run "+myCmd+" "+" -s "+aArgs1+" -s "+aArgs2);
+			trace("run " + myCmd + " " + " -s " + aArgs1 + " -s " + aArgs2);
 		}
-		else if(aArgs4==null)
+		else if (aArgs4 == null)
 		{
-			trace("run "+myCmd+" "+" -s "+aArgs1+" -s "+aArgs2+ " -s "+ aArgs3);
+			trace("run " + myCmd + " " + " -s " + aArgs1 + " -s " + aArgs2 + " -s " + aArgs3);
 		}
 		else
 		{
-			trace("run "+myCmd+" "+" -s "+aArgs1+" -s "+aArgs2+ " -s "+ aArgs3+ " -s "+ aArgs4);
+			trace("run " + myCmd + " " + " -s " + aArgs1 + " -s " + aArgs2 + " -s " + aArgs3 + " -s " + aArgs4);
 		}
-	
-		try 
+
+		try
 		{
 			ProcessBuilder pb;
-			if(aArgs3==null)
+			if (aArgs3 == null)
 			{
 				pb = new ProcessBuilder(myCmd, "-noconsole", "-s", aArgs1, "-s", aArgs2);
 			}
-			else if(aArgs4==null)
+			else if (aArgs4 == null)
 			{
 				pb = new ProcessBuilder(myCmd, "-noconsole", "-s", aArgs1, "-s", aArgs2, "-s", aArgs3);
 			}
@@ -258,354 +291,341 @@ public class MultiPlugin extends RPUserPlugin {
 			}
 			Process process = pb.start();
 			InputStream inputStream = process.getInputStream();
-			//InputStream errorStream = process.getErrorStream();
-			
+			// InputStream errorStream = process.getErrorStream();
+
 			BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
-			//BufferedReader errrorReader = new BufferedReader(new InputStreamReader(errorStream));
-			
+			// BufferedReader errrorReader = new BufferedReader(new
+			// InputStreamReader(errorStream));
+
 			String inputLine;
-			while((inputLine = inputReader.readLine()) != null)
+			while ((inputLine = inputReader.readLine()) != null)
 			{
 				ret.add(inputLine);
 				trace(inputLine);
 			}
-			
+
 			int exitCode = process.waitFor();
-			trace("Exit Code: "+exitCode);
-		} 
-		catch (IOException | InterruptedException iox) 
+			trace("Exit Code: " + exitCode);
+		}
+		catch (IOException | InterruptedException iox)
 		{
 			trace("Exception: " + iox.getMessage());
 			iox.printStackTrace();
 		}
 		return ret;
 	}
-	
+
 	public void viewInDebugger(IRPOperation aOperation)
 	{
 		trace("Start viewInDebugger");
 		String component = getOperationLocation(aOperation);
-		
-		
-		String arg2 = myArgDebugView2Begin+component+myArgDebugView2End;
-		
-		//build string...
-		//String args = MessageFormat.format(myArgs, component);
-		
-		runCmd(myArgDebugView1,arg2,null,null);
+
+		String arg2 = myArgDebugView2Begin + component + myArgDebugView2End;
+
+		// build string...
+		// String args = MessageFormat.format(myArgs, component);
+
+		runCmd(myArgDebugView1, arg2, null, null);
 
 	}
-	
+
 	public void setBreakPoint(IRPOperation aOperation, int aOffset)
 	{
 		trace("Start setBreakPoint operation ");
 		String component = getOperationLocation(aOperation);
-		if(aOffset>0)
+		if (aOffset > 0)
 		{
-			component = component+"#"+(aOffset+3);
+			component = component + "#" + (aOffset + 3);
 		}
-		String arg2 = myArgSetBreakPoint2Begin+component+myArgDebugView2End;
-		runCmd(myArgDebugView1,arg2,null,null);
+		String arg2 = myArgSetBreakPoint2Begin + component + myArgDebugView2End;
+		runCmd(myArgDebugView1, arg2, null, null);
 	}
-	
+
 	public void setBreakPoint(IRPComment aBreakpoint)
 	{
 		trace("Start setBeakPoint from comment");
-		
-		if(aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME)==false)
+
+		if (aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME) == false)
 		{
-			
+
 			setBreakPointCollection(aBreakpoint);
 			return;
 		}
-		
-		if(aBreakpoint.getOwner() instanceof IRPOperation == false)
+
+		if (aBreakpoint.getOwner() instanceof IRPOperation == false)
 		{
 			trace("Owner has to be an operation");
 			return;
 		}
-		
+
 		IRPTag offsetTag = aBreakpoint.getTag("Offset");
-		
+
 		String offsetString = offsetTag.getValue();
-		
+
 		int offset = Integer.parseInt(offsetString);
-		
-		IRPOperation owner = (IRPOperation)aBreakpoint.getOwner();
-		
-		setBreakPoint(owner,offset);
-		
+
+		IRPOperation owner = (IRPOperation) aBreakpoint.getOwner();
+
+		setBreakPoint(owner, offset);
+
 	}
-	
-	public void setBreakPoint(IRPModelElement aModelElement )
+
+	public void setBreakPoint(IRPModelElement aModelElement)
 	{
-		
-		if(aModelElement instanceof IRPComment)
+
+		if (aModelElement instanceof IRPComment)
 		{
-			IRPComment comment = (IRPComment)aModelElement;
+			IRPComment comment = (IRPComment) aModelElement;
 			setBreakPoint(comment);
 		}
-		//search for all comments
+		// search for all comments
 		List<IRPComment> comments = aModelElement.getNestedElementsByMetaClass("Comment", 1).toList();
-		
+
 		boolean setBreakpoint = false;
-		
-		for(IRPComment comment:comments)
+
+		for (IRPComment comment : comments)
 		{
-			if(comment.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
+			if (comment.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
 			{
 				setBreakPoint(comment);
 				setBreakpoint = true;
 			}
 		}
-		
-		if(setBreakpoint==true)
+
+		if (setBreakpoint == true)
 		{
 			return;
 		}
-		
-		if(aModelElement instanceof IRPOperation)
+
+		if (aModelElement instanceof IRPOperation)
 		{
-			IRPOperation operation = (IRPOperation)aModelElement;
+			IRPOperation operation = (IRPOperation) aModelElement;
 			setBreakPoint(operation, 0);
 			return;
 		}
-		
-		
+
 	}
-	
+
 	private void setBreakPointCollection(IRPComment aBreakpointCollection)
 	{
-		if(aBreakpointCollection.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME)==false)
+		if (aBreakpointCollection.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME) == false)
 		{
 			return;
 		}
-		
+
 		List<IRPModelElement> breakPoints = aBreakpointCollection.getAnchoredByMe().toList();
-		for(IRPModelElement element:breakPoints)
+		for (IRPModelElement element : breakPoints)
 		{
-			
-			if(element instanceof IRPComment)
+
+			if (element instanceof IRPComment)
 			{
-				IRPComment breakpoint = (IRPComment)element;
+				IRPComment breakpoint = (IRPComment) element;
 				setBreakPoint(breakpoint);
 			}
 		}
-		
-	}
-	
-	
-	
-	
-	
 
-	private String getOperationLocation(IRPOperation aOperation) {
+	}
+
+	private String getOperationLocation(IRPOperation aOperation)
+	{
 		String nameSpace = null;
 		String component = null;
 		IRPModelElement selected = aOperation;
-		
-		if(selected==null)
+
+		if (selected == null)
 		{
 			selected = myRhapsody.getSelectedElement();
 		}
-			
-		
+
 		nameSpace = RhapsodyOperation.getNamespace(selected);
 		component = selected.getName();
 		selected = selected.getOwner();
-		
-			
-		while(selected instanceof IRPClass)
+
+		while (selected instanceof IRPClass)
 		{
-			component = selected.getName()+"::"+component;
+			component = selected.getName() + "::" + component;
 			selected = selected.getOwner();
 		}
-			
-		if(nameSpace!=null)
+
+		if (nameSpace != null)
 		{
-			component = nameSpace+"::"+component;
+			component = nameSpace + "::" + component;
 		}
 		return component;
 	}
-	
-	
+
 	public void viewInRhapsody()
 	{
 		String arg2 = "\"dw.GetPullDownValue('pd_proc')\"";
-		List<String> result = runCmd(myArgDebugView1,arg2,null,null);
-		
+		List<String> result = runCmd(myArgDebugView1, arg2, null, null);
+
 		int i = 0;
-		
-		
+
 		String operationString = result.get(1);
-		
-		operationString = operationString.substring(1, operationString.length()-1);
-		
-		trace("Operation: "+operationString);
-		
+
+		operationString = operationString.substring(1, operationString.length() - 1);
+
+		trace("Operation: " + operationString);
+
 		try
 		{
-		
+
 			IRPModelElement selectedModel = selectOperation(operationString);
-			if(selectedModel==null)
+			if (selectedModel == null)
 			{
 				trace("Operation not found");
 				return;
 			}
-			
+
 			trace("Selected Model:" + selectedModel.getName());
-			
+
 			selectedModel.locateInBrowser();
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
-			trace("Exception: "+ e.getMessage());
+			trace("Exception: " + e.getMessage());
 		}
-	
+
 	}
-	
+
 	private IRPModelElement selectOperation(String aOperationName)
 	{
-		
+
 		aOperationName = aOperationName.substring(0, aOperationName.indexOf('('));
-		
+
 		String[] elements = aOperationName.split("::");
-		
+
 		IRPModelElement searchIn = myRhapsody.activeProject();
-		
-		trace("selectOperation " + aOperationName); 
-		
-		if(searchIn==null)
+
+		trace("selectOperation " + aOperationName);
+
+		if (searchIn == null)
 		{
 			return null;
 		}
-		
-		for(String element:elements)
+
+		for (String element : elements)
 		{
-			//namespace...
+			// namespace...
 			IRPModelElement f = searchIn.findNestedElementRecursive(element, "Package");
-			if(f==null)
+			if (f == null)
 			{
 				f = searchIn.findNestedElementRecursive(element, "Class");
-				if(f==null)
+				if (f == null)
 				{
 					f = searchIn.findNestedElementRecursive(element, "Operation");
-					if(f==null)
+					if (f == null)
 					{
-						//not found
-						trace("Did not find  " + element); 
+						// not found
+						trace("Did not find  " + element);
 						continue;
-					}		
+					}
 				}
 			}
 			searchIn = f;
-			trace("Found  " + searchIn.getName() +" as " + searchIn.getMetaClass()); 
-			
-		}
-		
-		return searchIn;
-		
-	}
-	
+			trace("Found  " + searchIn.getName() + " as " + searchIn.getMetaClass());
 
-	
-	
+		}
+
+		return searchIn;
+
+	}
+
 	public void viewInEditor(IRPOperation aOperation)
 	{
 		trace("Start viewInEditor");
-		
+
 		IRPOperation selectedOperation = getSelectedOperation(aOperation);
-		
-		if(selectedOperation==null)
+
+		if (selectedOperation == null)
 		{
 			return;
 		}
-		
+
 		String path = getPath(selectedOperation);
-		
-		if(path == null)
+
+		if (path == null)
 		{
 			return;
 		}
-		
-		String args2 = myArgEditView2Begin+path+myArgEditView2End;
-		
+
+		String args2 = myArgEditView2Begin + path + myArgEditView2End;
+
 		int line = ASTHelper.getSourceOffset(selectedOperation, myRhapsody);
 
-		String args3 = myArgEditView3Begin+line+myArgEditView3End;
-		
-		runCmd(myArgEditView1, args2, args3,null);
-		
+		String args3 = myArgEditView3Begin + line + myArgEditView3End;
+
+		runCmd(myArgEditView1, args2, args3, null);
+
 	}
-	
-	
-	
-	public void compile(IRPModelElement aElement) {
+
+	public void compile(IRPModelElement aElement)
+	{
 
 		trace("Generate...");
 
 		IRPCollection generateCollection = myRhapsody.getListOfSelectedElements();
-			
-			
+
 		trace("Start generate");
 
-		if (aElement == null) {
+		if (aElement == null)
+		{
 			aElement = myRhapsody.getSelectedElement();
 		}
 		else
 		{
 			generateCollection.addItem(aElement);
 		}
-		
+
 		myRhapsody.generateElements(generateCollection);
-		
+
 		trace("Start compile");
-		
 
 		String path = null;
 
-		if (aElement instanceof IRPOperation) 
+		if (aElement instanceof IRPOperation)
 		{
-			
+
 			IRPOperation aOperation = (IRPOperation) aElement;
 			IRPOperation selectedOperation = getSelectedOperation(aOperation);
 
-			if (selectedOperation == null) {
+			if (selectedOperation == null)
+			{
 				return;
 			}
 
 			IRPModelElement owner = selectedOperation.getOwner();
-			
-			if(owner instanceof IRPClass)
+
+			if (owner instanceof IRPClass)
 			{
-				IRPClass selectedClass = (IRPClass)owner;
-				deleteCompilerIssues(selectedClass);
+				IRPClass selectedClass = (IRPClass) owner;
+				ASTHelper.deleteCompilerIssues(selectedClass,"CompilerIssue");
+				//deleteCompilerIssues(selectedClass);
 			}
-			
+
 			path = getPath(selectedOperation);
-			
-		} 		
-		else if (aElement instanceof IRPClass) 
+
+		}
+		else if (aElement instanceof IRPClass)
 		{
 
 			IRPClass selectedClass = (IRPClass) aElement;
 			path = getPath(selectedClass);
-		
+
 			deleteCompilerIssues(selectedClass);
-	
-			
-		} 
+
+		}
 		else if (aElement instanceof IRPPackage)
 		{
 			IRPPackage selectedPackage = (IRPPackage) aElement;
-			
+
 			deleteCompilerIssues(selectedPackage);
-			
+
 			path = getPath(selectedPackage);
 		}
-		
+
 		List<String> result = null;
-		
+
 		if (aElement instanceof IRPProject)
 		{
 			IRPProject selectedProject = (IRPProject) aElement;
@@ -614,328 +634,342 @@ public class MultiPlugin extends RPUserPlugin {
 		else
 		{
 
-			if (path == null) {
+			if (path == null)
+			{
 				return;
 			}
-	
+
 			String args2 = myArgCompile2Begin + path + myArgCompile2End;
-	
+
 			result = runCmd(myArgCompile1, args2, myArgCompile3, myArgCompile4);
 		}
-		
-		if(result!=null)
+
+		if (result != null)
 		{
 			// check for error....
-			Iterator<String> i =result.iterator();
-			
+			Iterator<String> i = result.iterator();
+
 			File workingFolder = RhapsodyHelper.getActiveDefaultPath(aElement);
 			
-			
-			while(i.hasNext())
+
+			while (i.hasNext())
 			{
 				String r = i.next();
-				
-			
-				
-				if(r.contains("error #")||r.contains("warning #"))
-				{
-					 
-					//String pattern = "\"([^\"]+)\", line (\\d+): error #(\\d+): (.+)";
-					//String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #(\\d+):(.+)?";
-					String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #([^:]+)(.+)?";
-				        Pattern re = Pattern.compile(pattern);
 
-				        Matcher matcher = re.matcher(r);
-				        if (matcher.find()) 
-				        {
-				            
-				            String filePath = matcher.group(1);
-				            int lineNumber = Integer.parseInt(matcher.group(2));
-				            String errorLevel = matcher.group(3);
-				            String errorCode = matcher.group(4);
-				            String errorMessage = matcher.group(5);
-				            if(i.hasNext())
-				            {
-				            	String messageEnd = " "+i.next().trim();
-				            	if(errorMessage == null)
-				            	{
-				            		errorMessage = messageEnd;
-				            	}
-				            	else
-				            	{
-				            		errorMessage += messageEnd;
-				            	}
-				            }
-				            
-				            File f = new File(filePath);
-				            
-				            String fileName = f.getName();
-				            
-				            String className = fileName.substring(0, fileName.lastIndexOf("."));
-				            
-				            // Ausgabe der Ergebnisse
-				            System.out.println("----------------------------------");
-				            System.out.println("Class: " + className);
-				            System.out.println("File: " + fileName);
-				            System.out.println("Line: " + lineNumber);
-				            System.out.println("errorLevel: " + errorLevel);
-				            System.out.println("Errorcode: " + errorCode);
-				            System.out.println("Errormessage: " + errorMessage);
-				            System.out.println("----------------------------------");
-				            
-				            
-				            
-				            if(aElement instanceof IRPClass)
-				            {
-				            	IRPClass selectedClass = (IRPClass)aElement;
-				            	createIssue(workingFolder, selectedClass, fileName, className, lineNumber, errorLevel,
-										errorCode, errorMessage);
-				            }
-				            else if(aElement instanceof IRPPackage)
-				            {
-				            	IRPPackage p = (IRPPackage)aElement;
-				            	List<IRPClass> classes = p.getNestedElementsByMetaClass("Class", 1).toList();
-				            	for(IRPClass c:classes)
-				            	{
-				            		if(c.getName().equals(className))
-				            		{
-				            			createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel, errorCode, errorMessage);
-				            		}
-				            	}
-				            }
-				            else if(aElement instanceof IRPOperation)
-				            {
-				            	IRPModelElement o = aElement.getOwner();
-				            	if(o instanceof IRPClass)
-				            	{
-				            		IRPClass c = (IRPClass)o;
-				            		
-				            		createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel, errorCode, errorMessage);
-				            		
-				            	}
-				            }
-   
-				       } 
+				if (r.contains("error #") || r.contains("warning #"))
+				{
+
+					// String pattern = "\"([^\"]+)\", line (\\d+): error #(\\d+): (.+)";
+					// String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #(\\d+):(.+)?";
+					String pattern = "\"([^\"]+)\", line (\\d+): (error|warning) #([^:]+)(.+)?";
+					Pattern re = Pattern.compile(pattern);
+
+					Matcher matcher = re.matcher(r);
+					if (matcher.find())
+					{
+
+						String filePath = matcher.group(1);
+						int lineNumber = Integer.parseInt(matcher.group(2));
+						String errorLevel = matcher.group(3);
+						String errorCode = matcher.group(4);
+						String errorMessage = matcher.group(5);
+						if (i.hasNext())
+						{
+							String messageEnd = " " + i.next().trim();
+							if (errorMessage == null)
+							{
+								errorMessage = messageEnd;
+							}
+							else
+							{
+								errorMessage += messageEnd;
+							}
+						}
+
+						File f = new File(filePath);
+
+						String fileName = f.getName();
+
+						String className = fileName.substring(0, fileName.lastIndexOf("."));
+
+						// Ausgabe der Ergebnisse
+						System.out.println("----------------------------------");
+						System.out.println("Class: " + className);
+						System.out.println("File: " + fileName);
+						System.out.println("Line: " + lineNumber);
+						System.out.println("errorLevel: " + errorLevel);
+						System.out.println("Errorcode: " + errorCode);
+						System.out.println("Errormessage: " + errorMessage);
+						System.out.println("----------------------------------");
+
+						File absolutePath = new File(workingFolder.getParentFile(), filePath);
+						
+						String absolutePathString = null;
+						
+						try
+						{
+							absolutePathString = absolutePath.getCanonicalPath();
+						}
+						catch(IOException iox)
+                        {
+                            trace("Exception: " + iox.getMessage());
+                            iox.printStackTrace();
+                            return;
+                        }
+						
+						ASTHelper.createIssue(myRhapsody.activeProject(), absolutePathString, lineNumber, errorLevel, errorMessage, "CompilerIssue");
+
+						/*
+						if (aElement instanceof IRPClass)
+						{
+							IRPClass selectedClass = (IRPClass) aElement;
+							createIssue(workingFolder, selectedClass, fileName, className, lineNumber, errorLevel,
+									errorCode, errorMessage);
+						}
+						else if (aElement instanceof IRPPackage)
+						{
+							IRPPackage p = (IRPPackage) aElement;
+							List<IRPClass> classes = p.getNestedElementsByMetaClass("Class", 1).toList();
+							for (IRPClass c : classes)
+							{
+								if (c.getName().equals(className))
+								{
+									createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel,
+											errorCode, errorMessage);
+								}
+							}
+						}
+						else if (aElement instanceof IRPOperation)
+						{
+							IRPModelElement o = aElement.getOwner();
+							if (o instanceof IRPClass)
+							{
+								IRPClass c = (IRPClass) o;
+
+								createIssue(workingFolder, c, fileName, className, lineNumber, errorLevel, errorCode,
+										errorMessage);
+
+							}
+						}
+						*/
+					}
 				}
 			}
 		}
-			
 
 	}
 
 	public void createIssue(File aWorkingFolder, IRPClass aClass, String aFileName, String aClassName, int aLineNumber,
-			String aErrorLevel, String aErrorCode, String aErrorMessage) {
-		
-		while(aClass.getOwner() instanceof IRPClass)
+			String aErrorLevel, String aErrorCode, String aErrorMessage)
+	{
+
+		while (aClass.getOwner() instanceof IRPClass)
 		{
-			aClass = (IRPClass)aClass.getOwner();
+			aClass = (IRPClass) aClass.getOwner();
 		}
 
-		File cppSource = new File(aWorkingFolder,aFileName);
-		if(cppSource.exists())
+		File cppSource = new File(aWorkingFolder, aFileName);
+		if (cppSource.exists())
 		{
-			IASTTranslationUnit translationUnit =  ASTHelper.getTranslationUnit(cppSource.getAbsolutePath());
+			IASTTranslationUnit translationUnit = ASTHelper.getTranslationUnit(cppSource.getAbsolutePath());
 			IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(aLineNumber, translationUnit);
-	        String operationName = ASTHelper.getOperationName(operationDefinition);   
-	        int offset = (ASTHelper.getOffset(operationDefinition, aLineNumber)-1);
-	        
-	        createIssue(aClass, aErrorLevel, aErrorCode+": "+aErrorMessage, operationName, offset); 
-	        
-	        
+			String operationName = ASTHelper.getOperationName(operationDefinition);
+			int offset = (ASTHelper.getOffset(operationDefinition, aLineNumber) - 1);
+
+			createIssue(aClass, aErrorLevel, aErrorCode + ": " + aErrorMessage, operationName, offset);
+
 		}
-			
-		
+
 	}
 
-	public void deleteCompilerIssues(IRPPackage aPackage) {
-		
-		if(aPackage instanceof IRPProject)
+	public void deleteCompilerIssues(IRPPackage aPackage)
+	{
+
+		if (aPackage instanceof IRPProject)
 		{
 			return;
 		}
-		
+
 		trace("delete CompilerIssue from " + aPackage.getName());
-		
+
 		List<IRPClass> classes = aPackage.getNestedElementsByMetaClass("Class", 1).toList();
-		
-		if(aPackage.isReadOnly()==1)
+
+		if (aPackage.isReadOnly() == 1)
 		{
 			return;
 		}
-		
-		for(IRPClass c:classes)
+
+		for (IRPClass c : classes)
 		{
 			trace("delete CompilerIssue from " + c.getName());
 			deleteCompilerIssues(c);
 		}
 	}
 
-	public void deleteCompilerIssues(IRPClass aClass) {
-			
-		
-		if(aClass.isReadOnly()==1)
+	public void deleteCompilerIssues(IRPClass aClass)
+	{
+
+		if (aClass.isReadOnly() == 1)
 		{
 			return;
 		}
-		
+
 		List<IRPComment> comments = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
-		 
-		for(IRPComment comment:comments)
+
+		for (IRPComment comment : comments)
 		{
-			if(comment.getUserDefinedMetaClass().equals(CompilerIssue))
+			if (comment.getUserDefinedMetaClass().equals(CompilerIssue))
 			{
-				
+
 				comment.deleteFromProject();
-				
+
 			}
 		}
-	}
-	
-	
-	@SuppressWarnings("unchecked")
-	public void createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName, int offset) 
-	{
-		if(operationName==null)
-		{
-			return;
-		}
-		
-		IRPUnit unit = aClass.getSaveUnit();
-		if(unit==null)
-		{
-			return;
-		}
-		
-		if(unit.isReadOnly()==1)
-		{
-			return;
-		}
-		        
-		String issueName = errorLevel+"_"+operationName+"_"+offset;
-		       
-        List<IRPComment> issues = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
-        for(IRPComment issue:issues)
-        {
-        	if(issue.getUserDefinedMetaClass().equals(CompilerIssue))
-        	{
-        		if(issue.getName().equals(issueName))
-        		{
-        			return;
-        		}
-        	}
-        }
-		                
-        IRPComment compilerIssue = (IRPComment) aClass.addNewAggr(CompilerIssue, issueName);
-        
-        compilerIssue.setDescription(infoText);
-        compilerIssue.setBody(errorLevel);
-        compilerIssue.setSpecification(operationName+" "+offset);
-        
-        if(compilerIssue!=null)
-        {
-            //get the operation...
-            boolean foundOperation = addCompilerIssue(aClass, operationName, compilerIssue);
-            
-            if(foundOperation==false)
-            {
-            	//check in nested class
-            	List<IRPClass> nestedClasses = aClass.getNestedElementsByMetaClass("Class", 1).toList();
-            	for(IRPClass nestedClass:nestedClasses)
-            	{
-            		addCompilerIssue(nestedClass, operationName, compilerIssue);
-            	}
-            	
-            }
-            
-            
-        }
 	}
 
-	public boolean addCompilerIssue(IRPClass aClass, String aOperationName, IRPComment aCompilerIssue) {
-		boolean foundOperation = false; 
-		List<IRPOperation> ops = aClass.getOperations().toList();
-		for(IRPOperation op:ops)
+	@SuppressWarnings("unchecked")
+	public void createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName, int offset)
+	{
+		if (operationName == null)
 		{
-			if(op.getName().equals(aOperationName))
+			return;
+		}
+
+		IRPUnit unit = aClass.getSaveUnit();
+		if (unit == null)
+		{
+			return;
+		}
+
+		if (unit.isReadOnly() == 1)
+		{
+			return;
+		}
+
+		String issueName = errorLevel + "_" + operationName + "_" + offset;
+
+		List<IRPComment> issues = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
+		for (IRPComment issue : issues)
+		{
+			if (issue.getUserDefinedMetaClass().equals(CompilerIssue))
 			{
-				foundOperation = true;
-				aCompilerIssue.addAnchor(op);            		
+				if (issue.getName().equals(issueName))
+				{
+					return;
+				}
 			}
 		}
-		
-		if(foundOperation == false)
+
+		IRPComment compilerIssue = (IRPComment) aClass.addNewAggr(CompilerIssue, issueName);
+
+		compilerIssue.setDescription(infoText);
+		compilerIssue.setBody(errorLevel);
+		compilerIssue.setSpecification(operationName + " " + offset);
+
+		if (compilerIssue != null)
+		{
+			// get the operation...
+			boolean foundOperation = addCompilerIssue(aClass, operationName, compilerIssue);
+
+			if (foundOperation == false)
+			{
+				// check in nested class
+				List<IRPClass> nestedClasses = aClass.getNestedElementsByMetaClass("Class", 1).toList();
+				for (IRPClass nestedClass : nestedClasses)
+				{
+					addCompilerIssue(nestedClass, operationName, compilerIssue);
+				}
+
+			}
+
+		}
+	}
+
+	public boolean addCompilerIssue(IRPClass aClass, String aOperationName, IRPComment aCompilerIssue)
+	{
+		boolean foundOperation = false;
+		List<IRPOperation> ops = aClass.getOperations().toList();
+		for (IRPOperation op : ops)
+		{
+			if (op.getName().equals(aOperationName))
+			{
+				foundOperation = true;
+				aCompilerIssue.addAnchor(op);
+			}
+		}
+
+		if (foundOperation == false)
 		{
 			List<IRPClass> nestedClasses = aClass.getNestedElementsByMetaClass("Class", 0).toList();
-			for(IRPClass c:nestedClasses)
+			for (IRPClass c : nestedClasses)
 			{
 				foundOperation = addCompilerIssue(c, aOperationName, aCompilerIssue);
-				if(foundOperation==true)
+				if (foundOperation == true)
 				{
 					return foundOperation;
 				}
 			}
 			return false;
-			
+
 		}
 		else
 		{
 			return foundOperation;
 		}
 	}
-	
-	
+
 	private void openGHSProject()
 	{
 		IRPModelElement selected = myRhapsody.getSelectedElement();
-		if(selected instanceof IRPProject == false)
+		if (selected instanceof IRPProject == false)
 		{
 			trace("No Project selected");
 			return;
 		}
-		
-		IRPProject project = (IRPProject)selected;
-		
-		IRPConfiguration config = RhapsodyHelper.getProjectConfig(project, "DefaultConfig"); //which config?
-		
-		if(config==null)
+
+		IRPProject project = (IRPProject) selected;
+
+		IRPConfiguration config = RhapsodyHelper.getProjectConfig(project, "DefaultConfig"); // which config?
+
+		if (config == null)
 		{
-			trace("ProjectPath of "+project.getName()+" not found");
+			trace("ProjectPath of " + project.getName() + " not found");
 			return;
 		}
-		
+
 		String projectEnding = "AppWorkspaceD9.gpj";
-		if(config.getBuildSet().equals("Release"))
+		if (config.getBuildSet().equals("Release"))
 		{
 			projectEnding = "AppWorkspaceR9.gpj";
 		}
-		
-		String projectName = config.getDirectory(1, "")+"/"+project.getName()+projectEnding; //is there a better solution?
-		
+
+		String projectName = config.getDirectory(1, "") + "/" + project.getName() + projectEnding; // is there a better
+																									// solution?
+
 		File projectFile = new File(projectName);
-		
-		if(projectFile.exists()==false)
+
+		if (projectFile.exists() == false)
 		{
-			
+
 			trace("could not find Project file in " + projectName);
 			return;
-			
-		}
-		
-		//run multi...
-		try 
-		{
-			ProcessBuilder pb  = new ProcessBuilder(myMultiCmd, projectName);
-		
-			pb.start(); //fire and forget
 
-		} 
-		catch (IOException iox) 
+		}
+
+		// run multi...
+		try
+		{
+			ProcessBuilder pb = new ProcessBuilder(myMultiCmd, projectName);
+
+			pb.start(); // fire and forget
+
+		}
+		catch (IOException iox)
 		{
 			trace("Exception: " + iox.getMessage());
 			iox.printStackTrace();
 		}
-		
-		
+
 	}
 
 }

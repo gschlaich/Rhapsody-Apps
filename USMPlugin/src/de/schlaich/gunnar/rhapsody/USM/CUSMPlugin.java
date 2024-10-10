@@ -6,12 +6,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileView;
 
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
@@ -22,6 +26,7 @@ import com.telelogic.rhapsody.core.IRPControlledFile;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
@@ -38,16 +43,17 @@ import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
+import de.schlaich.gunnar.rhapsody.utilities.USMConfiguration;
 import de.schlaich.gunnar.rhapsody.utilities.generateInitCode.CodeGenerator;
 
-public class CUSMPlugin extends RPUserPlugin {
+public class CUSMPlugin extends RPUserPlugin
+{
 
-	
 	private IRPApplication myRhapsody = null;
 	private IRPProfile myProfile = null;
-	
+
 	private SVNTools mySVNTools = null;
-	
+
 	public static final String PlantUmlCmd = "PlantUML";
 	public static final String RoundtripCmd = "Operational Roundtrip";
 	public static final String SearchElementCmd = "Search Element";
@@ -72,80 +78,109 @@ public class CUSMPlugin extends RPUserPlugin {
 	public static final String SetInitCodeOfClassCmd = "Set init code of class";
 	public static final String DiffHeadCmd = "Diff Head";
 	public static final String DiffTrunkCmd = "Diff Trunk";
-	public static final String HistoryCmd = "History";
+	public static final String HistoryCmd = "Show Log";
+	public static final String CommitCmd = "Commit";
 	public static final String ExplorerCmd = "Explorer";
 	public static final String DiffHeadReportCmd = "Diff Report Head";
 	public static final String DiffTrunkReportCmd = "Diff Report Trunk";
-	public static final String GetLockCmd = "Get lock";
+	public static final String GetLockCmd = "Get Lock";
 	public static final String ExportTableCmd = "Export Table";
 	public static final String AddLibraryCmd = "Add Library";
 	public static final String AddIncludePathCmd = "Add include path";
-	
-	
-	
-	public CUSMPlugin() {
+	public static final String AddConfigCmd = "Add Configuration";
+	public static final String AddLibraryLinksCmd = "Show Library links";
+
+	public static final String libraryProperty = "CPP_CG.Package.USMLibraries";
+	public static final String IncludeProperty = "CPP_CG.Package.USMIncludePath";
+
+	public CUSMPlugin()
+	{
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	private SVNTools getSVNTools()
 	{
-		if(mySVNTools==null)
+		if (mySVNTools == null)
 		{
 			mySVNTools = new SVNTools(myRhapsody, this::trace);
 		}
-		
+
 		return mySVNTools;
-		
+
+	}
+
+	private String getBuildDate()
+	{
+		try
+		{
+			String jarPath = CUSMPlugin.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+			String decodedPath = URLDecoder.decode(jarPath, "UTF-8");
+			File jarFile = new File(decodedPath);
+			if (jarFile.exists())
+			{
+				long lastModified = jarFile.lastModified();
+				Date date = new Date(lastModified);
+				return date.toString();
+			}
+			else
+			{
+				return "JAR-File not found";
+			}
+		}
+		catch (UnsupportedEncodingException e)
+		{
+			e.printStackTrace();
+			return "Error while getting build date";
+		}
 	}
 
 	@Override
-	public void RhpPluginInit(IRPApplication rpyApplication) {
-		
+	public void RhpPluginInit(IRPApplication rpyApplication)
+	{
+
 		myRhapsody = rpyApplication;
 		trace("started");
+		trace("Build date: " + getBuildDate());
 
 		IRPProject activeProject = myRhapsody.activeProject();
-		
-		if(activeProject==null)
+
+		if (activeProject == null)
 		{
 			trace("no active Project!");
 			return;
 		}
-		
-		try 
+
+		try
 		{
-            // Setze das Look and Feel auf das System-Look-and-Feel
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } 
-		catch (Exception e) 
+			// Setze das Look and Feel auf das System-Look-and-Feel
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		}
+		catch (Exception e)
 		{
-            e.printStackTrace();
-        }
+			e.printStackTrace();
+		}
 
 	}
-	
+
 	public void OnElementsChanged(String GUIDsList)
 	{
 		String[] elementsGuids = GUIDsList.split(",");
 		IRPProject currentActiveProject = myRhapsody.activeProject();
 		if (currentActiveProject != null)
 		{
-			for (int i = 0; i<elementsGuids.length; i++)
+			for (int i = 0; i < elementsGuids.length; i++)
 			{
 				if (elementsGuids[i].length() > 0)
 				{
-					IRPModelElement currentElement = 
-						currentActiveProject.findElementByGUID(elementsGuids[i]);
+					IRPModelElement currentElement = currentActiveProject.findElementByGUID(elementsGuids[i]);
 					if (currentElement == null)
 					{
-						myRhapsody.writeToOutputWindow("Log", 
-								"Deleted element with GUID: "+elementsGuids[i]+"\n");
+						myRhapsody.writeToOutputWindow("Log", "Deleted element with GUID: " + elementsGuids[i] + "\n");
 					}
 					else
 					{
-						myRhapsody.writeToOutputWindow("Log", 
-								"Element: "+currentElement.getFullPathName()+" ("+
-											elementsGuids[i]+") was changed\n");
+						myRhapsody.writeToOutputWindow("Log", "Element: " + currentElement.getFullPathName() + " ("
+								+ elementsGuids[i] + ") was changed\n");
 					}
 				}
 			}
@@ -153,175 +188,173 @@ public class CUSMPlugin extends RPUserPlugin {
 	}
 
 	@Override
-	public void RhpPluginInvokeItem() {
-		
-		
+	public void RhpPluginInvokeItem()
+	{
 
 	}
 
 	@Override
-	public void OnMenuItemSelect(String menuItem) {
-		
-		trace("Selected: "+menuItem);
-		
+	public void OnMenuItemSelect(String menuItem)
+	{
+
+		trace("Selected: " + menuItem);
+
 		IRPModelElement selected = myRhapsody.getSelectedElement();
-		
-		if(menuItem.contains(LocateActiveCmd))
+
+		if (menuItem.contains(LocateActiveCmd))
 		{
 			RhapsodyHelper.locateActivePackage(myRhapsody, selected);
 			return;
 		}
-		
-		if(selected==null)
+
+		if (selected == null)
 		{
 			trace("no element selected");
 			return;
 		}
-		
-		if(menuItem.contains(PlantUmlCmd))
+
+		if (menuItem.contains(PlantUmlCmd))
 		{
 			PlantUMLStarter.startPlantUML(myRhapsody, selected, false);
 			return;
 		}
-		if(menuItem.contains(RoundtripCmd))
+		if (menuItem.contains(RoundtripCmd))
 		{
 			COperationalRoundtrip roundtrip = new COperationalRoundtrip();
 			roundtrip.startRoundtrip(myRhapsody, selected, false);
 			return;
 		}
-		if(menuItem.contains(SearchElementCmd))
+		if (menuItem.contains(SearchElementCmd))
 		{
 			RhapsodyHelper.searchElement(myRhapsody, selected);
 			return;
 		}
-		if(menuItem.contains(SelectRelationCmd))
+		if (menuItem.contains(SelectRelationCmd))
 		{
 			CRhapsodyRelation relation = new CRhapsodyRelation();
 			relation.execute(myRhapsody, selected, false);
 			return;
 		}
-		if(menuItem.contains(CreateMsgCmd))
+		if (menuItem.contains(CreateMsgCmd))
 		{
 			CCreateMessage createMessage = new CCreateMessage();
 			createMessage.execute(myRhapsody, selected);
 			return;
 		}
-		if(menuItem.contains(AddParamMsgCmd))
-        {
-            CCreateMessage createMessage = new CCreateMessage();
-            createMessage.addParameter(myRhapsody, selected);
-            return;
-        }
-		if(menuItem.contains(MovePackageCmd))
+		if (menuItem.contains(AddParamMsgCmd))
+		{
+			CCreateMessage createMessage = new CCreateMessage();
+			createMessage.addParameter(myRhapsody, selected);
+			return;
+		}
+		if (menuItem.contains(MovePackageCmd))
 		{
 			RhapsodyHelper.movePackageToRepository(myRhapsody, selected);
 			return;
 		}
-		if(menuItem.contains(SetActiveCmd))
+		if (menuItem.contains(SetActiveCmd))
 		{
 			RhapsodyHelper.setActive(selected, myRhapsody);
 			return;
 		}
-		
-		if(menuItem.contains(ScriptRunnerCmd))
+
+		if (menuItem.contains(ScriptRunnerCmd))
 		{
 			RhapsodyHelper.scriptRunner(myRhapsody, selected);
 			return;
 		}
-		if(menuItem.contains(BuildAllCmd))
+		if (menuItem.contains(BuildAllCmd))
 		{
 			BuildTools bt = new BuildTools(myRhapsody);
 			bt.buildAll();
 			return;
 		}
-		if(menuItem.contains(SetComponentDependencyCmd))
+		if (menuItem.contains(SetComponentDependencyCmd))
 		{
 			RhapsodyHelper.setComponentDependency(myRhapsody, selected);
 			return;
 		}
-		
-		if(menuItem.contains(JiraChangedCmd))
+
+		if (menuItem.contains(JiraChangedCmd))
 		{
-			
+
 			getSVNTools().anchorAllChanges(selected);
 			return;
-			
+
 		}
-		
-		if(menuItem.contains(JiraIssueCmd))
+
+		if (menuItem.contains(JiraIssueCmd))
 		{
-			
+
 			IRPRequirement jiraReq = getSVNTools().setActualJiraIssue(selected);
-			if(jiraReq==null)
+			if (jiraReq == null)
 			{
 				trace("Could not get Jira Issue");
 				return;
 			}
-			
+
 			trace("Jira Issue: " + jiraReq.getName() + ": " + jiraReq.getSpecification());
 			return;
 		}
-		
-		
-		
-		if(menuItem.contains(StaticCodeAnalyzeCmd))
+
+		if (menuItem.contains(StaticCodeAnalyzeCmd))
 		{
 			String result = StaticCodeAnalysis.Analyze(selected, myRhapsody, this::trace);
-			
-			if(result==null)
+
+			if (result == null)
 			{
 				trace("Analyze failed");
 			}
-			
-			trace("Analyze: "+ result);
-			
+
+			trace("Analyze: " + result);
+
 			return;
 		}
-		
-		if(menuItem.contains(StaticCodeAnalyzeClearCmd))
+
+		if (menuItem.contains(StaticCodeAnalyzeClearCmd))
 		{
 			StaticCodeAnalysis.Clear(selected, myRhapsody, this::trace);
 			return;
 		}
-		
-		if(menuItem.contains(RunMFileCmd))
+
+		if (menuItem.contains(RunMFileCmd))
 		{
-			if(selected instanceof IRPHyperLink == false) 
+			if (selected instanceof IRPHyperLink == false)
 			{
 				trace("No m-File");
 				return;
 			}
-			
-			IRPHyperLink c = (IRPHyperLink)selected; 
-			
+
+			IRPHyperLink c = (IRPHyperLink) selected;
+
 			String absolutePath = RhapsodyHelper.getAbsolutePath(c);
-			
-			if(absolutePath==null)
+
+			if (absolutePath == null)
 			{
-				trace("Could not generate absolute Path from "+ c.getURL());
+				trace("Could not generate absolute Path from " + c.getURL());
 				return;
 			}
-			
+
 			File mFile = new File(absolutePath);
-			
-			if(mFile.exists()==false)
+
+			if (mFile.exists() == false)
 			{
 				trace("File " + mFile.getPath() + " does not exist");
 				return;
 			}
-		
-			//build cmd...
 
-			String script = "\"cd('"+ mFile.getParent() + "'); run('"+mFile.getName()+"'); waitfor(h);\"";
-			
+			// build cmd...
+
+			String script = "\"cd('" + mFile.getParent() + "'); run('" + mFile.getName() + "'); waitfor(h);\"";
+
 			trace(script);
-			
+
 			ProcessBuilder pb = new ProcessBuilder("Octave", "--eval", script);
-				
-			try 
+
+			try
 			{
-				//pb.directory(mFile.getParentFile());
-				
+				// pb.directory(mFile.getParentFile());
+
 				trace("Execute M File");
 				Process p = pb.start();
 //				InputStream inputStream = p.getInputStream();
@@ -344,9 +377,9 @@ public class CUSMPlugin extends RPUserPlugin {
 //	            	trace("Output:");
 //	            	trace(output.toString());
 //	            }
-	            	
-			} 
-			catch (IOException e) 
+
+			}
+			catch (IOException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -354,355 +387,528 @@ public class CUSMPlugin extends RPUserPlugin {
 			trace("end");
 			return;
 		}
-		
-		if(menuItem.contains(EditMFileCmd))
+
+		if (menuItem.contains(EditMFileCmd))
 		{
 			trace("not yet implemented");
 			return;
 		}
-		
-		if(menuItem.contains(ConvertToRelativePathCmd))
+
+		if (menuItem.contains(ConvertToRelativePathCmd))
 		{
-			
-			if(selected instanceof IRPHyperLink == false)
+
+			if (selected instanceof IRPHyperLink == false)
 			{
 				return;
 			}
-						
+
 			IRPHyperLink selectedLink = (IRPHyperLink) selected;
 
-			if(selectedLink.getSaveUnit().isReadOnly()==1)
+			if (selectedLink.getSaveUnit().isReadOnly() == 1)
 			{
 				trace(selectedLink.getSaveUnit().getName() + " is readOnly!");
 				return;
 			}
-			
+
 			String relativePath = RhapsodyHelper.getRelativePath(selectedLink);
-			
-			if(relativePath==null)
+
+			if (relativePath == null)
 			{
 				trace("Could not generate relative Path from " + selectedLink.getURL());
 				return;
 			}
 
 			File lFile = new File(selectedLink.getURL());
-			
+
 			selectedLink.setURL(relativePath);
 			selectedLink.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, lFile.getName());
-			
+
 			return;
 		}
-		
-		if(menuItem.contains(GenerateInitCodeCmd))
+
+		if (menuItem.contains(GenerateInitCodeCmd))
 		{
 			IRPProject p = selected.getProject();
-			
-			if(p==null)
+
+			if (p == null)
 			{
 				return;
 			}
-			
+
 			CodeGenerator generator = new CodeGenerator(this::trace);
-			
+
 			generator.generateSortedList(p);
-			
+
 			generator.generateInitcode();
-			
+
 			return;
-			
+
 		}
-		
-		if(menuItem.contains(GetInitCodeOfClassCmd))
+
+		if (menuItem.contains(GetInitCodeOfClassCmd))
 		{
-			
-			if(selected instanceof IRPClass == false)
+
+			if (selected instanceof IRPClass == false)
 			{
 				return;
 			}
-			
-			IRPClass selectedClass = (IRPClass)selected;
-					
+
+			IRPClass selectedClass = (IRPClass) selected;
+
 			CodeGenerator generator = new CodeGenerator(this::trace);
-			
+
 			String initCode = generator.getInitCodeForClass(selectedClass);
-			
-			if(initCode==null)
+
+			if (initCode == null)
 			{
 				return;
 			}
-			
+
 			trace(initCode);
-			
+
 			return;
 		}
-		
-		if(menuItem.contains(SetInitCodeOfClassCmd))
+
+		if (menuItem.contains(SetInitCodeOfClassCmd))
 		{
-			if(selected instanceof IRPClass == false)
+			if (selected instanceof IRPClass == false)
 			{
 				return;
 			}
-			
-			IRPClass selectedClass = (IRPClass)selected;
-			
+
+			IRPClass selectedClass = (IRPClass) selected;
+
 			CodeGenerator generator = new CodeGenerator(this::trace);
-			
+
 			String initCode = generator.updateEntry(selectedClass);
-			
-			if(initCode == null)
+
+			if (initCode == null)
 			{
 				return;
 			}
-			
+
 			trace(initCode);
-			
+
 			return;
 		}
-		
-		if(menuItem.contains(DiffHeadCmd))
+
+		if (menuItem.contains(DiffHeadCmd))
 		{
-			
-			getSVNTools().diffmerge(selected,-1,false);
-	
+
+			getSVNTools().diffmerge(selected, -1, false);
+
 			return;
 		}
-		
-		if(menuItem.contains(DiffHeadReportCmd))
+
+		if (menuItem.contains(DiffHeadReportCmd))
 		{
 			getSVNTools().diffmerge(selected, -1, true);
 			return;
 		}
-		
-		if(menuItem.contains(DiffTrunkCmd))
+
+		if (menuItem.contains(DiffTrunkCmd))
 		{
 			getSVNTools().diffMergeBase(selected, false);
 			return;
 		}
-		
-		if(menuItem.contains(DiffTrunkReportCmd))
+
+		if (menuItem.contains(DiffTrunkReportCmd))
 		{
 			getSVNTools().diffMergeBase(selected, true);
 			return;
-			
+
 		}
-		
-		if(menuItem.contains(GetLockCmd))
+
+		if (menuItem.contains(GetLockCmd))
 		{
 			getSVNTools().getLock(selected);
 			return;
 		}
-		
-		if(menuItem.contains(HistoryCmd))
+
+		if (menuItem.contains(HistoryCmd))
 		{
-			
-			
+
 			SVNTools svn = getSVNTools();
-			
-			List<SVNTools.logRow> list = svn.readHistory(selected, 10);
-			
-			for(SVNTools.logRow row:list)
-			{
-				trace("Revision: "+row.getRevision());
-			}
-			
+
+			svn.showLog(selected);
+
 			return;
 		}
-		
-		if(menuItem.contains(ExplorerCmd))
+
+		if (menuItem.contains(CommitCmd))
+		{
+			getSVNTools().commit(selected);
+			return;
+		}
+
+		if (menuItem.contains(ExplorerCmd))
 		{
 			IRPUnit unit = selected.getSaveUnit();
-			if(unit == null)
+			if (unit == null)
 			{
 				return;
 			}
 			String directory = unit.getCurrentDirectory();
 			String sbsFile = unit.getFilename();
 			System.out.println(directory);
-			try 
+			try
 			{
-				Runtime.getRuntime().exec("explorer.exe /select," + directory+"\\"+sbsFile);
-			} 
-			catch (IOException e1) 
+				Runtime.getRuntime().exec("explorer.exe /select," + directory + "\\" + sbsFile);
+			}
+			catch (IOException e1)
 			{
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
 			}
-			
+
 			return;
-			
+
 		}
-		
-		if(menuItem.contains(ExportTableCmd))
+
+		if (menuItem.contains(ExportTableCmd))
 		{
-			if(selected instanceof IRPTableView ==false)
+			if (selected instanceof IRPTableView == false)
 			{
 				trace("not tableView");
 				return;
 			}
-			
-			IRPTableView tableView = (IRPTableView)selected;
-			
+
+			IRPTableView tableView = (IRPTableView) selected;
+
 			JFileChooser fileChooser = new JFileChooser();
-		    fileChooser.setDialogTitle("Save as");
+			fileChooser.setDialogTitle("Save as");
 
-	        // Filter für .csv, .html und .xml Dateien
-	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".csv", "CSV Files"));
-	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".html", "HTML Files"));
-	        fileChooser.addChoosableFileFilter(new FileTypeFilter(".xml", "XML Files"));
-	        fileChooser.setAcceptAllFileFilterUsed(false);
+			// Filter für .csv, .html und .xml Dateien
+			fileChooser.addChoosableFileFilter(new FileTypeFilter(".csv", "CSV Files"));
+			fileChooser.addChoosableFileFilter(new FileTypeFilter(".html", "HTML Files"));
+			fileChooser.addChoosableFileFilter(new FileTypeFilter(".xml", "XML Files"));
+			fileChooser.setAcceptAllFileFilterUsed(false);
 
-		    int userSelection = fileChooser.showSaveDialog(null);
+			int userSelection = fileChooser.showSaveDialog(null);
 
-	        if (userSelection != JFileChooser.APPROVE_OPTION)
-	        {
-	        	trace("cancel save");
-	        	return;
-	        }
-	        
-	       
-	        File fileToSave = fileChooser.getSelectedFile();
-	        String filePath = fileToSave.getAbsolutePath();
-	        String fileType = getFileExtension(fileToSave);
-	            
-	        String contentFormat = IRPTableView.ContentFormat.CSV;    
-	        
-	        if(fileType.equals("html"))
-	        {
-	        	contentFormat =  IRPTableView.ContentFormat.HTML;
-	        }
-	        else if(fileType.equals("xml"))
-	        {
-	        	contentFormat = IRPTableView.ContentFormat.XML;
-	        }
-	        
-	        String content = tableView.getContent(contentFormat);
-	        
-	        try
-	        {
- 
-		        FileWriter fileWriter = new FileWriter(filePath);
-		            
-		        fileWriter.write(content);
-		        
-		        fileWriter.close();
-	        }
-	        catch(IOException e)
-	        {
-	        	trace(e.getMessage());
-	        }
+			if (userSelection != JFileChooser.APPROVE_OPTION)
+			{
+				trace("cancel save");
+				return;
+			}
 
-	        trace("File "+ fileToSave.getName() + " saved");
-	        return;
-        
-	    }
-		if(menuItem.contains(AddLibraryCmd))
+			File fileToSave = fileChooser.getSelectedFile();
+			String filePath = fileToSave.getAbsolutePath();
+			String fileType = getFileExtension(fileToSave);
+
+			String contentFormat = IRPTableView.ContentFormat.CSV;
+
+			if (fileType.equals("html"))
+			{
+				contentFormat = IRPTableView.ContentFormat.HTML;
+			}
+			else if (fileType.equals("xml"))
+			{
+				contentFormat = IRPTableView.ContentFormat.XML;
+			}
+
+			String content = tableView.getContent(contentFormat);
+
+			try
+			{
+
+				FileWriter fileWriter = new FileWriter(filePath);
+
+				fileWriter.write(content);
+
+				fileWriter.close();
+			}
+			catch (IOException e)
+			{
+				trace(e.getMessage());
+			}
+
+			trace("File " + fileToSave.getName() + " saved");
+			return;
+
+		}
+		if (menuItem.contains(AddLibraryCmd))
 		{
-			JFileChooser fileChooser = new JFileChooser();
-	        
-	        
-	        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-	        
-	        
-	        fileChooser.setAcceptAllFileFilterUsed(false);
+			if (selected instanceof IRPPackage == false)
+			{
+				trace("No Package selected");
+				return;
+			}
 
-	        int userSelection = fileChooser.showOpenDialog(null);
+			Path usmRoot = null;
+			try
+			{
+				usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
 
-	        if (userSelection != JFileChooser.APPROVE_OPTION) 
-	        {
-	          trace("Cancel...");
-	          return;
-	        }
-	        File directoryToSave = fileChooser.getSelectedFile();
-            trace("Folder: " + directoryToSave.getAbsolutePath());
+			}
+			catch (Exception e)
+			{
+				trace(e.getMessage());
+				return;
+			}
+
+			JFileChooser fileChooser = new JFileChooser(
+					usmRoot.resolve("Development").resolve("ExternalSource").toFile());
+
+			// fileChooser.setFileSelectionMode(JFileChooser.);
+
+			fileChooser.setAcceptAllFileFilterUsed(false);
+
+			int userSelection = fileChooser.showOpenDialog(null);
+
+			if (userSelection != JFileChooser.APPROVE_OPTION)
+			{
+				trace("Cancel...");
+				return;
+			}
+			File directoryToSave = fileChooser.getSelectedFile();
+			trace("Folder: " + directoryToSave.getAbsolutePath());
+
+			Path path = Paths.get(directoryToSave.getAbsolutePath());
+
+			path = usmRoot.relativize(path);
+
+			String libString = "<usm_root>\\" + path.toString();
+
+			libString = libString.replace("\\", "\\\\");
+
+			String delimiter = ";";
+
+			int dotIndex = libString.lastIndexOf('.');
+			if (dotIndex > 0)
+			{
+				libString = libString.substring(0, dotIndex);
+			}
+
+			trace("Library Path: " + libString);
+
+			String libPropertyValue = selected.getPropertyValue(libraryProperty);
+
+			String[] libArray = libPropertyValue.split(delimiter);
+
+			for (String s : libArray)
+			{
+				if (s.equals(libString))
+				{
+					trace("Library already added");
+					return;
+				}
+			}
+
+			libPropertyValue += delimiter + libString;
+			trace("set Library: " + libPropertyValue);
+
+			selected.setPropertyValue(libraryProperty, libPropertyValue);
+
+			return;
+		}
+		if (menuItem.contains(AddIncludePathCmd))
+		{
+			if (selected instanceof IRPPackage == false)
+			{
+				trace("No Package selected");
+				return;
+			}
+
+			Path usmRoot = null;
+			try
+			{
+				usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
+
+			}
+			catch (Exception e)
+			{
+				trace(e.getMessage());
+				return;
+			}
+
+			JFileChooser fileChooser = new JFileChooser(
+					usmRoot.resolve("Development").resolve("ExternalSource").toFile());
+
+			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+			fileChooser.setAcceptAllFileFilterUsed(false);
+
+			int userSelection = fileChooser.showOpenDialog(null);
+
+			if (userSelection != JFileChooser.APPROVE_OPTION)
+			{
+				trace("Cancel...");
+				return;
+			}
+			File directoryToSave = fileChooser.getSelectedFile();
+			trace("Folder: " + directoryToSave.getAbsolutePath());
+
+			Path path = Paths.get(directoryToSave.getAbsolutePath());
+
+			path = usmRoot.relativize(path);
+
+			String libString = "<usm_root>\\" + path.toString();
+
+			libString = libString.replace("\\", "\\\\");
+
+			String delimiter = ";";
+
+			int dotIndex = libString.lastIndexOf('.');
+			if (dotIndex > 0)
+			{
+				libString = libString.substring(0, dotIndex);
+			}
+
+			trace("Include Path: " + libString);
+
+			String libPropertyValue = selected.getPropertyValue(IncludeProperty);
+
+			String[] libArray = libPropertyValue.split(delimiter);
+
+			for (String s : libArray)
+			{
+				if (s.equals(libString))
+				{
+					trace("Include path already added");
+					return;
+				}
+			}
+
+			libPropertyValue += delimiter + libString;
+			trace("set Include Path: " + libPropertyValue);
+
+			selected.setPropertyValue(IncludeProperty, libPropertyValue);
+
+			return;
+		}
+
+		if (menuItem.contains(AddConfigCmd))
+		{
+
+			trace("Add Configuration");
+			if (selected instanceof IRPProject == false)
+			{
+				trace("No Project selected");
+				return;
+			}
+			
+			
+			IRPProject project = (IRPProject) selected;
+			
+			USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
+			config.loadConfiguration(project);
+			
+			trace("End Add Configuration");
+
+			return;
+		}
+		
+		if (menuItem.contains(AddLibraryLinksCmd))
+		{
+			trace("Add Library Links");
+            if (selected instanceof IRPProject == false)
+            {
+                trace("No Project selected");
+                return;
+            }
             
+            
+            IRPProject project = (IRPProject) selected;
+            
+            USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
+            config.addLibraryLinks(project);
+            
+            trace("End Add Library Links");
+
             return;
 		}
 
-
 		trace("menue item unknown");
-		
+
 	}
 
-	private  String getFileExtension(File file) 
+	private String getFileExtension(File file)
 	{
 		String fileName = file.getName();
 		int lastIndexOfDot = fileName.lastIndexOf('.');
-		if (lastIndexOfDot > 0 && lastIndexOfDot < fileName.length() - 1) 
+		if (lastIndexOfDot > 0 && lastIndexOfDot < fileName.length() - 1)
 		{
 			return fileName.substring(lastIndexOfDot + 1).toLowerCase();
 		}
 		return "";
 	}
-	
+
 	private void trace(String aMsg)
 	{
 		myRhapsody.writeToOutputWindow("Log", "USMPlugin: " + aMsg + "\n");
 		System.out.println(aMsg);
 	}
-	
-	
+
 	@Override
-	public void OnTrigger(String trigger) {
+	public void OnTrigger(String trigger)
+	{
 		// TODO Auto-generated method stub
 		trace(trigger);
 
 	}
 
 	@Override
-	public boolean RhpPluginCleanup() {
+	public boolean RhpPluginCleanup()
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
-	public void RhpPluginFinalCleanup() {
+	public void RhpPluginFinalCleanup()
+	{
 		// TODO Auto-generated method stub
 
 	}
-	
-	public String get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column) {
+
+	public String get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column)
+	{
 		return cellElement.getOwner().getDescription();
 	}
-	
-	public IRPModelElement get_UserDefinedImplementation1(IRPModelElement cellElement, Integer row, Integer column) 
+
+	public IRPModelElement get_UserDefinedImplementation1(IRPModelElement cellElement, Integer row, Integer column)
 	{
-		
-		IRPRequirement req = (IRPRequirement)cellElement;
-		if(req==null)
+
+		IRPRequirement req = (IRPRequirement) cellElement;
+		if (req == null)
 		{
 			return null;
 		}
-		
-		req.getAnchoredByMe();
-		
-		return null;
-		
-	}
 
-	
+		req.getAnchoredByMe();
+
+		return null;
+
+	}
 
 }
 
-class FileTypeFilter extends javax.swing.filechooser.FileFilter {
+class FileTypeFilter extends javax.swing.filechooser.FileFilter
+{
 
-    private String extension;
-    private String description;
+	private String extension;
+	private String description;
 
-    public FileTypeFilter(String extension, String description) {
-        this.extension = extension;
-        this.description = description;
-    }
+	public FileTypeFilter(String extension, String description)
+	{
+		this.extension = extension;
+		this.description = description;
+	}
 
-    @Override
-    public boolean accept(File file) {
-        if (file.isDirectory()) {
-            return true;
-        }
-        return file.getName().toLowerCase().endsWith(extension);
-    }
+	@Override
+	public boolean accept(File file)
+	{
+		if (file.isDirectory())
+		{
+			return true;
+		}
+		return file.getName().toLowerCase().endsWith(extension);
+	}
 
-    @Override
-    public String getDescription() {
-        return description + String.format(" (*%s)", extension);
-    }
+	@Override
+	public String getDescription()
+	{
+		return description + String.format(" (*%s)", extension);
+	}
 }

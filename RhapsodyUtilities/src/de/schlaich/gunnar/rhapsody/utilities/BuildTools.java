@@ -24,6 +24,8 @@ import com.telelogic.rhapsody.core.IRPUnit;
 public class BuildTools {
 	
 	private IRPApplication myApplication = null;
+	private long myStartTime = 0;
+	
 
 	public BuildTools(IRPApplication aApplication) {
 		myApplication = aApplication;
@@ -31,6 +33,8 @@ public class BuildTools {
 	
 	public boolean buildAll()
 	{
+	
+		myStartTime = System.currentTimeMillis();
 		
 		List<IRPProject> projects = myApplication.getProjects().toList();
 		for(IRPProject project : projects )
@@ -48,6 +52,7 @@ public class BuildTools {
 	private boolean buildProject(IRPProject aProject)
 	{
 	
+		//measure time since start
 		
 		try 
 		{
@@ -58,7 +63,10 @@ public class BuildTools {
 				buildComponent(aProject, component, 0);
 			}
 			
-			trace("generation of "+ aProject.getName()+" finished!");
+			long currentTime = System.currentTimeMillis();
+			double duration = (currentTime - myStartTime)/1000.0;
+			
+			trace("[ "+ duration + " s ] Generation of "+ aProject.getName()+" finished!");
 		} catch (Exception e) 
 		{
 			// TODO Auto-generated catch block
@@ -79,12 +87,20 @@ public class BuildTools {
 	private boolean buildComponent(IRPProject aProject, IRPComponent aComponent, int aLevel)
 	{
 		
+		if (aComponent.getName().equals("lwIpExtern") == true)
+		{
+			trace("do not build lwIpExtern");
+			return true;
+		}
+		
 		//aProject.setActiveComponent(aComponent);
 		//HashMap<String,IRPUnit> units = new HashMap<String,IRPUnit>();
 		
+		long currentTime = System.currentTimeMillis();
 		
+		double duration = (currentTime - myStartTime)/1000.0;
 		
-		trace("Check for generate: "+aComponent.getName()+"...");
+		trace("[ " + duration + " s ] Check for generate: "+aComponent.getName()+"...");
 		
 		IRPUnit componentUnit = aComponent.getSaveUnit();
 		
@@ -104,8 +120,8 @@ public class BuildTools {
 			return false;
 		}
 
-		@SuppressWarnings("unchecked")
-		List<IRPModelElement> elements = aComponent.getScopeElements().toList();
+		//@SuppressWarnings("unchecked")
+		//List<IRPModelElement> elements = aComponent.getScopeElements().toList();
 		
 		boolean needsBuild = false;
 		
@@ -132,14 +148,38 @@ public class BuildTools {
 		{
 			//check date and time
 			Date dateMakeFile = new Date(makeFile.lastModified());
-			List<IRPModelElement> es = aComponent.getScopeElements().toList();
+	
+			
+			IRPCollection collection = aComponent.getScopeElements();
 
-			for (IRPModelElement e : es) {
+			IRPUnit lastUnit = null;
+
+			for (int i = collection.getCount(); i > 0; i--)
+			{
+				IRPModelElement e = (IRPModelElement) collection.getItem(i);//  es.get(i);
+				if (e instanceof IRPClass)
+				{
+					//packages are always last
+					break;
+				}
+
 				if (e instanceof IRPPackage)
 
 				{
+					
 					IRPPackage p = (IRPPackage) e;
 					IRPUnit unit = p.getSaveUnit();
+					if (lastUnit != null)
+					{
+						if(lastUnit.equals(unit))
+						{
+							continue;
+						}
+					}
+					
+					lastUnit = unit;
+					
+					
 					String modifiedString = unit.getLastModifiedTime();
 					Date dateUnit = null;
 					try {
@@ -149,6 +189,8 @@ public class BuildTools {
 						ex.printStackTrace();
 						return false;
 					}
+					
+
 
 					String formattedDate = dateFormat.format(dateMakeFile);
 
@@ -157,6 +199,8 @@ public class BuildTools {
 						System.out.println("Source Class: " + makeFile.getName() + " Last Modified: " + formattedDate
 								+ " Unit: " + unit.getName() + " Last Modified: " + unit.getLastModifiedTime());
 
+						// delete cfg file
+						makeFile.delete();
 						needsBuild = true;
 						break;
 

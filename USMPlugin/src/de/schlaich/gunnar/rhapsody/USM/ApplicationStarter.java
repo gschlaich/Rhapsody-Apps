@@ -59,7 +59,17 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetLockCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExportTableCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CreateMsgCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddParamMsgCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddParamMsgCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddIncludePathCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
+		
+		
+		
+		
+		
 		
 		
 

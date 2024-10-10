@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -41,229 +42,226 @@ import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
-
-
-public class RhapsodyHelper 
+public class RhapsodyHelper
 {
 	public static void executeApp(App aApp, String aConnectionstring)
 	{
 		IRPApplication actualApp = null;
-		
-		if(aConnectionstring!=null)
+
+		if (aConnectionstring != null)
 		{
 			try
 			{
 				actualApp = RhapsodyAppServer.getActiveRhapsodyApplicationByID(aConnectionstring);
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				System.out.println("connectionstring "+ aConnectionstring + " is not an active rhapsody application ");
+				System.out.println("connectionstring " + aConnectionstring + " is not an active rhapsody application ");
 			}
 		}
 		else
 		{
 			System.out.println("no connectionstring set");
 		}
-		
-		if(actualApp==null)
+
+		if (actualApp == null)
 		{
-        
+
 			aApp.invokeFromMain();
 			return;
 		}
-		
+
 		IRPModelElement selectedElement = actualApp.getSelectedElement();
-		
-		
-		if(aConnectionstring!=null)
+
+		if (aConnectionstring != null)
 		{
-			//actualApp.writeToOutputWindow("log", "ConnectiongString: " + aConnectionstring + "\n");
+			// actualApp.writeToOutputWindow("log", "ConnectiongString: " +
+			// aConnectionstring + "\n");
 		}
 		else
 		{
 			actualApp.writeToOutputWindow("log", "ConnectiongString was null\n");
 		}
-		
+
 		actualApp.writeToOutputWindow("log", "start...\n");
-		
-		//mainApp.setRhapsody(actualApp);
-		//actualApp.executeCommand("RhpLocateinModelAction", null, null);
-		//mainApp.invoke(selectedElement);
+
+		// mainApp.setRhapsody(actualApp);
+		// actualApp.executeCommand("RhpLocateinModelAction", null, null);
+		// mainApp.invoke(selectedElement);
 		aApp.execute(actualApp, selectedElement);
 	}
-	
+
 	/*
-	 * Sets the Component which has scope of aElement active. 
-	 * Works only when package and component has the same name. (USM)
+	 * Sets the Component which has scope of aElement active. Works only when
+	 * package and component has the same name. (USM)
 	 * 
 	 */
 	public static boolean setActive(IRPModelElement aSelectedElement, IRPApplication aRhapsody)
 	{
-		
+
 		IRPModelElement selectedElement = aSelectedElement;
 		IRPProject project = aRhapsody.activeProject();
-		if(project==null)
+		if (project == null)
 		{
 			return false;
 		}
-		while((selectedElement instanceof IRPPackage)==false)
+		while ((selectedElement instanceof IRPPackage) == false)
 		{
 			selectedElement = selectedElement.getOwner();
-			if(selectedElement==null)
+			if (selectedElement == null)
 			{
 				return false;
 			}
 		}
-		
-		IRPPackage selectedPackage = (IRPPackage)selectedElement;
-		
+
+		IRPPackage selectedPackage = (IRPPackage) selectedElement;
+
 		IRPComponent selectedComponent = null;
-		
-		while(selectedComponent==null)
+
+		while (selectedComponent == null)
 		{
-			selectedComponent = (IRPComponent)project.findNestedElementRecursive(selectedPackage.getName(), "Component");
-			if(selectedComponent==null)
+			selectedComponent = (IRPComponent) project.findNestedElementRecursive(selectedPackage.getName(),
+					"Component");
+			if (selectedComponent == null)
 			{
 				selectedElement = selectedPackage.getOwner();
-				if(selectedElement==null)
+				if (selectedElement == null)
 				{
 					return false;
 				}
-				if((selectedElement instanceof IRPPackage)==false)
+				if ((selectedElement instanceof IRPPackage) == false)
 				{
 					return false;
 				}
-				selectedPackage = (IRPPackage)selectedElement;
+				selectedPackage = (IRPPackage) selectedElement;
 			}
 		}
-		
-		if(project.getActiveComponent().equals(selectedComponent))
+
+		if (project.getActiveComponent().equals(selectedComponent))
 		{
 			return true;
 		}
-		
+
 		project.setActiveComponent(selectedComponent);
 		return true;
-		
+
 	}
-	
+
 	public static void locateActivePackage(IRPApplication rhapsody, IRPModelElement selected)
 	{
 		IRPComponent component = null;
-		
-		if((selected!=null)&&(selected instanceof IRPComponent))
+
+		if ((selected != null) && (selected instanceof IRPComponent))
 		{
-			component = (IRPComponent)selected;
+			component = (IRPComponent) selected;
 		}
 		else
 		{
-			IRPProject project  = rhapsody.activeProject();
-			
-			if(project==null)
+			IRPProject project = rhapsody.activeProject();
+
+			if (project == null)
 			{
 				return;
 			}
-			
+
 			component = project.getActiveComponent();
 		}
-		
-		if(component==null)
+
+		if (component == null)
 		{
 			return;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		List<IRPModelElement> elements = component.getScopeElements().toList();
 		rhapsody.selectModelElements(component.getScopeElements());
-		if(elements.isEmpty()==false)
+		if (elements.isEmpty() == false)
 		{
 			elements.get(0).locateInBrowser();
 		}
-		
+
 	}
-	
-	
+
 	public static void setComponentDependency(IRPApplication rhapsody, IRPModelElement selected)
 	{
-		if((selected instanceof IRPDependency)==false)
+		if ((selected instanceof IRPDependency) == false)
 		{
 			return;
 		}
-		
+
 		IRPUnit unit = selected.getSaveUnit();
 		String componentName = unit.getName();
 		IRPProject project = rhapsody.activeProject();
-		
-		IRPDependency dependency = (IRPDependency)selected;
-		
+
+		IRPDependency dependency = (IRPDependency) selected;
+
 		IRPModelElement dependsOn = dependency.getDependsOn();
-		
-		if(dependsOn==null)
+
+		if (dependsOn == null)
 		{
 			return;
 		}
-		
-		if((dependsOn instanceof IRPPackage) == false)
+
+		if ((dependsOn instanceof IRPPackage) == false)
 		{
 			return;
 		}
-		
+
 		IRPUnit dependsOnUnit = dependsOn.getSaveUnit();
-		
+
 		String dependsOnName = dependsOnUnit.getName();
-		
+
 		System.out.println("Depends: " + dependsOnName);
-		
-		IRPComponent dependsOnComponent = (IRPComponent)project.findNestedElementRecursive(dependsOnName, "Component");
-		
-		if(dependsOnComponent==null)
+
+		IRPComponent dependsOnComponent = (IRPComponent) project.findNestedElementRecursive(dependsOnName, "Component");
+
+		if (dependsOnComponent == null)
 		{
 			return;
 		}
-		
-		IRPComponent component = (IRPComponent)project.findNestedElementRecursive(componentName, "Component");
-		
-		if(component==null)
+
+		IRPComponent component = (IRPComponent) project.findNestedElementRecursive(componentName, "Component");
+
+		if (component == null)
 		{
 			return;
 		}
-		
-		
+
 		IRPDependency compDep = component.addDependencyTo(dependsOnComponent);
-		
-		if(compDep==null)
+
+		if (compDep == null)
 		{
 			return;
 		}
-		
+
 		compDep.addStereotype("Usage", "Dependency");
 		rhapsody.writeToOutputWindow("log", "Added Dependency from " + componentName + "to" + dependsOnName + "\n");
 		rhapsody.writeToOutputWindow("log", "Generate and build " + componentName + "\n");
-		
+
 		project.setActiveComponent(component);
 		rhapsody.generate();
 		rhapsody.build();
 	}
-	
-	static enum eVisibility
-	{
-		ePrivate,
-		eProtected,
-		ePublic
+
+	static enum eVisibility {
+		ePrivate, eProtected, ePublic
 	}
-	
-	public static void movePackageToRepository(IRPApplication rhapsody, IRPModelElement selected) {
+
+	public static void movePackageToRepository(IRPApplication rhapsody, IRPModelElement selected)
+	{
 
 		rhapsody.writeToOutputWindow("Log", "Move selected Package into the correct Repository folder\n");
 
-		if (selected instanceof IRPPackage == false) {
+		if (selected instanceof IRPPackage == false)
+		{
 			rhapsody.writeToOutputWindow("Log", "Selected element is not a Package - exit\n");
 			return;
 		}
 
 		IRPUnit selectedUnit = selected.getSaveUnit();
 
-		if (selectedUnit.getName().equals(selected.getName()) == false) {
+		if (selectedUnit.getName().equals(selected.getName()) == false)
+		{
 			rhapsody.writeToOutputWindow("Log", "Unit Name is not same as Package name\n");
 			return;
 		}
@@ -272,7 +270,8 @@ public class RhapsodyHelper
 
 		Path pathUnit = FileSystems.getDefault().getPath(pathUnitStr);
 
-		if (pathUnit.endsWith(selectedUnit.getName()) == false) {
+		if (pathUnit.endsWith(selectedUnit.getName()) == false)
+		{
 			rhapsody.writeToOutputWindow("Log", "Unit is not in a separate Directory\n");
 			return;
 		}
@@ -280,7 +279,8 @@ public class RhapsodyHelper
 		System.out.println("Name saveUnit: " + selectedUnit.getName());
 
 		IRPProject project = rhapsody.activeProject();
-		if (project == null) {
+		if (project == null)
+		{
 			rhapsody.writeToOutputWindow("Log", "No project loaded\n");
 			return;
 		}
@@ -288,10 +288,10 @@ public class RhapsodyHelper
 		project.save();
 
 		IRPCollection dependencies = selectedUnit.getDependencies();
-		if (dependencies.getCount() > 0) 
+		if (dependencies.getCount() > 0)
 		{
 			List<IRPDependency> dependenciesList = dependencies.toList();
-			for (IRPDependency dependency : dependenciesList) 
+			for (IRPDependency dependency : dependenciesList)
 			{
 				System.out.println("Dependency: " + dependency.getName());
 			}
@@ -302,7 +302,7 @@ public class RhapsodyHelper
 		}
 
 		String currentDirectory = selectedUnit.getCurrentDirectory();
-		if (currentDirectory.contains("UniversalSewingMachine_rpy") == true) 
+		if (currentDirectory.contains("UniversalSewingMachine_rpy") == true)
 		{
 			rhapsody.writeToOutputWindow("Log", "Unit is already part of the repository - exit\n");
 			return;
@@ -318,7 +318,7 @@ public class RhapsodyHelper
 
 		Path f = sourceDesignView.getFileName();
 
-		while (f.toString().equals("DesignView") == false) 
+		while (f.toString().equals("DesignView") == false)
 		{
 			sourceDesignView = sourceDesignView.getParent();
 			f = sourceDesignView.getFileName();
@@ -329,14 +329,14 @@ public class RhapsodyHelper
 		Path usmRoot = source.getParent();
 		String usmRootFileName = usmRoot.getFileName().toString();
 
-		while (usmRoot != null && (usmRootFileName.equals("GeneratedProjects") == false)) 
+		while (usmRoot != null && (usmRootFileName.equals("GeneratedProjects") == false))
 		{
 			usmRoot = usmRoot.getParent();
 			usmRootFileName = usmRoot.getFileName().toString();
 
 		}
 
-		if (usmRoot == null) 
+		if (usmRoot == null)
 		{
 			System.out.println("did not found USMRoot");
 			rhapsody.writeToOutputWindow("Log", "did not found USMRoot\n");
@@ -355,7 +355,7 @@ public class RhapsodyHelper
 		System.out.println("Destination: " + destination.toString());
 
 		File destinationFolder = new File(destination.toString());
-		if (destinationFolder.exists()) 
+		if (destinationFolder.exists())
 		{
 			System.out.println("Folder already exists - exit");
 			rhapsody.writeToOutputWindow("Log", "Folder already exists - exit\n");
@@ -364,9 +364,12 @@ public class RhapsodyHelper
 
 		destinationFolder.mkdir();
 
-		try {
+		try
+		{
 			Files.copy(sourceFile, destinationFile);
-		} catch (IOException e) {
+		}
+		catch (IOException e)
+		{
 
 			e.printStackTrace();
 			rhapsody.writeToOutputWindow("Log", "Copy failed: " + e.getMessage() + "\n");
@@ -382,7 +385,8 @@ public class RhapsodyHelper
 
 		IRPProject p = selected.getProject();
 
-		if (p == null) {
+		if (p == null)
+		{
 			return;
 		}
 
@@ -398,7 +402,8 @@ public class RhapsodyHelper
 
 		System.out.println(addedElement.getName());
 
-		if (addedElement instanceof IRPUnit == false) {
+		if (addedElement instanceof IRPUnit == false)
+		{
 			System.out.println("addedElement is not unit");
 			return;
 		}
@@ -412,18 +417,21 @@ public class RhapsodyHelper
 
 		List<IRPComponent> components = p.getComponents().toList();
 
-		if (components.size() != 1) {
+		if (components.size() != 1)
+		{
 			rhapsody.writeToOutputWindow("Log", "Not 1 rootComponent\n");
 			return;
 		}
 
-		for (IRPComponent c : components) {
+		for (IRPComponent c : components)
+		{
 			IRPComponent newComponent = c.addNestedComponent(unitName);
 			newComponent.addStereotype("Library", "Component");
 			newComponent.setBuildType("Library");
 			newComponent.addScopeElement(addedUnit);
 			IRPConfiguration config = newComponent.findConfiguration("DefaultConfig");
-			if (config != null) {
+			if (config != null)
+			{
 				config.setStatechartImplementation("Reuseable");
 			}
 
@@ -432,356 +440,351 @@ public class RhapsodyHelper
 
 		}
 	}
-	
+
 	public static void scriptRunner(IRPApplication rhapsody, IRPModelElement selected)
 	{
 		String myScriptRunnerPath = "J:/Utilities/CSharpTools/Applications/ScriptRunner/bin/Release/ScriptRunner.exe";
 		String scriptPath = "";
-		if(selected instanceof IRPControlledFile )
+		if (selected instanceof IRPControlledFile)
 		{
-			IRPControlledFile controlledFile = (IRPControlledFile)selected;
+			IRPControlledFile controlledFile = (IRPControlledFile) selected;
 			IRPStereotype stereoType = controlledFile.getNewTermStereotype();
-			
-			if(stereoType == null)
+
+			if (stereoType == null)
 			{
 				rhapsody.writeToOutputWindow("Log", "has no new Term Stereotype - not a bcl file\n");
 				return;
 			}
-			
-			if(stereoType.getName().equals("BCLScript")==false)
+
+			if (stereoType.getName().equals("BCLScript") == false)
 			{
-				rhapsody.writeToOutputWindow("Log", "wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
-				return; 
+				rhapsody.writeToOutputWindow("Log",
+						"wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
+				return;
 			}
-			
-			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + controlledFile.getName()+"\n");
-			
+
+			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + controlledFile.getName() + "\n");
+
 			scriptPath = controlledFile.getFullPathFileName();
-			
+
 		}
-		else if(selected instanceof IRPHyperLink)
+		else if (selected instanceof IRPHyperLink)
 		{
-			IRPHyperLink hyperLink = (IRPHyperLink)selected;
+			IRPHyperLink hyperLink = (IRPHyperLink) selected;
 			IRPStereotype stereoType = hyperLink.getNewTermStereotype();
-			if(stereoType==null)
+			if (stereoType == null)
 			{
 				rhapsody.writeToOutputWindow("Log", "has no new Term Stereotype - not a bcl file\n");
 				return;
 			}
-			if(stereoType.getName().equals("BCLScriptExt")==false)
+			if (stereoType.getName().equals("BCLScriptExt") == false)
 			{
-				rhapsody.writeToOutputWindow("Log", "wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
-				return; 
+				rhapsody.writeToOutputWindow("Log",
+						"wrong stereotype (" + stereoType.getName() + ")  - not a bcl file\n");
+				return;
 			}
-			
-			
-			//check if hyperlink is an absolute path...
-			rhapsody.writeToOutputWindow("Log","Working Directory = " + System.getProperty("user.dir") +"\n");
-			rhapsody.writeToOutputWindow("Log","USM_ROOT = " + System.getenv("USM_ROOT") +"\n");
-			
+
+			// check if hyperlink is an absolute path...
+			rhapsody.writeToOutputWindow("Log", "Working Directory = " + System.getProperty("user.dir") + "\n");
+			rhapsody.writeToOutputWindow("Log", "USM_ROOT = " + System.getenv("USM_ROOT") + "\n");
+
 			String usm_root = System.getenv("USM_ROOT");
 			scriptPath = hyperLink.getURL();
-			if(scriptPath.startsWith(usm_root))
+			if (scriptPath.startsWith(usm_root))
 			{
-				//we have an absolute path...
-				rhapsody.writeToOutputWindow("Log","change from = " + scriptPath +"\n");
-				scriptPath = "..\\.."+scriptPath.substring(usm_root.length());
-				rhapsody.writeToOutputWindow("Log","To = " + scriptPath +"\n");
-				if(hyperLink.getSaveUnit().isReadOnly()==0)
+				// we have an absolute path...
+				rhapsody.writeToOutputWindow("Log", "change from = " + scriptPath + "\n");
+				scriptPath = "..\\.." + scriptPath.substring(usm_root.length());
+				rhapsody.writeToOutputWindow("Log", "To = " + scriptPath + "\n");
+				if (hyperLink.getSaveUnit().isReadOnly() == 0)
 				{
 					hyperLink.setURL(scriptPath);
 				}
 
 			}
-	
-			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + scriptPath +"\n");
-			
-			
+
+			rhapsody.writeToOutputWindow("Log", "Start scriptrunner with script " + scriptPath + "\n");
+
 		}
 		else
 		{
 			return;
 		}
-		
-		
-		//call the scriptrunner...
-		/*
-		 * J:/Utilities/CSharpTools/Applications/ScriptRunner/bin/Release/ScriptRunner.exe script=j:\USM\Development\RhapsodyModel\UniversalSewingMachine_rpy\DesignView\HardwareDevices\HDInterfaces\WIFI\enableWifi.bcl
-		 */
-		String[] params = new String [2];
-		
-		params[0] = myScriptRunnerPath;
-		params[1] = "script="+scriptPath;
-		
 
-		try 
+		// call the scriptrunner...
+		/*
+		 * J:/Utilities/CSharpTools/Applications/ScriptRunner/bin/Release/ScriptRunner.
+		 * exe
+		 * script=j:\USM\Development\RhapsodyModel\UniversalSewingMachine_rpy\DesignView
+		 * \HardwareDevices\HDInterfaces\WIFI\enableWifi.bcl
+		 */
+		String[] params = new String[2];
+
+		params[0] = myScriptRunnerPath;
+		params[1] = "script=" + scriptPath;
+
+		try
 		{
-			
+
 			Process p = Runtime.getRuntime().exec(params);
-			
-		} catch (IOException e) 
-		{
-			rhapsody.writeToOutputWindow("Log", "Exception: "+e.getMessage()+"\n"); 
+
 		}
-		
-		
-		
+		catch (IOException e)
+		{
+			rhapsody.writeToOutputWindow("Log", "Exception: " + e.getMessage() + "\n");
+		}
+
 	}
-	
+
 	public static IRPModelElement selectOperation(IRPApplication rhapsody, String aOperationName)
 	{
-		//string like IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned long &)
-		
-		//aOperationName = "IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned long &)";
-		
+		// string like IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned long &)
+
+		// aOperationName = "IOUSam9x60::CSam9x60Random::CRandomIn::getValue(unsigned
+		// long &)";
+
 		aOperationName = aOperationName.substring(0, aOperationName.indexOf('('));
-		
+
 		String[] elements = aOperationName.split("::");
-		
+
 		IRPModelElement searchIn = rhapsody.activeProject();
-		
-		rhapsody.writeToOutputWindow("Log", "selectOperation " + aOperationName+"\n"); 
-		
-		if(searchIn==null)
+
+		rhapsody.writeToOutputWindow("Log", "selectOperation " + aOperationName + "\n");
+
+		if (searchIn == null)
 		{
 			return null;
 		}
-		
-		for(String element:elements)
+
+		for (String element : elements)
 		{
-			//namespace...
+			// namespace...
 			IRPModelElement f = searchIn.findNestedElementRecursive(element, "Package");
-			if(f==null)
+			if (f == null)
 			{
 				f = searchIn.findNestedElementRecursive(element, "Class");
-				if(f==null)
+				if (f == null)
 				{
 					f = searchIn.findNestedElementRecursive(element, "Operation");
-					if(f==null)
+					if (f == null)
 					{
-						//not found
-						rhapsody.writeToOutputWindow("Log", "Did not find  " + element +"\n"); 
+						// not found
+						rhapsody.writeToOutputWindow("Log", "Did not find  " + element + "\n");
 						continue;
-					}		
+					}
 				}
 			}
 			searchIn = f;
-			rhapsody.writeToOutputWindow("Log", "Found  " + searchIn.getName() +" as " + searchIn.getMetaClass() + "\n"); 
-			
-		}
-		
-		return searchIn;
-		
-	}
-	
-	
-	public static void searchElement(IRPApplication rhapsody, IRPModelElement selected) {
-		Map<String,IRPModelElement> scopes = new HashMap<String,IRPModelElement>();
-		
+			rhapsody.writeToOutputWindow("Log",
+					"Found  " + searchIn.getName() + " as " + searchIn.getMetaClass() + "\n");
 
-		eVisibility visibility = eVisibility.ePublic; 
+		}
+
+		return searchIn;
+
+	}
+
+	public static void searchElement(IRPApplication rhapsody, IRPModelElement selected)
+	{
+		Map<String, IRPModelElement> scopes = new HashMap<String, IRPModelElement>();
+
+		eVisibility visibility = eVisibility.ePublic;
 		boolean getOwner = false;
-		
-		if(rhapsody==null)
+
+		if (rhapsody == null)
 		{
 			System.out.println("no rhapsody");
 		}
-		
-		if(selected==null)
+
+		if (selected == null)
 		{
 			System.out.println("no selected");
 		}
 
 		rhapsody.writeToOutputWindow("Log", "Search model element of type " + selected.getMetaClass());
-		
-		if(selected instanceof IRPPackage)
+
+		if (selected instanceof IRPPackage)
 		{
 			rhapsody.writeToOutputWindow("Log", "Search works not with " + selected.getMetaClass());
 		}
-		
-		
+
 		IRPModelElement owner = selected;
-		
-		if(selected instanceof IRPOperation)
+
+		if (selected instanceof IRPOperation)
 		{
-			IRPOperation operation = (IRPOperation)selected;
-			if(operation.getVisibility().equals("Private"))
+			IRPOperation operation = (IRPOperation) selected;
+			if (operation.getVisibility().equals("Private"))
 			{
 				visibility = eVisibility.ePrivate;
 			}
-			else if(operation.getVisibility().equals("Protected"))
+			else if (operation.getVisibility().equals("Protected"))
 			{
 				visibility = eVisibility.eProtected;
 			}
 			getOwner = true;
 		}
-		else if(selected instanceof IRPAttribute)
+		else if (selected instanceof IRPAttribute)
 		{
-			IRPAttribute attribute = (IRPAttribute)selected;
-			if(attribute.getVisibility().equals("Private"))
+			IRPAttribute attribute = (IRPAttribute) selected;
+			if (attribute.getVisibility().equals("Private"))
 			{
 				visibility = eVisibility.ePrivate;
 			}
-			else if(attribute.getVisibility().equals("Protected"))
-			{
-				visibility = eVisibility.eProtected;
-			}
-			getOwner = true;		
-		}
-		else if(selected instanceof IRPRelation)
-		{
-			IRPRelation relation = (IRPRelation)selected;
-			if(relation.getVisibility().equals("Private"))
-			{
-				visibility = eVisibility.ePrivate;
-			}
-			else if(relation.getVisibility().equals("Protected"))
+			else if (attribute.getVisibility().equals("Protected"))
 			{
 				visibility = eVisibility.eProtected;
 			}
 			getOwner = true;
 		}
-		
-		else if(selected instanceof IRPType)
+		else if (selected instanceof IRPRelation)
+		{
+			IRPRelation relation = (IRPRelation) selected;
+			if (relation.getVisibility().equals("Private"))
+			{
+				visibility = eVisibility.ePrivate;
+			}
+			else if (relation.getVisibility().equals("Protected"))
+			{
+				visibility = eVisibility.eProtected;
+			}
+			getOwner = true;
+		}
+
+		else if (selected instanceof IRPType)
 		{
 			getOwner = true;
-			scopes.put(selected.getFullPathName(),selected);
+			scopes.put(selected.getFullPathName(), selected);
 		}
-		else if(selected instanceof IRPEvent)
+		else if (selected instanceof IRPEvent)
 		{
-			IRPModelElement evowner = selected;;
-			while(evowner instanceof IRPPackage == false)
+			IRPModelElement evowner = selected;
+			;
+			while (evowner instanceof IRPPackage == false)
 			{
 				evowner = evowner.getOwner();
-				if(evowner==null)
+				if (evowner == null)
 				{
 					break;
 				}
 			}
-			if(evowner!=null)
+			if (evowner != null)
 			{
-				IRPPackage evpack = (IRPPackage)evowner;
+				IRPPackage evpack = (IRPPackage) evowner;
 				List<IRPModelElement> elements = evpack.getNestedElementsByMetaClass("Class", 1).toList();
-				for(IRPModelElement e:elements)
+				for (IRPModelElement e : elements)
 				{
 					scopes.put(e.getFullPathName(), e);
 				}
 			}
-			
-			
-			
+
 		}
-		
-		if(getOwner==true)
+
+		if (getOwner == true)
 		{
 			owner = selected.getOwner();
 		}
-		
-		
-		scopes.put(owner.getFullPathName(),owner);
-			
+
+		scopes.put(owner.getFullPathName(), owner);
+
 		List<IRPModelElement> references = owner.getReferences().toList();
-		for(IRPModelElement reference:references)
+		for (IRPModelElement reference : references)
 		{
-			System.out.println(reference.getMetaClass()+" "+reference.getName()+" "+reference.toString());
-			
-			if(reference instanceof IRPRelation)
+			System.out.println(reference.getMetaClass() + " " + reference.getName() + " " + reference.toString());
+
+			if (reference instanceof IRPRelation)
 			{
-				if(visibility!=eVisibility.ePublic)
+				if (visibility != eVisibility.ePublic)
 				{
 					continue;
 				}
-				IRPRelation relation = (IRPRelation)reference;
-				scopes.put(relation.getFullPathName(),relation);
+				IRPRelation relation = (IRPRelation) reference;
+				scopes.put(relation.getFullPathName(), relation);
 				IRPModelElement ofClass = relation.getOfClass();
-				scopes.put(ofClass.getFullPathName(),ofClass);
-				
-				
+				scopes.put(ofClass.getFullPathName(), ofClass);
+
 			}
-			else if(reference instanceof IRPGeneralization)
+			else if (reference instanceof IRPGeneralization)
 			{
-				if(visibility==eVisibility.ePrivate)
+				if (visibility == eVisibility.ePrivate)
 				{
 					continue;
 				}
-				IRPGeneralization generalization = (IRPGeneralization)reference;
+				IRPGeneralization generalization = (IRPGeneralization) reference;
 				IRPModelElement derivedClass = generalization.getDerivedClass();
-				scopes.put(derivedClass.getFullPathName(),derivedClass);
+				scopes.put(derivedClass.getFullPathName(), derivedClass);
 				getGeneralization(scopes, derivedClass);
 			}
-			else if(reference instanceof IRPDependency)
+			else if (reference instanceof IRPDependency)
 			{
-				if(visibility!=eVisibility.ePublic)
+				if (visibility != eVisibility.ePublic)
 				{
 					continue;
 				}
-				IRPDependency dependency = (IRPDependency)reference;
+				IRPDependency dependency = (IRPDependency) reference;
 				scopes.put(dependency.getFullPathName(), dependency);
 				IRPModelElement dependent = dependency.getDependent();
 				scopes.put(dependent.getFullPathName(), dependent);
-				if(dependent instanceof IRPPackage)
+				if (dependent instanceof IRPPackage)
 				{
 					continue;
 				}
-				scopes.put(dependent.getFullPathName(),dependent);
+				scopes.put(dependent.getFullPathName(), dependent);
 			}
-			else if(reference instanceof IRPOperation)
+			else if (reference instanceof IRPOperation)
 			{
-				if(visibility!=eVisibility.ePublic)
+				if (visibility != eVisibility.ePublic)
 				{
 					continue;
 				}
 				IRPModelElement operationOwner = reference.getOwner();
-				scopes.put(operationOwner.getFullPathName(),operationOwner);
+				scopes.put(operationOwner.getFullPathName(), operationOwner);
 			}
-			else if(reference instanceof IRPAttribute)
+			else if (reference instanceof IRPAttribute)
 			{
-				if(visibility!=eVisibility.ePublic)
+				if (visibility != eVisibility.ePublic)
 				{
 					continue;
 				}
 				IRPModelElement attributeOwner = reference.getOwner();
-				scopes.put(attributeOwner.getFullPathName(),attributeOwner);
+				scopes.put(attributeOwner.getFullPathName(), attributeOwner);
 			}
-			else if(reference instanceof IRPArgument)
+			else if (reference instanceof IRPArgument)
 			{
-				if(visibility!=eVisibility.ePublic)
+				if (visibility != eVisibility.ePublic)
 				{
 					continue;
 				}
-				IRPArgument argument = (IRPArgument)reference;
+				IRPArgument argument = (IRPArgument) reference;
 				IRPModelElement op = argument.getOwner();
-				scopes.put(op.getFullPathName(),op);
+				scopes.put(op.getFullPathName(), op);
 			}
 			else
 			{
 				scopes.put(reference.getFullPathName(), reference);
 			}
 		}
-		
-		
-		
+
 		IRPSearchManager mgr = rhapsody.getSearchManager();
 		IRPSearchQuery query = mgr.createSearchQuery();
-		
-		
+
 		Set<Map.Entry<String, IRPModelElement>> set = scopes.entrySet();
-		
+
 		for (Map.Entry<String, IRPModelElement> pair : set)
 		{
-		     System.out.println("Scope: " + pair.getValue().getMetaClass()+" "+pair.getValue().getName()+" Path: "+pair.getKey());
-		     query.addSearchScope(pair.getValue());
+			System.out.println("Scope: " + pair.getValue().getMetaClass() + " " + pair.getValue().getName() + " Path: "
+					+ pair.getKey());
+			query.addSearchScope(pair.getValue());
 		}
-		
+
 		// set fields to search...
-		
+
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.NAME);
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.OPERATION_BODIES);
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.INITIAL_VALUE);
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.ENUMERATION_LITERAL_VALUE);
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.TYPE_DECLARATIONS_AND_REFERENCES);
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.TRANSITION_LABEL);
-		
+
 		query.addFilterElementType("Class");
 		query.addFilterElementType("Attribute");
 		query.addFilterElementType("Variable");
@@ -799,241 +802,264 @@ public class RhapsodyHelper
 		query.addFilterElementType("AssociationEnd");
 		query.addFilterElementType("Event");
 		query.addFilterElementType("Transition");
-		
+
 		query.setMatchWholeWord(0);
-		
+
 		query.setSearchText(selected.getName());
-		
+
 		mgr.searchAndShowResults(query);
-		
+
 	}
 
-		@SuppressWarnings("unchecked")
-		private static void getGeneralization(Map<String,IRPModelElement> aScopes, IRPModelElement aModelElement )
+	@SuppressWarnings("unchecked")
+	private static void getGeneralization(Map<String, IRPModelElement> aScopes, IRPModelElement aModelElement)
+	{
+		List<IRPModelElement> references = aModelElement.getReferences().toList();
+		for (IRPModelElement reference : references)
 		{
-			List<IRPModelElement> references = aModelElement.getReferences().toList();
-			for(IRPModelElement reference:references)
+			if (reference instanceof IRPGeneralization)
 			{
-				if(reference instanceof IRPGeneralization)
-				{
-					IRPGeneralization generalization = (IRPGeneralization)reference;
-					IRPModelElement derivedClass = generalization.getDerivedClass();
-					aScopes.put(derivedClass.getFullPathName(), derivedClass);
-					getGeneralization(aScopes, derivedClass);
-				
-				}
+				IRPGeneralization generalization = (IRPGeneralization) reference;
+				IRPModelElement derivedClass = generalization.getDerivedClass();
+				aScopes.put(derivedClass.getFullPathName(), derivedClass);
+				getGeneralization(aScopes, derivedClass);
+
 			}
 		}
-		
-		@SuppressWarnings("unchecked")
-		public static IRPConfiguration getProjectConfig(IRPProject aProject, String aConfigName)
-		{	
-			List<IRPComponent> components = aProject.getComponents().toList();
-			for(IRPComponent component : components)
+	}
+
+	@SuppressWarnings("unchecked")
+	public static IRPConfiguration getProjectConfig(IRPProject aProject, String aConfigName)
+	{
+		List<IRPComponent> components = aProject.getComponents().toList();
+		for (IRPComponent component : components)
+		{
+			if (component.getBuildType().equals("executable"))
 			{
-				if(component.getBuildType().equals("executable"))
+				List<IRPConfiguration> configs = component.getConfigurations().toList();
+				for (IRPConfiguration config : configs)
 				{
-					List<IRPConfiguration> configs =  component.getConfigurations().toList();
-					for(IRPConfiguration config:configs)
+					if (config.getName().equals(aConfigName))
 					{
-						if(config.getName().equals(aConfigName))
-						{
-							
-							return config;
-							
-						}
+
+						return config;
+
 					}
-					break;
 				}
+				break;
 			}
-			
+		}
+
+		return null;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public static IRPConfiguration getConfiguration(IRPComponent aComponent, String aConfigName)
+	{
+		IRPConfiguration config = null;
+
+		List<IRPConfiguration> configs = aComponent.getConfigurations().toList();
+		for (IRPConfiguration c : configs)
+		{
+			if (c.getName().equals(aConfigName))
+			{
+				config = c;
+			}
+		}
+		return config;
+	}
+
+	public static IRPConfiguration getDefaultConfiguration(IRPComponent aComponent)
+	{
+		return getConfiguration(aComponent, "DefaultConfig");
+	}
+
+	public static File getActiveDefaultPath(IRPModelElement aElement)
+	{
+		IRPProject project = aElement.getProject();
+		if (project == null)
+		{
 			return null;
-			
 		}
-		
-		@SuppressWarnings("unchecked")
-		public static IRPConfiguration getConfiguration(IRPComponent aComponent, String aConfigName)
+		IRPComponent component = project.getActiveComponent();
+		if (component == null)
 		{
-			IRPConfiguration config = null;
-    		
-    		
-    		List<IRPConfiguration> configs = aComponent.getConfigurations().toList();
-    		for(IRPConfiguration c : configs)
-    		{
-    			if(c.getName().equals(aConfigName))
-    			{
-    				config = c;
-    			}
-    		}
-    		return config;
+			return null;
 		}
-		
-		public static IRPConfiguration getDefaultConfiguration(IRPComponent aComponent)
-		{
-			return getConfiguration(aComponent, "DefaultConfig");
-		}
-		
-		public static File getActiveDefaultPath(IRPModelElement aElement)
-		{
-			IRPProject project = aElement.getProject();
-			if(project==null)
-			{
-				return null;
-			}
-			IRPComponent component = project.getActiveComponent();
-			if(component == null)
-			{
-				return null;
-			}
-			
-			IRPConfiguration config = getDefaultConfiguration(component);
-			
-			if(config == null)
-			{
-				return null;
-			}
-			
-			String path = config.getPath(1);
-			
-			if(path == null)
-			{
-				return null;
-			}
-			
-			File ret = new File(path);
-			
-			return ret;
-			
-		}
-		
-		public List<IRPModelElement> get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column) {
-			
-			
-			cellElement.getHyperLinks().toList();
-			
-			
-			if(cellElement instanceof IRPRequirement == false)
-			{
-				return null;
-			}
-			
-			IRPRequirement req = (IRPRequirement)cellElement;
-			
-			return req.getHyperLinks().toList();
 
-		}
-		
-		public static String getAbsolutePath(IRPHyperLink aLink)
-		{
-			IRPProject project = aLink.getProject();
-			if(project==null)
-			{
-				return null;
-			}
-			
-			File lFile = new File(aLink.getURL());
-			if(lFile.exists())
-			{
-				//is already absolute...
-				return aLink.getURL();
-			}
-			
-			File pFile = new File(project.getSaveUnit().getCurrentDirectory());
-			
-			lFile = new File(pFile, aLink.getURL());
-			
-			
-			try 
-			{
-				lFile = lFile.getCanonicalFile();
-			} 
-			catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
-	      	      
-			if(lFile.exists()==false)
-			{
-				return null;
-			}
-						
-			return lFile.getAbsolutePath();
-		}
-		
-		public static String getRelativePath(IRPHyperLink aLink)
-		{
-			File lFile = new File(aLink.getURL());
-			if(lFile.exists()==false)
-			{
-				return null;
-			}
-			
-			IRPProject project = aLink.getProject();
-			if(project==null)
-			{
-				return null;
-			}
-			
+		IRPConfiguration config = getDefaultConfiguration(component);
 
-			Path linkPath = Paths.get(aLink.getURL());
-			
-			Path projectPath = Paths.get(project.getSaveUnit().getCurrentDirectory());
-			
-			Path relativePath = projectPath.relativize(linkPath);
-			
-			return relativePath.toString();
+		if (config == null)
+		{
+			return null;
+		}
 
-		}
-				
-		public static boolean isPartOf(IRPModelElement aModel, IRPModelElement aPart)
+		String path = config.getPath(1);
+
+		if (path == null)
 		{
-			IRPModelElement owner = aPart;
-			while( owner != null)
+			return null;
+		}
+
+		File ret = new File(path);
+
+		return ret;
+
+	}
+
+	public List<IRPModelElement> get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column)
+	{
+
+		cellElement.getHyperLinks().toList();
+
+		if (cellElement instanceof IRPRequirement == false)
+		{
+			return null;
+		}
+
+		IRPRequirement req = (IRPRequirement) cellElement;
+
+		return req.getHyperLinks().toList();
+
+	}
+
+	public static Path getUSMPath(IRPProject aProject) throws IOException
+	{
+
+		if (aProject == null)
+		{
+			IOException ioException = new IOException("aProject is null");
+			throw ioException;
+		}
+
+		IRPUnit saveUnit = aProject.getSaveUnit();
+		if (saveUnit == null)
+		{
+			IOException ioException = new IOException("aProject has no save Unit");
+			throw ioException;
+		}
+
+		String path = saveUnit.getCurrentDirectory();
+
+		Path usmRootFile = Paths.get(path, "USM_ROOT");
+
+		Path currentPath = Paths.get(path);
+
+		Path usmPath = currentPath.getParent().getParent();
+
+
+		if (Files.exists(usmRootFile) == true)
+		{
+			List<String> lines = Files.readAllLines(usmRootFile);
+			if (lines.size() > 0)
 			{
-				if(aModel.equals(owner))
-				{
-					return true;
-				}
-				owner = owner.getOwner();
+				String usmPathString = lines.get(0);
+				usmPath = Paths.get(usmPathString);
 			}
-			return false;
 		}
-		
-		public static List<IRPModelElement> isPartOf(IRPModelElement aModel, List<IRPModelElement>aParts)
+		// check if usmroot is correct
+		Path development = Paths.get(usmPath.toString(), "Development");
+
+		if (Files.exists(development, LinkOption.NOFOLLOW_LINKS) == false)
 		{
-			List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
-			
-			for(IRPModelElement part:aParts)
-			{
-				if(isPartOf(aModel, part)==true)
-				{
-					ret.add(part);
-				}
-					
-			}
-			
-			return ret;
+			IOException ioException = new IOException("USM_ROOT not found");
+			throw ioException;
 		}
-		public static boolean getUSMRoot(IRPProject aProject, Path aPath)
+
+		return usmPath;
+
+	}
+
+	public static String getAbsolutePath(IRPHyperLink aLink)
+	{
+		IRPProject project = aLink.getProject();
+		if (project == null)
 		{
-			String projectpathStr = aProject.getCurrentDirectory();
-			
-			Path projectPath = FileSystems.getDefault().getPath(projectpathStr);
-			Path usmRootPath = projectPath.resolve("USM_ROOT");
-			
-			//open file 
-			try 
+			return null;
+		}
+
+		File lFile = new File(aLink.getURL());
+		if (lFile.exists())
+		{
+			// is already absolute...
+			return aLink.getURL();
+		}
+
+		File pFile = new File(project.getSaveUnit().getCurrentDirectory());
+
+		lFile = new File(pFile, aLink.getURL());
+
+		try
+		{
+			lFile = lFile.getCanonicalFile();
+		}
+		catch (IOException e1)
+		{
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+		if (lFile.exists() == false)
+		{
+			return null;
+		}
+
+		return lFile.getAbsolutePath();
+	}
+
+	public static String getRelativePath(IRPHyperLink aLink)
+	{
+		File lFile = new File(aLink.getURL());
+		if (lFile.exists() == false)
+		{
+			return null;
+		}
+
+		IRPProject project = aLink.getProject();
+		if (project == null)
+		{
+			return null;
+		}
+
+		Path linkPath = Paths.get(aLink.getURL());
+
+		Path projectPath = Paths.get(project.getSaveUnit().getCurrentDirectory());
+
+		Path relativePath = projectPath.relativize(linkPath);
+
+		return relativePath.toString();
+
+	}
+
+	public static boolean isPartOf(IRPModelElement aModel, IRPModelElement aPart)
+	{
+		IRPModelElement owner = aPart;
+		while (owner != null)
+		{
+			if (aModel.equals(owner))
 			{
-				String usmPathString  = new String(Files.readAllBytes(usmRootPath));
-				aPath = Paths.get(usmPathString);
 				return true;
-			} 
-			catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				
 			}
-			
-			return false;
+			owner = owner.getOwner();
 		}
+		return false;
+	}
+
+	public static List<IRPModelElement> isPartOf(IRPModelElement aModel, List<IRPModelElement> aParts)
+	{
+		List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
+
+		for (IRPModelElement part : aParts)
+		{
+			if (isPartOf(aModel, part) == true)
+			{
+				ret.add(part);
+			}
+
+		}
+
+		return ret;
+	}
+
 }

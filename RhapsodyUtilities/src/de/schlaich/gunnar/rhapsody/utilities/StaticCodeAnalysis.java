@@ -7,10 +7,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,7 +75,7 @@ public class StaticCodeAnalysis {
 		
 		try
 		{
-			myUSMPath = getUSMPath(myApplication.activeProject());
+			myUSMPath = RhapsodyHelper.getUSMPath(myApplication.activeProject());
 		}
 		catch(IOException e)
 		{
@@ -90,53 +87,6 @@ public class StaticCodeAnalysis {
 		myComponents = new HashMap<IRPComponent,ComponentIncludes>();
 	}
 	
-	
-	public Path getUSMPath(IRPProject aProject) throws IOException
-	{
-		
-		if(aProject==null)
-		{
-			IOException ioException = new IOException("aProject is null");
-			throw ioException;
-		}
-		
-		IRPUnit saveUnit = aProject.getSaveUnit();
-		if(saveUnit==null)
-		{
-			IOException ioException = new IOException("aProject has no save Unit");
-			throw ioException;
-		}
-		
-		String path = saveUnit.getCurrentDirectory();
-		
-		Path usmRootFile = Paths.get(path, "USM_ROOT");
-		
-		
-		if(Files.exists(usmRootFile)==false)
-		{
-			// try to get USMPath in the way <usmRoot>/GeneratedProjects/<project>/<project>.rpy
-			
-			Path currentPath = Paths.get(path);
-			
-			Path usmPath = currentPath.getParent().getParent();
-			
-			//check if usmroot is correct
-			Path development = Paths.get(usmPath.toString(), "Development");
-			
-			
-			
-			IOException ioException = new IOException("File USM_ROOT does not exist");
-			throw ioException;
-		}
-		
-		String usmPathString = Files.readAllBytes(usmRootFile).toString();
-		
-		Path usmPath = Paths.get(usmPathString);
-			
-		return usmPath;
-				
-	}
-
 	
 	public static StaticCodeAnalysis get(IRPApplication aApp, Consumer<String> aTraceAction)
 	{
