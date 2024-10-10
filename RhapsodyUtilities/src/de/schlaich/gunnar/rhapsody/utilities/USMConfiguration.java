@@ -260,7 +260,6 @@ public class USMConfiguration
         {
             
 			
-			//component.scop
 			
 			@SuppressWarnings("unchecked")
 			List<IRPPackage> packages = component.getScopeElementsByCategory("Package").toList();
