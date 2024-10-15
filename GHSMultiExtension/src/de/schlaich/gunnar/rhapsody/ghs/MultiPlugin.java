@@ -13,6 +13,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
+import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
@@ -562,6 +563,8 @@ public class MultiPlugin extends RPUserPlugin
 	public void compile(IRPModelElement aElement)
 	{
 
+		boolean viewTable = false;
+		
 		trace("Generate...");
 
 		IRPCollection generateCollection = myRhapsody.getListOfSelectedElements();
@@ -718,6 +721,7 @@ public class MultiPlugin extends RPUserPlugin
                         }
 						
 						ASTHelper.createIssue(myRhapsody.activeProject(), absolutePathString, lineNumber, errorLevel, errorMessage, "CompilerIssue");
+						viewTable = true;
 
 						/*
 						if (aElement instanceof IRPClass)
@@ -756,8 +760,20 @@ public class MultiPlugin extends RPUserPlugin
 				}
 			}
 		}
+		
+		if (viewTable == true)
+		{
+			IRPProject project = myRhapsody.activeProject();
+			if (project == null)
+			{
+				return;
+			}
+			ASTHelper.viewCompilerIssues(project);
+		}
 
 	}
+
+	
 
 	public void createIssue(File aWorkingFolder, IRPClass aClass, String aFileName, String aClassName, int aLineNumber,
 			String aErrorLevel, String aErrorCode, String aErrorMessage)

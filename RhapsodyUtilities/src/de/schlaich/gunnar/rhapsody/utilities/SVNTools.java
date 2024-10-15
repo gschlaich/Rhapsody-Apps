@@ -58,7 +58,7 @@ public class SVNTools
 	public static final String JiraProfileName = "JiraProfile";
 	public static final String SearchPatternUSM = "/USM-(\\d+)";
 	public static final String SearchPatternTitle = "USM-\\d+_(.*?)(?=\\/)";
-	public static final String HyperLinkStart = "https://jira.bernina.com/browse/";
+	public static final String HyperLinkStart = "https://berninaag.atlassian.net/jira/software/c/projects/USM/issues/";
 
 	private Consumer<String> myTraceAction = null;
 	private Object added;

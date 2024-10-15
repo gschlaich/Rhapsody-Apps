@@ -69,7 +69,9 @@ import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
+import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 
@@ -522,6 +524,38 @@ public class ASTHelper
 			return -1;
 		}
 		return getOffset(functionDefinition, aLine);
+	}
+	
+	public static void viewCompilerIssues(IRPProject aProject)
+	{
+		
+		IRPProfile usmProfile = null;
+		List<IRPProfile> profiles =  aProject.getProfiles().toList();
+		for (IRPProfile p : profiles)
+		{
+			if (p.getName().equals("USMProfile"))
+			{
+				usmProfile = p;
+				break;
+			}
+			
+		}
+		if (usmProfile == null)
+		{
+			trace("USMProfile not found");
+			return;
+		}
+		
+		List<IRPTableView> tables=  usmProfile.getNestedElementsByMetaClass("TableView",0).toList();
+		
+		for (IRPTableView t : tables)
+		{
+			if (t.getName().equals("CompilerIssues"))
+			{
+				t.open();
+				break;
+			}
+		}
 	}
 
 	public static IRPComment createIssue(IRPProject aProject, String aPath, int aLine, String aErrorLevel,

@@ -414,6 +414,8 @@ public class VSPlugin extends RPUserPlugin
 		mySolutionPath = mySolutionPath.replace('/', '\\');
 
 		trace("SolutionPath: " + mySolutionPath);
+		
+		boolean viewTable = false;
 
 		try
 		{
@@ -446,6 +448,8 @@ public class VSPlugin extends RPUserPlugin
 					System.out.println("Parts[2]: " + parts[2]);
 					System.out.println("Parts[3]: " + parts[3]);
 					System.out.println("Parts[4]: " + parts[4]);
+					
+					viewTable = true;
 
 					IRPComment issue = ASTHelper.createIssue(activeProject, parts[3], Integer.parseInt(parts[4]),
 							errorLevel, parts[2], "CompilerIssue");
@@ -459,6 +463,11 @@ public class VSPlugin extends RPUserPlugin
 		{
 			trace("Exception: " + iox.getMessage());
 			iox.printStackTrace();
+		}
+		
+		if (viewTable == true)
+		{
+			ASTHelper.viewCompilerIssues(activeProject);
 		}
 
 	}
