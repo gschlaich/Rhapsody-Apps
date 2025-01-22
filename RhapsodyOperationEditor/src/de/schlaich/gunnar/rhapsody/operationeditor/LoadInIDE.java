@@ -113,6 +113,10 @@ public class LoadInIDE
 		{
 			myMultiPlugin.compile(aOperation);
 		}
+		else if (myVSPlugin != null)
+		{
+			myVSPlugin.compile(aOperation);
+		}
 	}
 	
 	public void build(IRPProject aProject)
@@ -122,6 +126,5 @@ public class LoadInIDE
 			myMultiPlugin.compile(aProject);
 		}
 	}
-	
-	
+
 }

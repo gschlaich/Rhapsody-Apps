@@ -1,5 +1,9 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -10,10 +14,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +30,15 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -70,6 +87,8 @@ public class SVNTools
 	private String myURL = null;
 	private IRPModelElement mySelected = null;
 	private IRPUnit mySaveUnit = null;
+	
+	private Path myTempPath = null;
 
 	public SVNTools(IRPApplication aApplication, Consumer<String> aTraceAction)
 	{
@@ -77,7 +96,269 @@ public class SVNTools
 		myApplication = aApplication;
 
 	}
+	
+	private boolean hasChanged(IRPModelElement aSelected, int aRevision1, int aRevision2)
+    {
+        List<IRPModelElement> changes = diffmerge(aSelected, aRevision1, aRevision2, true, false);
+        if (changes.size() > 0)
+        {
+            return true;
+        }
+        return false;
+    }
+	
+	public void showChangeList(IRPModelElement aSelected, int aLimit, boolean aIsMonth)
+	{
+		List<logRow> changesUnit = readHistory(aSelected, aLimit, aIsMonth);
+		
+		List<HistoryRow > changes = new ArrayList<HistoryRow>();
+		
+		logRow lastRow = null;
+		for (logRow row : changesUnit)
+		{
+			int revision = row.getRevision();
+			if (lastRow != null)
+			{
+				int lastRevision = lastRow.getRevision();
+				trace("Check -- Revision: " + revision + " LastRevision: " + lastRevision);
+				
+				List<IRPModelElement> changedElements = diffmerge(aSelected,lastRevision, revision, true, false);
+				
+				if (changedElements.size() > 0)
+				{
+					changes.add(new HistoryRow(lastRow, changedElements));
+					trace("Revision: " + lastRevision + " has changes");
+				}
+				else
+				{
+					trace("Revision: " + lastRevision + " has no changes");
+				}
+				
+			}
+			lastRow = row;
+		}
+		
+		File sbsTempDir = getSBSTempDir();
+		for (File f : sbsTempDir.listFiles())
+		{
+			f.delete();
+		}
+	
+		Object[][] data = new Object[changes.size()][5];
+		
+		trace("------------------------------ Changes:"       );
+		for (HistoryRow hrow : changes)
+		{
+			logRow row = hrow.getLogRow();
+			List<IRPModelElement> changedElements = hrow.getChangedElements();
+			
+			String changedElementsString = "";
+			
+			for (IRPModelElement element : changedElements)
+			{
+				changedElementsString += "["+element.getMetaClass()+" "+element.getName()+"] ";
+				
+			}
+			
+			String message = row.myMessage;
+			
+			String regex = "\\bUSM-\\d[\\w_]*\\b"; // Startet mit USM-, gefolgt von Zahlen und optional weiteren Zeichen oder Unterstrichen
 
+	        // Pattern und Matcher erstellen
+	        Pattern pattern = Pattern.compile(regex);
+	        Matcher matcher = pattern.matcher(message);
+
+	        // Falls ein Treffer vorhanden ist
+	        if (matcher.find()) {
+	            // Das gefundene Wort
+	            message = matcher.group();
+
+	            // Unterstriche durch Leerzeichen ersetzen
+	            message = message.replace("_", " ");
+	        }
+		
+			trace("Revision: " + row.getRevision() + " Author: " + row.myAuthor + " Date: " + row.myDate+ " Elements: " + changedElementsString + " Message: " + message);
+			
+			data[changes.indexOf(hrow)][0] = row.getRevision();
+			data[changes.indexOf(hrow)][1] = row.myAuthor;
+			data[changes.indexOf(hrow)][2] = row.myDate;
+			data[changes.indexOf(hrow)][3] = message;
+			data[changes.indexOf(hrow)][4] = changedElementsString;
+		
+		}
+
+
+		 // Spaltennamen für die Tabelle
+        String[] columnNames = {"Revision", "Author", "Date", "Jira", "Changed Elements"};
+
+        DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
+        JTable table = new JTable(tableModel);
+
+        // Tabelle in ein ScrollPane einfügen
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        // Scrollbar-Strategie festlegen
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Horizontal scrollbar nur bei Bedarf
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);     // Vertikal scrollbar nur bei Bedarf
+
+        // Dialog erstellen
+        JDialog dialog = new JDialog();
+        
+
+		ImageIcon icon = new ImageIcon(aSelected.getIconFileName());
+		dialog.setIconImage(icon.getImage());
+		dialog.setTitle("SVN History for "+ aSelected.getMetaClass() + " " + aSelected.getName());
+		
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        // Dialog-Layout festlegen
+        dialog.setLayout(new BorderLayout());
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Größe des Fensters festlegen
+        dialog.setSize(600, 400); // Breite: 600px, Höhe: 400px
+        dialog.setLocationRelativeTo(null); // Fenster zentrieren
+
+        // Dialog anzeigen
+        dialog.setVisible(true);
+		
+	}
+	
+	public void showChangeStatistic(IRPModelElement aSelected, int aLimitMonths)
+    {
+		
+		Map<IRPModelElement, Integer> changedElementsMap = new HashMap<IRPModelElement, Integer>();
+		
+		List<logRow> changesUnit = readHistory(aSelected, aLimitMonths, true);
+		
+		logRow lastRow = null;
+		for (logRow row : changesUnit)
+		{
+			int revision = row.getRevision();
+			if (lastRow != null)
+			{
+				int lastRevision = lastRow.getRevision();
+
+				List<IRPModelElement> changedElements = diffmerge(aSelected, lastRevision, revision, true, false);
+				
+				for (IRPModelElement element : changedElements)
+                {
+					if (changedElementsMap.containsKey(element))
+                    {
+                    	changedElementsMap.put(element, changedElementsMap.get(element)+1);
+                    }
+                    else
+                    {
+                    	changedElementsMap.put(element, 1);
+                    }
+                }
+			}
+			lastRow = row;
+		}
+		
+		File sbsTempDir = getSBSTempDir();
+		for (File f : sbsTempDir.listFiles())
+		{
+			f.delete();
+		}
+
+		
+		if (changedElementsMap.size() == 0)
+		{
+			trace("No changes found");
+			return;
+		}
+
+		
+		JTreeNode rootTreeNode = new JTreeNode(aSelected,changedElementsMap.get(aSelected));
+        
+    	DefaultMutableTreeNode root = new DefaultMutableTreeNode(rootTreeNode);
+    	
+		addToTree(changedElementsMap, root, aSelected);
+		
+		JTree tree = new JTree(root);
+		
+		tree.setCellRenderer(new CustomTreeCellRenderer());
+		
+		tree.addMouseListener(new MouseAdapter()
+		{
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() == 2)
+				{
+					DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+					if (selectedNode != null)
+					{
+						JTreeNode node = (JTreeNode) selectedNode.getUserObject();
+						IRPModelElement element = node.getElement();
+						showChangeList(element, 24, true);
+					}
+				}
+			}
+		});
+
+		
+		JScrollPane scrollPane = new JScrollPane(tree);
+
+		// Scrollbar-Strategie festlegen
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED); // Horizontal scrollbar
+																								// nur bei Bedarf
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED); // Vertikal scrollbar nur
+																							// bei Bedarf
+
+		// Dialog erstellen
+		JDialog dialog = new JDialog();
+		
+		ImageIcon icon = new ImageIcon(aSelected.getIconFileName());
+		dialog.setIconImage(icon.getImage());
+		dialog.setTitle("SVN Statistic for "+ aSelected.getMetaClass() + " " + aSelected.getName());
+		
+		
+		dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+		// Dialog-Layout festlegen
+		dialog.setLayout(new BorderLayout());
+		dialog.add(scrollPane, BorderLayout.CENTER);
+
+		// Größe des Fensters festlegen
+		dialog.setSize(600, 400); // Breite: 600px, Höhe: 400px
+		dialog.setLocationRelativeTo(null); // Fenster zentrieren
+
+		// Dialog anzeigen
+		dialog.setVisible(true);
+	
+		
+	
+    }
+	
+	
+	private void addToTree(Map<IRPModelElement, Integer> aMap, DefaultMutableTreeNode aNode, IRPModelElement aElement)
+	{
+		trace("Add to tree: " + aElement.getName());
+		
+		List<IRPModelElement> elements = aElement.getNestedElements().toList();
+		List<JTreeNode> nodeList = new ArrayList<JTreeNode>();
+		
+		for(IRPModelElement element : elements)
+		{
+			if (aMap.containsKey(element))
+			{
+				JTreeNode node = new JTreeNode(element, aMap.get(element));
+				nodeList.add(node);
+			}
+		}
+		
+		nodeList.sort(Collections.reverseOrder());
+		
+		for (JTreeNode node : nodeList)
+		{
+			DefaultMutableTreeNode child = new DefaultMutableTreeNode(node);
+			aNode.add(child);
+			addToTree(aMap, child, node.getElement());
+		}
+	}
+		
+       
 	private void trace(String aMessage)
 	{
 		if (myTraceAction == null)
@@ -307,7 +588,7 @@ public class SVNTools
 			return jiraReq;
 		}
 
-		List<IRPModelElement> changedElements = diffmerge(aSelected, -1, true);
+		List<IRPModelElement> changedElements = diffmerge(aSelected, -1, -1, true, true);
 		for (IRPModelElement e : changedElements)
 		{
 			anchorModel(jiraReq, e);
@@ -318,11 +599,11 @@ public class SVNTools
 
 	}
 
-	public List<IRPModelElement> diffmerge(IRPModelElement aSelected, int aRevision, boolean aReport)
+	public List<IRPModelElement> diffmerge(IRPModelElement aSelected, int aRevision, int aRevisionSource, boolean aReport, boolean addToFavorites)
 	{
 
-		List<IRPModelElement> ret = new ArrayList<>();
-
+		List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
+		
 		mySaveUnit = aSelected.getSaveUnit();
 		if (mySaveUnit == null)
 		{
@@ -331,6 +612,30 @@ public class SVNTools
 
 		File directory = new File(mySaveUnit.getCurrentDirectory());
 		File sbsFile = new File(directory, mySaveUnit.getFilename());
+		File reportFile = null;
+		
+		File tempDir = getTempDir();
+		
+		if (aReport == true)
+		{
+			String reportFileName = "report_"+mySaveUnit.getFullPathName()+"_"+aRevision+"_"+aRevisionSource+".txt";
+			reportFileName = reportFileName.replace("::", "_");
+			
+			reportFile = new File(tempDir, reportFileName);
+			
+			if (reportFile.exists() == true)
+			{
+				ret = parseReport(reportFile, aSelected, addToFavorites);
+				return ret;
+			}
+		}
+		
+		
+		if (aRevisionSource > 0)
+		{
+			sbsFile = getVersion(aSelected, aRevisionSource);
+		}
+		
 		if (sbsFile.exists() == false)
 		{
 			trace(sbsFile.toString() + " does not exist");
@@ -338,8 +643,6 @@ public class SVNTools
 		}
 
 		File share = new File(System.getenv("OMROOT"));
-
-		// trace("Working dir: " + share.getParent());
 
 		File headFile = getVersion(aSelected, aRevision);
 
@@ -360,7 +663,10 @@ public class SVNTools
 		// Diffmerge.exe <file1> <file2> -compare
 		// trace(diffMergeExe.toString()+" "+sbsFile.toString()+"
 		// "+headFile.toString()+" -xcompare");
-		File reportFile = null;
+		
+		
+		
+		
 
 		ProcessBuilder processBuilder = null;
 		try
@@ -368,9 +674,12 @@ public class SVNTools
 
 			if (aReport == true)
 			{
-				reportFile = File.createTempFile("report", ".txt");
-				processBuilder = new ProcessBuilder(diffMergeExe.toString(), sbsFile.toString(), headFile.toString(),
-						"-uname", sbsFile.toString(), "-compare", "-diffReport", reportFile.toString());
+				
+					reportFile.createNewFile();
+					processBuilder = new ProcessBuilder(diffMergeExe.toString(), sbsFile.toString(), headFile.toString(),
+							"-uname", sbsFile.toString(), "-compare", "-diffReport", reportFile.toString());
+						
+				
 			}
 			else
 			{
@@ -396,7 +705,7 @@ public class SVNTools
 				{
 
 					trace("Changed in " + aSelected.getName());
-					ret = parseReport(reportFile, aSelected);
+					ret = parseReport(reportFile, aSelected, addToFavorites);
 					trace("end changes");
 
 					// BufferedReader reportReader = new BufferedReader( new
@@ -407,7 +716,7 @@ public class SVNTools
 					// }
 					// reportReader.close();
 
-					reportFile.delete();
+					
 
 				}
 			}
@@ -417,8 +726,7 @@ public class SVNTools
 		{
 			trace(e.toString());
 		}
-
-		headFile.delete();
+		
 		return ret;
 
 	}
@@ -455,35 +763,51 @@ public class SVNTools
 		processBuilder.redirectErrorStream(true);
 		processBuilder.directory(currentDirectory);
 		trace("Current directory: " + processBuilder.directory().toString());
-
+		
 		try
 		{
-			tempFile = File.createTempFile(unit.getName(), ".sbs");
-			Process process = processBuilder.start();
-			InputStream inputStream = process.getInputStream();
-			BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-			BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+			
+			String unitName = unit.getFullPathName();
+			unitName = unitName.replace("::", "_");
 
-			String line;
-			while ((line = reader.readLine()) != null)
-			{
-				writer.write(line);
-				writer.newLine();
-			}
+			File sbsTempDir = getSBSTempDir();
 
-			writer.close();
-			reader.close();
+			tempFile = new File(sbsTempDir, unitName+"_"+Integer.toString(revision)+".sbs");
+			
+			//tempFile = File.createTempFile(unitName, ".sbs", tempDir);
+			
+			if(tempFile.exists()==false)
+            {
+                
+			
+				tempFile.createNewFile();
+				Process process = processBuilder.start();
+				InputStream inputStream = process.getInputStream();
+				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+				BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
 
-			int exitCode = process.waitFor();
-			if (exitCode == 0)
-			{
-				trace("SVN cmd success " + tempFile.toString() + "  stored.");
-			}
-			else
-			{
-				trace("SVN cmd failed. Exit-Code: " + exitCode);
-			}
+				String line;
+				while ((line = reader.readLine()) != null)
+				{
+					writer.write(line);
+					writer.newLine();
+				}
 
+				writer.close();
+				reader.close();
+
+				int exitCode = process.waitFor();
+				if (exitCode == 0)
+				{
+					trace("SVN cmd success " + tempFile.toString() + "  stored.");
+				}
+				else
+				{
+					trace("SVN cmd failed. Exit-Code: " + exitCode);
+				}
+            }
+		
+	
 		}
 		catch (Exception e)
 		{
@@ -507,7 +831,7 @@ public class SVNTools
 		return lines.length > 0 ? lines[0] : null; // Prüft, ob überhaupt eine Zeile vorhanden ist
 	}
 
-	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit)
+	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit, boolean aIsMonth)
 	{
 		try
 		{
@@ -530,8 +854,27 @@ public class SVNTools
 
 			if (aLimit > 0)
 			{
-				processBuilder = new ProcessBuilder("svn", "log", "--limit", Integer.toString(aLimit), "--xml",
-						fileName);
+				if (aIsMonth == true)
+				{
+					
+					LocalDate currentDate = LocalDate.now();
+					LocalDate startDate = currentDate.minusMonths(aLimit);
+					
+					String currentDateString = currentDate.format(DateTimeFormatter.ISO_DATE);
+					String startDateString = startDate.format(DateTimeFormatter.ISO_DATE);
+					
+					String dateString = "{"+currentDateString+"}:{"+startDateString+"}";
+					
+					//svn log -r {2022-12-23}:{2024-12-23} --xml PFE.sbs
+					
+					processBuilder = new ProcessBuilder("svn", "log", "-r", dateString, "--xml", fileName);
+				}
+				else
+				{
+					processBuilder = new ProcessBuilder("svn", "log", "--limit", Integer.toString(aLimit), "--xml",
+							fileName);
+				}
+				
 			}
 			else
 			{
@@ -553,6 +896,10 @@ public class SVNTools
 
 		return null;
 	}
+	
+	
+	
+	
 
 	private List<logRow> parseLog(InputStream inputStream)
 			throws ParserConfigurationException, SAXException, IOException
@@ -736,13 +1083,35 @@ public class SVNTools
 			trace(e.getMessage());
 		}
 	}
- 		
+
+	private File getTempDir()
+	{
+		File globalTempDir = new File(System.getProperty("java.io.tmpdir"));
+		File tempDir = new File(globalTempDir, "tempSVNTools");
+		if (tempDir.exists() == false)
+		{
+			tempDir.mkdir();
+		}
+		return tempDir;
+	}
+ 	
+	private File getSBSTempDir()
+	{
+		File tempDir = getTempDir();
+		File sbsTempDir = new File(tempDir, "sbs");
+		if (sbsTempDir.exists() == false)
+		{
+			sbsTempDir.mkdir();
+		}
+		return sbsTempDir;
+	}
+	
 
 	private enum actionEnum {
 		added, removed, changed, unchanged
 	};
 
-	private List<IRPModelElement> parseReport(File aReportFile, IRPModelElement selected)
+	private List<IRPModelElement> parseReport(File aReportFile, IRPModelElement selected, boolean addToFavorites)
 	{
 
 		List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
@@ -781,7 +1150,7 @@ public class SVNTools
 
 				if (op.contains(">>"))
 				{
-					action = actionEnum.unchanged;
+					action = actionEnum.changed;
 				}
 				else if (op.contains("<>"))
 				{
@@ -861,7 +1230,11 @@ public class SVNTools
 
 		ret = RhapsodyHelper.isPartOf(selected, ret);
 
-		addToFavorites(ret);
+		if (addToFavorites == true)
+		{
+			addToFavorites(ret);
+		}
+		
 
 		return ret;
 
@@ -869,7 +1242,7 @@ public class SVNTools
 
 	private int getBaseRevision(IRPModelElement aSelected)
 	{
-		List<logRow> history = readHistory(aSelected, -1);
+		List<logRow> history = readHistory(aSelected, -1, false);
 
 		logRow lastRow = history.get(history.size() - 1);
 
@@ -882,7 +1255,7 @@ public class SVNTools
 	{
 		int revision = getBaseRevision(aSelected);
 		trace("Base Revision: " + revision);
-		diffmerge(aSelected, revision, aReport);
+		diffmerge(aSelected, revision, -1, aReport, true);
 
 	}
 
@@ -976,5 +1349,109 @@ public class SVNTools
 		}
 
 	}
+	
+	public class HistoryRow
+	{
+		private logRow myLogRow = null;
+		private List<IRPModelElement> myChangedElements = null;
+		
+		public HistoryRow(logRow aLogRow, List<IRPModelElement> aChangedElements)
+        {
+            myLogRow = aLogRow;
+            myChangedElements = aChangedElements;
+        }
+		
+		public logRow getLogRow()
+		{
+			return myLogRow;
+		}
+		
+		public List<IRPModelElement> getChangedElements()
+		{
+			return myChangedElements;
+		}
+		
+	}
+	
+	private class JTreeNode implements Comparable<JTreeNode>
+	{
+		private IRPModelElement myElement = null;
+		private int myChanges = 0;
+		private boolean myFound = false;
+		
+		public JTreeNode(IRPModelElement aElement, int aChanges)
+		{
+			myElement = aElement;
+			myChanges = aChanges;
+		}
+		
+		public JTreeNode(IRPModelElement aElement)
+		{
+			myElement = aElement;
+			myChanges = 0;
+		}
+		
+		public void setChanges(int aChanges)
+        {
+            myChanges = aChanges;
+        }
+		
+		public IRPModelElement getElement()
+		{
+			return myElement;
+		}
+		
+		public int getChanges()
+		{
+			return myChanges;
+		}
+		
+		public String toString()
+		{
+			return myElement.getName() + " [" + myElement.getMetaClass() + "] Changes: " + myChanges;
+		}
+		
+		public boolean isFound()
+		{
+			return myFound;
+		}
+		
+		public void setFound(boolean aFound)
+		{
+			myFound = aFound;
+		}
 
+		@Override
+		public int compareTo(JTreeNode o)
+		{
+			return myChanges - o.getChanges();       
+		}
+	}
+	
+	private class CustomTreeCellRenderer extends DefaultTreeCellRenderer
+	{
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
+				boolean leaf, int row, boolean hasFocus)
+		{
+			super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
+			
+			DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) value;
+			
+			JTreeNode node = (JTreeNode) treeNode.getUserObject();
+			
+			IRPModelElement element = node.getElement();
+			String iconPath = element.getIconFileName();
+			
+			if (iconPath != null)
+			{
+				setIcon(new ImageIcon(iconPath));
+			}
+			
+			return this;
+		}
+		
+	}
 }

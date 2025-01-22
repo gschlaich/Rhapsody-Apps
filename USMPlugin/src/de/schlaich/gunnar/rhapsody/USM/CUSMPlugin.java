@@ -79,6 +79,8 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String DiffHeadCmd = "Diff Head";
 	public static final String DiffTrunkCmd = "Diff Trunk";
 	public static final String HistoryCmd = "Show Log";
+	public static final String ShowHistoryCmd = "Show History";
+	public static final String StatisticCmd = "Change Statistic";
 	public static final String CommitCmd = "Commit";
 	public static final String ExplorerCmd = "Explorer";
 	public static final String DiffHeadReportCmd = "Diff Report Head";
@@ -495,14 +497,14 @@ public class CUSMPlugin extends RPUserPlugin
 		if (menuItem.contains(DiffHeadCmd))
 		{
 
-			getSVNTools().diffmerge(selected, -1, false);
+			getSVNTools().diffmerge(selected, -1, -1, false, false);
 
 			return;
 		}
 
 		if (menuItem.contains(DiffHeadReportCmd))
 		{
-			getSVNTools().diffmerge(selected, -1, true);
+			getSVNTools().diffmerge(selected, -1, -1, true, true);
 			return;
 		}
 
@@ -518,10 +520,16 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 
 		}
-
+		
 		if (menuItem.contains(GetLockCmd))
 		{
 			getSVNTools().getLock(selected);
+			return;
+		}
+
+		if (menuItem.contains(ShowHistoryCmd))
+		{
+			getSVNTools().showChangeList(selected, 25, true);
 			return;
 		}
 
@@ -532,6 +540,13 @@ public class CUSMPlugin extends RPUserPlugin
 
 			svn.showLog(selected);
 
+			return;
+		}
+		
+		if (menuItem.contains(StatisticCmd))
+		{
+			SVNTools svn = getSVNTools();
+			svn.showChangeStatistic(selected, 24);
 			return;
 		}
 

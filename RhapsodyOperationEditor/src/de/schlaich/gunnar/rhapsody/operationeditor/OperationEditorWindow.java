@@ -167,6 +167,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		buttonPanel.add(explorerButton);
 		
 		JButton vsIdeButton = null;
+		JButton vsCompileButton = null;
 		JButton multiIdeEditButton = null;
 		JButton multiIdeDebugButton = null;
 		JButton multiCompileButton = null;
@@ -178,6 +179,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		{
 			vsIdeButton = new JButton("View in VS");
 			buttonPanel.add(vsIdeButton);
+			vsCompileButton = new JButton("Compile");
+			buttonPanel.add(vsCompileButton);
 		}
 		
 		if(ide.isMultiIde())
@@ -271,6 +274,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			multiCompileButton.setActionCommand("compile");
 			multiCompileButton.addActionListener(oew);
 		}
+		
+		if (vsCompileButton != null)
+		{
+			vsCompileButton.setActionCommand("compile");
+			vsCompileButton.addActionListener(oew);
+		}		
 		
 		if(multiBuildButton!=null)
 		{
@@ -1750,7 +1759,7 @@ class SetBreakpoint extends TextAction
         
         IRPTag offsetTag = bpComment.getTag("Offset");  
      
-        String offsetStr = Integer.toString(lineNumber-3);
+        String offsetStr = Integer.toString(lineNumber);
         
         bpComment.setTagValue(offsetTag, offsetStr);
         

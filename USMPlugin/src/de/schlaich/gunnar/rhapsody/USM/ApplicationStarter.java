@@ -64,7 +64,9 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddIncludePathCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd);
 		
 		
 		

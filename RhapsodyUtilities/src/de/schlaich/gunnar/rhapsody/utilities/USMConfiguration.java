@@ -31,6 +31,7 @@ import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPTableView;
 
 public class USMConfiguration
@@ -65,6 +66,10 @@ public class USMConfiguration
 
 	public void loadConfiguration(IRPProject aProject)
 	{
+		
+		
+		
+		
 		File classCatalog = loadClassCatalog(aProject);
 		if (classCatalog == null)
 		{
@@ -82,11 +87,9 @@ public class USMConfiguration
 
 		loadComponents(aProject);
 
-//		if(removeHyperlinks()==true)
-//		{
-//			return;
-//		}
+		
 
+		removeHyperlinks();
 		for (CClassClass cClass : myParamSetList)
 		{
 
@@ -126,11 +129,39 @@ public class USMConfiguration
 
 			trace("Paramset: " + cClass.getName() + " ObjectId: " + objectId);
 
+			//IRPHyperLink link = (IRPHyperLink) component.addNewAggr("HyperLink", cClass.getName());
+			
 			IRPHyperLink link = (IRPHyperLink) component.addNewAggr("ParameterSet", cClass.getName());
+			
 			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
+			
+			IRPTableView paramSetView = null;
+
+			List<IRPTableView> tableViews = aProject.getNestedElementsByMetaClass("TableView", 1).toList();
+			for (IRPTableView tableView : tableViews)
+			{
+				if (tableView.getName().equals("ParamSets"))
+				{
+					paramSetView = tableView;
+					break;
+				}
+			}
+			
+			if (paramSetView == null)
+			{
+				trace("No USMDataView found!");
+				return;
+			}
+
+			paramSetView.open();
+
+			
+			
 
 		}
+		
+		
 
 		// check if any part of the path is a component name
 
@@ -240,6 +271,12 @@ public class USMConfiguration
 				usmDataView = tableView;
 				break;
 			}
+		}
+		
+		if (usmDataView == null)
+		{
+			trace("No USMDataView found!");
+			return;
 		}
 
 		usmDataView.open();

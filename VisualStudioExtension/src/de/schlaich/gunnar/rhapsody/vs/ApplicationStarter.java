@@ -37,9 +37,13 @@ public class ApplicationStarter {
 		// simulate a call to the plug-in
 		myVSPlugin.RhpPluginInvokeItem();
 		
-		//myVSPlugin.OnMenuItemSelect("View in Visual Studio");
+		myVSPlugin.OnMenuItemSelect("View in Visual Studio");
 		//myVSPlugin.OnMenuItemSelect("View in Rhapsody");
-		myVSPlugin.OnMenuItemSelect("Compile in Visual Studio");
+		//myVSPlugin.OnMenuItemSelect("Compile in Visual Studio");
+		//myVSPlugin.OnMenuItemSelect("Set Breakpoint");
+		//myVSPlugin.OnMenuItemSelect(VSPlugin.openVisualStudioCmd);
+		
+		
 
 	}
 

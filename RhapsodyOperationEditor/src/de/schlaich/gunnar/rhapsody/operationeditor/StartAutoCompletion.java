@@ -392,7 +392,7 @@ public class StartAutoCompletion extends Thread
               
                     try 
                     {
-						GutterIconInfo info = aGutter.addLineTrackingIcon(line+2, RhapsodyOperation.getIcon("RhapsodyIcons_12.gif"),"BreakPoint "+comment.getName());
+						GutterIconInfo info = aGutter.addLineTrackingIcon(line, RhapsodyOperation.getIcon("RhapsodyIcons_12.gif"),"BreakPoint "+comment.getName());
 						
 						myGutterEndpoints.add(info);
 				

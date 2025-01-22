@@ -17,13 +17,16 @@ import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
 //import de.schlaich.gunnar.rhapsody.USM.CUSMPlugin;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 
 public class VSPlugin extends RPUserPlugin
 {
@@ -34,9 +37,19 @@ public class VSPlugin extends RPUserPlugin
 	private String myStartupDirectory = null;
 	private String mySolutionPath = null;
 
-	private static final String locateOperationCmd = "locateOperation";
-	private static final String locateInRhapsodyCmd = "locateInRhapsody";
-	private static final String compileCmd = "compile";
+	public static final String locateOperationCmd = "locateOperation";
+	public static final String locateInRhapsodyCmd = "locateInRhapsody";
+	public static final String compileCmd = "compile";
+	public static final String setBreakpointCmd = "setBreakpoint";
+	public static final String openVisualStudioCmd = "Open in VisualStudio";
+	public static final String setStartupProjectCmd = "setStartupProject";
+	
+	private static final String BREAK_POINT_META_NAME = "BreakPoint";
+	private static final String BREAK_POINT_COLLECTION_META_NAME = "BreakPointCollection";
+	
+	private static final String vsCmd = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Professional\\Common7\\IDE\\devenv.exe";
+	private static final String solutionend = "AppWorkspace.sln";
+	
 
 	public VSPlugin()
 	{
@@ -149,6 +162,8 @@ public class VSPlugin extends RPUserPlugin
 	public void OnMenuItemSelect(String menuItem)
 	{
 
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
 		if (menuItem.equals("View in Visual Studio"))
 		{
 			viewInVisualStudio(null);
@@ -164,6 +179,31 @@ public class VSPlugin extends RPUserPlugin
 			compile(null);
 			return;
 		}
+		if (menuItem.equals("Set Breakpoint"))
+		{
+			setBreakpoint(selected);
+			return;
+		}
+		if (menuItem.equals(openVisualStudioCmd))
+		{
+			openVSProject();
+			
+			///wait for Visual Studio to start
+			try
+			{
+				Thread.sleep(5000);
+			}
+			catch (InterruptedException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			setStartupProject();
+			return;
+		}
+		
+		trace("Menu Item not found: " + menuItem);
 
 	}
 
@@ -243,11 +283,54 @@ public class VSPlugin extends RPUserPlugin
 		mySolutionPath = mySolutionPath.replace('/', '\\');
 
 		trace("SolutionPath: " + mySolutionPath);
+		trace("exe: " + exe);
 
 		try
 		{
 			ProcessBuilder pb = new ProcessBuilder(exe, locateOperationCmd, path, Integer.toString(offset),
 					mySolutionPath);
+			Process process = pb.start();
+			InputStream inputStream = process.getInputStream();
+			// InputStream errorStream = process.getErrorStream();
+
+			BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
+			// BufferedReader errrorReader = new BufferedReader(new
+			// InputStreamReader(errorStream));
+
+			String inputLine;
+			String errorLine;
+			while ((inputLine = inputReader.readLine()) != null)
+			{
+				trace("VSControl.exe: " + inputLine);
+			}
+
+			int exitCode = process.waitFor();
+			trace("VSControl Exit Code: " + exitCode);
+		}
+		catch (IOException | InterruptedException iox)
+		{
+			trace("Exception: " + iox.getMessage());
+			iox.printStackTrace();
+		}
+
+	}
+	
+	
+	public void setStartupProject()
+	{
+		trace("Set Startup Project");
+
+		String cmd = myStartupDirectory + "\\VSControl.exe";
+		mySolutionPath = mySolutionPath.replace('/', '\\');
+
+		trace("cmd: " + cmd);
+
+		trace(setStartupProjectCmd + " \"\" 0 " + mySolutionPath);
+
+
+		try
+		{
+			ProcessBuilder pb = new ProcessBuilder(cmd, setStartupProjectCmd, "none", "0", mySolutionPath);
 			Process process = pb.start();
 			InputStream inputStream = process.getInputStream();
 			// InputStream errorStream = process.getErrorStream();
@@ -361,10 +444,63 @@ public class VSPlugin extends RPUserPlugin
 		}
 
 	}
+	
+	public void compilePackage(IRPPackage aPackage)
+    {
+        trace("Compile Package");
+        
+        IRPProject activeProject = myRhapsody.activeProject();
+        if (activeProject == null)
+        {
+            trace("No active Project!");
+            return;
+        }
+        
+        List<IRPModelElement> elements = aPackage.getAllNestedElements().toList();
+		for (IRPModelElement element : elements)
+		{
+			if (element instanceof IRPClass)
+			{
+				compile(element);
+			}
+			else if (element instanceof IRPPackage)
+            {
+                compilePackage((IRPPackage)element);
+            }
+		}
+        
+    }
 
-	public void compile(IRPClass aClass)
+	
+	public void compile(IRPModelElement aElement)
 	{
+		
+		
+		if (aElement instanceof IRPPackage)
+		{
+			compilePackage((IRPPackage) aElement);
+			return;
+		}
+		
 		trace("Compile");
+		
+		IRPClass selectedClass = null;
+		
+		if (aElement instanceof IRPClass)
+		{
+			selectedClass = (IRPClass) aElement;
+		}
+		else if (aElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation) aElement;
+			IRPModelElement owner = operation.getOwner();
+			if (owner instanceof IRPClass)
+			{
+				selectedClass = (IRPClass) owner;
+			}
+		}
+		
+		
 		IRPProject activeProject = myRhapsody.activeProject();
 		if (activeProject == null)
 		{
@@ -372,11 +508,17 @@ public class VSPlugin extends RPUserPlugin
 			return;
 		}
 
-		IRPClass selectedClass = aClass;
+		
 
 		if (selectedClass == null)
 		{
 			IRPModelElement selected = myRhapsody.getSelectedElement();
+			
+			if (selected instanceof IRPPackage)
+			{
+				compilePackage((IRPPackage) selected);
+				return;
+			}
 
 			// operation...
 			if (selected instanceof IRPOperation == true)
@@ -397,9 +539,13 @@ public class VSPlugin extends RPUserPlugin
 				return;
 			}
 		}
+		
+		
+		
+		RhapsodyHelper.setActive(selectedClass, myRhapsody);
 
 		// remove all compiler issues
-		ASTHelper.deleteCompilerIssues(selectedClass, "compilerIssue");
+		ASTHelper.deleteCompilerIssues(selectedClass, "CompilerIssue");
 
 		myRhapsody.generateElements(myRhapsody.getListOfSelectedElements());
 
@@ -471,5 +617,227 @@ public class VSPlugin extends RPUserPlugin
 		}
 
 	}
+	
+	
+	public void setBreakPoint(IRPComment aBreakpoint)
+	{
+		trace("Start setBeakPoint from comment");
+
+		if (aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME) == false)
+		{
+
+			setBreakpointCollection(aBreakpoint);
+			return;
+		}
+
+		if (aBreakpoint.getOwner() instanceof IRPOperation == false)
+		{
+			trace("Owner has to be an operation");
+			return;
+		}
+
+		IRPTag offsetTag = aBreakpoint.getTag("Offset");
+
+		String offsetString = offsetTag.getValue();
+
+		int offset = Integer.parseInt(offsetString);
+
+		IRPOperation owner = (IRPOperation) aBreakpoint.getOwner();
+
+		setBreakpoint(owner, offset);
+
+	}
+
+	public void setBreakpoint(IRPModelElement aModelElement)
+	{
+
+		if (aModelElement instanceof IRPComment)
+		{
+			IRPComment comment = (IRPComment) aModelElement;
+			setBreakPoint(comment);
+		}
+		// search for all comments
+		List<IRPComment> comments = aModelElement.getNestedElementsByMetaClass("Comment", 1).toList();
+
+		boolean setBreakpoint = false;
+
+		for (IRPComment comment : comments)
+		{
+			if (comment.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
+			{
+				setBreakPoint(comment);
+				setBreakpoint = true;
+			}
+		}
+
+		if (setBreakpoint == true)
+		{
+			return;
+		}
+
+		if (aModelElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation) aModelElement;
+			setBreakpoint(operation, 0);
+			return;
+		}
+
+	}
+
+	private void setBreakpointCollection(IRPComment aBreakpointCollection)
+	{
+		if (aBreakpointCollection.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME) == false)
+		{
+			return;
+		}
+
+		List<IRPModelElement> breakPoints = aBreakpointCollection.getAnchoredByMe().toList();
+		for (IRPModelElement element : breakPoints)
+		{
+
+			if (element instanceof IRPComment)
+			{
+				IRPComment breakpoint = (IRPComment) element;
+				setBreakPoint(breakpoint);
+			}
+		}
+
+	}
+
+	
+	private void setBreakpoint(IRPOperation aOperation, int aOffset)
+	{
+		trace("Set breakpoint in Visual Studio");
+
+		IRPOperation selectedOperation = aOperation;
+
+		if (selectedOperation == null)
+		{
+			IRPModelElement selected = myRhapsody.getSelectedElement();
+
+			// operation...
+			if (selected instanceof IRPOperation == false)
+			{
+				return;
+			}
+
+			selectedOperation = (IRPOperation) selected;
+		}
+		
+		IRPModelElement selectedOwner = selectedOperation.getOwner();
+
+		if (selectedOwner instanceof IRPClass == false)
+		{
+			return;
+		}
+
+		IRPClass selectedClass = (IRPClass) selectedOwner;
+		String path = ASTHelper.getSourcePath(selectedClass, myRhapsody);
+
+		if ((selectedOperation.isATemplate() == 1) || (selectedOperation.getIsInline() == 1))
+		{
+			path = path + ".h";
+		}
+		else
+		{
+			path = path + ".cpp";
+		}
+
+		path = path.replace('/', '\\');
+
+		String exe = myStartupDirectory + "\\VSControl.exe";
+
+		int offset = ASTHelper.getSourceOffset(selectedOperation, myRhapsody);
+		if (aOffset != 0)
+		{
+			offset += aOffset+1;
+		}
+		
+		trace(path + " " + offset);
+
+		mySolutionPath = mySolutionPath.replace('/', '\\');
+
+		trace("SolutionPath: " + mySolutionPath);
+		trace("exe: " + exe);
+
+		try
+		{
+			ProcessBuilder pb = new ProcessBuilder(exe, setBreakpointCmd, path, Integer.toString(offset),
+					mySolutionPath);
+			Process process = pb.start();
+			InputStream inputStream = process.getInputStream();
+			// InputStream errorStream = process.getErrorStream();
+
+			BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
+			// BufferedReader errrorReader = new BufferedReader(new
+			// InputStreamReader(errorStream));
+
+			String inputLine;
+			String errorLine;
+			while ((inputLine = inputReader.readLine()) != null)
+			{
+				trace("VSControl.exe: " + inputLine);
+			}
+
+			int exitCode = process.waitFor();
+			trace("VSControl Exit Code: " + exitCode);
+		}
+		catch (IOException | InterruptedException iox)
+		{
+			trace("Exception: " + iox.getMessage());
+			iox.printStackTrace();
+		}
+
+	}
+	
+	private void openVSProject()
+	{
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		if (selected instanceof IRPProject == false)
+		{
+			trace("No Project selected");
+			return;
+		}
+
+		IRPProject project = (IRPProject) selected;
+
+		IRPConfiguration config = RhapsodyHelper.getProjectConfig(project, "DefaultConfig"); // which config?
+
+		if (config == null)
+		{
+			trace("ProjectPath of " + project.getName() + " not found");
+			return;
+		}
+
+		
+		String projectName = config.getDirectory(1, "") + "/" + project.getName() + solutionend; // is there a better
+																									// solution?
+
+		File projectFile = new File(projectName);
+
+		if (projectFile.exists() == false)
+		{
+
+			trace("could not find Project file in " + projectName);
+			return;
+
+		}
+
+		// run
+		try
+		{
+			ProcessBuilder pb = new ProcessBuilder(vsCmd, projectName);
+
+			pb.start(); // fire and forget
+
+		}
+		catch (IOException iox)
+		{
+			trace("Exception: " + iox.getMessage());
+			iox.printStackTrace();
+		}
+
+	}
+
 
 }
