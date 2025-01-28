@@ -81,6 +81,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String HistoryCmd = "Show Log";
 	public static final String ShowHistoryCmd = "Show History";
 	public static final String StatisticCmd = "Change Statistic";
+	public static final String LOCStatisticCmd = "Lines of Code";
 	public static final String CommitCmd = "Commit";
 	public static final String ExplorerCmd = "Explorer";
 	public static final String DiffHeadReportCmd = "Diff Report Head";
@@ -549,6 +550,15 @@ public class CUSMPlugin extends RPUserPlugin
 			svn.showChangeStatistic(selected, 24);
 			return;
 		}
+		
+		if (menuItem.contains(LOCStatisticCmd))
+        {
+            SVNTools svn = getSVNTools();
+            svn.showLOCStatistic(selected);
+            return;
+        }
+		
+		
 
 		if (menuItem.contains(CommitCmd))
 		{
