@@ -61,7 +61,7 @@ public class GeminiAPIClient
 	{
         
 		/* test with curl...
-		 curl -v -X POST  -H "Content-Type: application/json" -d '{"contents":[{"parts":[{"text":"Erzähl mir einen Witz über Programmierer."}]}]}' "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=AIzaSyAQi8KDbjDkVlARUDwGO5HAdNesPqdNqkQ" 
+		 curl -v -X POST  -H "Content-Type: application/json" -d '{"contents":[{"parts":[{"text":"Erzähl mir einen Witz über Programmierer."}]}]}' "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" 
 		 
 		 */
 		
