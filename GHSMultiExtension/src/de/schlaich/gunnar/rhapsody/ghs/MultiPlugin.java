@@ -135,6 +135,8 @@ public class MultiPlugin extends RPUserPlugin
 	public void OnMenuItemSelect(String menuItem)
 	{
 
+		
+		
 		IRPModelElement selected = myRhapsody.getSelectedElement();
 
 		if (menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))

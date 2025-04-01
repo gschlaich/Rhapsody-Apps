@@ -116,12 +116,54 @@ public class VSPlugin extends RPUserPlugin
 					if (config.getName().equals("DefaultConfig"))
 					{
 						mySolutionPath = config.getDirectory(1, "");
-						mySolutionPath = mySolutionPath + "/" + activeProject.getName() + "AppWorkspace.sln"; // is
-																												// there
-																												// a
-																												// better
-																												// solution?
-
+						mySolutionPath = mySolutionPath + "/" + activeProject.getName() + "AppWorkspace.sln"; // is there a better solution?
+						
+						File solutionFile = new File(mySolutionPath);
+						
+						
+						if (solutionFile.exists() == false)
+                        {
+                            
+							mySolutionPath = null;
+							
+							trace("Solution file not found: " + mySolutionPath + " try cmake solution");
+                            
+                            File configFile = new File(config.getDirectory(1, ""));
+                            
+                            if (configFile.exists() == false)
+                            {
+                                trace("Config directory not found");
+                                return;
+                            }
+                            
+                            String cMakeSolutionDirName = "build-"+activeProject.getName()+"-Debug";
+                            
+                            File generatedProjectDir = configFile.getParentFile().getParentFile().getParentFile();
+                            
+                            if (generatedProjectDir.exists() == false)
+                            {
+                                trace("Generated Project directory not found");
+                                return;
+                            }
+                            
+                            File cMakeSolutionDir = new File(generatedProjectDir, cMakeSolutionDirName);
+                            
+                            if (cMakeSolutionDir.exists() == false)
+                            {
+                                trace("CMake Solution directory not found");
+                                return;
+                            }
+                            
+                            File cMakeSolutionFile = new File(cMakeSolutionDir, activeProject.getName()+"App.sln");
+                            if (cMakeSolutionFile.exists() == false)
+                            {
+                                trace("CMake Solution file not found");
+                                return;
+                            }
+                            
+                            mySolutionPath = cMakeSolutionFile.getAbsolutePath();
+                        }
+           
 						break;
 					}
 				}
@@ -148,6 +190,13 @@ public class VSPlugin extends RPUserPlugin
 		}
 
 		IRPUnit profileUnit = myProfile.getSaveUnit();
+		
+		if (profileUnit == null)
+        {
+            trace("Profile Unit not found");
+            return;
+        }
+		
 		myStartupDirectory = profileUnit.getCurrentDirectory();
 
 	}
@@ -790,13 +839,13 @@ public class VSPlugin extends RPUserPlugin
 
 	}
 	
-	private void openVSProject()
+	private boolean openVSProject()
 	{
 		IRPModelElement selected = myRhapsody.getSelectedElement();
 		if (selected instanceof IRPProject == false)
 		{
 			trace("No Project selected");
-			return;
+			return false;
 		}
 
 		IRPProject project = (IRPProject) selected;
@@ -806,7 +855,7 @@ public class VSPlugin extends RPUserPlugin
 		if (config == null)
 		{
 			trace("ProjectPath of " + project.getName() + " not found");
-			return;
+			return false;
 		}
 
 		
@@ -818,8 +867,42 @@ public class VSPlugin extends RPUserPlugin
 		if (projectFile.exists() == false)
 		{
 
-			trace("could not find Project file in " + projectName);
-			return;
+			trace("could not find Project file in " + projectName + " try cmake solution");
+			
+			File configFile = new File(config.getDirectory(1, ""));
+			
+			if (configFile.exists() == false)
+			{
+				trace("Config directory not found");
+				return false;
+			}
+			
+			String cMakeSolutionDirName = "build-"+project.getName()+"-Debug";
+			
+			File generatedProjectDir = configFile.getParentFile().getParentFile().getParentFile();
+			
+			if (generatedProjectDir.exists() == false)
+            {
+                trace("Generated Project directory not found");
+                return false;
+            }
+			
+			File cMakeSolutionDir = new File(generatedProjectDir, cMakeSolutionDirName);
+			
+			if (cMakeSolutionDir.exists() == false)
+			{
+				trace("CMake Solution directory not found");
+				return false;
+			}
+			
+			File cMakeSolutionFile = new File(cMakeSolutionDir, project.getName()+"App.sln");
+			if (cMakeSolutionFile.exists() == false)
+			{
+				trace("CMake Solution file not found");
+				return false;
+			}
+			
+			projectName = cMakeSolutionFile.getAbsolutePath();
 
 		}
 
@@ -835,7 +918,10 @@ public class VSPlugin extends RPUserPlugin
 		{
 			trace("Exception: " + iox.getMessage());
 			iox.printStackTrace();
+			return false;
 		}
+		
+		return true;
 
 	}
 

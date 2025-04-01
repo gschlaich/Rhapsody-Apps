@@ -37,6 +37,8 @@ public class ApplicationStarter {
 		// simulate a call to the plug-in
 		myUSMPlugin.RhpPluginInvokeItem();
 		
+		//Test the commands
+		
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
 		//myUSMPlugin.OnMenuItemSelect("Util\\PlantUML");
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
@@ -53,7 +55,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SetInitCodeOfClassCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffHeadCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.HistoryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LogCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ExplorerCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffTrunkReportCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetLockCmd);
@@ -65,17 +67,17 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LOCStatisticCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CompareOperationHeadCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CodeComplexityCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BlameCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.OperationEditorCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.TortoiseLogCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GeminiCmd);
 		
-		
-		
-		
-		
-		
-		
-
 		
 	}
 

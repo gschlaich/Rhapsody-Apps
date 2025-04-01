@@ -7,11 +7,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.swing.JFileChooser;
 import javax.swing.UIManager;
@@ -34,6 +36,7 @@ import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
+import de.schlaich.gunnar.aiTools.GeminiAPIClient;
 import de.schlaich.gunnar.rhapsody.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
@@ -78,7 +81,8 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String SetInitCodeOfClassCmd = "Set init code of class";
 	public static final String DiffHeadCmd = "Diff Head";
 	public static final String DiffTrunkCmd = "Diff Trunk";
-	public static final String HistoryCmd = "Show Log";
+	public static final String DiffCmd = "Diff";
+	public static final String LogCmd = "Show Log";
 	public static final String ShowHistoryCmd = "Show History";
 	public static final String StatisticCmd = "Change Statistic";
 	public static final String LOCStatisticCmd = "Lines of Code";
@@ -92,9 +96,18 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String AddIncludePathCmd = "Add include path";
 	public static final String AddConfigCmd = "Add Configuration";
 	public static final String AddLibraryLinksCmd = "Show Library links";
-
+	public static final String CompareOperationHeadCmd = "Compare Operation Head";
+	public static final String CodeComplexityCmd = "Code Complexity";
+	public static final String BlameCmd = "Blame";
+	public static final String OperationEditorCmd = "OperationEditor";
+	public static final String TortoiseLogCmd = "Tortoise Log";
+	public static final String GeminiCmd = "Gemini";
+	
 	public static final String libraryProperty = "CPP_CG.Package.USMLibraries";
 	public static final String IncludeProperty = "CPP_CG.Package.USMIncludePath";
+	
+	
+	
 
 	public CUSMPlugin()
 	{
@@ -200,21 +213,23 @@ public class CUSMPlugin extends RPUserPlugin
 	public void OnMenuItemSelect(String menuItem)
 	{
 
-		trace("Selected: " + menuItem);
-
 		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if (selected != null)
+		{
+			trace("Selected Menuitem: " + menuItem + " for " + selected.getName() + " of type " + selected.getMetaClass());
+		}
+		else
+		{
+			trace("Selected Menuitem: " + menuItem + " no selected element");
+		}
+		
 
 		if (menuItem.contains(LocateActiveCmd))
 		{
 			RhapsodyHelper.locateActivePackage(myRhapsody, selected);
 			return;
-		}
-
-		if (selected == null)
-		{
-			trace("no element selected");
-			return;
-		}
+		}	
 
 		if (menuItem.contains(PlantUmlCmd))
 		{
@@ -310,6 +325,8 @@ public class CUSMPlugin extends RPUserPlugin
 			}
 
 			trace("Analyze: " + result);
+			
+			
 
 			return;
 		}
@@ -502,6 +519,26 @@ public class CUSMPlugin extends RPUserPlugin
 
 			return;
 		}
+		
+		if (menuItem.contains(DiffCmd))
+        {
+
+            getSVNTools().diffTreeDialog(selected);
+            return;
+        }
+
+		if (menuItem.contains(CompareOperationHeadCmd))
+		{
+			if (selected instanceof IRPOperation == false)
+			{
+				trace("No Operation selected");
+				return;
+			}
+
+			IRPOperation operation = (IRPOperation) selected;
+			getSVNTools().compareOperationVersions(operation, -1, -1);
+			return;
+		}
 
 		if (menuItem.contains(DiffHeadReportCmd))
 		{
@@ -521,7 +558,7 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 
 		}
-		
+
 		if (menuItem.contains(GetLockCmd))
 		{
 			getSVNTools().getLock(selected);
@@ -530,11 +567,11 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(ShowHistoryCmd))
 		{
-			getSVNTools().showChangeList(selected, 25, true);
+			getSVNTools().showChangeList(selected, 100, false);
 			return;
 		}
 
-		if (menuItem.contains(HistoryCmd))
+		if (menuItem.contains(LogCmd))
 		{
 
 			SVNTools svn = getSVNTools();
@@ -543,22 +580,25 @@ public class CUSMPlugin extends RPUserPlugin
 
 			return;
 		}
-		
+		if (menuItem.contains(TortoiseLogCmd))
+		{
+			getSVNTools().showTortoiseLog(selected);
+			return;
+		}
+
 		if (menuItem.contains(StatisticCmd))
 		{
 			SVNTools svn = getSVNTools();
-			svn.showChangeStatistic(selected, 24);
+			svn.showChangeStatistic(selected, 36, true);
 			return;
 		}
-		
+
 		if (menuItem.contains(LOCStatisticCmd))
-        {
-            SVNTools svn = getSVNTools();
-            svn.showLOCStatistic(selected);
-            return;
-        }
-		
-		
+		{
+			SVNTools svn = getSVNTools();
+			svn.showLOCStatistic(selected);
+			return;
+		}
 
 		if (menuItem.contains(CommitCmd))
 		{
@@ -812,41 +852,92 @@ public class CUSMPlugin extends RPUserPlugin
 				trace("No Project selected");
 				return;
 			}
-			
-			
+
 			IRPProject project = (IRPProject) selected;
-			
+
 			USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
 			config.loadConfiguration(project);
-			
+
 			trace("End Add Configuration");
 
 			return;
 		}
-		
+
 		if (menuItem.contains(AddLibraryLinksCmd))
 		{
 			trace("Add Library Links");
-            if (selected instanceof IRPProject == false)
-            {
-                trace("No Project selected");
-                return;
-            }
-            
-            
-            IRPProject project = (IRPProject) selected;
-            
-            USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
-            config.addLibraryLinks(project);
-            
-            trace("End Add Library Links");
+			if (selected instanceof IRPProject == false)
+			{
+				trace("No Project selected");
+				return;
+			}
 
-            return;
+			IRPProject project = (IRPProject) selected;
+
+			USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
+			config.addLibraryLinks(project);
+
+			trace("End Add Library Links");
+
+			return;
+		}
+
+		if (menuItem.contains(CodeComplexityCmd))
+		{
+			if (selected instanceof IRPClass == false)
+			{
+				trace("No Class selected");
+				return;
+			}
+
+			StaticCodeAnalysis.calculateCodeComplexity(selected, myRhapsody, this::trace);
+
+			return;
+		}
+
+		if (menuItem.contains(BlameCmd))
+		{
+			if (selected instanceof IRPOperation == false)
+			{
+				trace("No Operation selected");
+				return;
+			}
+
+			getSVNTools().blame((IRPOperation) selected, 100, false);
+
+			return;
+		}
+
+		if (menuItem.contains(OperationEditorCmd))
+		{
+			if (selected instanceof IRPOperation == false)
+			{
+				trace("No Operation selected");
+				return;
+			}
+
+			IRPOperation operation = (IRPOperation) selected;
+
+			RhapsodyHelper.startOperationEditor(operation, myRhapsody, this::trace);
+
+			return;
+		}
+		
+		if (menuItem.contains(GeminiCmd))
+		{
+			
+			GeminiAPIClient geminiAPIClient = new GeminiAPIClient(this::trace);
+			
+			geminiAPIClient.testGeminiAPI();
+
+			return;
 		}
 
 		trace("menue item unknown");
 
 	}
+	
+	
 
 	private String getFileExtension(File file)
 	{

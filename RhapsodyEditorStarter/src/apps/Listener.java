@@ -1,7 +1,12 @@
 package apps;
 
+import java.util.Arrays;
+import java.util.List;
+
 import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPComment;
+import com.telelogic.rhapsody.core.IRPDependency;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -11,6 +16,7 @@ import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 public class Listener extends RPApplicationListener {
@@ -19,6 +25,8 @@ public class Listener extends RPApplicationListener {
 	private MainApp myMainApp = null;
 	private String myProjectName = null;
 	private IRPProject myProject = null;
+	
+	private String myContextGuid = null;
 	
 	
 	private RhapsodyPreferences myPrefs = null;
@@ -119,6 +127,40 @@ public class Listener extends RPApplicationListener {
 		return false;
 		
 	}
+	
+	@Override
+	public boolean onElementsChanged(String aGuids)
+	{
+		
+		
+		List<String> guids = Arrays.asList(aGuids.split(","));
+		
+		if(myContextGuid==null)
+        {
+			IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
+            myContextGuid = context.getGUID();
+        }
+		
+		
+		for (String guid : guids)
+		{
+			if(guid.equals(myContextGuid))
+            {
+				IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
+				List<IRPDependency> dependencies = context.getDependencies().toList();
+				for(IRPDependency dependency:dependencies)
+				{
+					IRPModelElement element = dependency.getDependsOn();
+					startEditorThread(element);	
+				}
+		
+				return true;	
+            }
+		}
+
+		return false;
+	}
+	
 	
 	
 	private boolean startEditorThread(IRPModelElement aModelElement)

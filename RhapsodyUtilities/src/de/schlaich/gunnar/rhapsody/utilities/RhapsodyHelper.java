@@ -1,7 +1,9 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -12,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import com.github.difflib.algorithm.myers.MyersDiff;
 import com.ibm.rhapsody.apps.App;
@@ -44,6 +47,9 @@ import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
 public class RhapsodyHelper
 {
+	
+	private static IRPComment myOperationContext = null;
+	
 	public static void executeApp(App aApp, String aConnectionstring)
 	{
 		IRPApplication actualApp = null;
@@ -948,7 +954,6 @@ public class RhapsodyHelper
 
 		Path usmPath = currentPath.getParent().getParent();
 
-
 		if (Files.exists(usmRootFile) == true)
 		{
 			List<String> lines = Files.readAllLines(usmRootFile);
@@ -969,6 +974,95 @@ public class RhapsodyHelper
 
 		return usmPath;
 
+	}
+	
+	public static IRPComment getOperationContext(IRPProject project)
+	{
+		if (myOperationContext == null)
+		{
+			List<IRPComment> comments = project.getNestedElementsByMetaClass("Comment", 0).toList();
+
+			for (IRPComment comment : comments)
+			{
+				if (comment.getName().equals("OperationContext"))
+				{
+					myOperationContext = comment;
+					break;
+				}
+			}
+			
+			if (myOperationContext == null)
+            {
+			
+				myOperationContext = (IRPComment) project.addNewAggr("Comment", "OperationContext");
+            }
+			
+		}
+		return myOperationContext;
+	}
+	
+
+	public static boolean startOperationEditor(IRPOperation aOperation, IRPApplication aRhapsody,
+			Consumer<String> aTraceAction)
+	{
+
+		String rpAppId = aRhapsody.getApplicationConnectionString();
+		
+		IRPComment context = getOperationContext(aOperation.getProject());
+		
+		List<IRPDependency> dependencies = context.getDependencies().toList();
+		
+		for (IRPDependency dependency : dependencies)
+		{
+			context.deleteDependency(dependency);
+		}
+
+		try
+		{
+			
+			Process process = Runtime.getRuntime().exec(
+					"powershell -command \"Get-WmiObject Win32_Process | Where-Object {$_.Name -eq 'javaw.exe'} | Select-Object CommandLine | Format-List\"");
+
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			String line;
+			while ((line = reader.readLine()) != null)
+			{
+
+				if (line.contains(rpAppId))
+				{ 
+					if (context != null)
+					{
+						context.addDependencyTo(aOperation);
+						return true;
+					}
+				}
+			}
+			
+
+//			String omRoot = System.getenv("OMROOT");
+//
+//			ProcessBuilder pb = new ProcessBuilder(omRoot + "\\..\\jdk\\bin\\javaw.exe",
+//					"\"-Djava.library.path=" + omRoot + "\\JavaAPI\"", "-Dfile.encoding=Cp1252", "-jar",
+//					"Development\\Share\\Profiles\\Bernina\\RhapsodyEditorStarter.jar", rpAppId);
+//
+//			Path usmPath = RhapsodyHelper.getUSMPath(aOperation.getProject());
+//
+//			pb.directory(usmPath.toFile());
+//
+//			
+//
+//			Process p = pb.start();
+			
+			
+
+		}
+		catch (IOException e)
+		{
+			aTraceAction.accept("Error while starting Operation Editor");
+			aTraceAction.accept(e.getMessage());
+			return false;
+		}
+		return true;
 	}
 
 	public static String getAbsolutePath(IRPHyperLink aLink)

@@ -1,5 +1,8 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -18,12 +21,21 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.ImageIcon;
+import javax.swing.JDialog;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+
 import org.eclipse.cdt.core.IProcessList;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
@@ -33,6 +45,9 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPState;
+import com.telelogic.rhapsody.core.IRPStatechart;
+import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.IRPUnit;
 
 public class StaticCodeAnalysis {
@@ -54,7 +69,7 @@ public class StaticCodeAnalysis {
 	private static final String OsConfigInclude = "/LangCpp/osconfig/WIN32";
 	
 	private static final String FlawfinderPath = "J:/Utilities/flawfinder-2.0.19"; //TODO: correct path...
-	private static final String FlawfinderCmd = "flawfinder.py";
+	private static final String FlawfinderCmd = "flawfinder";
 	private static final String FlawFinderCSV = "--csv";
 	
 	public static final String ConfigName = "DefaultConfig";
@@ -169,6 +184,30 @@ public class StaticCodeAnalysis {
 		return "ok";
 	}
 	
+	//calculateCodeComplexity(selected, myRhapsody, this::trace);
+	public static String calculateCodeComplexity(IRPModelElement aSelected, IRPApplication aApplication, Consumer<String> aTraceAction)
+    {
+		if (aSelected == null)
+		{
+			return "failed";
+		}
+		
+		LizardWrapper lizard = new LizardWrapper(aApplication, aTraceAction);
+		
+		if (aSelected instanceof IRPClass)
+		{
+			IRPClass selectedClass = (IRPClass) aSelected;
+			lizard.calculateComplexity(selectedClass);
+		}
+		
+		
+		
+		
+		return "ok";
+		
+	}
+			
+	
 	private void clear(IRPComponent aComponent)
 	{
 		if(myComponents.remove(aComponent)==null)
@@ -176,6 +215,7 @@ public class StaticCodeAnalysis {
 			trace("No Component found");
 		}
 	}
+	
 	
 	
 	@SuppressWarnings("unchecked")
@@ -246,7 +286,9 @@ public class StaticCodeAnalysis {
 			List<String> params = new ArrayList<String>();
 			
 			params.add(fileName);
+			params.add("--checks=clang-analyzer-*,readability-*,-readability-identifier-length,-readability-simplify-boolean-expr,modernize-*,-modernize-use-trailing-return-type,-modernize-use-auto,-modernize-use-nullptr,bugprone-*,cppcoreguidelines-*,cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-owning-memory,misc-*,-misc-include-cleaner");
 			params.add("--");
+			params.add("-std=c++14");
 			params.add(PrecompiledInclude);
 			params.add("-I"+omRoot+OxfInclude);
 			params.add("-I../../../../../Development/ExternalSource/oxf");
@@ -320,8 +362,10 @@ public class StaticCodeAnalysis {
 		            
 		            IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(lineNumber, translationUnit);
 		            String operationName = ASTHelper.getOperationName(operationDefinition);
+		            String operationSignature = ASTHelper.getOperationSignature(operationDefinition);
 		            
-		            int offset = (ASTHelper.getOffset(operationDefinition, lineNumber)-1);
+		            
+		            int offset = (ASTHelper.getOffset(operationDefinition, lineNumber));
 		            
 		            createIssue(aClass, errorLevel, infoText, operationName, offset, positionInLine);
 		            
@@ -329,7 +373,7 @@ public class StaticCodeAnalysis {
 		            trace("Clang: ---------------------------------------");
 		            trace("File: " + fName);
 		            trace("Line: " + lineNumber);
-		            trace("Operation: "+ operationName);			
+		            trace("Operation: "+ operationSignature);			
 					trace("Offset: "+ offset);
 		            trace("Column: " + positionInLine);
 		            trace("Errorlevel: " + errorLevel);
@@ -529,12 +573,12 @@ public class StaticCodeAnalysis {
 		try 
 		{
 			
-			trace("python" + " " + FlawfinderCmd +" " + FlawFinderCSV + " " + workingFile.getAbsolutePath());
+			trace( FlawfinderCmd +" " + FlawFinderCSV + " " + workingFile.getAbsolutePath());
 			
 			
-			ProcessBuilder processBuilder = new ProcessBuilder("python", FlawfinderCmd, FlawFinderCSV, workingFile.getAbsolutePath());
+			ProcessBuilder processBuilder = new ProcessBuilder(FlawfinderCmd, FlawFinderCSV, workingFile.getAbsolutePath());
 			 
-	        processBuilder.directory(new File(FlawfinderPath));
+	        //processBuilder.directory(new File(FlawfinderPath));
 	   
 	        Process process = processBuilder.start();
 		
@@ -640,47 +684,69 @@ public class StaticCodeAnalysis {
 	
 	
 	@SuppressWarnings("unchecked")
-	private IRPComment createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName, int offset, int column) 
+	private IRPComment createIssue(IRPClass aClass, String errorLevel, String infoText, String operationName,
+			int offset, int column)
 	{
-		if(operationName==null)
+		if (operationName == null)
 		{
 			return null;
 		}
-		
+
 		IRPUnit unit = aClass.getSaveUnit();
-		if(unit==null)
+		if (unit == null)
 		{
 			return null;
+		}
+
+		if (unit.isReadOnly() == 1)
+		{
+			return null;
+		}
+
+		if (errorLevel.contains("note"))
+		{
+			return null;
+		}
+
+		if (offset <= 0)
+		{
+			offset = 1;
+		}
+
+		Pattern pattern = Pattern.compile("\\[(.*?)\\]");
+		Matcher matcher = pattern.matcher(infoText);
+
+		if (matcher.find() == true)
+		{
+			String errorType = matcher.group(1);
+			int endIndex =  errorType.indexOf("-");
+			if (endIndex > 0)
+			{
+				errorLevel = errorType.substring(0, endIndex);
+			}
+			else
+			{
+				errorLevel = errorType;
+			}
+			
 		}
 		
-		if(unit.isReadOnly()==1)
+		String operationNameD = operationName.replace("~", "_");
+
+		String issueName = errorLevel + "_" + operationNameD + "_" + offset;
+
+		List<IRPComment> issues = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
+		for (IRPComment issue : issues)
 		{
-			return null;
+			if (issue.getName().equals(issueName))
+			{
+				return null;
+			}
 		}
-			
-		if(errorLevel.contains("note"))
-		{
-			return null;
-		}
-		
-		if(offset<0)
-		{
-			offset = 0;
-		}
-			
-		        
-		String issueName = errorLevel+"_"+operationName+"_"+offset;
-		       
-        List<IRPComment> issues = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
-        for(IRPComment issue:issues)
-        {
-        	if(issue.getName().equals(issueName))
-        	{
-        		return null;
-        	}
-        }
-		                
+
         IRPComment staticAnalysisIssue = (IRPComment) aClass.addNewAggr("CodeAnalysisIssue", issueName);
+        
+        
         
         staticAnalysisIssue.setDescription(infoText);
         staticAnalysisIssue.setBody(errorLevel);
@@ -697,7 +763,8 @@ public class StaticCodeAnalysis {
         return staticAnalysisIssue;
 	}
 
-	private void addAnchor(IRPClass aClass, String operationName, IRPComment staticAnalysisIssue) {
+	private void addAnchor(IRPClass aClass, String operationName, IRPComment staticAnalysisIssue) 
+	{
 		
 		
 		List<IRPOperation> ops = aClass.getOperations().toList();
@@ -838,4 +905,401 @@ class ComponentIncludes
 	
 	}
 		
+}
+
+class LizardWrapper
+{
+	private static final String LizardCmd = "lizard";
+	private IRPApplication myApplication = null;
+	private Consumer<String> myTraceAction = null;
+
+	public LizardWrapper(IRPApplication aApplication, Consumer<String> aTraceAction)
+	{
+		myApplication = aApplication;
+		myTraceAction = aTraceAction;
+	}
+	
+	private void trace(String aMessage)
+	{
+		if(myTraceAction==null)
+		{
+			//no traceaction set...
+			return;
+		}
+		
+		aMessage = "Lizard: " + aMessage;
+		
+		myTraceAction.accept(aMessage);
+	}
+
+	List<LizardData> calculateComplexity(IRPClass aClass)
+	{
+		
+		
+		
+		List<LizardData> data = new ArrayList<LizardData>();
+		
+		
+		//String className = RhapsodyOperation.getNamespace(aClass)+"::"+aClass.getName();
+		
+		
+		
+		
+		String fileName = aClass.getName()+".cpp";
+		
+		if (aClass.getOwner() instanceof IRPClass)
+		{
+			trace("Nested class!");
+			
+			fileName = aClass.getOwner().getName()+".cpp";
+			
+		}
+		
+		if(aClass.isATemplate()==1)
+		{
+			fileName = aClass.getName()+".h";
+			if (aClass.getOwner() instanceof IRPClass)
+            {
+                trace("Nested class!");
+                
+                fileName = aClass.getOwner().getName()+".h";
+            }
+		}
+		
+		
+		
+		if(aClass.getIsReactive()==1)
+		{
+			IRPStatechart stateChart = aClass.getStatechart();
+			
+			if (stateChart != null)
+			{
+				
+			
+				List<IRPState> states = stateChart.getNestedElementsByMetaClass("State", 1).toList();
+				List<IRPTransition> transitions = stateChart.getNestedElementsByMetaClass("Transition", 1).toList();
+			
+				int stateCount = states.size();
+				int transitionCount = transitions.size();
+			
+				// TODO: add statechart complexity...
+				trace("Statechart: " + stateChart.getName() + " States: " + stateCount + " Transitions: " + transitionCount);
+				//  V(G) = E - N + 2P
+				//  E = number of edges ( transitions )
+				//  N = number of nodes ( states )
+				int vG = transitionCount - stateCount + 2;
+			
+				trace("Statechart Complexity: " + vG);
+			
+				LizardData d = new LizardData(stateChart, 0, vG, stateCount, transitionCount, 0);
+				data.add(d);
+			
+			}
+
+		}
+		
+		
+	
+		try
+		{
+			IRPCollection generateCollection = myApplication.getListOfSelectedElements();
+			
+			myApplication.generateElements(generateCollection);
+			
+			File workingFolder = RhapsodyHelper.getActiveDefaultPath(aClass);
+			
+			ProcessBuilder processBuilder = new ProcessBuilder(LizardCmd, fileName, "--csv");
+			processBuilder.directory(workingFolder);
+			Process process = processBuilder.start();
+
+			InputStream inputStream = process.getInputStream();
+			BufferedReader inputReader = new BufferedReader(new InputStreamReader(inputStream));
+			String line;
+			while ((line = inputReader.readLine()) != null)
+			{
+				String[] values = line.split(","); 
+				if (values.length >= 6)
+				{
+					String name = values[7].replace('"', ' ').trim();
+					//alle leerzeichen entfernen...
+					name = name.replaceAll("\\s+", "");
+					
+					
+					
+					//String opName = name.substring(name.indexOf(className)+className.length()+2);
+					
+					String opName = name.substring(name.lastIndexOf("::")+2);
+					
+					//trace("Operation: " + opName);
+					
+					IRPModelElement element = aClass.findNestedElement(opName, "Operation");
+					
+					if(element==null)
+					{
+						
+						element = aClass.findNestedElement(opName, "TriggeredOperation");
+										
+					}
+					
+					
+					
+					if (element instanceof IRPOperation)
+					{
+						IRPOperation operation = (IRPOperation) element;
+						int ncloc = Integer.parseInt(values[0]);
+						int cyclomaticComplexity = Integer.parseInt(values[1]);
+						int tokenCount = Integer.parseInt(values[2]);
+						int parameterCount = Integer.parseInt(values[3]);
+						int lineCount = Integer.parseInt(values[4]);
+
+						LizardData d = new LizardData(operation, ncloc, cyclomaticComplexity, tokenCount,
+								parameterCount, lineCount);
+						data.add(d);
+
+						trace(d.toString());
+						
+						// stelle die werte in einem Dialogfenster als Tabelle dar...
+	
+						
+					}
+
+				}
+				
+				//System.out.println(line);
+			}
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		
+		
+		
+		int sumCC = 0;
+		int sumNclOC = 0;
+		int sumTokenCount = 0;
+		int sumLineCount = 0;
+		
+		for (LizardData d : data)
+		{
+			if(d.getCyclomaticComplexity()>1)
+			{
+				sumCC += d.getCyclomaticComplexity();
+			}
+			sumNclOC += d.getNcloc();
+			sumTokenCount += d.getTokenCount();
+			sumLineCount += d.getLineCount();
+			
+		}	
+		
+		
+		LizardData d = new LizardData(aClass, sumNclOC, sumCC, sumTokenCount, 0, sumLineCount);
+		data.add(d);
+		
+		
+		//sort data by cyclomatic complexity...
+		data.sort((a, b) -> Integer.compare(b.getCyclomaticComplexity(), a.getCyclomaticComplexity()));
+				
+		
+		showDataInTable(data, aClass);
+		
+		
+		return data;
+	}
+	
+	private void showDataInTable(List<LizardData> data, IRPClass aSelected) {
+        String[] columnNames = {"Element", "Ncloc", "Cyclomatic Complexity", "Token Count", "Parameter Count", "Line Count"};
+        Object[][] tableData = new Object[data.size()][7];
+		
+        for (int i = 0; i < data.size(); i++) {
+            LizardData d = data.get(i);
+            //tableData[i][0] = new Object[] { new ImageIcon(d.getOperation().getIconFileName()), d.getName() };
+            tableData[i][0] = d.getOperation();
+            tableData[i][1] = d.getNcloc();
+            tableData[i][2] = d.getCyclomaticComplexity();
+            tableData[i][3] = d.getTokenCount();
+            tableData[i][4] = d.getParameterCount();
+            tableData[i][5] = d.getLineCount();
+        }
+        
+       
+        
+
+        JTable table = new JTable(tableData, columnNames);
+        table.setDefaultRenderer(Object.class, new CustomTableCellRenderer());
+        
+        // Set custom header renderer
+        JTableHeader header = table.getTableHeader();
+        header.setDefaultRenderer(new CustomHeaderRenderer());
+        
+        JScrollPane scrollPane = new JScrollPane(table);
+        table.setFillsViewportHeight(true);
+
+        JDialog dialog = new JDialog();
+        ImageIcon icon = new ImageIcon(aSelected.getIconFileName());
+		dialog.setIconImage(icon.getImage());
+        dialog.setTitle("Lizard Data of Class " + aSelected.getName());
+        dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(scrollPane, BorderLayout.CENTER);
+        dialog.setSize(800, 400);
+        dialog.setLocationRelativeTo(null);
+        dialog.setVisible(true);
+        
+        //when click on a row, the operation should be selected in the model...
+		table.getSelectionModel().addListSelectionListener(e ->
+		{
+			int selectedRow = table.getSelectedRow();
+			if (selectedRow >= 0)
+			{
+				LizardData d = data.get(selectedRow);
+				IRPClassifier operation = d.getOperation();
+				operation.openFeaturesDialog(0);
+			}
+		});
+        
+    }
+	
+	
+	
+	private static class CustomTableCellRenderer extends DefaultTableCellRenderer {
+	    @Override
+	    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+	        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	        if (column == 0 && value instanceof IRPClassifier) 
+	        {
+	            IRPClassifier operation = (IRPClassifier) value;
+	            setIcon(new ImageIcon(operation.getIconFileName()));
+	            setText(operation.getName());
+	            
+				if (operation instanceof IRPStatechart)
+				{
+					c.setFont(c.getFont().deriveFont(Font.ITALIC));
+				}
+				else
+				{
+					c.setFont(c.getFont().deriveFont(Font.PLAIN));
+				}
+	            
+	        }
+	        else 
+	        {
+	            setIcon(null);
+	            int cyclomaticComplexity = (int) table.getValueAt(row, 2);
+	            if (cyclomaticComplexity > 20) {
+	                c.setFont(c.getFont().deriveFont(Font.BOLD));
+	            } else {
+	                c.setFont(c.getFont().deriveFont(Font.PLAIN));
+	            }
+	        }
+	        return c;
+	    }
+	}
+	
+	/*
+	
+	private static class CustomTableCellRenderer extends DefaultTableCellRenderer {
+	    @Override
+	    public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+	        Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+	        if (column == 0 && value instanceof Object[]) {
+	            Object[] values = (Object[]) value;
+	            setIcon((ImageIcon) values[0]);
+	            setText((String) values[1]);
+	        } else {
+	            setIcon(null);
+	            int cyclomaticComplexity = (int) table.getValueAt(row, 2);
+	            if (cyclomaticComplexity > 20) {
+	                c.setFont(c.getFont().deriveFont(Font.BOLD));
+	            } else {
+	                c.setFont(c.getFont().deriveFont(Font.PLAIN));
+	            }
+	        }
+	        return c;
+	    }
+	}
+	
+	*/
+
+	
+	
+	private static class CustomHeaderRenderer extends DefaultTableCellRenderer {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            c.setFont(c.getFont().deriveFont(Font.BOLD));
+            return c;
+        }
+    }
+
+	
+		
+}
+
+
+class LizardData
+{
+	
+	private int myNcloc = 0;
+	private int myCyclomaticComplexity = 0;
+	private int myTokenCount = 0;
+	private int myParameterCount = 0;
+	private IRPClassifier myOperation = null;
+	
+	private int myLineCount = 0;
+
+	public LizardData(IRPClassifier aOperation, int aNcloc, int aCyclomaticComplexity, int aTokenCount, int aParameterCount,
+			 int aLineCount)
+	{
+		myOperation = aOperation;
+		myNcloc = aNcloc;
+		myCyclomaticComplexity = aCyclomaticComplexity;
+		myTokenCount = aTokenCount;
+		myParameterCount = aParameterCount;
+		
+		myLineCount = aLineCount;
+	}
+
+	public String getName()
+	{
+		return myOperation.getName();
+	}
+	
+	public IRPClassifier getOperation()
+    {
+        return myOperation;
+    }
+
+	public int getNcloc()
+	{
+		return myNcloc;
+	}
+
+	public int getCyclomaticComplexity()
+	{
+		return myCyclomaticComplexity;
+	}
+
+	public int getTokenCount()
+	{
+		return myTokenCount;
+	}
+
+	public int getParameterCount()
+	{
+		return myParameterCount;
+	}
+
+
+	public int getLineCount()
+	{
+		return myLineCount;
+	}
+
+	public String toString()
+	{
+		return "Name: " + myOperation.getName() + " Ncloc: " + myNcloc + " CyclomaticComplexity: " + myCyclomaticComplexity
+				+ " TokenCount: " + myTokenCount + " ParameterCount: " + myParameterCount +
+				 " LineCount: " + myLineCount;
+	}
 }

@@ -1,7 +1,6 @@
 package apps;
 
 import java.awt.Dimension;
-import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,13 +8,11 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.ImageIcon;
@@ -38,7 +35,6 @@ import de.schlaich.gunnar.rhapsody.operationeditor.LoadInIDE;
 import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
 import de.schlaich.gunnar.rhapsody.utilities.HistoryControl;
 import de.schlaich.gunnar.rhapsody.utilities.HistoryElement;
-import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 public class MainApp extends App implements HistoryControl
@@ -71,7 +67,6 @@ public class MainApp extends App implements HistoryControl
 	 * This method is called on invoking an app inside Rhapsody. rhapsody - Instance
 	 * of an active Rhapsody application selected - Selected element in Rhapsody
 	 */
-	@SuppressWarnings("unchecked")
 	public void execute(IRPApplication rhapsody, IRPModelElement selected, boolean onStartup)
 	{
 

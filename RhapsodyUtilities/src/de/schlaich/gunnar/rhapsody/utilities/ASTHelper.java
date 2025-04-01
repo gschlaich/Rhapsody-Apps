@@ -805,11 +805,12 @@ public class ASTHelper
 
 	public static List<String> getLines(String aText)
 	{
-		List<String> ret = null;
+		List<String> ret = new ArrayList<String>();
+		ret.add("");
 
 		if (aText == null || aText.isEmpty())
 		{
-			return null;
+			return ret;
 		}
 
 		try
@@ -819,8 +820,9 @@ public class ASTHelper
 			ret = new ArrayList<String>();
 			while ((line = origBR.readLine()) != null)
 			{
-				line.replace((char) 0x09, ' ');
-				line = line.trim();
+				//line.replaceAll( "\0x09", "    ");
+				
+				//line = line.trim();
 				ret.add(line);
 			}
 		}
@@ -834,6 +836,11 @@ public class ASTHelper
 		while (ret.size() != 0 && ret.get(ret.size() - 1).isEmpty())
 		{
 			ret.remove(ret.size() - 1);
+		}
+		
+		if (ret.size() == 0)
+		{
+			ret.add("");
 		}
 
 		return ret;
