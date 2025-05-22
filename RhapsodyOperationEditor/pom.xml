@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>RhapsodyOperationEditor</groupId>
+  <artifactId>RhapsodyOperationEditor</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>
+  <dependencies>
+    <dependency>
+    	<groupId>com.fifesoft</groupId>
+    	<artifactId>rsyntaxtextarea</artifactId>
+    	<version>3.6.0</version> <!-- oder die neueste Version -->
+	</dependency>
+	<dependency>
+    	<groupId>com.fifesoft</groupId>
+    	<artifactId>autocomplete</artifactId>
+    	<version>3.3.2</version>
+	</dependency>
+	<dependency>
+	    <groupId>io.github.java-diff-utils</groupId>
+	    <artifactId>java-diff-utils</artifactId>
+	    <version>4.15</version>
+	</dependency>
+	<dependency>
+    	<groupId>com.ibm.icu</groupId>
+    	<artifactId>icu4j</artifactId>
+    	<version>77.1</version>
+	</dependency>
+	<dependency>
+		<groupId>com.formdev</groupId>
+		<artifactId>flatlaf</artifactId>
+		<version>3.4</version>
+	</dependency>
+   </dependencies>
+</project>

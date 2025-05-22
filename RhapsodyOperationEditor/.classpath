@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
-	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/jdom.jar"/>
+	<classpathentry including="**/*.java" kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar"/>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/JavaAPI/rhapsody.jar">
 		<attributes>
@@ -11,9 +19,7 @@
 	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
 	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/autocomplete-3.1.1.jar" sourcepath="/AutoComplete"/>
 	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.cdt.core.source_5.6.0.201402142303.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/rsyntaxtextarea-3.1.2.jar" sourcepath="/RSyntaxTextArea"/>
 	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/commons-imaging-1.0-alpha2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/CDC-1.0%Foundation-1.0">
 		<attributes>
@@ -28,10 +34,13 @@
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.runtime-3.1.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.text-3.8.0.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox-common-3.2.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/icu4j-72.1.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GHSMultiExtension"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/VisualStudioExtension"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/java-diff-utils-4.0.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtils"/>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>

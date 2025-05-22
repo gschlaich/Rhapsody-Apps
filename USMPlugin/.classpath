@@ -11,10 +11,10 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Rhapsody/v840/Share/JavaAPI"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtilities"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/PlantUMLView"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/OperationalRoundtrip"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyRelation"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyCreateMessage"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtils"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

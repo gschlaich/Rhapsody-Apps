@@ -44,6 +44,7 @@ import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 import de.schlaich.gunnar.rhapsody.utilities.USMConfiguration;
@@ -85,6 +86,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String LogCmd = "Show Log";
 	public static final String ShowHistoryCmd = "Show History";
 	public static final String StatisticCmd = "Change Statistic";
+	public static final String StatisticCmd2 = "Change Statistics";
 	public static final String LOCStatisticCmd = "Lines of Code";
 	public static final String CommitCmd = "Commit";
 	public static final String ExplorerCmd = "Explorer";
@@ -101,7 +103,8 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String BlameCmd = "Blame";
 	public static final String OperationEditorCmd = "OperationEditor";
 	public static final String TortoiseLogCmd = "Tortoise Log";
-	public static final String GeminiCmd = "Gemini";
+	public static final String GeminiDescribeCmd = "Add Description";
+	public static final String UpdateDatabaseCmd = "Update Database";
 	
 	public static final String libraryProperty = "CPP_CG.Package.USMLibraries";
 	public static final String IncludeProperty = "CPP_CG.Package.USMIncludePath";
@@ -154,27 +157,25 @@ public class CUSMPlugin extends RPUserPlugin
 	public void RhpPluginInit(IRPApplication rpyApplication)
 	{
 
+		
+	
 		myRhapsody = rpyApplication;
 		trace("started");
 		trace("Build date: " + getBuildDate());
 
 		IRPProject activeProject = myRhapsody.activeProject();
+		
+		
 
 		if (activeProject == null)
 		{
 			trace("no active Project!");
 			return;
 		}
+		
+		RhapsodyPreferences.setUILightmode();
 
-		try
-		{
-			// Setze das Look and Feel auf das System-Look-and-Feel
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
+		
 
 	}
 
@@ -567,7 +568,7 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(ShowHistoryCmd))
 		{
-			getSVNTools().showChangeList(selected, 100, false);
+			getSVNTools().showChangeList(selected, 800, false);
 			return;
 		}
 
@@ -585,6 +586,13 @@ public class CUSMPlugin extends RPUserPlugin
 			getSVNTools().showTortoiseLog(selected);
 			return;
 		}
+		
+		if (menuItem.contains(StatisticCmd2))
+		{
+			SVNTools svn = getSVNTools();
+			svn.showChangeStatistic(selected, 800, false);
+			return;
+		}
 
 		if (menuItem.contains(StatisticCmd))
 		{
@@ -592,6 +600,7 @@ public class CUSMPlugin extends RPUserPlugin
 			svn.showChangeStatistic(selected, 36, true);
 			return;
 		}
+			
 
 		if (menuItem.contains(LOCStatisticCmd))
 		{
@@ -923,14 +932,39 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 		}
 		
-		if (menuItem.contains(GeminiCmd))
+		if (menuItem.contains(GeminiDescribeCmd))
 		{
 			
-			GeminiAPIClient geminiAPIClient = new GeminiAPIClient(this::trace);
+			GeminiAPIClient geminiAPIClient = new GeminiAPIClient(this::trace, myRhapsody);
 			
-			geminiAPIClient.testGeminiAPI();
+			if (selected instanceof IRPOperation == true)
+			{
+				IRPOperation operation = (IRPOperation) selected;
+				geminiAPIClient.generateDescription(operation);
+				
+				
+			}
+			else if (selected instanceof IRPClass == true)
+			{
+				IRPClass c = (IRPClass) selected;
+				geminiAPIClient.generateDescription(c);
+			}
+			else	
+			{
+				trace("No Operation or Class selected");
+				
+			}
 
 			return;
+		}
+		
+		if (menuItem.contains(UpdateDatabaseCmd))
+		{
+			SVNTools svnTools = getSVNTools();
+			
+			trace("Update SVN Database");
+			svnTools.updateDatabase();
+			
 		}
 
 		trace("menue item unknown");

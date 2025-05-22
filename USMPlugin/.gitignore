@@ -1,2 +1,7 @@
 /HEADIOUGeneric.sbs
 /HEADControlUnit.sbs
+/cache.db
+/cache.db-shm
+/cache.db-wal
+/HEADControlUnit.sbsx
+/HEADIOUGeneric.sbsx

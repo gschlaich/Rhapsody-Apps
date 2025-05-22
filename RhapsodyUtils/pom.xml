@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.schlaich.gunnar</groupId>
+  <artifactId>RhapsodyUtils</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+   <packaging>jar</packaging>
+
+  <name>RhapsodyUtils</name>
+  <url>http://maven.apache.org</url>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <dependencies>
+  <!-- https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils -->
+	<dependency>
+	    <groupId>io.github.java-diff-utils</groupId>
+	    <artifactId>java-diff-utils</artifactId>
+	    <version>4.15</version>
+	</dependency>
+	  <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
+	<dependency>
+    	<groupId>org.bouncycastle</groupId>
+    	<artifactId>bcprov-jdk18on</artifactId>
+    	<version>1.80</version>
+	</dependency>
+	<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+	<dependency>
+	    <groupId>org.apache.httpcomponents</groupId>
+	    <artifactId>httpclient</artifactId>
+	    <version>4.5.14</version>
+	</dependency>
+	<dependency>
+  		<groupId>com.fasterxml.jackson.core</groupId>
+  		<artifactId>jackson-databind</artifactId>
+  		<version>2.15.2</version>
+	</dependency>
+	<dependency>
+    	<groupId>com.formdev</groupId>
+    	<artifactId>flatlaf</artifactId>
+    	<version>3.4</version> 
+	</dependency>
+	<dependency>
+    	<groupId>org.xerial</groupId>
+    	<artifactId>sqlite-jdbc</artifactId>
+    <version>3.49.1.0</version>
+</dependency>
+	
+  </dependencies>
+  
+  
+  
+
+  
+</project>

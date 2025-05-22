@@ -3,6 +3,7 @@ package de.schlaich.gunnar.rhapsody.operationeditor;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Image;
 import java.awt.TextArea;
 import java.awt.Toolkit;
@@ -15,8 +16,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -56,12 +59,13 @@ import org.fife.ui.rsyntaxtextarea.Style;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.TokenTypes;
 import org.fife.ui.rsyntaxtextarea.parser.TaskTagParser;
 import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.github.difflib.DiffUtils;
-import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 import com.ibm.icu.util.ULocale.Minimize;
 import com.ibm.rhapsody.apps.ui.SearchRunDialog;
@@ -123,6 +127,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private IRPAction myAction = null;
 	private ApplicationListener myApplicationListener = null;
 	private boolean myExitOnClose = true;
+	
+	private boolean myUseDarkMode = false;
 
 	private static Map<IRPModelElement,OperationEditorWindow>  myOperationWindows = null;
 	
@@ -146,12 +152,28 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			myOperationWindows = new HashMap<IRPModelElement,OperationEditorWindow>();
 		}
 		
+		myUseDarkMode = RhapsodyPreferences.isWindowsDarkMode();
+		
+		if (myUseDarkMode)
+		{
+			try
+			{
+				UIManager.setLookAndFeel(new FlatDarkLaf());
+			}
+			catch (UnsupportedLookAndFeelException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
 		myOperationWindows.put(aOperation, this);
 		
 		myAction = aAction;
 		myExitOnClose = aExitOnClose;
 		
 		JFrame frame = new JFrame (RhapsodyOperation.getOperation(aOperation));
+		
+		
 		
 		frame.setLayout(new BorderLayout());
 		
@@ -175,25 +197,30 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 		LoadInIDE ide = LoadInIDE.Instance(myApplication);
 		
-		if(ide.isVSIde())
+		if(ide != null)
 		{
-			vsIdeButton = new JButton("View in VS");
-			buttonPanel.add(vsIdeButton);
-			vsCompileButton = new JButton("Compile");
-			buttonPanel.add(vsCompileButton);
-		}
 		
-		if(ide.isMultiIde())
-		{
-			multiIdeEditButton = new JButton("Multi Edit");
-			buttonPanel.add(multiIdeEditButton);
-			multiIdeDebugButton = new JButton("Multi Debug");
-			buttonPanel.add(multiIdeDebugButton);
-			multiCompileButton = new JButton("Compile");
-			buttonPanel.add(multiCompileButton);
-			multiBuildButton = new JButton("Build");
-			buttonPanel.add(multiBuildButton);
+			if(ide.isVSIde())
+			{
+				vsIdeButton = new JButton("View in VS");
+				buttonPanel.add(vsIdeButton);
+				vsCompileButton = new JButton("Compile");
+				buttonPanel.add(vsCompileButton);
+			}
 			
+			if(ide.isMultiIde())
+			{
+				multiIdeEditButton = new JButton("Multi Edit");
+				buttonPanel.add(multiIdeEditButton);
+				multiIdeDebugButton = new JButton("Multi Debug");
+				buttonPanel.add(multiIdeDebugButton);
+				multiCompileButton = new JButton("Compile");
+				buttonPanel.add(multiCompileButton);
+				multiBuildButton = new JButton("Build");
+				buttonPanel.add(multiBuildButton);
+				
+			}
+		
 		}
 		
 		
@@ -330,6 +357,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		
+		
+		
 			
 			
 		Image img = null;
@@ -384,14 +414,20 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		myTextArea = new RSyntaxTextArea(rows, cols);
 	    myTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_CPLUSPLUS);
-	    //myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
+	    myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
 	    myTextArea.setCaretPosition(0);
 		myTextArea.requestFocusInWindow();
 		myTextArea.setMarkOccurrences(true);
-		myTextArea.setCodeFoldingEnabled(false);
 		myTextArea.setTabsEmulated(true);
 		myTextArea.setTabSize(4);
 		myTextArea.addHyperlinkListener(this);
+		
+		myTextArea.setAntiAliasingEnabled(true);
+		myTextArea.setCloseCurlyBraces(true);
+		myTextArea.setCloseMarkupTags(true);
+		myTextArea.setHighlightCurrentLine(true);
+		myTextArea.setCodeFoldingEnabled(true);
+		
 		
 		myTextArea.addFocusListener(new FocusListener() {
 			
@@ -412,9 +448,25 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		
 		RTextScrollPane scrollPane = new RTextScrollPane(myTextArea, true);
+		
+		Gutter gutter = scrollPane.getGutter();
+		
+		if(myUseDarkMode)
+		{
+			gutter.setBackground(Color.DARK_GRAY);
+			gutter.setBorderColor(Color.DARK_GRAY);
+			
+		}
+		
+		
+	    gutter.setLineNumberingStartIndex(0);
+		
+		
+		
 		ErrorStrip es = new ErrorStrip(myTextArea);
 		JPanel temp = new JPanel(new BorderLayout());
 		temp.add(scrollPane);
+		
 		temp.add(es, BorderLayout.LINE_END);
 		
 
@@ -424,7 +476,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		
 		setContentPane(contentPane);
-		scrollPane.setIconRowHeaderEnabled(true);
+		//scrollPane.setIconRowHeaderEnabled(true);
 		
 		myTextArea.setText(mySelectedOperation.getBody());
 		myTextArea.convertTabsToSpaces();
@@ -441,7 +493,24 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.convertTabsToSpaces();
 		myTextArea.requestFocusInWindow();
 		
-		setRhapsodyStyle();
+		//check if windows runs in dark mode
+		if (myUseDarkMode)
+		{
+			
+			
+			
+			
+			setDarkStyle();
+			
+			
+			
+		}
+		else
+		{
+			setRhapsodyStyle();
+		}
+		
+
 		
 	    ScreenMonitor.Instance.registerFrame(frame);
 
@@ -450,6 +519,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	  	frame.setLocationRelativeTo(null);
  
         frame.setVisible(true);
+        
+        
+
         
     	//now add rhapsodyListener
         
@@ -540,6 +612,11 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	
 	
+	
+	
+	
+	
+	
 	private void removeActionOperation()
 	{
 
@@ -607,6 +684,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private void setRhapsodyStyle() 
 	{
 		//settings should be similar to rhapsody
+		
+		//use same font as rhapsody
+		myTextArea.setFont(new Font("Courier New", Font.PLAIN, 12));
+		
 		myTextArea.setBackground(new Color(0xffffff));
 		myTextArea.setCaretColor(new Color(0x000000));
 		myTextArea.setCurrentLineHighlightColor(new Color(0xe8f2fe));
@@ -640,31 +721,68 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	private void setDarkStyle() 
 	{
 		//settings should be similar to rhapsody
-		myTextArea.setBackground(new Color(0x000000));
-		myTextArea.setCaretColor(new Color(0xffffff));
-		myTextArea.setCurrentLineHighlightColor(new Color(0xe8f2fe));
-		myTextArea.setFadeCurrentLineHighlight(false);
-		myTextArea.setMarginLineColor(new Color(0xb0b4b9));
-		myTextArea.setMarkAllHighlightColor(new Color(0x6b8189));
-		myTextArea.setMatchedBracketBorderColor(new Color(0xdbe0cc));
+		//change to dark mode for the gui
+		
+		
+		
+		//use same font as rhapsody
+		myTextArea.setFont(new Font("Courier New", Font.PLAIN, 12));
+		
+		
+	
+		myTextArea.setMarginLineColor(new Color(0xCCCCCC));
+		myTextArea.setMarkAllHighlightColor(new Color(0x214283));
+		myTextArea.setMatchedBracketBorderColor(new Color(0x555555));
 		myTextArea.setBracketMatchingEnabled(true);
+		myTextArea.setMatchedBracketBGColor(new Color(0x999999));
 		myScheme = myTextArea.getSyntaxScheme();
 		
-		int colorComment = 0x30a030;
 		
-		setTokenFgColor(SyntaxScheme.IDENTIFIER, 0x00000);
-		setTokenFgColor(SyntaxScheme.RESERVED_WORD, 0x0000ff);
-		setTokenFgColor(SyntaxScheme.RESERVED_WORD_2, 0x0000ff);
+		//set for dark mode
+		myTextArea.setForeground(new Color(0xAAAAB0));
+		myTextArea.setBackground(new Color(0x1F1F1F));
+		myTextArea.setCaretColor(new Color(0xCCCCCC));
+		myTextArea.setCurrentLineHighlightColor(new Color(0x373737));
+		myTextArea.setFadeCurrentLineHighlight(false);
+		
+		
+		myTextArea.setSelectionColor(new Color(0x777777)); 
+		
+		
+		myTextArea.setMarkOccurrencesColor(new Color(0x373737));
+		
+		myTextArea.setCloseCurlyBraces(true);
+		
+		int colorComment = 0x808080;
+		
+		
+		setTokenFgColor(SyntaxScheme.IDENTIFIER, 0xCCCCCC);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD, 0x5297BB);
+		setTokenFgColor(SyntaxScheme.RESERVED_WORD_2, 0x5297BB);
 		setTokenFgColor(SyntaxScheme.ANNOTATION, 0x80f080);
 		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
 		setTokenFgColor(SyntaxScheme.COMMENT_EOL, colorComment);
 		setTokenFgColor(SyntaxScheme.COMMENT_DOCUMENTATION, colorComment);
 		setTokenFgColor(SyntaxScheme.COMMENT_MULTILINE, colorComment);
 		setTokenFgColor(SyntaxScheme.COMMENT_MARKUP, colorComment);
-		setTokenFgColor(SyntaxScheme.COMMENT_KEYWORD, 0xae9fbf);
-		setTokenFgColor(SyntaxScheme.DATA_TYPE, 0x4040ff);
-		setTokenFgColor(SyntaxScheme.VARIABLE, 0x5050a0);
-		setTokenFgColor(SyntaxScheme.LITERAL_STRING_DOUBLE_QUOTE, 0xA31515);
+		setTokenFgColor(SyntaxScheme.COMMENT_KEYWORD,colorComment);
+		setTokenFgColor(SyntaxScheme.DATA_TYPE, 0xCC6C1D);
+		setTokenFgColor(SyntaxScheme.VARIABLE, 0xF3EC79);
+		setTokenFgColor(SyntaxScheme.LITERAL_STRING_DOUBLE_QUOTE, 0x17C6A3);
+		setTokenFgColor(SyntaxScheme.LITERAL_CHAR, 0x17C6A3);
+		setTokenFgColor(SyntaxScheme.LITERAL_BACKQUOTE, 0x17C6A3);
+		setTokenFgColor(SyntaxScheme.LITERAL_NUMBER_DECIMAL_INT, 0x6897BB);
+		setTokenFgColor(SyntaxScheme.LITERAL_NUMBER_HEXADECIMAL, 0x6897BB);
+		setTokenFgColor(SyntaxScheme.LITERAL_NUMBER_FLOAT, 0x6897BB);
+		
+		
+		setTokenFgColor(SyntaxScheme.OPERATOR, 0xE6E6FA);
+		setTokenFgColor(SyntaxScheme.FUNCTION, 0xA27802);
+
+		
+		myScheme.getStyle(TokenTypes.SEPARATOR).foreground = new Color(0xFFD40B); 
+		
+		
 
 		
 		myTextArea.setSyntaxScheme(myScheme);
@@ -1198,7 +1316,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			JOptionPane.showMessageDialog(
 				    null,
-				    "Rhapsody  model already closed","Changes are irretrievably deleted",JOptionPane.ERROR_MESSAGE);
+				    "Exception: " + e1.getMessage()  ,"Changes are irretrievably deleted",JOptionPane.ERROR_MESSAGE);
 			
 			myFrame.dispose();
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
@@ -1224,7 +1342,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
 			return(patch.getDeltas().isEmpty()==false);
 		} 
-		catch (DiffException e) {
+		catch (Exception e) {
 			
 			e.printStackTrace();
 		}

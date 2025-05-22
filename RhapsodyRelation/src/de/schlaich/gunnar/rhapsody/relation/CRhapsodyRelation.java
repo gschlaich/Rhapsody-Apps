@@ -51,6 +51,7 @@ import com.telelogic.rhapsody.core.RPApplicationListener;
 
 import apps.RhapsodyModelElementItem;
 import apps.RhapsodyModelElementSearchable;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 public class CRhapsodyRelation {
 
@@ -263,28 +264,10 @@ public class CRhapsodyRelation {
 		 *
 		 */
 		
-		String lufSystem = UIManager.getSystemLookAndFeelClassName();
-		
-		
-	
-		try 
-		{
-			UIManager.setLookAndFeel(lufSystem);
-		} 
-		catch (Exception e) 
-		{	
-			e.printStackTrace();
-		} 
-		
-		 
 		
 		
 		myFrame = new JFrame();
-		
-		
-		
-		
-		
+
 		String imageName = selected.getIconFileName();
 		imageName = imageName.replace("\\", "/");
 		

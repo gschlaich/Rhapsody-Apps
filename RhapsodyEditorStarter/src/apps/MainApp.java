@@ -23,6 +23,8 @@ import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+
 //import org.apache.commons.imaging.Imaging;
 
 import com.ibm.rhapsody.apps.*;
@@ -71,7 +73,20 @@ public class MainApp extends App implements HistoryControl
 	{
 
 		RhapsodyPreferences prefs = RhapsodyPreferences.Get(true);
-
+		
+		if(RhapsodyPreferences.isWindowsDarkMode())
+		{
+			try
+			{
+				UIManager.setLookAndFeel(new FlatDarkLaf());
+			}
+			catch (UnsupportedLookAndFeelException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		
+	
 		
 		rhapsody.writeToOutputWindow("Log", "Build date: " + getBuildDate() + "\n");
 		

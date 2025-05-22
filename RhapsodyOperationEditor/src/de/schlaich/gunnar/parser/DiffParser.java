@@ -18,7 +18,6 @@ import org.fife.ui.rtextarea.Gutter;
 import org.fife.ui.rtextarea.GutterIconInfo;
 
 import com.github.difflib.DiffUtils;
-import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Chunk;
 import com.github.difflib.patch.DeltaType;
@@ -164,7 +163,7 @@ public class DiffParser extends AbstractParser {
 				
 			}      
 		} 
-	    catch (DiffException e) 
+	    catch (Exception e) 
 	    {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

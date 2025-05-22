@@ -8,7 +8,6 @@ import javax.swing.JOptionPane;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
 import com.github.difflib.DiffUtils;
-import com.github.difflib.algorithm.DiffException;
 import com.github.difflib.patch.Patch;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPDiagram;
@@ -88,7 +87,7 @@ public class ApplicationListener extends RPApplicationListener {
 			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
 			return(patch.getDeltas().isEmpty()==false);
 		} 
-		catch (DiffException e) {
+		catch (Exception e) {
 			
 			e.printStackTrace();
 		}

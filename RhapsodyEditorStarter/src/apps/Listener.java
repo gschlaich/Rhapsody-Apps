@@ -128,39 +128,41 @@ public class Listener extends RPApplicationListener {
 		
 	}
 	
-	@Override
-	public boolean onElementsChanged(String aGuids)
-	{
-		
-		
-		List<String> guids = Arrays.asList(aGuids.split(","));
-		
-		if(myContextGuid==null)
-        {
-			IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
-            myContextGuid = context.getGUID();
-        }
-		
-		
-		for (String guid : guids)
-		{
-			if(guid.equals(myContextGuid))
-            {
-				IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
-				List<IRPDependency> dependencies = context.getDependencies().toList();
-				for(IRPDependency dependency:dependencies)
-				{
-					IRPModelElement element = dependency.getDependsOn();
-					startEditorThread(element);	
-				}
-		
-				return true;	
-            }
-		}
-
-		return false;
-	}
-	
+//	@Override
+//	
+//	commented out because of deadlock issue
+//	public boolean onElementsChanged(String aGuids)
+//	{
+//		
+//		
+//		List<String> guids = Arrays.asList(aGuids.split(","));
+//		
+//		if(myContextGuid==null)
+//        {
+//			IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
+//            myContextGuid = context.getGUID();
+//        }
+//		
+//		
+//		for (String guid : guids)
+//		{
+//			if(guid.equals(myContextGuid))
+//            {
+//				IRPComment context =  RhapsodyHelper.getOperationContext(myProject);
+//				List<IRPDependency> dependencies = context.getDependencies().toList();
+//				for(IRPDependency dependency:dependencies)
+//				{
+//					IRPModelElement element = dependency.getDependsOn();
+//					startEditorThread(element);	
+//				}
+//		
+//				return true;	
+//            }
+//		}
+//
+//		return false;
+//	}
+//	
 	
 	
 	private boolean startEditorThread(IRPModelElement aModelElement)

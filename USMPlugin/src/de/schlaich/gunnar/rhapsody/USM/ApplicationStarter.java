@@ -76,7 +76,10 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.OperationEditorCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.TortoiseLogCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GeminiCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GeminiCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.UpdateDatabaseCmd);
+		
 		
 		
 	}

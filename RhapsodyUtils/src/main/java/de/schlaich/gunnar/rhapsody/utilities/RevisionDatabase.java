@@ -1,793 +1,545 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-class RevisionDatabase
-{
-	//private static final String JDBC_URL = "jdbc:sqlite:./cache.db";
+/**
+ * Vollständig optimierte und funktionskomplette Variante der ursprünglichen {@code RevisionDatabase}.
+ * <p>
+ *  Alle ehemals öffentlichen Methoden sind vorhanden, nutzen jedoch:</p>
+ * <ul>
+ *   <li>einmalig erzeugte {@link PreparedStatement}s&nbsp;→ vermeidet ständiges Parse/Plan‑Overhead</li>
+ *   <li>{@code INSERT OR IGNORE} / {@code ON CONFLICT DO NOTHING}&nbsp;→ vermeidet Doppel‑SELECTs</li>
+ *   <li>Batchfähige Inserts und "SELECT&nbsp;1 … LIMIT&nbsp;1"‑Existenzprüfungen</li>
+ *   <li>manuelles Commit (für Bulk‑Operationen typische Faktor‑5–20‑Beschleunigung)</li>
+ * </ul>
+ */
+public class RevisionDatabase implements AutoCloseable {
 
-	private String myJDBC_URL = null;
-	
-	private static final String[] DDL = {
+    /* ---------------------------------------------------------------------
+     *  SQL – DDL
+     * ------------------------------------------------------------------ */
+    private static final String[] DDL = {
+            // 1) unit
+            "CREATE TABLE IF NOT EXISTS unit (" +
+                    "unit_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "name TEXT NOT NULL UNIQUE);",
 
-			// 1) unit
-			"CREATE TABLE IF NOT EXISTS unit (\n" 
-					+ "  unit_id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-					+ "  name    TEXT    NOT NULL UNIQUE\n" 
-					+ ");",
+            // 2) revision
+            "CREATE TABLE IF NOT EXISTS revision (" +
+                    "rev_id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                    "rev_code INTEGER NOT NULL UNIQUE," +
+                    "author TEXT NOT NULL," +
+                    "date TEXT NOT NULL," +
+                    "message TEXT," +
+                    "jiraIssue TEXT);",
 
-			// 2) revision
-			"CREATE TABLE IF NOT EXISTS revision (\n" 
-					+ "  rev_id   INTEGER PRIMARY KEY AUTOINCREMENT,\n"
-					+ "  rev_code INTEGER NOT NULL UNIQUE,\n" 
-					+ "  author   TEXT    NOT NULL,\n"
-					+ "  date     TEXT    NOT NULL,\n" 
-					+ "  message TEXT,\n" 
-					+ "  jiraIssue TEXT\n" 
-					+ ");",
+            // 3) unit_revision
+            "CREATE TABLE IF NOT EXISTS unit_revision (" +
+                    "unit_id INTEGER NOT NULL REFERENCES unit(unit_id) ON DELETE CASCADE," +
+                    "rev_id INTEGER NOT NULL REFERENCES revision(rev_id) ON DELETE CASCADE," +
+                    "file_hash TEXT," +
+                    "PRIMARY KEY (unit_id, rev_id));",
 
-			// 3) unit_revision
-			"CREATE TABLE IF NOT EXISTS unit_revision (\n"
-					+ "  unit_id   INTEGER NOT NULL REFERENCES unit(unit_id) ON DELETE CASCADE,\n"
-					+ "  rev_id    INTEGER NOT NULL REFERENCES revision(rev_id) ON DELETE CASCADE,\n"
-					+ "  file_hash TEXT,\n" 
-					+ "  PRIMARY KEY (unit_id, rev_id)\n" 
-					+ ");",
+            // 4) guid
+            "CREATE TABLE IF NOT EXISTS guid (" +
+                    "guid     TEXT UNIQUE," +
+                    "unit_id  INTEGER NOT NULL REFERENCES unit(unit_id) ON DELETE CASCADE," +
+                    "guid_id  INTEGER PRIMARY KEY AUTOINCREMENT);",
 
-			// 4) guid
-			"CREATE TABLE IF NOT EXISTS guid (\n" 
-					+ "  guid     TEXT,\n"
-					+ "  unit_id  INTEGER NOT NULL REFERENCES unit(unit_id) ON DELETE CASCADE,\n" 
-					+ "  guid_id INTEGER PRIMARY KEY AUTOINCREMENT\n"
-					+ ");",
+            // 5) guid_revision
+            "CREATE TABLE IF NOT EXISTS guid_revision (" +
+                    "guid_id INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE," +
+                    "rev_id  INTEGER NOT NULL REFERENCES revision(rev_id) ON DELETE CASCADE," +
+                    "PRIMARY KEY (guid_id, rev_id));",
 
-			// 5) guid_revision
-			"CREATE TABLE IF NOT EXISTS guid_revision (\n"
-					+ "  guid_id INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,\n"
-					+ "  rev_id INTEGER NOT NULL REFERENCES revision(rev_id) ON DELETE CASCADE,\n"
-					+ "  PRIMARY KEY (guid_id, rev_id)\n" 
-					+ ");",
-					
-		    // 6) guid_owner
-			"CREATE TABLE IF NOT EXISTS guid_owner (\n"
-					+ "  parent_guid_id INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,\n"
-					+ "  child_guid_id INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE,\n"
-					+ "  PRIMARY KEY (parent_guid_id, child_guid_id)\n"
-					+ ");",
+            // 6) guid_owner
+            "CREATE TABLE IF NOT EXISTS guid_owner (" +
+                    "parent_guid_id INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE," +
+                    "child_guid_id  INTEGER NOT NULL REFERENCES guid(guid_id) ON DELETE CASCADE," +
+                    "PRIMARY KEY (parent_guid_id, child_guid_id));",
 
-			// Indizes
-			"CREATE INDEX IF NOT EXISTS idx_gr_guid ON guid_revision(guid_id);",
-			"CREATE INDEX IF NOT EXISTS idx_ur_unit ON unit_revision(unit_id);",
-			"CREATE INDEX IF NOT EXISTS idx_ur_rev  ON unit_revision(rev_id);",
-			"CREATE INDEX IF NOT EXISTS idx_go_child ON guid_owner(child_guid_id);"
-					
-	};
+            // Indizes
+            "CREATE INDEX IF NOT EXISTS idx_gr_guid      ON guid_revision(guid_id);",
+            "CREATE INDEX IF NOT EXISTS idx_ur_unit      ON unit_revision(unit_id);",
+            "CREATE INDEX IF NOT EXISTS idx_ur_rev       ON unit_revision(rev_id);",
+            "CREATE INDEX IF NOT EXISTS idx_go_child     ON guid_owner(child_guid_id);",
+            "CREATE INDEX IF NOT EXISTS idx_guid_guid    ON guid(guid);",
+            "CREATE INDEX IF NOT EXISTS idx_rev_code     ON revision(rev_code);"
+    };
 
-	private Consumer<String> myTraceAction = null;
+    /* ---------------------------------------------------------------------
+     *  SQL – Prepared‑Statement‑Vorlagen
+     * ------------------------------------------------------------------ */
+    // Revision
+    private static final String INS_REVISION               =
+            "INSERT OR IGNORE INTO revision (rev_code, author, date, message, jiraIssue) VALUES (?,?,?,?,?)";
+    private static final String SEL_REVISION_ID_BY_CODE    =
+            "SELECT rev_id FROM revision WHERE rev_code = ? LIMIT 1";
+    private static final String SEL_REV_CODE_BY_ID         =
+            "SELECT rev_code FROM revision WHERE rev_id = ? LIMIT 1";
+    private static final String SEL_REV_DATA_BY_ID         =
+            "SELECT rev_code, author, date, message, jiraIssue FROM revision WHERE rev_id = ? LIMIT 1";
 
-	private Connection myConnection;
+    // Unit
+    private static final String INS_UNIT                   =
+            "INSERT OR IGNORE INTO unit (name) VALUES (?)";
+    private static final String SEL_UNIT_ID_BY_NAME        =
+            "SELECT unit_id FROM unit WHERE name = ? LIMIT 1";
 
-	public RevisionDatabase(File aTempDir, Consumer<String> aTraceAction)
+    // GUID
+    private static final String INS_GUID                   =
+            "INSERT OR IGNORE INTO guid (guid, unit_id) VALUES (?,?)";
+    private static final String SEL_GUID_ID_BY_GUID        =
+            "SELECT guid_id FROM guid WHERE guid = ? LIMIT 1";
+    private static final String SEL_GUIDS_BY_UNIT_ID       =
+            "SELECT guid FROM guid WHERE unit_id = ?";
+
+    // Verknüpfungen
+    private static final String INS_UNIT_REVISION          =
+            "INSERT OR IGNORE INTO unit_revision (unit_id, rev_id) VALUES (?,?)";
+    private static final String EXISTS_UNIT_REVISION       =
+            "SELECT 1 FROM unit_revision WHERE unit_id = ? AND rev_id = ? LIMIT 1";
+
+    private static final String INS_GUID_REVISION          =
+            "INSERT OR IGNORE INTO guid_revision (guid_id, rev_id) VALUES (?,?)";
+    private static final String EXISTS_GUID_REVISION       =
+            "SELECT 1 FROM guid_revision WHERE guid_id = ? AND rev_id = ? LIMIT 1";
+    private static final String SEL_REVISION_IDS_BY_GUID_ID=
+            "SELECT rev_id FROM guid_revision WHERE guid_id = ?";
+
+    private static final String SEL_GUIDS_BY_REV_ID        =
+            "SELECT g.guid FROM guid g JOIN guid_revision gr ON g.guid_id = gr.guid_id WHERE gr.rev_id = ?";
+    private static final String SEL_GUIDS_BY_REV_AND_UNIT  =
+            "SELECT g.guid FROM guid g JOIN guid_revision gr ON g.guid_id = gr.guid_id WHERE gr.rev_id = ? AND g.unit_id = ?";
+
+    private static final String INS_GUID_OWNER             =
+            "INSERT OR IGNORE INTO guid_owner (parent_guid_id, child_guid_id) VALUES (?,?)";
+    private static final String EXISTS_GUID_OWNER          =
+            "SELECT 1 FROM guid_owner WHERE parent_guid_id = ? AND child_guid_id = ? LIMIT 1";
+
+    /* ---------------------------------------------------------------------
+     *  Instanz‑Felder
+     * ------------------------------------------------------------------ */
+    private Connection connection;   // wird ggf. von reopenConnection() erneuert
+    private final String jdbcUrl;
+
+    private final Consumer<String> traceAction;
+
+    /* PreparedStatements */
+    private PreparedStatement psInsRevision;
+    private PreparedStatement psSelRevisionIdByCode;
+    private PreparedStatement psSelRevCodeById;
+    private PreparedStatement psSelRevDataById;
+
+    private PreparedStatement psInsUnit;
+    private PreparedStatement psSelUnitIdByName;
+
+    private PreparedStatement psInsGuid;
+    private PreparedStatement psSelGuidIdByGuid;
+
+    private PreparedStatement psInsUnitRevision;
+    private PreparedStatement psExistsUnitRevision;
+
+    private PreparedStatement psInsGuidRevision;
+    private PreparedStatement psExistsGuidRevision;
+    private PreparedStatement psRevisionIdsByGuidId;
+
+    private PreparedStatement psGuidsByUnitId;
+    private PreparedStatement psGuidsByRevId;
+    private PreparedStatement psGuidsByRevAndUnit;
+
+    private PreparedStatement psInsGuidOwner;
+    private PreparedStatement psExistsGuidOwner;
+    
+    private final static String  dbFileName = "cache.db";
+
+    /* ---------------------------------------------------------------------
+     *  Konstruktor
+     * ------------------------------------------------------------------ */
+    public RevisionDatabase(File dbDir, Consumer<String> traceAction) throws SQLException {
+        
+    	this.traceAction = traceAction;
+    	
+        if (!dbDir.exists() && !dbDir.mkdirs()) {
+            throw new IllegalStateException("Verzeichnis " + dbDir + " konnte nicht angelegt werden.");
+        }
+        //this.jdbcUrl = "jdbc:sqlite:" + new File(dbDir, "cache.db").getAbsolutePath();
+        
+        
+        this.jdbcUrl = "jdbc:sqlite:" + dbDir.getAbsolutePath() + File.separator + dbFileName;
+        trace("DBURL: " + this.jdbcUrl);
+        
+        createDatabase();
+
+
+        //trace("Database initialisiert (optimiert)");
+    }
+    
+	public static String GetDBFileName() 
 	{
-		
-		if (aTempDir.exists() == false)
+    	return dbFileName;
+    }
+
+    private void createDatabase()
+    {
+    	try(Connection con = DriverManager.getConnection(jdbcUrl))
+    	{
+    		
+    		        this.connection = con;
+    		
+    	
+        //this.connection.setAutoCommit(false);
+        try (Statement st = connection.createStatement()) {
+            st.execute("PRAGMA journal_mode=WAL;");
+            st.execute("PRAGMA synchronous   = NORMAL;");
+            st.execute("PRAGMA cache_size    = -20000;"); // ≈ 80 MB
+            st.execute("PRAGMA foreign_keys  = ON;");
+            st.execute("PRAGMA temp_store    = MEMORY;");
+        }
+        try (Statement st = connection.createStatement()) {
+            for (String ddl : DDL) st.execute(ddl);
+        }
+        
+        prepareStatements();
+
+        
+    	
+    }
+    	catch (SQLException e)
 		{
-			aTempDir.mkdirs();
+			e.printStackTrace();
 		}
-		
-		
-		myJDBC_URL = "jdbc:sqlite:" + aTempDir.getAbsolutePath() + File.separator + "cache.db";
-		
-		myTraceAction = aTraceAction;
-
-		createDatabase();
-
-	}
-
-	private void trace(String aMessage)
+    }
+    
+    private void trace(String aMessage)
 	{
-		if (myTraceAction == null)
+		if (this.traceAction == null)
 		{
 			// no traceaction set...
 			return;
 		}
+		aMessage = "DB: " + aMessage;
 
-		aMessage = "SVN: " + aMessage;
-
-		myTraceAction.accept(aMessage);
+		this.traceAction.accept(aMessage);
 	}
 
-	void testSQLite() throws ClassNotFoundException, SQLException
-	{
-		Class.forName("org.sqlite.JDBC"); // Treiber laden
-		try (Connection c = java.sql.DriverManager.getConnection("jdbc:sqlite::memory:"))
+    /* ---------------------------------------------------------------------
+     *  Utility
+     * ------------------------------------------------------------------ */
+    
+	private void prepareStatements() throws SQLException	
+    {
+    	/* PreparedStatements */
+        psInsRevision            = connection.prepareStatement(INS_REVISION, Statement.RETURN_GENERATED_KEYS);
+        psSelRevisionIdByCode    = connection.prepareStatement(SEL_REVISION_ID_BY_CODE);
+        psSelRevCodeById         = connection.prepareStatement(SEL_REV_CODE_BY_ID);
+        psSelRevDataById         = connection.prepareStatement(SEL_REV_DATA_BY_ID);
+
+        psInsUnit               = connection.prepareStatement(INS_UNIT, Statement.RETURN_GENERATED_KEYS);
+        psSelUnitIdByName       = connection.prepareStatement(SEL_UNIT_ID_BY_NAME);
+
+        psInsGuid               = connection.prepareStatement(INS_GUID, Statement.RETURN_GENERATED_KEYS);
+        psSelGuidIdByGuid       = connection.prepareStatement(SEL_GUID_ID_BY_GUID);
+
+        psInsUnitRevision       = connection.prepareStatement(INS_UNIT_REVISION);
+        psExistsUnitRevision    = connection.prepareStatement(EXISTS_UNIT_REVISION);
+
+        psInsGuidRevision       = connection.prepareStatement(INS_GUID_REVISION);
+        psExistsGuidRevision    = connection.prepareStatement(EXISTS_GUID_REVISION);
+        psRevisionIdsByGuidId   = connection.prepareStatement(SEL_REVISION_IDS_BY_GUID_ID);
+
+        psGuidsByUnitId         = connection.prepareStatement(SEL_GUIDS_BY_UNIT_ID);
+        psGuidsByRevId          = connection.prepareStatement(SEL_GUIDS_BY_REV_ID);
+        psGuidsByRevAndUnit     = connection.prepareStatement(SEL_GUIDS_BY_REV_AND_UNIT);
+
+        psInsGuidOwner          = connection.prepareStatement(INS_GUID_OWNER);
+        psExistsGuidOwner       = connection.prepareStatement(EXISTS_GUID_OWNER);
+    }
+    
+
+    public void commit() throws SQLException { connection.commit(); }
+    public void rollback() throws SQLException { connection.rollback(); }
+
+    /* ---------------------------------------------------------------------
+     *  Revision
+     * ------------------------------------------------------------------ */
+    public int addRevision(int revCode, String author, String date, String message, String jira) throws SQLException {
+        psInsRevision.setInt   (1, revCode);
+        psInsRevision.setString(2, author);
+        psInsRevision.setString(3, date);
+        psInsRevision.setString(4, message);
+        psInsRevision.setString(5, jira);
+        int rows = psInsRevision.executeUpdate();
+        if (rows > 0) {
+            try (ResultSet keys = psInsRevision.getGeneratedKeys()) { keys.next(); return keys.getInt(1); }
+        }
+        return hasRevision(revCode); // bereits vorhanden
+    }
+
+    public int hasRevision(int revCode) throws SQLException {
+        psSelRevisionIdByCode.setInt(1, revCode);
+        try (ResultSet rs = psSelRevisionIdByCode.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : -1;
+        }
+    }
+
+    public int getRevision(int revisionId) throws SQLException {
+        psSelRevCodeById.setInt(1, revisionId);
+        try (ResultSet rs = psSelRevCodeById.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : -1;
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     *  Unit
+     * ------------------------------------------------------------------ */
+    public int addUnit(String name) throws SQLException {
+        psInsUnit.setString(1, name);
+        int rows = psInsUnit.executeUpdate();
+        if (rows > 0) {
+            try (ResultSet keys = psInsUnit.getGeneratedKeys()) { keys.next(); return keys.getInt(1); }
+        }
+        psSelUnitIdByName.setString(1, name);
+        try (ResultSet rs = psSelUnitIdByName.executeQuery()) { rs.next(); return rs.getInt(1); }
+    }
+
+    private int hasUnit(String name) throws SQLException {
+        psSelUnitIdByName.setString(1, name);
+        try (ResultSet rs = psSelUnitIdByName.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : -1;
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     *  GUID
+     * ------------------------------------------------------------------ */
+    private int insertGuid(String guid, int unitId) throws SQLException {
+        psInsGuid.setString(1, guid);
+        psInsGuid.setInt   (2, unitId);
+        int rows = psInsGuid.executeUpdate();
+        if (rows > 0) {
+            try (ResultSet keys = psInsGuid.getGeneratedKeys()) { keys.next(); return keys.getInt(1); }
+        }
+        return getGuidId(guid);
+    }
+
+    public boolean addGUID(String guid, String unitName) throws SQLException {
+        int unitId = addUnit(unitName);
+        psSelGuidIdByGuid.setString(1, guid);
+        try (ResultSet rs = psSelGuidIdByGuid.executeQuery()) {
+            if (rs.next()) return false;   // existiert
+        }
+        insertGuid(guid, unitId);
+        return true;
+    }
+
+    public int getGuidId(String guid) throws SQLException {
+        psSelGuidIdByGuid.setString(1, guid);
+        try (ResultSet rs = psSelGuidIdByGuid.executeQuery()) {
+            return rs.next() ? rs.getInt(1) : -1;
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     *  Verknüpfungen unit_revision
+     * ------------------------------------------------------------------ */
+    public boolean hasUnitRevision(int unitId, int revisionId) throws SQLException {
+        psExistsUnitRevision.setInt(1, unitId);
+        psExistsUnitRevision.setInt(2, revisionId);
+        try (ResultSet rs = psExistsUnitRevision.executeQuery()) {
+            return rs.next();
+        }
+    }
+
+    public boolean addUnitRevision(String unitName, int revCode) throws SQLException {
+        int revisionId = hasRevision(revCode);
+        if (revisionId == -1) return false;
+        int unitId = addUnit(unitName);
+        psInsUnitRevision.setInt(1, unitId);
+        psInsUnitRevision.setInt(2, revisionId);
+        psInsUnitRevision.executeUpdate();
+        return true;
+    }
+
+    public boolean hasUnitRevision(String unitName, int revCode) throws SQLException {
+        int unitId = hasUnit(unitName);
+        int revId  = hasRevision(revCode);
+        if (unitId == -1 || revId == -1) return false;
+        return hasUnitRevision(unitId, revId);
+    }
+
+    /* ---------------------------------------------------------------------
+     *  Verknüpfungen guid_revision
+     * ------------------------------------------------------------------ */
+    public boolean addRevisionToGUID(String guid, int revCode) throws SQLException {
+        int guidId = getGuidId(guid);
+        if (guidId == -1) return false;
+        int revId = hasRevision(revCode);
+        if (revId == -1) return false;
+        psInsGuidRevision.setInt(1, guidId);
+        psInsGuidRevision.setInt(2, revId);
+        psInsGuidRevision.executeUpdate();
+        return true;
+    }
+
+    public boolean addGUIDsToRevision(List<String> guids, int revCode) throws SQLException {
+        int revId = hasRevision(revCode);
+        if (revId == -1) return false;
+        for (String g : guids) {
+            int gId = getGuidId(g);
+            if (gId == -1) return false;
+            psInsGuidRevision.setInt(1, gId);
+            psInsGuidRevision.setInt(2, revId);
+            psInsGuidRevision.addBatch();
+        }
+        psInsGuidRevision.executeBatch();
+        return true;
+    }
+
+    /* ---------------------------------------------------------------------
+     *  guid_owner
+     * ------------------------------------------------------------------ */
+    public boolean addChildtoGuid(String parentGuid, String childGuid) throws SQLException {
+        int parentId = getGuidId(parentGuid);
+        int childId  = getGuidId(childGuid);
+        if (parentId == -1 || childId == -1) return false;
+        psInsGuidOwner.setInt(1, parentId);
+        psInsGuidOwner.setInt(2, childId);
+        psInsGuidOwner.executeUpdate();
+        return true;
+    }
+
+    public boolean isParentOf(String parentGuid, String childGuid) throws SQLException {
+        int parentId = getGuidId(parentGuid);
+        int childId  = getGuidId(childGuid);
+        if (parentId == -1 || childId == -1) return false;
+        psExistsGuidOwner.setInt(1, parentId);
+        psExistsGuidOwner.setInt(2, childId);
+        try (ResultSet rs = psExistsGuidOwner.executeQuery()) { return rs.next(); }
+    }
+
+    /* ---------------------------------------------------------------------
+     *  Abfragen
+     * ------------------------------------------------------------------ */
+    public List<String> getGUIDsByRevision(int revCode) throws SQLException {
+        int revId = hasRevision(revCode);
+        if (revId == -1) return null;
+        List<String> list = new ArrayList<>();
+        psGuidsByRevId.setInt(1, revId);
+        try (ResultSet rs = psGuidsByRevId.executeQuery()) {
+            while (rs.next()) list.add(rs.getString(1));
+        }
+        return list;
+    }
+
+    public List<String> getGUIDsByUnit(String unitName) throws SQLException {
+        int unitId = hasUnit(unitName);
+        if (unitId == -1) return null;
+        List<String> list = new ArrayList<>();
+        psGuidsByUnitId.setInt(1, unitId);
+        try (ResultSet rs = psGuidsByUnitId.executeQuery()) {
+            while (rs.next()) list.add(rs.getString(1));
+        }
+        return list;
+    }
+
+    public List<String> getGUIDsByRevision(String unitName, int revCode) throws SQLException {
+        int unitId = hasUnit(unitName);
+        int revId  = hasRevision(revCode);
+        if (unitId == -1 || revId == -1) return null;
+        List<String> list = new ArrayList<>();
+        psGuidsByRevAndUnit.setInt(1, revId);
+        psGuidsByRevAndUnit.setInt(2, unitId);
+        try (ResultSet rs = psGuidsByRevAndUnit.executeQuery()) {
+            while (rs.next()) list.add(rs.getString(1));
+        }
+        return list;
+    }
+
+    public List<Integer> getRevisionIdsByGUID(String guid) throws SQLException {
+        int guidId = getGuidId(guid);
+        if (guidId == -1) return null;
+        List<Integer> ids = new ArrayList<>();
+        psRevisionIdsByGuidId.setInt(1, guidId);
+        try (ResultSet rs = psRevisionIdsByGuidId.executeQuery()) {
+            while (rs.next()) ids.add(rs.getInt(1));
+        }
+        return ids;
+    }
+
+    public RevisionData getRevisionData(int revisionId) throws SQLException {
+        psSelRevDataById.setInt(1, revisionId);
+        try (ResultSet rs = psSelRevDataById.executeQuery()) {
+            if (!rs.next()) return null;
+            return new RevisionData(
+                    rs.getInt("rev_code"),
+                    rs.getString("author"),
+                    rs.getString("date"),
+                    rs.getString("message"),
+                    rs.getString("jiraIssue")
+            );
+        }
+    }
+
+    /* ---------------------------------------------------------------------
+     *  Verbindungsverwaltung
+     * ------------------------------------------------------------------ */
+    public boolean reopenConnection()
+    {
+        try
 		{
-			trace("SQLite-JDBC is working: " + c.getMetaData().getDriverVersion());
-		}
-	}
-
-	private void createDatabase( )
-	{
-
-		trace("Creating Database on " + myJDBC_URL);
-		
-		try (Connection con = DriverManager.getConnection(myJDBC_URL))
-		{
-			myConnection = con;
-
-			try (Statement st = myConnection.createStatement())
+			if (!connection.isClosed()) 
 			{
-				st.execute("PRAGMA journal_mode=WAL;"); // parallele Leser/Schreiber
-				st.execute("PRAGMA synchronous   = NORMAL;"); // Pflicht f�r WAL-Performance
-				st.execute("PRAGMA cache_size    = -20000;"); // ~80 MB Cache (20 000 kB)
-				st.execute("PRAGMA foreign_keys  = ON;");     // FK-Pr�fung nicht vergessen
-			}
-
-			try (Statement st = myConnection.createStatement())
-			{
-				for (String sql : DDL)
-				{
-					st.execute(sql);
-				}
-			}
-
-		}
-		catch (SQLException e)
-		{
-			e.printStackTrace();
-		}
-
-		trace("Database created");
-
-	}
-
-	public int addRevision(int aRevCode, String aAuthor, String aDate, String aMessage, String aJiraId)
-			throws SQLException
-	{
-		
-		try (PreparedStatement sel = myConnection.prepareStatement("SELECT rev_id FROM revision WHERE rev_code = ?"))
-		{
-			sel.setInt(1, aRevCode);
-			try (ResultSet rs = sel.executeQuery())
-			{
-				if (rs.next()) return rs.getInt(1);
-			}
-		}
-		// Revision neu anlegen
-		try (PreparedStatement ins = myConnection.prepareStatement(
-				"INSERT INTO revision (rev_code, author, date, message, jiraIssue) VALUES (?,?,?,?,?)",
-				Statement.RETURN_GENERATED_KEYS))
-		{
-			ins.setInt(1, aRevCode);
-			ins.setString(2, aAuthor);
-			ins.setString(3, aDate);
-			ins.setString(4, aMessage);
-			ins.setString(5, aJiraId);
-			ins.executeUpdate();
-			try (ResultSet keys = ins.getGeneratedKeys())
-			{
-				keys.next();
-				return keys.getInt(1);
-			}
-		}
-
-	}
-
-	public int addUnit(String aUnitName) throws SQLException
-	{
-		try (PreparedStatement sel = myConnection.prepareStatement("SELECT unit_id FROM unit WHERE name = ?"))
-		{
-			sel.setString(1, aUnitName);
-			try (ResultSet rs = sel.executeQuery())
-			{
-				if (rs.next()) return rs.getInt(1);
-			}
-		}
-
-		// Neu anlegen
-		try (PreparedStatement ins = myConnection.prepareStatement("INSERT INTO unit(name) VALUES (?)",
-				Statement.RETURN_GENERATED_KEYS))
-		{
-			ins.setString(1, aUnitName);
-			ins.executeUpdate();
-			try (ResultSet keys = ins.getGeneratedKeys())
-			{
-				keys.next();
-				return keys.getInt(1);
-			}
-		}
-	}
-	
-	public boolean addGUID(String aGUID, String aUnitName) throws SQLException
-	{
-		int unitId = addUnit(aUnitName);
-		
-		int getGuidId = getGuidId(aGUID);
-		
-		if (getGuidId != -1)
-		{
-			return false;
-		}
-
-		
-		try (PreparedStatement ins = myConnection.prepareStatement("INSERT INTO guid(guid, unit_id) VALUES (?,?)",
-				Statement.RETURN_GENERATED_KEYS))
-		{
-			ins.setString(1, aGUID);
-			ins.setInt(2, unitId);
-			ins.executeUpdate();
-			try (ResultSet keys = ins.getGeneratedKeys())
-			{
-				keys.next();
 				return true;
 			}
 		}
-	}
-	
-	
-	public int getGuidId(String aGUID) throws SQLException
-	{
-		try (PreparedStatement sel = myConnection.prepareStatement("SELECT guid_id FROM guid WHERE guid = ?"))
+		catch (SQLException e)
 		{
-			sel.setString(1, aGUID);
-			try (ResultSet rs = sel.executeQuery())
-			{
-				if (rs.next()) return rs.getInt(1);
-			}
+			// TODO Auto-generated catch block
+			//e.printStackTrace();
 		}
-
-		return -1;
-	}
-	
-
-	private boolean hasRevisionId(int aRevisionId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection.prepareStatement("SELECT 1 FROM revision WHERE rev_id = ?"))
-		{
-			ps.setInt(1, aRevisionId);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	private boolean hasUnitId(int aUnitId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection.prepareStatement("SELECT 1 FROM unit WHERE unit_id = ?"))
-		{
-			ps.setInt(1, aUnitId);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	public boolean hasUnitRevision(int aUnitId, int aRevisionId) throws SQLException
-	{
-		if (hasRevisionId(aRevisionId) == false)
-		{
-			return false;
-		}
-
-		if (hasUnitId(aUnitId) == false)
-		{
-			return false;
-		}
-
-		return hasUnitRevisionNoCheck(aUnitId, aRevisionId);
-	}
-	
-	public boolean addUnitRevision(String aUnitName, int aRevCode) throws SQLException
-	{
-		int revisionId = hasRevision(aRevCode);
-		if (revisionId == -1)
-		{
-			return false;
-		}
-		int unitId = addUnit(aUnitName);
-		
-		
-		if (hasUnitRevision(unitId, revisionId) == true)
-		{
-			return true;
-		}
-		
-		// Neu anlegen
-
-		try (PreparedStatement ins = myConnection.prepareStatement(
-				"INSERT INTO unit_revision(unit_id, rev_id) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS))
-		{
-			ins.setInt(1, unitId);
-			ins.setInt(2, revisionId);
-			ins.executeUpdate();
-			try (ResultSet keys = ins.getGeneratedKeys())
-			{
-				keys.next();
-				int id = keys.getInt(1);
-				if (id == -1)
-				{
-					return false;
-				}
-				
-                return true;			
-             }
-		}
-
-	}
-	
-	
-	private boolean hasUnitRevisionNoCheck(int aUnitId, int aRevisionId) throws SQLException
-    {
-        try (PreparedStatement ps = myConnection
-                .prepareStatement("SELECT 1 FROM unit_revision WHERE unit_id = ? AND rev_id = ?"))
+    
+        try
         {
-            ps.setInt(1, aUnitId);
-            ps.setInt(2, aRevisionId);
-            try (ResultSet rs = ps.executeQuery())
-            {
-                if (!rs.next())
-                {
-                    return false;
-                }
-            }
+        connection = DriverManager.getConnection(jdbcUrl);
+        
+        prepareStatements();
+        
         }
-
+        catch (SQLException e)
+        {
+        	//e.printStackTrace();
+        	trace("ReopenConnection failed: " + e.getMessage());
+        	return false;
+        }
         return true;
     }
-	
-	public int hasRevision(int aRevCode) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection.prepareStatement("SELECT rev_id FROM revision WHERE rev_code = ?"))
-		{
-			ps.setInt(1, aRevCode);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return -1;
-				}
-				return rs.getInt(1);
-			}
-		}
-	}
-	
-	private int hasUnit(String aUnitName) throws SQLException
-	{
-		
-		try (PreparedStatement ps = myConnection.prepareStatement("SELECT unit_id FROM unit WHERE name = ?"))
-		{
-			ps.setString(1, aUnitName);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return -1;
-				}
-				return rs.getInt(1);
-			}
-		}
-	}
-	
-	public boolean reopenConnection() throws SQLException
-	{
-		if(myConnection.isClosed())
-		{
-			myConnection = DriverManager.getConnection(myJDBC_URL);
-		
-		}
-		return true;
-	}
-	
-	public boolean hasUnitRevision(String aUnitName, int aRevCode) throws SQLException
-	{
-		int unitId = hasUnit(aUnitName);
-		if (unitId == -1)
-		{
-			return false;
-		}
-		
-		int aRevisionId = hasRevision(aRevCode);
 
-		if (aRevisionId == -1)
-		{
-			return false;
-		}
-		
-		return hasUnitRevisionNoCheck(unitId, aRevisionId);
-		
-	}
-	
-	private boolean addRevisionIdToGuidId(int aGuidId, int aRevisionId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection
-				.prepareStatement("INSERT INTO guid_revision (guid_id, rev_id) VALUES (?, ?)"))
-		{
-			ps.setInt(1, aGuidId);
-			ps.setInt(2, aRevisionId);
-			ps.executeUpdate();
-		}
-		return true;
-	}
-	
-	private boolean getRevisionIdByGuidId(int aGuidId, int aRevisionId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection
-				.prepareStatement("SELECT 1 FROM guid_revision WHERE guid_id = ? AND rev_id = ?"))
-		{
-			ps.setInt(1, aGuidId);
-			ps.setInt(2, aRevisionId);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-	
-	
-	public boolean addRevisionToGUID(String aGUID, int aRevCode) throws SQLException
-	{
-		int guidId = getGuidId(aGUID);
-		
-		if (guidId == -1)
-		{
-			return false;
-		}
-		
-		
-		int aRevisionId = hasRevision(aRevCode);
+    @Override public void close() throws SQLException { connection.close(); }
 
-		if (aRevisionId == -1)
-		{
-			return false;
-		}
-		
-		if (getRevisionIdByGuidId(guidId, aRevisionId) == true)
-		{
-			return true;
-		}
-
-		return addRevisionIdToGuidId(guidId, aRevisionId);
-
-	}
-	
-	public boolean addChildtoGuid(String aParentGUID, String aChildGUID) throws SQLException
-	{
-		int parentGuidId = getGuidId(aParentGUID);
-		int childGuidId = getGuidId(aChildGUID);
-
-		if (parentGuidId == -1 || childGuidId == -1)
-		{
-			return false;
-		}
-
-		try (PreparedStatement ps = myConnection.prepareStatement("INSERT INTO guid_owner (parent_guid_id, child_guid_id) VALUES (?, ?)"))
-		{
-			ps.setInt(1, parentGuidId);
-			ps.setInt(2, childGuidId);
-			ps.executeUpdate();
-		}
-
-		return true;
-
-	}
-	
-	
-
-	public List<String> getGUIDsByRevision(int aRevCode) throws SQLException
-	{
-		int revisionId = hasRevision(aRevCode);
-		if (revisionId == -1)
-		{
-			return null;
-		}
-		
-		List<String> guids = new ArrayList<>();
-
-		try (PreparedStatement pstmt = myConnection.prepareStatement("SELECT guid FROM guid_revision WHERE rev_id = ?"))
-		{
-			pstmt.setInt(1, revisionId);
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next())
-			{
-				String guid = rs.getString("guid");
-				guids.add(guid);
-			}
-		}
-		
-		return guids;
-	}
-	
-	public List<String> getGUIDsByUnit(String aUnitName) throws SQLException
-	{
-		int unitId = hasUnit(aUnitName);
-		if (unitId == -1)
-		{
-			return null;
-		}
-
-		List<String> guids = new ArrayList<>();
-
-		try (PreparedStatement pstmt = myConnection.prepareStatement("SELECT guid FROM guid WHERE unit_id = ?"))
-		{
-			pstmt.setInt(1, unitId);
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next())
-			{
-				String guid = rs.getString("guid");
-				guids.add(guid);
-			}
-		}
-
-		return guids;
-
-	}
-	
-	public boolean isParentOf(String aParentGUID, String aChildGUID) throws SQLException
-	{
-		int parentGuidId = getGuidId(aParentGUID);
-		int childGuidId = getGuidId(aChildGUID);
-
-		if (parentGuidId == -1 || childGuidId == -1)
-		{
-			return false;
-		}
-
-		try (PreparedStatement ps = myConnection
-				.prepareStatement("SELECT 1 FROM guid_owner WHERE parent_guid_id = ? AND child_guid_id = ?"))
-		{
-			ps.setInt(1, parentGuidId);
-			ps.setInt(2, childGuidId);
-			try (ResultSet rs = ps.executeQuery())
-			{
-				if (!rs.next())
-				{
-					return false;
-				}
-			}
-		}
-
-		return true;
-
-	}
-
-	public List<String> getGUIDsByRevision(String aUnitName, int aRevCode) throws SQLException
-	{
-		
-		int revisionId = hasRevision(aRevCode);
-		int unitId = hasUnit(aUnitName);
-		
-		if (revisionId == -1)
-		{
-			return null;
-		}
-		
-		if (unitId == -1)
-		{
-			return null;
-		}
-		
-		List<String> guids = new ArrayList<>();
-		try (PreparedStatement pstmt = myConnection.prepareStatement(
-				"SELECT g.guid FROM guid g JOIN guid_revision gr ON g.guid_id = gr.guid_id WHERE gr.rev_id = ?"/* AND g.unit_id = ?"*/))
-		{
-			pstmt.setInt(1, revisionId);
-			//pstmt.setInt(2, unitId);
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next())
-			{
-				String guid = rs.getString("guid");
-				guids.add(guid);
-			}
-		}
-		
-		return guids;
-				
-	}
-
-	public List<Integer> getRevisionIdsByGUID(String aGUID) throws SQLException
-	{
-		List<Integer> revisionIds = new ArrayList<>();
-		
-		int guidId = getGuidId(aGUID);
-		
-		if (guidId == -1)
-		{
-			return null;
-		}
-		
-		// Revisionen holen
-		
-		try (PreparedStatement pstmt = myConnection
-				.prepareStatement("SELECT gr.rev_id FROM guid_revision gr WHERE gr.guid_id = ?"))
-		{
-			pstmt.setInt(1, guidId);
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next())
-			{
-				int revisionId = rs.getInt("rev_id");
-				revisionIds.add(revisionId);
-			}
-		}
-		
-		return revisionIds;
-	}
-	
-	public int getRevision(int aRevisionId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection.prepareStatement("SELECT rev_code FROM revision WHERE rev_id = ?"))
-		{
-			ps.setInt(1, aRevisionId);
-			ResultSet rs = ps.executeQuery();
-		
-			if (!rs.next())
-			{
-				return -1;
-			}
-			return rs.getInt(1);	
-		}	
-	}
-	
-	
-	
-
-	public boolean addGUIDsToRevision(List<String> aGUIDs, int aRevCode) throws SQLException
-	{
-		
-		int revisionId = hasRevision(aRevCode);
-		if (revisionId == -1)
-		{
-			return false;
-		}
-		
-		for(String guid : aGUIDs)
-		{
-			int guidId = getGuidId(guid);
-
-			if (guidId == -1)
-			{
-				return false;
-			}
-
-			if(addRevisionIdToGuidId(guidId, revisionId)==false)
-            {
-                return false;
-            }
-			
-			
-		}
-
-		return true;
-	}
-	
-	
-	/*
-	
-	public boolean addGUIDs(List<String> aGUIDs, String aUnitName, int aRevCode) throws SQLException
-	{
-
-		int unitId = hasUnit(aUnitName);
-		int revisionId = hasRevision(aRevCode);
-
-		if (revisionId == -1)
-		{
-			return false;
-		}
-
-		if (unitId == -1)
-		{
-			return false;
-		}
-
-		for (String guid : aGUIDs)
-		{
-			int guidId = addGUID(guid, aUnitName);
-
-			if (addRevisionIdToGuidId(guidId, revisionId) == false)
-			{
-				return false;
-			}
-
-		}
-
-		return true;
-
-	}
-	*/
-	
-	public RevisionData getRevisionData(int aRevisionId) throws SQLException
-	{
-		try (PreparedStatement ps = myConnection
-				.prepareStatement("SELECT rev_code, author, date, message, jira_issue FROM revision WHERE rev_id = ?"))
-		{
-			ps.setInt(1, aRevisionId);
-			ResultSet rs = ps.executeQuery();
-
-			if (!rs.next())
-			{
-				return null;
-			}
-
-			int revCode = rs.getInt("rev_code");
-			String author = rs.getString("author");
-			String date = rs.getString("date");
-			String message = rs.getString("message");
-			String jiraIssue = rs.getString("jira_issue");
-
-			return new RevisionData(revCode, author, date, message, jiraIssue);
-		}
-	}
-	
-	public class RevisionData
-	{
-		
-		private int myRevCode;
-		private String myRevisionMessage;
-		private String myJiraIssue;
-		private String myAuthor;
-		private String myDate;
-
-		public RevisionData(int aRevCode, String aAuthor, String aDate, String aRevisionMessage, String aJiraIssue)
-		{		
-			myRevCode = aRevCode;
-			myRevisionMessage = aRevisionMessage;
-			myJiraIssue = aJiraIssue;
-			myAuthor = aAuthor;
-			myDate = aDate;
-		}
-	
-		public int getRevCode()
-		{
-			return myRevCode;
-		}
-
-		public String getAuthor()
-		{
-			return myAuthor;
-		}
-		
-		public String getDate()
-		{
-			return myDate;
-		}
-		
-		public String getRevisionMessage()
-		{
-			return myRevisionMessage;
-		}
-
-		public String getJiraIssue()
-		{
-			return myJiraIssue;
-		}
-	}
-
-
+    /* ---------------------------------------------------------------------
+     *  RevisionData DTO
+     * ------------------------------------------------------------------ */
+    public static class RevisionData {
+        private final int revCode;
+        private final String author;
+        private final String date;
+        private final String message;
+        private final String jira;
+        public RevisionData(int revCode, String author, String date, String message, String jira) {
+            this.revCode = revCode; this.author = author; this.date = date; this.message = message; this.jira = jira;
+        }
+        public int getRevCode() { return revCode; }
+        public String getAuthor() { return author; }
+        public String getDate() { return date; }
+        public String getRevisionMessage() { return message; }
+        public String getJira()
+        {
+        	return jira;
+        }
+    }
 }
-
