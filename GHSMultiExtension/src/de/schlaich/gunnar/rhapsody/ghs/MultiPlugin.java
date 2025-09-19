@@ -31,11 +31,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,8 +59,11 @@ public class MultiPlugin extends RPUserPlugin
 	private static final String BREAK_POINT_META_NAME = "BreakPoint";
 	private static final String BREAK_POINT_COLLECTION_META_NAME = "BreakPointCollection";
 
-	private String myCmd = "C:\\ghs\\multi_716\\mpythonrun";
-	private String myMultiCmd = "C:\\ghs\\multi_716\\multi.exe";
+	//environment variables
+	
+	private String myGhsPath = "C:\\ghs\\multi_814\\";
+	private String myCmd = myGhsPath+"mpythonrun";
+	private String myMultiCmd = myGhsPath+"multi.exe";
 	private String myArgsDebugView = " -s \"dw = winreg.GetDebugger()\" -s \"dw.RunCommands('e {0} ')\"";
 	private String myArgDebugView1 = "\"dw = winreg.GetDebugger()\"";
 	private String myArgDebugView2Begin = "\"dw.RunCommands('e ";
@@ -129,6 +134,23 @@ public class MultiPlugin extends RPUserPlugin
 	{
 		// TODO Auto-generated method stub
 
+	}
+	
+	
+	private boolean setMyCmd()
+	{
+		String ghsPathRunning = getGhsPath();
+		if (ghsPathRunning == null || ghsPathRunning.isEmpty())
+		{
+			trace("Multi not running");
+			return false;
+		}
+		
+		myGhsPath = ghsPathRunning;
+		myCmd = myGhsPath + "mpythonrun";
+		myMultiCmd = myGhsPath + "multi.exe";
+		return true;
+		
 	}
 
 	@Override
@@ -335,6 +357,13 @@ public class MultiPlugin extends RPUserPlugin
 	public void setBreakPoint(IRPOperation aOperation, int aOffset)
 	{
 		trace("Start setBreakPoint operation ");
+		
+		if (setMyCmd() == false)
+		{
+			trace("Could not set Breakpoint - Multi not running");
+			return;
+		}
+		
 		String component = getOperationLocation(aOperation);
 		if (aOffset > 0)
 		{
@@ -459,6 +488,13 @@ public class MultiPlugin extends RPUserPlugin
 
 	public void viewInRhapsody()
 	{
+		
+		if (setMyCmd() == false)
+		{
+			trace("Could not view in Rhapsody - Multi not running");
+			return;
+		}
+		
 		String arg2 = "\"dw.GetPullDownValue('pd_proc')\"";
 		List<String> result = runCmd(myArgDebugView1, arg2, null, null);
 
@@ -537,6 +573,12 @@ public class MultiPlugin extends RPUserPlugin
 	public void viewInEditor(IRPOperation aOperation)
 	{
 		trace("Start viewInEditor");
+		
+		if (setMyCmd() == false)
+		{
+			trace("Could not view in Editor - Multi not running");
+			return;
+		}
 
 		IRPOperation selectedOperation = getSelectedOperation(aOperation);
 
@@ -561,10 +603,154 @@ public class MultiPlugin extends RPUserPlugin
 		runCmd(myArgEditView1, args2, args3, null);
 
 	}
+	
+	private  String pickPwsh() {
+        String sysroot = System.getenv("SystemRoot");
+        String[] candidates = new String[] {
+            sysroot + "\\Sysnative\\WindowsPowerShell\\v1.0\\powershell.exe", // erzwingt 64-bit aus 32-bit JVM
+            sysroot + "\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",  // 64-bit, wenn JVM 64-bit
+            "powershell.exe"                                                  // Fallback
+        };
+        for (String c : candidates) {
+            try {
+                Process p = new ProcessBuilder(c, "-NoProfile", "-NonInteractive", "-Command", "echo OK").start();
+                if (p.waitFor(3, TimeUnit.SECONDS) && p.exitValue() == 0) return c;
+            } catch (Exception ignored) {}
+        }
+        return "powershell.exe";
+    }
+
+	
+	
+	private String getGhsPath() 
+	{
+		
+		String path = "";
+		
+		String pwsh = pickPwsh();
+
+        // PowerShell-Command: UTF-8 einschalten, nur vorhandene Pfade ausgeben
+        String ps = "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8; " +
+                    "(Get-Process mprojmgr).Path";
+                   
+        
+        trace("PowerShell: " + ps);
+
+        ProcessBuilder pb = new ProcessBuilder(
+            pwsh,
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy", 
+            "Bypass",
+            "-Command", ps
+        );
+        
+
+        pb.redirectErrorStream(true); // stderr -> stdout zusammenführen
+        Process p;
+		try
+		{
+			p = pb.start();
+		}
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
+
+        List<String> lines = new ArrayList<>();
+        try 
+        {
+        	BufferedReader br = new BufferedReader(
+        
+                new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8));
+        
+            String line;
+            try
+			{
+				while ((line = br.readLine()) != null) 
+				{
+				    trace(line);
+					// BOM am ersten Zeichen ggf. entfernen
+				    if (!lines.isEmpty()) lines.add(line);
+				    else lines.add(line.replace("\uFEFF", ""));
+				}
+			}
+			catch (IOException e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+        }
+		catch (Exception e)
+		{
+			p.destroyForcibly();
+			throw new RuntimeException("error reading powershell output", e);
+		}
+
+        // Sauber beenden (Timeout als Schutz)
+        try
+		{
+			if (!p.waitFor(10, TimeUnit.SECONDS))
+			{
+			    p.destroyForcibly();
+			    throw new RuntimeException("could not closePowerShell");
+			}
+		}
+		catch (InterruptedException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+        int code = p.exitValue();
+        if (lines.isEmpty()) 
+        {
+            System.out.println("No Output (ExitCode " + code + ").");
+        } 
+        else 
+        {
+            for (String s : lines) 
+            {
+                if (!s.trim().isEmpty())
+                {	
+                	path += s.trim();
+                }
+                
+            }
+        }
+        
+        File ghsExe = new File(path);
+        
+		if (!ghsExe.exists())
+		{
+			trace("GHS Multi nicht found: " + path);
+			return null;
+		}
+		
+		path = ghsExe.getParentFile().getAbsolutePath() + "\\";
+        
+        
+        
+        
+        return path;
+    }
+    
+	
+	
+	
+	
 
 	public void compile(IRPModelElement aElement)
 	{
 
+		if (setMyCmd() == false)
+		{
+			trace("Could not compile - Multi not running");
+			return;
+		}
+		
 		boolean viewTable = false;
 		
 		trace("Generate...");

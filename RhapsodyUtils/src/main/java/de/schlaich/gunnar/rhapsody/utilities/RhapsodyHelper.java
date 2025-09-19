@@ -214,24 +214,8 @@ public class RhapsodyHelper
 		{
 			return null;
 		}
-		
-		
-		
-		
-		
-		
+	
 		return null;
-		
-		
-		
-		
-		
-		
-		
-		
-		
-
-		
 
 	}
 
@@ -269,8 +253,7 @@ public class RhapsodyHelper
 		}
 
 	}
-	
-	
+
 
 	public static void setComponentDependency(IRPApplication rhapsody, IRPModelElement selected)
 	{
@@ -380,6 +363,7 @@ public class RhapsodyHelper
 		IRPCollection dependencies = selectedUnit.getDependencies();
 		if (dependencies.getCount() > 0)
 		{
+			@SuppressWarnings("unchecked")
 			List<IRPDependency> dependenciesList = dependencies.toList();
 			for (IRPDependency dependency : dependenciesList)
 			{
@@ -505,6 +489,7 @@ public class RhapsodyHelper
 		rhapsody.writeToOutputWindow("Log",
 				"Moved Package " + addedUnit.getName() + " added to " + owner.getName() + "\n");
 
+		@SuppressWarnings("unchecked")
 		List<IRPComponent> components = p.getComponents().toList();
 
 		if (components.size() != 1)
@@ -525,10 +510,45 @@ public class RhapsodyHelper
 				config.setStatechartImplementation("Reuseable");
 			}
 
+			IRPDependency d = c.addDependencyTo(newComponent);
+			d.addStereotype("Usage", "Dependency");
+			
 			p.setActiveComponent(newComponent);
 			rhapsody.writeToOutputWindow("Log", "Created new Component " + newComponent.getName() + "\n");
 
 		}
+	}
+	
+	public static String attributeToString(IRPAttribute attribute)
+	{
+		StringBuilder sb = new StringBuilder();
+		sb.append(attribute.getName());
+		sb.append(" : ");
+		sb.append(attribute.getType().getName());
+		if (attribute.getIsStatic()==1)
+		{
+			sb.append(" static");
+		}
+		
+		if (attribute.getIsConstant() == 1)
+		{
+			sb.append(" constant");
+		}
+		
+		if(attribute.getIsReference()==1)
+		{
+			sb.append(" reference");
+		}
+		
+		if (attribute.getIsOrdered() == 1)
+		{
+			sb.append(" ordered");
+		}
+		
+		sb.append(attribute.getMultiplicity());
+		
+		return sb.toString();
+
 	}
 
 	public static void scriptRunner(IRPApplication rhapsody, IRPModelElement selected)

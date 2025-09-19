@@ -44,6 +44,7 @@ import com.telelogic.rhapsody.core.IRPProject;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
+import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 
 public class COperationalRoundtrip implements ActionListener {
 
@@ -227,6 +228,7 @@ public class COperationalRoundtrip implements ActionListener {
 				
 		
 			}
+			
 			
 			diffStringBuilder.append("</body> </html>\n");
 			
@@ -493,6 +495,7 @@ public class COperationalRoundtrip implements ActionListener {
 						{
 							continue;
 						}
+						sourceCode = StaticCodeAnalysis.formatString(sourceCode);
 						operation.setBody(sourceCode);
 					}
 				}

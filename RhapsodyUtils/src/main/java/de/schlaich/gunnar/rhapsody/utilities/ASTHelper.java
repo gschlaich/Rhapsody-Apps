@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -1525,6 +1526,57 @@ public class ASTHelper
 		}
 
 		return filePath;
+	}
+	
+	
+
+	
+	public static File getSourcePath(IRPModelElement aElement, IRPApplication aApplication, String aFileExtension)
+	{
+		List<IRPProject> projects = aApplication.getProjects().toList();
+		
+		IRPProject project = aApplication.activeProject();
+
+		IRPComponent component = project.getActiveComponent();
+		
+		IRPConfiguration configuration = project.getActiveConfiguration();
+		
+		List<IRPModelElement> scopeElements = component.getScopeElements().toList();
+		
+		IRPModelElement selectedElement = aElement;
+		
+		while(selectedElement!= null)
+		{
+			for (IRPModelElement scopeElement : scopeElements)
+			{
+				if (scopeElement.equals(selectedElement))
+				{
+					
+					File dir = new File(configuration.getDirectory(1, ""));
+					if (dir.exists() == false)
+					{
+						trace("Directory does not exist: " + configuration.getDirectory(1, ""));
+						return null;
+					}
+					
+					File file = new File(dir, selectedElement.getName()+aFileExtension);
+					if (file.exists() == false)
+					{
+						trace("File does not exist: " + file.getAbsolutePath());
+						return null;
+					}
+					
+					return file;
+				}
+			}
+			
+			selectedElement = selectedElement.getOwner();
+			
+		}
+
+		return null;
+			
+
 	}
 
 	public static String getSourcePath(IRPPackage aPackage, IRPApplication aApplication)

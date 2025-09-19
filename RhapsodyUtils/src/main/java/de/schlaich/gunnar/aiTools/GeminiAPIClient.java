@@ -293,7 +293,7 @@ public class GeminiAPIClient
 
 			String prompt = "what is the purpose of the following C++ class?:\n\n```header File: \n" + hFileContent
 					+ "\n ```  \n```cpp File: \n" + cppFileContent
-					+ "\n```  \n only summery, no rtf, no comments, use newline for line breaks";
+					+ "\n```  \n only summery, use markdown, no rtf, no comments, use newline for line breaks";
 
 			String output = generateContent(prompt);
 			output = output + "\n[gemini generated]\n";
@@ -335,8 +335,11 @@ public class GeminiAPIClient
 
 }
 
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 class GeminiResponse
 {
+	
 	public List<Candidate> candidates;
 	public UsageMetadata usageMetadata;
 	public String modelVersion;

@@ -22,9 +22,11 @@ import javax.swing.filechooser.FileView;
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
 import com.telelogic.rhapsody.core.IRPControlledFile;
+import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -33,21 +35,28 @@ import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
 import com.telelogic.rhapsody.core.IRPTableView;
+import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
 import de.schlaich.gunnar.aiTools.GeminiAPIClient;
+import de.schlaich.gunnar.aiTools.mcp.HttpJsonRpcBridge;
+import de.schlaich.gunnar.aiTools.mcp.McpStarter;
 import de.schlaich.gunnar.rhapsody.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
+import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
+import de.schlaich.gunnar.rhapsody.utilities.MarkdownEditorPreview;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyReverseEngineering;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 import de.schlaich.gunnar.rhapsody.utilities.USMConfiguration;
+import de.schlaich.gunnar.rhapsody.utilities.WriterTemplateParser;
 import de.schlaich.gunnar.rhapsody.utilities.generateInitCode.CodeGenerator;
 
 public class CUSMPlugin extends RPUserPlugin
@@ -105,9 +114,15 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String TortoiseLogCmd = "Tortoise Log";
 	public static final String GeminiDescribeCmd = "Add Description";
 	public static final String UpdateDatabaseCmd = "Update Database";
-	
 	public static final String libraryProperty = "CPP_CG.Package.USMLibraries";
 	public static final String IncludeProperty = "CPP_CG.Package.USMIncludePath";
+	public static final String MarkdownEditorCmd = "Markdown Editor";
+	public static final String ReverseEngineeringCmd = "Reverse Engineering";
+	public static final String GoogleTestRoundTripCmd = "GoogleTest Roundtrip";
+	public static final String FormatCmd = "Format Code";
+	public static final String ParseElementCmd = "Parse Element";
+	public static final String MCPStartCmd = "MCP Start";
+	public static final String MCPStopCmd = "MCP Stop";
 	
 	
 	
@@ -243,6 +258,18 @@ public class CUSMPlugin extends RPUserPlugin
 			roundtrip.startRoundtrip(myRhapsody, selected, false);
 			return;
 		}
+		
+		if (menuItem.contains(GoogleTestRoundTripCmd))
+		{
+			CGoogleTestRoundTrip typeRoundTrip = CGoogleTestRoundTrip.getInstance(myRhapsody);
+			if (typeRoundTrip.startRoundTrip((IRPFile) selected) == false)
+			{
+				trace("Type Roundtrip failed");
+			}
+			return;
+			
+		}
+		
 		if (menuItem.contains(SearchElementCmd))
 		{
 			RhapsodyHelper.searchElement(myRhapsody, selected);
@@ -549,7 +576,7 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(DiffTrunkCmd))
 		{
-			getSVNTools().diffMergeBase(selected, false);
+			//getSVNTools().diffMergeBase(selected, false);
 			return;
 		}
 
@@ -568,7 +595,7 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(ShowHistoryCmd))
 		{
-			getSVNTools().showChangeList(selected, 800, false);
+			getSVNTools().showChangeList(selected, 800, false, 0, 0);
 			return;
 		}
 
@@ -590,14 +617,14 @@ public class CUSMPlugin extends RPUserPlugin
 		if (menuItem.contains(StatisticCmd2))
 		{
 			SVNTools svn = getSVNTools();
-			svn.showChangeStatistic(selected, 800, false);
+			svn.showChangeStatistic(selected, 800, false, 0, 0);
 			return;
 		}
 
 		if (menuItem.contains(StatisticCmd))
 		{
 			SVNTools svn = getSVNTools();
-			svn.showChangeStatistic(selected, 36, true);
+			svn.showChangeStatistic(selected, 36, true, 0, 0);
 			return;
 		}
 			
@@ -941,6 +968,8 @@ public class CUSMPlugin extends RPUserPlugin
 			{
 				IRPOperation operation = (IRPOperation) selected;
 				geminiAPIClient.generateDescription(operation);
+				selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
+				
 				
 				
 			}
@@ -948,11 +977,13 @@ public class CUSMPlugin extends RPUserPlugin
 			{
 				IRPClass c = (IRPClass) selected;
 				geminiAPIClient.generateDescription(c);
+				selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
 			}
 			else	
 			{
 				trace("No Operation or Class selected");
 				
+		
 			}
 
 			return;
@@ -966,6 +997,105 @@ public class CUSMPlugin extends RPUserPlugin
 			svnTools.updateDatabase();
 			
 		}
+		
+		if (menuItem.contains(MarkdownEditorCmd))
+		{
+			selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
+			return;
+		}
+		
+		
+		if (menuItem.contains(ReverseEngineeringCmd))
+		{
+			
+			if(selected instanceof IRPPackage == false)
+            {
+                trace("No Package selected");
+                return;
+            }
+			
+			IRPPackage rpackage = (IRPPackage) selected;
+			
+			RhapsodyReverseEngineering reverseEngineering = RhapsodyReverseEngineering.getRhapsodyReverseEngineering(this::trace, myRhapsody);
+			
+			if (reverseEngineering == null)
+			{
+				trace("Reverse Engineering not available");
+				return;
+			}
+			
+			reverseEngineering.update(rpackage);
+			
+			
+			return;
+		}
+		
+		if (menuItem.contains(FormatCmd))
+		{
+			
+			if (selected instanceof IRPOperation)
+			{
+				IRPOperation operation = (IRPOperation) selected;
+				StaticCodeAnalysis.formatOperation(operation, this::trace);
+				return;
+			}
+			if (selected instanceof IRPClassifier)
+			{
+				IRPClassifier classifier = (IRPClassifier) selected;
+				StaticCodeAnalysis.formatClassifier(classifier, this::trace);
+				return;
+			}
+			
+
+			trace("No Classifier or Operation selected for formatting ( " + selected.getMetaClass() + ")");
+			
+			return;
+		}
+		
+		if (menuItem.contains(ParseElementCmd))
+		{
+			if (selected instanceof IRPModelElement)
+			{
+				IRPModelElement modelElement = (IRPModelElement) selected;
+				
+			
+				WriterTemplateParser parser = new WriterTemplateParser(this::trace);
+				
+				String parsedText = parser.parse(selected, false);
+				trace("Parsed Text: " + parsedText);
+				return;
+			}
+
+			trace("No Model Element selected for parsing ( " + selected.getMetaClass() + ")");
+			return;
+		}
+		
+		if (menuItem.contains(MCPStartCmd))
+		{
+			
+			McpStarter mcpStarter = McpStarter.getInstance();
+			
+			try
+			{
+				mcpStarter.start(myRhapsody);
+			}
+			catch (Exception e)
+			{
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return;
+		}
+		
+		if (menuItem.contains(MCPStopCmd))
+		{
+			McpStarter mcpStarter = McpStarter.getInstance();
+			mcpStarter.stop();
+			
+			return;
+		}
+		
 
 		trace("menue item unknown");
 

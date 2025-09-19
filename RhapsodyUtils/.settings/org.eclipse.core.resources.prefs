@@ -1,2 +1,6 @@
 eclipse.preferences.version=1
+encoding//src/main/java/de/schlaich/gunnar/aiTools/mcp/RhapsodyClient.java=UTF-8
+encoding//src/main/java/de/schlaich/gunnar/rhapsody/utilities/MarkdownEditorPreview.java=UTF-8
+encoding//src/main/java/de/schlaich/gunnar/rhapsody/utilities/PlantUmlNodeRenderer.java=UTF-8
 encoding//src/main/java/de/schlaich/gunnar/rhapsody/utilities/RevisionDatabase.java=UTF-8
+encoding//src/main/java/de/schlaich/gunnar/rhapsody/utilities/RhapsodyReverseEngineering.java=UTF-8

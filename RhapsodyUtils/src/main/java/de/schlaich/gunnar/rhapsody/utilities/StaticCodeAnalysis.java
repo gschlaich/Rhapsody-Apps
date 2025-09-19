@@ -4,12 +4,14 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Font;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,6 +113,87 @@ public class StaticCodeAnalysis {
 		}
 		
 		return myStaticCodeAnalysis;
+	}
+	
+	public static void formatOperation(IRPOperation aOperation,  Consumer<String> aTraceAction)
+	{
+		if (aOperation == null)
+		{
+			return;
+		}
+
+		String source = aOperation.getBody();
+
+		if (source == null)
+		{
+			return;
+		}
+
+		String dest = formatString(source);
+
+		if (dest.equals(source) == false)
+		{
+			aTraceAction.accept("Formatting operation [" + aOperation.getImplementationSignature()+"]");
+		}
+		else
+		{
+			return;
+		}	
+		
+		if (dest.equals("") == false)
+		{
+			aOperation.setBody(dest);
+		}
+	}
+	
+	public static void formatClassifier(IRPClassifier aClassifier, Consumer<String> aTraceAction)
+	{
+		if (aClassifier == null)
+		{
+			return;
+		}
+		
+		List<IRPOperation> operations = aClassifier.getOperations().toList();
+		for (IRPOperation op : operations)
+		{
+			
+			formatOperation(op, aTraceAction);
+		}
+
+	}
+	
+	
+	public static String formatString(String aSource)
+	{
+		Process p;
+		String ret = "";
+		try
+		{
+			p = Runtime.getRuntime().exec("clang-format --style=Microsoft");
+			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+			BufferedWriter stdOut = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+
+			stdOut.write(aSource);
+			stdOut.close();
+			String s;
+
+			while ((s = stdInput.readLine()) != null)
+			{
+				ret = ret.concat(s).concat("\n");
+			}
+			ret = ret.trim();
+			p.destroy();
+
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			ret = aSource;
+		}
+		return ret;
 	}
 	
 	

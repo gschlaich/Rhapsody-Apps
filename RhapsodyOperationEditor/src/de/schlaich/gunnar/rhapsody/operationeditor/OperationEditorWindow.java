@@ -112,6 +112,7 @@ import de.schlaich.gunnar.rhapsody.utilities.HistoryElement;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
+import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 import de.schlaich.gunnar.rhapsody.vs.VSPlugin;
 
 public class OperationEditorWindow extends JRootPane implements HyperlinkListener, ActionListener, SyntaxConstants { 
@@ -1261,10 +1262,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		if(command.equals("format"))
 		{
-			EditorCodeFormatter f = new EditorCodeFormatter();
+			//EditorCodeFormatter f = new EditorCodeFormatter();
 			String body = myTextArea.getText();
-			String formatted = f.format(body);
-			
+			//String formatted = f.format(body);
+			String formatted = StaticCodeAnalysis.formatString(body);
 			myTextArea.setText(formatted);
 			
 		}
@@ -1789,8 +1790,9 @@ class FormatSelected extends TextAction
 		JTextComponent tc = getTextComponent(e);
 		String selectedText = tc.getSelectedText();
 		
-		EditorCodeFormatter formatter = new EditorCodeFormatter();
-		selectedText = formatter.format(selectedText);
+		
+		selectedText = StaticCodeAnalysis.formatString(selectedText);
+		
 		tc.replaceSelection(selectedText);
 
 	}

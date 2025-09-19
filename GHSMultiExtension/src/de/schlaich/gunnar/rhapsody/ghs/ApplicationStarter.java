@@ -45,14 +45,14 @@ public class ApplicationStarter {
 		
 		//multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
 		
-		if(app.getSelectedElement() instanceof IRPPackage )
+		if(app.getSelectedElement() instanceof IRPProject)
+		{
+			multiPlugin.OnMenuItemSelect(MultiPlugin.OPEN_MULTI_CMD);
+		}
+		else if(app.getSelectedElement() instanceof IRPPackage )
 		{
 			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_RHAPSODY_CMD);
-		}
-		else if(app.getSelectedElement() instanceof IRPProject)
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
-		}
+		} 
 		else if(app.getSelectedElement() instanceof IRPClass)
 		{
 			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
