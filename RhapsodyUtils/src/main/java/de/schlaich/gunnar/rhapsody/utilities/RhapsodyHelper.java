@@ -647,6 +647,82 @@ public class RhapsodyHelper
 	}
 	
 	
+	//RhapsodyHelper.runBatch(myRhapsody, selected, this::trace);
+
+	
+	public static boolean runBatch(IRPModelElement selected, Consumer<String> outputConsumer)
+	{
+		try
+		{
+			
+			if (selected instanceof IRPHyperLink == false)
+			{
+				outputConsumer.accept("Selected element is not a controlled file");
+				return false;
+			}
+			
+			IRPHyperLink linkedFile = (IRPHyperLink) selected;
+			
+			File actualFolder = new File(System.getProperty("user.dir"));
+			
+			outputConsumer.accept("Working Directory: " + actualFolder.getAbsolutePath());
+			
+			String metaClass = linkedFile.getUserDefinedMetaClass();
+			
+			if((metaClass==null) || metaClass.equals("BatchFile")==false)
+            {
+                outputConsumer.accept("Selected Hyperlink is not of MetaClass BatchFile");
+                return false;
+            }
+			
+			String batchFile = linkedFile.getURL();
+			
+			
+			File batchPath = new File(batchFile);
+			
+			if (batchPath.exists() == false)
+			{
+				outputConsumer.accept("Batch file " + batchFile + " does not exist");
+				return false;
+			}
+			
+			
+			File workingDir = batchPath.getParentFile();
+			
+			if (workingDir.exists() == false)
+			{
+				outputConsumer.accept("Working Directory " + workingDir.getAbsolutePath() + " does not exist");
+				return false;
+			}
+			
+			String batchFileName = batchPath.getName();
+
+			ProcessBuilder builder = new ProcessBuilder("cmd.exe", "/c", batchFileName);
+			builder.directory(workingDir);
+
+			builder.redirectErrorStream(true);
+			Process p = builder.start();
+			BufferedReader r = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			String line;
+			while (true)
+			{
+				line = r.readLine();
+				if (line == null)
+				{
+					break;
+				}
+				outputConsumer.accept(line);
+			}
+			int exitCode = p.waitFor();
+			return exitCode == 0;
+		}
+		catch (IOException | InterruptedException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
 	
 	
 	/*

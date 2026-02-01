@@ -28,7 +28,7 @@ public class ApplicationStarter {
 		{
 			System.out.println("No Rhapsody Running! - exit!");
 			
-			List idList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
+			List<?> idList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
 		
 			for(Object id : idList)
 			{

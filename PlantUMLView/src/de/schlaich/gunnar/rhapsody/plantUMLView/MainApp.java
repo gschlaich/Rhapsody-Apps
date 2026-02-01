@@ -14,8 +14,8 @@ import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
-import net.sourceforge.plantuml.*;
-import net.sourceforge.plantuml.core.DiagramDescription;
+//import net.sourceforge.plantuml.*;
+//import net.sourceforge.plantuml.core.DiagramDescription;
 
 
 

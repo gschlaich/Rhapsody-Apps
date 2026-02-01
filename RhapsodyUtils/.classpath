@@ -38,6 +38,7 @@
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/JavaAPI/rhapsody.jar">
 		<attributes>
+			<attribute name="javadoc_location" value="file:/C:/Rhapsody/v840/Doc/java_api/"/>
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Rhapsody/v840/Share/JavaAPI"/>
 		</attributes>
 	</classpathentry>

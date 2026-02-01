@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.schlaich.gunnar</groupId>
+  <artifactId>PlantUMLView</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>PlantUMLView</name>
+  <url>http://maven.apache.org</url>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  
+  <dependencies>
+  <!-- https://mvnrepository.com/artifact/net.sourceforge.plantuml/plantuml -->
+	<dependency>
+	    <groupId>net.sourceforge.plantuml</groupId>
+	    <artifactId>plantuml</artifactId>
+	    <version>1.2025.10</version>
+	</dependency>
+</dependencies>
+</project>

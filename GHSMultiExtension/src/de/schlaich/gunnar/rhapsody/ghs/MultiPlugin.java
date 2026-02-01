@@ -673,7 +673,10 @@ public class MultiPlugin extends RPUserPlugin
 				{
 				    trace(line);
 					// BOM am ersten Zeichen ggf. entfernen
-				    if (!lines.isEmpty()) lines.add(line);
+				    if (lines.isEmpty()==false)
+				    {
+				    	//lines.add(line);
+				    }
 				    else lines.add(line.replace("\uFEFF", ""));
 				}
 			}
@@ -1149,6 +1152,10 @@ public class MultiPlugin extends RPUserPlugin
 
 		String projectName = config.getDirectory(1, "") + "/" + project.getName() + projectEnding; // is there a better
 																									// solution?
+		
+		String workingfolder = config.getDirectory(1, "");
+		
+		trace("Working Folder: " + workingfolder);
 
 		File projectFile = new File(projectName);
 
@@ -1164,7 +1171,8 @@ public class MultiPlugin extends RPUserPlugin
 		try
 		{
 			ProcessBuilder pb = new ProcessBuilder(myMultiCmd, projectName);
-
+			
+			pb.directory(new File(workingfolder));
 			pb.start(); // fire and forget
 
 		}

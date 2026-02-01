@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.aiTools.mcp;
+package de.schlaich.gunnar.aiTools.mcp.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,18 +6,23 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+
 
 import com.telelogic.rhapsody.core.IRPModelElement;
-import com.telelogic.rhapsody.core.IRPStereotype;
+
+
+import de.schlaich.gunnar.aiTools.mcp.RhapsodyClient;
 
 public class FetchTool extends Tool
 {
 	private final RhapsodyClient rh;
+	
+	
 
-	public FetchTool(RhapsodyClient rh)
+	public FetchTool(RhapsodyClient rh, Consumer<String> aTraceAction)
 	{
-		super("rhapsody.fetch", "Fetch element metadata for given IDs (GUIDs).", 
-				new LinkedHashMap<String, Object>()
+		super("rhapsody-fetch", "Fetch element metadata for given IDs (GUIDs).", new LinkedHashMap<String, Object>()
 		{
 			{
 				put("type", "object");
@@ -40,8 +45,9 @@ public class FetchTool extends Tool
 				});
 				put("required", Arrays.asList("ids"));
 			}
-		});
+		}, aTraceAction);
 		this.rh = rh;
+	
 	}
 
 	@Override
@@ -51,27 +57,24 @@ public class FetchTool extends Tool
 		List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();
 		for (Object idObj : ids)
 		{
+			trace("Fetching element for ID: " + idObj);
 			String id = String.valueOf(idObj);
 			java.util.Optional<IRPModelElement> opt = rh.byGUID(id);
-			if (opt.isPresent()) out.add(serialize(opt.get()));
+			if (opt.isPresent())
+			{
+				//trace("  Found: " + opt.get().getFullPathName() + " (" + opt.get().getMetaClass() + ")");
+				//trace("  JSON: " + serializeToJsonObject(opt.get()));
+				out.add(rh.serializeToJsonObject(opt.get(), false));
+			}
+			else
+			{
+				trace("  Not found!");
+			}
 		}
-		return Collections.singletonMap("items", out);
+		
+		//trace("returned:" + Collections.singletonMap("content", out).toString());
+		return Collections.singletonMap("content", out);
 	}
 
-	private static Map<String, Object> serialize(IRPModelElement el)
-	{
-		Map<String, Object> m = new LinkedHashMap<String, Object>();
-		m.put("id", el.getGUID());
-		m.put("kind", el.getMetaClass());
-		m.put("name", el.getName());
-		m.put("qualifiedName", el.getFullPathName());
-		
-		String stereo = (el.getStereotypes()) != null
-				? String.join(",", ((IRPStereotype) el).getStereotypes().toList())
-				: "";
-		m.put("stereotype", stereo);
-		
-		m.put("ownerPath", el.getOwner() != null ? el.getOwner().getFullPathName() : null);
-		return m;
-	}
+
 }

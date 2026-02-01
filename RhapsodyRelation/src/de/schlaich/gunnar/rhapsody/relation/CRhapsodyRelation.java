@@ -394,7 +394,7 @@ public class CRhapsodyRelation {
 				
 				Collection<RhapsodyModelElementItem> c =  myRhapsodyModelSearchable.search(myCombobox.getSelectedItem().toString());
 				
-				if(c.size()==1)
+				if((c!=null) && (c.size()>0) && (c.size()<5))
 				{
 					RhapsodyModelElementItem item = (RhapsodyModelElementItem)c.toArray()[0];
 					myFeaturesButton.setEnabled(true);

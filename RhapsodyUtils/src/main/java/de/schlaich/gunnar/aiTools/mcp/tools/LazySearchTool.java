@@ -1,8 +1,11 @@
-package de.schlaich.gunnar.aiTools.mcp;
+package de.schlaich.gunnar.aiTools.mcp.tools;
 
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.aiTools.mcp.RhapsodyClient;
+
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Lazy/On-Demand Suche ohne Vollindex.
@@ -24,14 +27,16 @@ public class LazySearchTool extends Tool
 {
 	private RhapsodyClient rh = null;
 
-	public LazySearchTool(RhapsodyClient rh)
+	public LazySearchTool(RhapsodyClient rh, Consumer<String> aTraceAction)
 	{
 
-		super("rhapsody.lazySearch", "On-demand search through the model with timeout and filters.",
+		super("rhapsody-lazySearch", "On-demand search through the model with timeout and filters.",
 				new LinkedHashMap<String, Object>()
 				{
 					{
+						put("$schema", "http://json-schema.org/draft-07/schema#");
 						put("type", "object");
+						put("additionalProperties", Boolean.FALSE);
 						put("properties", new LinkedHashMap<String, Object>()
 						{
 							{
@@ -39,6 +44,7 @@ public class LazySearchTool extends Tool
 								{
 									{
 										put("type", "string");
+										put("description", "text to search for in name, qualified name or stereotype");
 									}
 								});
 								put("top_k", new LinkedHashMap<String, Object>()
@@ -46,15 +52,10 @@ public class LazySearchTool extends Tool
 									{
 										put("type", "integer");
 										put("default", 20);
+
 									}
 								});
-								put("timeout_ms", new LinkedHashMap<String, Object>()
-								{
-									{
-										put("type", "integer");
-										put("default", 200);
-									}
-								});
+
 								put("kinds", new LinkedHashMap<String, Object>()
 								{
 									{
@@ -67,210 +68,165 @@ public class LazySearchTool extends Tool
 										});
 									}
 								});
-								put("stereotypes", new LinkedHashMap<String, Object>()
-								{
-									{
-										put("type", "array");
-										put("items", new LinkedHashMap<String, Object>()
-										{
-											{
-												put("type", "string");
-											}
-										});
-									}
-								});
+
 								put("under", new LinkedHashMap<String, Object>()
 								{
 									{
 										put("type", "string");
+
 									}
 								});
-								put("includeFeatures", new LinkedHashMap<String, Object>()
-								{
-									{
-										put("type", "boolean");
-										put("default", false);
-									}
-								});
+
 							}
 						});
 						put("required", Arrays.asList("query"));
+
 					}
-				});
+				}, aTraceAction);
 		this.rh = rh;
 	}
 
+	/**
+	 *
+	 */
 	@Override
 	public Object call(Map<String, Object> args)
 	{
 		String query = (String) args.get("query");
+
+		if (query == null || query.isEmpty())
+		{
+			return errorResult();
+		}
+
 		int topK = ((Number) args.getOrDefault("top_k", 20)).intValue();
-		long timeoutMs = ((Number) args.getOrDefault("timeout_ms", 200)).longValue();
+
 		List<String> kinds = args.containsKey("kinds") ? (List<String>) args.get("kinds") : Collections.emptyList();
-		List<String> stereotypes = args.containsKey("stereotypes") ? (List<String>) args.get("stereotypes")
-				: Collections.emptyList();
+
 		String under = (String) args.get("under");
-		boolean includeFeatures = Boolean.TRUE.equals(args.get("includeFeatures"));
 
-		long deadline = System.currentTimeMillis() + timeoutMs;
-		Deque<IRPModelElement> q = new ArrayDeque<IRPModelElement>();
-		if (under != null && !under.isEmpty())
-		{
-			// einfache Suche nach Startknoten anhand Prefix
-			Optional<IRPModelElement> opt = rh.byGUID(under); // oder: Lookup by QualifiedName (eigenes Helper)
-			if (opt.isPresent()) q.add(opt.get());
-		}
-		else
-		{
-			q.addAll(rh.topLevelElements());
-		}
+		trace("call query='" + query + "', topK=" + topK + ", kinds=" + kinds + ", , under='" + under);
 
+		
 		List<Map<String, Object>> hits = new ArrayList<Map<String, Object>>();
-		String qLower = query.toLowerCase();
-		while (!q.isEmpty() && hits.size() < topK && System.currentTimeMillis() < deadline)
+		List<IRPModelElement> results = rh.searchElements(query, kinds, SearchFindAsEnum.RP_SEARCH_WILDCARD);
+		
+		for (IRPModelElement el : results)
 		{
-			IRPModelElement el = q.poll();
-			if (el == null) continue;
-			String name = el.getName() != null ? el.getName() : "";
-			String qname = el.getFullPathName() != null ? el.getFullPathName() : "";
-			String kind = el.getMetaClass();
+			Map<String, Object> m = rh.serializeToJsonObject(el, true);
 
-			List<IRPStereotype> stList = el.getStereotypes().toList();
-
-			String stereoJoined = "";
-
-			for (IRPStereotype s : stList)
-			{
-				if (stereoJoined.isEmpty())
-				{
-					stereoJoined = s.getName();
-				}
-				else
-				{
-					stereoJoined += "," + s.getName();
-				}
-			}
-
-			boolean match = name.toLowerCase().contains(qLower) || qname.toLowerCase().contains(qLower)
-					|| stereoJoined.toLowerCase().contains(qLower);
-			if (!kinds.isEmpty() && !kinds.contains(kind)) match = false;
-			if (!stereotypes.isEmpty())
-			{
-				boolean any = false;
-				for (String s : stereotypes)
-					if (stereoJoined.contains(s))
-					{
-						any = true;
-						break;
-					}
-				if (!any) match = false;
-			}
-			if (match)
-			{
-				Map<String, Object> m = new LinkedHashMap<String, Object>();
-				m.put("id", el.getGUID());
-				m.put("kind", kind);
-				m.put("name", name);
-				m.put("qualifiedName", qname);
-				m.put("stereotype", stereoJoined);
-				hits.add(m);
-			}
-
-			if (el instanceof IRPPackage)
-			{
-				IRPCollection ch = ((IRPPackage) el).getNestedElements();
-				for (int i = 1; i <= ch.getCount(); i++)
-					q.add((IRPModelElement) ch.getItem(i));
-			}
-			else if (includeFeatures && el instanceof IRPClass)
-			{
-				IRPCollection feats = ((IRPClass) el).getNestedElements();
-				for (int i = 1; i <= feats.getCount(); i++)
-					q.add((IRPModelElement) feats.getItem(i));
-			}
+			hits.add(m);
 		}
+		
+		
+		
 
-		boolean partial = (hits.size() < topK && System.currentTimeMillis() >= deadline);
+//		if ((kinds.isEmpty() == false) && (under == null || under.isEmpty()))
+//		{
+//			// wenn Filter, aber kein Startknoten, dann auf Top-Level beschränken
+//			List<IRPModelElement> found = new ArrayList<>();
+//
+//			for (String k : kinds)
+//			{
+//				List<IRPModelElement> elements = rh.findByName(query, k, true);
+//				found.addAll(elements);
+//			}
+//
+//			for (IRPModelElement el : found)
+//			{
+//				trace("found: " + el.getFullPathName() + " (" + el.getMetaClass() + ")");
+//				Map<String, Object> m = rh.serialize(el);
+//
+//				hits.add(m);
+//			}
+//
+//			Map<String, Object> result = new LinkedHashMap<String, Object>();
+//			result.put("content", hits);
+//
+//			trace("result: " + result);
+//
+//			return result;
+//
+//		}
+
+//		Deque<IRPModelElement> q = new ArrayDeque<IRPModelElement>();
+//
+//		if (under != null && !under.isEmpty())
+//		{
+//			// einfache Suche nach Startknoten anhand Prefix
+//			Optional<IRPModelElement> opt = rh.byGUID(under);
+//			if (opt.isPresent())
+//			{
+//				IRPModelElement start = opt.get();
+//				q.add(start);
+//			}
+//			else
+//			{
+//				trace("call: under='" + under + "' not found!");
+//				// Startknoten nicht gefunden, also keine Treffer
+//				return errorResult();
+//			}
+//		}
+//		else
+//		{
+//			q.addAll(rh.topLevelElements());
+//		}
+//
+//		while (!q.isEmpty() && hits.size() < topK)
+//		{
+//			IRPModelElement el = q.poll();
+//
+//			if (el == null)
+//			{
+//				continue;
+//			}
+//
+//			String name = el.getName() != null ? el.getName() : "";
+//			String qname = el.getFullPathName() != null ? el.getFullPathName() : "";
+//			String kind = el.getMetaClass();
+//
+//			boolean match = name.toLowerCase().contains(query.toLowerCase());
+//			
+//			if (kinds.isEmpty() == false)
+//			{
+//				match = match && kinds.contains(kind);
+//			}
+//			
+//			
+//
+//			if (match)
+//			{
+//
+//				Map<String, Object> m = rh.serialize(el);
+//
+//				hits.add(m);
+//			}
+//
+//			if (el instanceof IRPPackage)
+//			{
+//				IRPPackage p = (IRPPackage) el;
+//				List<IRPModelElement> children = el.getNestedElements().toList();
+//
+//				for (IRPModelElement child : children)
+//				{
+//					q.add(child);
+//				}
+//			}
+//		}
+
 		Map<String, Object> result = new LinkedHashMap<String, Object>();
-		result.put("items", hits);
-		result.put("partial", partial);
+		result.put("content", hits);
+
+		trace("result: " + result);
+
+		return result;
+	}
+
+	private Object errorResult()
+	{
+		Map<String, Object> result = new LinkedHashMap<String, Object>();
+		result.put("content", Collections.emptyList());
 		return result;
 	}
 
 }
-
-/*
- * { put("type","object"); put("properties", new LinkedHashMap<String,Object>()
- * { { put("query", new LinkedHashMap<String,Object>() { { put("type","string");
- * } }); put("top_k", new LinkedHashMap<String,Object>() { {
- * put("type","integer"); put("default",20); } }); put("timeout_ms", new
- * LinkedHashMap<String,Object>() { { put("type","integer"); put("default",250);
- * } }); put("kinds", new LinkedHashMap<String,Object>() { {
- * put("type","array"); put("items", new LinkedHashMap<String,Object>() { {
- * put("type","string"); } }); } }); put("stereotypes", new
- * LinkedHashMap<String,Object>() { { put("type","array"); put("items", new
- * LinkedHashMap<String,Object>() { { put("type","string"); } }); } });
- * put("under", new LinkedHashMap<String,Object>() { { put("type","string"); }
- * }); put("includeFeatures", new LinkedHashMap<String,Object>() { {
- * put("type","boolean"); put("default", false); } }); put("offset", new
- * LinkedHashMap<String,Object>() { { put("type","integer"); put("default",0); }
- * }); } }); put("required", Arrays.asList("query")); }
- * 
- * ); /* new LinkedHashMap<String,Object>() { { put("type","object");
- * put("properties", new LinkedHashMap<String,Object>() { { put("query", new
- * LinkedHashMap<String,Object>() { { put("type","string"); } }); put("top_k",
- * new LinkedHashMap<String,Object>() { { put("type","integer");
- * put("default",20); } }); put("timeout_ms", new LinkedHashMap<String,Object>()
- * { { put("type","integer"); put("default",250); } }); put("kinds", new
- * LinkedHashMap<String,Object>() { { put("type","array"); put("items", new
- * LinkedHashMap<String,Object>() { { put("type","string"); } }); } });
- * put("stereotypes", new LinkedHashMap<String,Object>() { {
- * put("type","array"); put("items", new LinkedHashMap<String,Object>() { {
- * put("type","string"); } }); } }); put("under", new
- * LinkedHashMap<String,Object>() { { put("type","string"); } });
- * put("includeFeatures", new LinkedHashMap<String,Object>() { {
- * put("type","boolean"); put("default", false); } }); put("offset", new
- * LinkedHashMap<String,Object>() { { put("type","integer"); put("default",0); }
- * }); } }); put("required", Arrays.asList("query")); } }
- * 
- * 
- * ); }
- * 
- */
-
-/*
- * 
- * 
- * @Override public Object call(Map<String, Object> args) { final String query =
- * (String) args.get("query"); final int topK = ((Number)
- * args.getOrDefault("top_k", 20)).intValue(); final long timeout = ((Number)
- * args.getOrDefault("timeout_ms", 250)).longValue(); final boolean
- * includeFeatures = args.containsKey("includeFeatures") &&
- * Boolean.TRUE.equals(args.get("includeFeatures")); final int offset =
- * ((Number) args.getOrDefault("offset", 0)).intValue();
- * 
- * 
- * final Set<String> kinds = toLowerSet((List<?>) args.get("kinds")); final
- * Set<String> stereos = toLowerSet((List<?>) args.get("stereotypes")); final
- * String under = (String) args.get("under");
- * 
- * 
- * long deadline = System.currentTimeMillis() + Math.max(1, timeout);
- * Deque<IRPModelElement> q = new ArrayDeque<IRPModelElement>();
- * 
- * 
- * // Startknoten bestimmen if (under != null && !under.isEmpty()) {
- * IRPModelElement root = findByQualifiedPrefix(under); if (root != null)
- * q.add(root); } else { for (IRPModelElement e : rh.topLevelElements())
- * q.add(e); }
- * 
- * 
- * List<Map<String,Object>> items = new ArrayList<Map<String,Object>>(); int
- * visited = 0; int accepted = 0; // für offset boolean truncated = false;
- * 
- * 
- * while (!q.isEmpty()) { }
- * 
- * 
- * 
- */

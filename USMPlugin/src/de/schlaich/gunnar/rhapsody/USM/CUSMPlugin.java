@@ -1,31 +1,28 @@
 package de.schlaich.gunnar.rhapsody.USM;
 
-import java.io.BufferedReader;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
 import java.net.URLDecoder;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
-
 import javax.swing.JFileChooser;
-import javax.swing.UIManager;
-import javax.swing.filechooser.FileView;
-
+import javax.swing.SwingUtilities;
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
-import com.telelogic.rhapsody.core.IRPControlledFile;
 import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -35,19 +32,17 @@ import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
 import com.telelogic.rhapsody.core.IRPTableView;
-import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
 import de.schlaich.gunnar.aiTools.GeminiAPIClient;
-import de.schlaich.gunnar.aiTools.mcp.HttpJsonRpcBridge;
 import de.schlaich.gunnar.aiTools.mcp.McpStarter;
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelTester;
 import de.schlaich.gunnar.rhapsody.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
-import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.MarkdownEditorPreview;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
@@ -64,6 +59,7 @@ public class CUSMPlugin extends RPUserPlugin
 
 	private IRPApplication myRhapsody = null;
 	private IRPProfile myProfile = null;
+	
 
 	private SVNTools mySVNTools = null;
 
@@ -123,10 +119,17 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String ParseElementCmd = "Parse Element";
 	public static final String MCPStartCmd = "MCP Start";
 	public static final String MCPStopCmd = "MCP Stop";
-	
-	
-	
+	public static final String JsonExportCmd = "JSON export";
+	public static final String JsonCopyCmd = "JSON copy";
+	public static final String JsonPasteCmd = "JSON paste";
+	public static final String JsonSchemaCmd = "JSON Schema";
+	public static final String RunBatchCmd = "Run Batch";
+	public static final String RunAllBatchesCmd = "Run all Batches";
+	public static final String ListMetaClassesCmd = "List MetaClasses";
 
+
+	private final long myStartTimeNanos = System.nanoTime();
+	
 	public CUSMPlugin()
 	{
 		// TODO Auto-generated constructor stub
@@ -189,10 +192,31 @@ public class CUSMPlugin extends RPUserPlugin
 		}
 		
 		RhapsodyPreferences.setUILightmode();
-
+		
+		
+		
+		//run autorun batch files
+		runBatchFiles(activeProject);
 		
 
 	}
+	
+	private void runBatchFiles(IRPProject project)
+    {
+		List<IRPHyperLink> batchFiles = project.getNestedElementsByMetaClass("HyperLink", 1).toList();
+		
+		for (IRPHyperLink batchFile : batchFiles)
+		{
+			if(batchFile.getUserDefinedMetaClass().equals("BatchFile"))
+			{
+				RhapsodyHelper.runBatch(batchFile, this::trace);
+			}
+		}
+				
+	}
+	
+	
+	
 
 	public void OnElementsChanged(String GUIDsList)
 	{
@@ -730,78 +754,37 @@ public class CUSMPlugin extends RPUserPlugin
 		}
 		if (menuItem.contains(AddLibraryCmd))
 		{
+			
+			
+			
 			if (selected instanceof IRPPackage == false)
 			{
 				trace("No Package selected");
 				return;
 			}
 
-			Path usmRoot = null;
-			try
-			{
-				usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
-
-			}
-			catch (Exception e)
-			{
-				trace(e.getMessage());
-				return;
-			}
-
-			JFileChooser fileChooser = new JFileChooser(
-					usmRoot.resolve("Development").resolve("ExternalSource").toFile());
-
-			// fileChooser.setFileSelectionMode(JFileChooser.);
-
-			fileChooser.setAcceptAllFileFilterUsed(false);
-
-			int userSelection = fileChooser.showOpenDialog(null);
-
-			if (userSelection != JFileChooser.APPROVE_OPTION)
-			{
-				trace("Cancel...");
-				return;
-			}
-			File directoryToSave = fileChooser.getSelectedFile();
-			trace("Folder: " + directoryToSave.getAbsolutePath());
-
-			Path path = Paths.get(directoryToSave.getAbsolutePath());
-
-			path = usmRoot.relativize(path);
-
-			String libString = "<usm_root>\\" + path.toString();
-
-			libString = libString.replace("\\", "\\\\");
-
-			String delimiter = ";";
-
-			int dotIndex = libString.lastIndexOf('.');
-			if (dotIndex > 0)
-			{
-				libString = libString.substring(0, dotIndex);
-			}
-
-			trace("Library Path: " + libString);
-
-			String libPropertyValue = selected.getPropertyValue(libraryProperty);
-
-			String[] libArray = libPropertyValue.split(delimiter);
-
-			for (String s : libArray)
-			{
-				if (s.equals(libString))
-				{
-					trace("Library already added");
-					return;
-				}
-			}
-
-			libPropertyValue += delimiter + libString;
-			trace("set Library: " + libPropertyValue);
-
-			selected.setPropertyValue(libraryProperty, libPropertyValue);
-
+			
+			
+			SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	                //Turn off metal's use of bold fonts
+	                
+	                try
+					{
+						addLibrary(selected);
+					}
+					catch (IOException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+	            }
+	        });
+			
 			return;
+			
+
+			
 		}
 		if (menuItem.contains(AddIncludePathCmd))
 		{
@@ -811,71 +794,17 @@ public class CUSMPlugin extends RPUserPlugin
 				return;
 			}
 
-			Path usmRoot = null;
-			try
+			SwingUtilities.invokeLater(new Runnable() 
 			{
-				usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
 
-			}
-			catch (Exception e)
-			{
-				trace(e.getMessage());
-				return;
-			}
-
-			JFileChooser fileChooser = new JFileChooser(
-					usmRoot.resolve("Development").resolve("ExternalSource").toFile());
-
-			fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
-			fileChooser.setAcceptAllFileFilterUsed(false);
-
-			int userSelection = fileChooser.showOpenDialog(null);
-
-			if (userSelection != JFileChooser.APPROVE_OPTION)
-			{
-				trace("Cancel...");
-				return;
-			}
-			File directoryToSave = fileChooser.getSelectedFile();
-			trace("Folder: " + directoryToSave.getAbsolutePath());
-
-			Path path = Paths.get(directoryToSave.getAbsolutePath());
-
-			path = usmRoot.relativize(path);
-
-			String libString = "<usm_root>\\" + path.toString();
-
-			libString = libString.replace("\\", "\\\\");
-
-			String delimiter = ";";
-
-			int dotIndex = libString.lastIndexOf('.');
-			if (dotIndex > 0)
-			{
-				libString = libString.substring(0, dotIndex);
-			}
-
-			trace("Include Path: " + libString);
-
-			String libPropertyValue = selected.getPropertyValue(IncludeProperty);
-
-			String[] libArray = libPropertyValue.split(delimiter);
-
-			for (String s : libArray)
-			{
-				if (s.equals(libString))
+				public void run() 
 				{
-					trace("Include path already added");
-					return;
+                        
+                    addInclude(selected);
 				}
-			}
-
-			libPropertyValue += delimiter + libString;
-			trace("set Include Path: " + libPropertyValue);
-
-			selected.setPropertyValue(IncludeProperty, libPropertyValue);
-
+			
+			
+			});
 			return;
 		}
 
@@ -1075,9 +1004,10 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			McpStarter mcpStarter = McpStarter.getInstance();
 			
+			
 			try
 			{
-				mcpStarter.start(myRhapsody);
+				mcpStarter.start(myRhapsody, this::trace);
 			}
 			catch (Exception e)
 			{
@@ -1096,9 +1026,260 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 		}
 		
+		if (menuItem.contains(JsonExportCmd))
+        {
+            if (selected instanceof IRPModelElement)
+            {
+                IRPModelElement modelElement = (IRPModelElement) selected;
+                
+                JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
+                
+                
+                tester.getJson(modelElement);
+                
+                
+            }
+            return;
+        }
+		
+		if (menuItem.contains(JsonCopyCmd))
+		{
+			if (selected instanceof IRPModelElement)
+			{
+				IRPModelElement modelElement = (IRPModelElement) selected;
+
+				JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
+
+				String jsonModel = tester.getJson(modelElement);
+				
+				StringSelection stringSelection = new StringSelection(jsonModel);
+				
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
+
+			}
+			return;
+		}
+		
+		if(menuItem.contains(JsonPasteCmd))
+		{
+			if (selected instanceof IRPModelElement)
+			{
+				IRPModelElement modelElement = (IRPModelElement) selected;
+
+				JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
+				
+				
+
+				//String jsonModel = tester.getJson(modelElement);
+				
+				//StringSelection stringSelection = new StringSelection(jsonModel);
+				
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				//StringSelection stringSelection =  
+						
+						
+				Transferable contents = clipboard.getContents(null);
+				
+				if(contents == null)
+				{
+					trace("No contents in clipboard");
+					return;
+				}
+				
+				if(contents.isDataFlavorSupported(DataFlavor.stringFlavor) == false)
+                {
+                    trace("No string in clipboard");
+                }
+				
+				String jsonModel;
+				try
+				{
+					IRPProject project = selected.getProject();
+					
+					jsonModel = (String) contents.getTransferData(DataFlavor.stringFlavor);
+					tester.getRhapsodyModelElementFromJson(jsonModel, selected, project);
+				}
+				catch (UnsupportedFlavorException e)
+				{
+					// TODO Auto-generated catch block
+					trace("No string in clipboard");
+					trace(e.getMessage());
+				}
+				catch (IOException e)
+				{
+					// TODO Auto-generated catch block
+					trace("Error reading clipboard");
+					trace(e.getMessage());
+				}
+				
+				
+				
+				
+
+			}
+			return;
+			
+		}
+		
+		if (menuItem.contains(JsonSchemaCmd))
+		{
+			if (selected instanceof IRPModelElement)
+			{
+				IRPModelElement modelElement = (IRPModelElement) selected;
+
+				JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
+
+				String schema = tester.getJsonSchema(modelElement);
+				trace("JSON Schema: " + schema);
+
+			}
+			return;
+		}
+		
+		if (menuItem.contains(RunBatchCmd))
+		{
+			trace("Run Batch");
+
+			RhapsodyHelper.runBatch(selected, this::trace);
+
+			return;
+		}
+		
+		if (menuItem.contains(RunAllBatchesCmd))
+		{
+			IRPProject activeProject = myRhapsody.activeProject();
+			if (activeProject == null)
+			{
+				trace("no active Project!");
+				return;
+			}
+
+			runBatchFiles(activeProject);
+
+			return;
+		}
+		
+		if (menuItem.contains(ListMetaClassesCmd))
+		{
+			JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
+
+			String schema = tester.listAllMetaClasses();
+			trace("JSON Schema: " + schema);
+			return;
+		}
+		
 
 		trace("menue item unknown");
 
+	}
+
+	@SuppressWarnings("unchecked")
+	private void addInclude(IRPModelElement selected)
+	{
+		Path usmRoot = null;
+		try
+		{
+			usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
+
+		}
+		catch (Exception e)
+		{
+			trace(e.getMessage());
+			return;
+		}
+
+		JFileChooser fileChooser = new JFileChooser(
+				usmRoot.resolve("Development").resolve("ExternalSource").toFile());
+
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+		fileChooser.setAcceptAllFileFilterUsed(false);
+
+		int userSelection = fileChooser.showOpenDialog(null);
+
+		if (userSelection != JFileChooser.APPROVE_OPTION)
+		{
+			trace("Cancel...");
+			return;
+		}
+		File directoryToSave = fileChooser.getSelectedFile();
+		trace("Folder: " + directoryToSave.getAbsolutePath());
+
+		Path path = Paths.get(directoryToSave.getAbsolutePath());
+
+		path = usmRoot.relativize(path);
+
+		String libString = "<usm_root>\\" + path.toString();
+
+		libString = libString.replace("\\", "\\\\");
+
+		String delimiter = ";";
+
+		int dotIndex = libString.lastIndexOf('.');
+		if (dotIndex > 0)
+		{
+			libString = libString.substring(0, dotIndex);
+		}
+
+		trace("Include Path: " + libString);
+
+		String libPropertyValue = selected.getPropertyValue(IncludeProperty);
+
+		String[] libArray = libPropertyValue.split(delimiter);
+
+		for (String s : libArray)
+		{
+			if (s.equals(libString))
+			{
+				trace("Include path already added");
+				return;
+			}
+		}
+
+		libPropertyValue += delimiter + libString;
+		trace("set Include Path: " + libPropertyValue);
+
+		selected.setPropertyValue(IncludeProperty, libPropertyValue);
+		
+		// change in Component configuration as well
+		
+		IRPProject project = selected.getProject();
+		
+		List<IRPComponent> components = project.getNestedElementsByMetaClass("Component", 1).toList();
+		
+		for (IRPComponent component : components)
+		{
+			List<IRPModelElement> scopeElements = component.getScopeElements().toList();
+			
+			trace("Check Component " + component.getName() + " with " + scopeElements.size() + " scope elements");
+			
+			for(IRPModelElement elem : scopeElements)
+            {
+                
+				trace(elem.getName() + " of type " + elem.getMetaClass());
+				if(elem.equals(selected))
+                {
+			
+					trace("Update Include path in Component " + component.getName());
+                	IRPConfiguration config = component.findConfiguration("DefaultConfig");
+					if(config != null)
+	                {
+						config.setIncludePath(libPropertyValue);
+	                }
+					else
+					{
+						trace("No DefaultConfig for Component " + component.getName());
+					}
+	
+					break;
+	            }
+
+            }
+		}
+		
+		
+		
 	}
 	
 	
@@ -1116,10 +1297,15 @@ public class CUSMPlugin extends RPUserPlugin
 
 	private void trace(String aMsg)
 	{
-		myRhapsody.writeToOutputWindow("Log", "USMPlugin: " + aMsg + "\n");
-		System.out.println(aMsg);
+		///get time since start
+		long currentTimeNanos = System.nanoTime();
+		long elapsedTimeNanos = currentTimeNanos - myStartTimeNanos;
+		long elapsedTimeMilliSeconds = elapsedTimeNanos / 1_000_000;
+		double elapsedTimeSeconds = elapsedTimeMilliSeconds / 1000.0;
+		
+		myRhapsody.writeToOutputWindow("Log","["+elapsedTimeSeconds+"] USMPlugin: " + aMsg + "\n");
+		System.out.println("["+elapsedTimeSeconds+"] USMPlugin: "+aMsg);
 	}
-
 	@Override
 	public void OnTrigger(String trigger)
 	{
@@ -1140,6 +1326,71 @@ public class CUSMPlugin extends RPUserPlugin
 	{
 		// TODO Auto-generated method stub
 
+	}
+	
+	
+	private void addLibrary(IRPModelElement selected) throws IOException
+	{
+
+		Path usmRoot;
+		
+		usmRoot = RhapsodyHelper.getUSMPath(selected.getProject());
+		
+		
+		JFileChooser fileChooser = new JFileChooser(
+				usmRoot.resolve("Development").resolve("ExternalSource").toFile());
+
+		// fileChooser.setFileSelectionMode(JFileChooser.);
+
+		fileChooser.setAcceptAllFileFilterUsed(false);
+
+		int userSelection = fileChooser.showOpenDialog(null);
+
+		if (userSelection != JFileChooser.APPROVE_OPTION)
+		{
+			trace("Cancel...");
+			return;
+		}
+		File directoryToSave = fileChooser.getSelectedFile();
+		trace("Folder: " + directoryToSave.getAbsolutePath());
+
+		Path path = Paths.get(directoryToSave.getAbsolutePath());
+
+		path = usmRoot.relativize(path);
+
+		String libString = "<usm_root>\\" + path.toString();
+
+		libString = libString.replace("\\", "\\\\");
+
+		String delimiter = ";";
+
+		int dotIndex = libString.lastIndexOf('.');
+		if (dotIndex > 0)
+		{
+			libString = libString.substring(0, dotIndex);
+		}
+
+		trace("Library Path: " + libString);
+
+		String libPropertyValue = selected.getPropertyValue(libraryProperty);
+
+		String[] libArray = libPropertyValue.split(delimiter);
+
+		for (String s : libArray)
+		{
+			if (s.equals(libString))
+			{
+				trace("Library already added");
+				return;
+			}
+		}
+
+		libPropertyValue += delimiter + libString;
+		trace("set Library: " + libPropertyValue);
+
+		selected.setPropertyValue(libraryProperty, libPropertyValue);
+
+		return;
 	}
 
 	public String get_UserDefinedImplementation(IRPModelElement cellElement, Integer row, Integer column)

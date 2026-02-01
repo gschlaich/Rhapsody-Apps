@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ public class ToolRegistry
 		return this;
 	}
 
-	public List<McpProtocol.ToolDesc> list()
+	public List<McpProtocol.ToolDesc> list_()
 	{
 		return tools.values().stream().map(new Function<McpProtocol.McpTool, McpProtocol.ToolDesc>()
 		{
@@ -26,6 +27,20 @@ public class ToolRegistry
 				return new McpProtocol.ToolDesc(t.name(), t.description(), t.inputSchema());
 			}
 		}).collect(Collectors.toList());
+	}
+
+	public List<Map<String, Object>> list()
+	{
+		List<Map<String, Object>> out = new ArrayList<>();
+		for (McpProtocol.McpTool t : tools.values())
+		{
+			Map<String, Object> entry = new LinkedHashMap<>();
+			entry.put("name", t.name());
+			entry.put("description", t.description());
+			entry.put("inputSchema", t.inputSchema()); // <-- Wichtig
+			out.add(entry);
+		}
+		return out;
 	}
 
 	public Object call(String name, Map<String, Object> args) throws Exception

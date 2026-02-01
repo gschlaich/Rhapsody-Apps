@@ -110,7 +110,11 @@ public class COperationalRoundtrip implements ActionListener {
 			DiffRowGenerator.Builder builder = DiffRowGenerator.create();
 			builder.showInlineDiffs(true);
 			builder.inlineDiffByWord(true);
+			
+			
 			generator = builder.build();
+			
+			
 			
 			String nameSpace = RhapsodyOperation.getNamespace(myClass);
 			String sourcePath = ASTHelper.getSourcePath(myClass, rhapsody);
@@ -208,12 +212,11 @@ public class COperationalRoundtrip implements ActionListener {
 					   continue;
 				   }
 				    
-				   if(row.getNewLine().contains("<span class=\"editNewInline\"></span>"))
+				   if(row.getNewLine().trim().contains("<span class=\"editNewInline\"></span>".trim()))
 				   {
 					   continue;
 				   }
-				  
-				    
+   
 				   //diffOperator.append()
 				   diffStringBuilder.append("<tr><td style=\"width: 50px;\">"+line+"</td><td>" + row.getOldLine() + "</td><td>" + row.getNewLine() + "</td><td>"+tag.name()+"</td></tr>\n");
 				   changes++;

@@ -819,6 +819,12 @@ public class ASTHelper
 			ret = new ArrayList<String>();
 			while ((line = origBR.readLine()) != null)
 			{
+				if (line.trim().isEmpty())
+				{
+					ret.add("");
+					continue;
+				}
+				
 				//line.replaceAll( "\0x09", "    ");
 				
 				//line = line.trim();

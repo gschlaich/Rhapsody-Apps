@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.aiTools.mcp;
+package de.schlaich.gunnar.aiTools.mcp.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,18 +6,26 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+
+import com.telelogic.rhapsody.core.IRPModelElement;
+
+import de.schlaich.gunnar.aiTools.mcp.RhapsodyClient;
 
 public class SearchTool extends Tool
 {
-	private final ModelIndexer index;
+	
+	private RhapsodyClient rh = null;
 
-	public SearchTool(ModelIndexer index)
+	public SearchTool(RhapsodyClient rh, Consumer<String> aTraceAction)
 	{
-		super("rhapsody.search", "Search model elements by name, qualified name, kind or stereotype.",
+		super("rhapsody-search", "Search model elements by name and type (MetaClass; for example Class, Block, Package).",
 				new LinkedHashMap<String, Object>()
 				{
 					{
+						put("$schema", "http://json-schema.org/draft-07/schema#");
 						put("type", "object");
+						put("additionalProperties", Boolean.FALSE);
 						put("properties", new LinkedHashMap<String, Object>()
 						{
 							{
@@ -25,41 +33,46 @@ public class SearchTool extends Tool
 								{
 									{
 										put("type", "string");
+										put("description","text to search for in name");
 									}
 								});
-								put("top_k", new LinkedHashMap<String, Object>()
+								put("type", new LinkedHashMap<String, Object>()
 								{
 									{
-										put("type", "integer");
-										put("default", 20);
+										put("type", "string");
+										put("description", "MetaClass of the elements to search for (e.g. Class, Operation, Package)");
+						
 									}
 								});
 							}
 						});
-						put("required", Arrays.asList("query"));
+						put("required", Arrays.asList("query", "type"));
 					}
-				});
-		this.index = index;
+				}, aTraceAction);
+		this.rh = rh;
 	}
 
 	@Override
 	public Object call(Map<String, Object> args)
 	{
 		String q = (String) args.get("query");
-		Number k = (Number) (args.containsKey("top_k") ? args.get("top_k") : 20);
+		String type = (String) args.get("type");
 		
-		List<ModelIndexer.Entry> hits = index.search(q, k.intValue());
-		List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();
-		for (ModelIndexer.Entry e : hits)
-		{
-			Map<String, Object> row = new LinkedHashMap<String, Object>();
-			row.put("id", e.getId());
-			row.put("kind", e.getKind());
-			row.put("name", e.getName());
-			row.put("qualifiedName", e.getQname());
-			row.put("stereotype", e.getStereotype());
-			out.add(row);
-		}
-		return Collections.singletonMap("items", out);
+		List<IRPModelElement> elems = rh.findByName(q, type);
+		
+		
+		List<Map<String,Object>> items = new ArrayList<Map<String,Object>>();
+	    for (IRPModelElement e : elems) 
+	    {
+	      Map<String,Object> m = rh.serializeToJsonBaseObject(e);
+	      items.add(m);
+	    }
+
+	    Map<String,Object> out = new LinkedHashMap<String,Object>();
+	    out.put("content", items);
+	    out.put("count", items.size());
+	    trace(out.toString());
+	    return out;
+
 	}
 }
