@@ -117,8 +117,7 @@ public class JsonModelTester
 		
 		JsonModelElementBase parentJme = jsonFactory.getJsonModelElement(parentElement, 0);
 		
-		
-		return jme.createModelElement(parentJme, project, ImportMode.create);
+		return jme.toModelElement(parentJme, project, ImportMode.create);
 		
 	}
 

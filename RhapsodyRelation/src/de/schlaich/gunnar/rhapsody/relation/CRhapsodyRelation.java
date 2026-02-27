@@ -806,7 +806,7 @@ class RelationListener extends RPApplicationListener
 				myRhapsodyModelElementSearchable.clearRelationList();
 				myRhapsodyModelElementSearchable.createRelationList();
 			}
-			return true;
+			return false;
 			
 		}
 		

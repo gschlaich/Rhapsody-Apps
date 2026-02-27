@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -119,5 +120,46 @@ public class JsonFile extends JsonModelElement
 
 		return theFile;
 	}
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
+	{
+		
+		if (parent instanceof IRPComponent)
+		{
+			IRPComponent parentComponent = (IRPComponent) parent;
+			return parentComponent.addFile(name);
+		}
+		trace("Could not create file " + name + " under parent " + parent.getName());
+		return null;
+
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+        
+        if (aModelElement instanceof IRPFile == false)
+        {
+            return;
+        }
+        
+        IRPFile theFile = (IRPFile) aModelElement;
+        
+        theFile.setFileType(fileType.name());
+        
+        // TODO implement setting of the other properties
+        
+        // elements
+        // fileFragments
+        // files
+
+        // fileType
+        // path
+        // empty
+        // impName
+        // specName
+    }
 
 }

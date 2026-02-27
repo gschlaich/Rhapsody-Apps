@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.cdt.internal.core.model.Parent;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -103,36 +105,51 @@ public class JsonModelElement extends JsonModelElementBase
 			ImportMode aImportMode)
 	{
 
-		IRPModelElement returnElement = super.toModelElement(aRootElement, aProject, aImportMode);
+		
+		IRPModelElement returnElement = null;
+		
+		if (aImportMode == ImportMode.create)
+		{
+			IRPModelElement parentElement = aRootElement.toModelElement((JsonModelElementBase)null, aProject, ImportMode.reference);
+			returnElement = createModelElement(parentElement);
+		}
+		else
+		{
+			returnElement = super.toModelElement(aRootElement, aProject, ImportMode.reference);
+			return returnElement;
+		}
 
 		if (returnElement == null)
 		{
 			return null;
 		}
 		
-		if (aImportMode == ImportMode.reference)
-		{
-			return returnElement;
-		}
-
-		// set description
-		if (isSet(description))
-		{
-			returnElement.setDescription(this.description);
-		}
 		
-		// we do not set nested elements
-
-		addNestedElements(aProject, aImportMode);
-
-		setStereotypes(returnElement, aProject, aImportMode);
-
-		setProperties(returnElement, aImportMode);
+		setAttributes(returnElement, aProject, aImportMode);
 
 		return returnElement;
 	}
+	
+	
+	
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		
+		super.setAttributes(aModelElement, aProject, aImportMode);
+		
+		addNestedElements(aProject, aImportMode);
+		
+		// set description
+		if (isSet(description))
+		{
+			aModelElement.setDescription(this.description);
+		}
 
+		setStereotypes(aModelElement, aProject, aImportMode);
 
+		setProperties(aModelElement, aImportMode);
+
+	}
 
 	protected void addNestedElements(IRPProject aProject, ImportMode aImportMode)
 	{
@@ -154,16 +171,7 @@ public class JsonModelElement extends JsonModelElementBase
 				return;
 			}
 		}
-		else if (aImportMode == ImportMode.update)
-		{
-			// remove all existing stereotypes
-			List<IRPStereotype> existingStereotypes = aModelElement.getStereotypes().toList();
-			for (IRPStereotype stereotype : existingStereotypes)
-			{
-				aModelElement.removeStereotype(stereotype);
-			}
-		}
-		
+				
 		if (aImportMode == ImportMode.reference)
 		{
 			// do nothing
@@ -174,7 +182,7 @@ public class JsonModelElement extends JsonModelElementBase
 		for (JsonModelElementBase jsonStereotype : this.stereotypes)
 		{
 
-			IRPModelElement modelElement = jsonStereotype.toModelElement(aProject, ImportMode.reference);
+			IRPModelElement modelElement = jsonStereotype.getReference(aProject);
 
 			if (modelElement != null)
 			{
@@ -194,27 +202,6 @@ public class JsonModelElement extends JsonModelElementBase
 	protected void setProperties(IRPModelElement aModelElement, ImportMode aImportMode)
 	{
 		
-		if (aImportMode == ImportMode.create)
-		{
-			// on creation, no properties should be set yet
-			if (aModelElement.getOverriddenProperties(0).toList().size() > 0)
-			{
-				trace("On creation, the model must not have any overridden properties yet");
-				return;
-			}
-		}
-		
-		else if (aImportMode == ImportMode.update)
-		{
-			// remove all existing overridden properties
-			Map<String, String> overriddenProperties = getOverriddenProperties(aModelElement);
-			for (String key : overriddenProperties.keySet())
-			{
-				aModelElement.removeProperty(key);
-			}
-	
-		}
-		
 		if (aImportMode == ImportMode.reference)
 		{
 			// do nothing
@@ -233,7 +220,6 @@ public class JsonModelElement extends JsonModelElementBase
 			}
 		}
 
-
 	}
 
 	public static JsonModelElement GetJsonModelElement(IRPModelElement aModelElement, int level)
@@ -247,10 +233,7 @@ public class JsonModelElement extends JsonModelElementBase
 
 	}
 
-	List<JsonModelElementBase> getNestedElements()
-	{
-		return nestedElements;
-	}
+	
 
 	List<JsonModelElementBase> getTemplates()
 	{
@@ -281,6 +264,12 @@ public class JsonModelElement extends JsonModelElementBase
 	JsonModelElementBase getNewTermStereotype()
 	{
 		return newTermStereotype;
+	}
+	
+	@Override
+	public List<JsonModelElementBase> getNestedElements()
+	{
+		return nestedElements;
 	}
 
 	/*

@@ -36,15 +36,7 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/JavaAPI/rhapsody.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="file:/C:/Rhapsody/v840/Doc/java_api/"/>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Rhapsody/v840/Share/JavaAPI"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.cdt.core.source_5.6.0.201402142303.jar"/>
 	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox-common-3.2.0.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
+	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.cdt.core.source_5.6.0.201402142303.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

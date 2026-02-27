@@ -61,80 +61,82 @@ public class JsonFileFragment extends JsonModelElement
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		
-		if (importMode == ImportMode.reference)
-		{
-			return super.toModelElement(parent, project, importMode);
-		}
-		
-		IRPModelElement parentElement = parent.toModelElement(project, ImportMode.reference);
-		
-		IRPModelElement returnElement = null;
-		
-		if (parentElement == null)
-		{
-			trace("JsonFileFragment can only be created under IRPFile parent.");
-			return null;
-		}
-		
-		if (parentElement instanceof IRPFile == false)
-		{
-			trace("JsonFileFragment can only be created under IRPFile parent.");
-			return null;
-		}
-		
-		IRPFile parentFile = (IRPFile) parentElement;
-		
-		//IRPFileFragment theFragment = (IRPFileFragment) super.toModelElement(parent, project);
-		
-		if (fragmentElement != null)
-		{
-			
-			IRPModelElement existingElement = fragmentElement.toModelElement(project, ImportMode.reference);
-			if (existingElement == null)
-			{
-				trace("JsonFileFragment cannot create fragment because fragmentElement could not be found.");
-				return null;
-			}
-			
-			parentFile.addModelElement(existingElement, fragmentType.toString());
-			
-			List<IRPFileFragment> fragments = parentFile.getFileFragments().toList();
-			
-			for(IRPFileFragment frag : fragments)
-            {
-                if (frag.getFragmentElement() != null)
-                {
-                    if (frag.getFragmentElement().getGUID().equals(existingElement.getGUID()))
-                    {
-                        returnElement = frag;
-                    }
-                }
-            }
 	
-		}
-
-		else if (isSet(fragmentText))
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
+	{
+		if (parent instanceof IRPFile)
 		{
-			parentFile.addTextElement(fragmentText);
-			
-			List<IRPFileFragment> fragments = parentFile.getFileFragments().toList();
-			
-			for (IRPFileFragment frag :fragments)
+			IRPFile parentFile = (IRPFile) parent;
+
+			if (fragmentElement != null)
 			{
-				if (frag.getFragmentText().equals(fragmentText))
+				IRPModelElement existingElement = fragmentElement.getReference(parent.getProject());
+				if (existingElement == null)
 				{
-					returnElement = frag;
+					trace("JsonFileFragment cannot create fragment because fragmentElement could not be found.");
+					return null;
+				}
+
+				parentFile.addModelElement(existingElement, fragmentType.toString());
+
+				List<IRPFileFragment> fragments = parentFile.getFileFragments().toList();
+
+				for (IRPFileFragment frag : fragments)
+				{
+					if (frag.getFragmentElement() != null)
+					{
+						if (frag.getFragmentElement().getGUID().equals(existingElement.getGUID()))
+						{
+							return frag;
+						}
+					}
+				}
+
+			}
+
+			else if (isSet(fragmentText))
+			{
+				parentFile.addTextElement(fragmentText);
+
+				List<IRPFileFragment> fragments = parentFile.getFileFragments().toList();
+
+				for (IRPFileFragment frag : fragments)
+				{
+					if (frag.getFragmentText().equals(fragmentText))
+					{
+						return frag;
+					}
 				}
 			}
+
 		}
-		
-		return returnElement;
+
+		trace("JsonFileFragment can only be created under IRPFile parent.");
+
+		return null;
+
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		if (aModelElement instanceof IRPFileFragment == false)
+		{
+			return;
+		}
+
+		IRPFileFragment theFragment = (IRPFileFragment) aModelElement;
+
+		if (isSet(fragmentText))
+		{
+			theFragment.setFragmentText(fragmentText);
+		}
 
 
-		
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
 	}
 	
 	

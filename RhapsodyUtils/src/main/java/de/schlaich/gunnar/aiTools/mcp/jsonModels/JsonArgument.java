@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPArgument;
+import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 
@@ -32,32 +33,89 @@ public class JsonArgument extends JsonVariable
 		
 	}
 	
-	public IRPModelElement toModelElement( JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-    {
-        IRPModelElement model  = super.toModelElement(parent, project, importMode);
-		if (model == null)
+	@Override
+	protected IRPModelElement createModelElement(IRPModelElement aParentElement)
+	{
+		
+		IRPModelElement modelElement = null;
+		if (aParentElement instanceof IRPInterfaceItem)
 		{
-			return null;
+			IRPInterfaceItem parentInterfaceItem = (IRPInterfaceItem) aParentElement;
+
+			modelElement = parentInterfaceItem.addArgument(name);
+			
+		}
+		else
+		{
+			trace("Parent element is not an IRPInterfaceItem. Its " + aParentElement.getMetaClass());
+			modelElement =super.createModelElement(aParentElement);
 		}
 		
-		if (model instanceof IRPArgument == false)
+		return modelElement;
+	}
+	
+//	public IRPModelElement toModelElement( JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+//    {
+//       
+//		IRPModelElement model = null;
+//		IRPModelElement parentModel = parent.getReference(project);
+//		if(importMode == ImportMode.reference)
+//		{
+//			model = getReference(project);
+//			return model;
+//		}
+//		else
+//		{
+//			
+//			
+//			IRPModelElement parentElement = parent.toModelElement(project, ImportMode.reference);
+//
+//			if (parentElement == null)
+//			{
+//				return null;
+//			}
+//
+//			//model = parentElement.addArgument(name, type, argumentDirection);
+//		}
+//		if (model == null)
+//		{
+//			return null;
+//		}
+//		
+//		if (model instanceof IRPArgument == false)
+//		{
+//			return null;
+//		}
+//		
+//		IRPArgument theArgument = (IRPArgument) model;
+//        
+//		if (importMode == ImportMode.reference)
+//		{
+//			return theArgument;
+//		}
+//        
+//		setAttributes(theArgument, project, importMode);
+//        
+//        return theArgument;
+//    }
+	
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
+	{
+		super.setAttributes(modelElement, project, importMode);
+
+		if (modelElement instanceof IRPArgument == false)
 		{
-			return null;
+			return;
 		}
-		
-		IRPArgument theArgument = (IRPArgument) model;
-        
-		if (importMode == ImportMode.reference)
+
+		IRPArgument theArgument = (IRPArgument) modelElement;
+
+		if (argumentDirection != null)
 		{
-			return theArgument;
+			theArgument.setArgumentDirection(argumentDirection);
 		}
-        
-        if (argumentDirection != null)
-        {
-            theArgument.setArgumentDirection(argumentDirection);
-        }
-        
-        return theArgument;
-    }
+
+	}
 
 }

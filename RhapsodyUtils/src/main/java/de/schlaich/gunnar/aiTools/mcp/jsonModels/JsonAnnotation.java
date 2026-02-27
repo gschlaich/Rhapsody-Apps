@@ -64,64 +64,61 @@ public class JsonAnnotation extends JsonUnit
 
 	}
 
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		IRPModelElement modelElement = super.toModelElement(parent, project, importMode);
-		if (modelElement == null)
-		{
-			return null;
-		}
+//	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+//	{
+//		IRPModelElement modelElement = super.toModelElement(parent, project, importMode);
+//		if (modelElement == null)
+//		{
+//			return null;
+//		}
+//
+//		if (importMode == ImportMode.reference)
+//		{
+//			return modelElement;
+//		}
+//
+//
+//		setAttributes(modelElement, project, importMode);
+//		
+//		return modelElement;
+//	}
+//	
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+		super.setAttributes(aModelElement, aProject, aImportMode);
 
-		if (importMode == ImportMode.reference)
-		{
-			return modelElement;
-		}
+        if (aModelElement instanceof IRPAnnotation == false)
+        {
+            return;
+        }
 
-		if (modelElement instanceof IRPAnnotation == false)
-		{
-			return null;
-		}
+        IRPAnnotation annotation = (IRPAnnotation) aModelElement;
 
-		IRPAnnotation annotation = (IRPAnnotation) modelElement;
+        annotation.setBody(this.body);
 
-		annotation.setBody(this.body);
+        if (this.isSpecificationRTF)
+        {
+            annotation.setSpecificationRTF(this.specification);
+        }
+        else
+        {
+            annotation.setSpecification(this.specification);
+        }
 
-		if (this.isSpecificationRTF)
-		{
-			annotation.setSpecificationRTF(this.specification);
-		}
-		else
-		{
-			annotation.setSpecification(this.specification);
-		}
-
-		if (importMode == ImportMode.update)
-		{
-			List<IRPModelElement> existingAnchors = annotation.getAnchoredByMe().toList();
-			for (IRPModelElement anchor : existingAnchors)
-			{
-				annotation.removeAnchor(anchor);
-			}
-		}
-		else if (importMode == ImportMode.create)
-		{
-			if (annotation.getAnchoredByMe().toList().size() > 0)
-			{
-				trace("On creation, the annotation must not have any anchored elements yet");
-				return modelElement;
-			}
-		}
-
-		for (JsonModelElementBase jsonElem : anchoredByMe)
-		{
-			IRPModelElement elem = jsonElem.toModelElement( project, ImportMode.reference);
-			if (elem != null)
-			{
-				annotation.addAnchor(elem);
-			}
-		}
-
-		return modelElement;
-	}
+        
+        for (JsonModelElementBase jsonElem : anchoredByMe)
+        {
+            IRPModelElement elem = jsonElem.getReference(aProject);
+            if (elem != null)
+            {
+                annotation.addAnchor(elem);
+            }
+        }
+        
+        
+    }
 
 }

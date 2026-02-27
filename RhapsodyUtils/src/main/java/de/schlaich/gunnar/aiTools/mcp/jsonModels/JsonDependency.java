@@ -49,47 +49,71 @@ public class JsonDependency extends JsonModelElement
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-
-		if (model == null)
+	    IRPProject project = parent.getProject();
+		
+		if(dependent == null)
 		{
+			trace("Dependent element is null for dependency " + name);
+			return null;
+		}
+	    
+	    IRPModelElement dependentModel = dependent.getReference(project);
+		
+		if (dependentModel == null)
+		{
+			trace("Could not find model for dependent element " + name);
+			return null;
+		}
+		
+		if (dependsOn == null)
+		{
+			trace("DependsOn element is null for dependency " + name);
+			return null;
+		}
+		
+		IRPModelElement dependsOnModel = dependsOn.getReference(project);
+		
+		if (dependsOnModel == null)
+		{
+			trace("Could not find model for dependsOn element " + name);
 			return null;
 		}
 
-		if (model instanceof IRPDependency == false)
-		{
-			return null;
-		}
-		
-		if (importMode == ImportMode.reference)
-		{
-			return model;
-		}
-		
-		IRPDependency theDep = (IRPDependency) model;
-		
-		if (dependent != null)
-		{
-			IRPModelElement depModel = dependent.toModelElement(project, ImportMode.reference);
-			if (depModel != null)
-			{
-				theDep.setDependent(depModel);
-			}
-		}
-		
-		if (dependsOn != null)
-		{
-			IRPModelElement depOnModel = dependsOn.toModelElement(project, ImportMode.reference);
-			if (depOnModel != null)
-			{
-				theDep.setDependsOn(depOnModel);
-			}
-		}
-
-		return model;
-
+		return parent.addDependencyBetween(dependentModel, dependsOnModel);
 	}
+	
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
+    {
+        super.setAttributes(modelElement, project, importMode);
+
+        if (modelElement instanceof IRPDependency == false)
+        {
+            return;
+        }
+        
+        IRPDependency theDep = (IRPDependency) modelElement;
+        
+        if (dependent != null)
+        {
+            IRPModelElement depModel = dependent.getReference(project);
+            if (depModel != null)
+            {
+                theDep.setDependent(depModel);
+            }
+        }
+        
+        if (dependsOn != null)
+        {
+            IRPModelElement depOnModel = dependsOn.getReference(project);
+            if (depOnModel != null)
+            {
+                theDep.setDependsOn(depOnModel);
+            }
+        }
+    }
 
 }

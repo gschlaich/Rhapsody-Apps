@@ -100,6 +100,10 @@ public class JsonStateVertex extends JsonModelElement
 	
 	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode mode)
 	{
+		
+		
+		// will never be called
+		
 		IRPModelElement model = super.toModelElement(parent, project, mode);
 		if (model == null)
 		{

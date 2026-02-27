@@ -19,11 +19,5 @@ public class JsonComment extends JsonAnnotation
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		IRPModelElement modelElement = super.toModelElement(parent, project, importMode);
-
-		return modelElement;
-	}
-
+	
 }

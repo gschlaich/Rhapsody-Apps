@@ -2,7 +2,9 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAttribute;
+import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
 public class JsonAttribute extends JsonVariable
@@ -59,26 +61,43 @@ public class JsonAttribute extends JsonVariable
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	@Override
+	protected IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
+		//package
+		//classifier
 		
-		if (model == null)
+		IRPModelElement modelElement = null;
+		if (aParentElement instanceof IRPClassifier)
 		{
-			return null;
+			IRPClassifier parentClass = (IRPClassifier) aParentElement;
+			modelElement = parentClass.addAttribute(name);
 		}
-		
-		if (model instanceof IRPAttribute == false)
+		else if (aParentElement instanceof IRPPackage)
 		{
-			return null;
+			IRPPackage parentPackage = (IRPPackage) aParentElement;
+			modelElement = parentPackage.addGlobalVariable(name);
 		}
-		
-		IRPAttribute theAttribute = (IRPAttribute) model;
-		
-		if (importMode == ImportMode.reference)
+		else
 		{
-			return theAttribute;
+			trace("Parent element is not an IRPClassifier or IRPPackage. Its " + aParentElement.getMetaClass());
+			modelElement = super.createModelElement(aParentElement);			
 		}
+
+		return modelElement;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+
+		if (aModelElement instanceof IRPAttribute == false)
+		{
+			return;
+		}
+
+		IRPAttribute theAttribute = (IRPAttribute) aModelElement;
 
 		theAttribute.setIsConstant(isConstant ? 1 : 0);
 		theAttribute.setIsOrdered(isOrdered ? 1 : 0);
@@ -87,7 +106,8 @@ public class JsonAttribute extends JsonVariable
 		theAttribute.setMultiplicity(multiplicity);
 		theAttribute.setVisibility(visibility);
 
-		return theAttribute;
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
 	}
 
 }

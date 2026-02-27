@@ -281,15 +281,9 @@ public class RhapsodyClient
 		IRPModelElement targetModel = targetModelOpt.get();
 		
 		JsonModelElementBase modifiedJson = null;
+	
+		modifiedJson = myJsonModelFactory.fromJson(aJsonModelString);
 		
-		if (aImportMode == ImportMode.update)
-		{
-			modifiedJson = updateModelFromJson(targetModel, aJsonModelString);
-		}
-		else
-		{
-			modifiedJson = myJsonModelFactory.fromJson(aJsonModelString);
-		}
 		
 		JsonModelElementBase parentJson = new JsonModelElementBase(targetModel);
 		

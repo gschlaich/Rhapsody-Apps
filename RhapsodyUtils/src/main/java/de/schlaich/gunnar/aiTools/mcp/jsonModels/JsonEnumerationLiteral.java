@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPEnumerationLiteral;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
 
@@ -38,33 +39,40 @@ public class JsonEnumerationLiteral extends JsonModelElement
 	}
 	
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
+		IRPModelElement modelElement = null;
+
+		if (aParentElement instanceof IRPType)
 		{
-			return null;
-		}
-		
-		if (model instanceof IRPEnumerationLiteral == false)
-		{
-			return null;
-		}
-		
-		IRPEnumerationLiteral theEnumerationLiteral = (IRPEnumerationLiteral) model;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return theEnumerationLiteral;
-		}
-		
-		if (isSet(value))
-		{
-			theEnumerationLiteral.setValue(value);
+			IRPType parentType = (IRPType) aParentElement;
+
+			modelElement = parentType.addEnumerationLiteral(name);
 		}
 
-		return theEnumerationLiteral;
+		return modelElement;
+
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		
+		super.setAttributes(aModelElement, aProject, aImportMode);
+		
+		if (aModelElement instanceof IRPEnumerationLiteral == false)
+		{
+			return;
+		}
+
+		IRPEnumerationLiteral theLiteral = (IRPEnumerationLiteral) aModelElement;
+
+		if (isSet(value))
+		{
+			theLiteral.setValue(value);
+		}
+
 	}
 
 }

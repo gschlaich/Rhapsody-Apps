@@ -3,6 +3,10 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPClass;
+import com.telelogic.rhapsody.core.IRPClassifier;
+import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPState;
@@ -10,7 +14,7 @@ import com.telelogic.rhapsody.core.IRPStatechart;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
 
-public class JsonStatechart extends JsonModelElement
+public class JsonStatechart extends JsonClass
 {
 
 	/*
@@ -26,8 +30,10 @@ public class JsonStatechart extends JsonModelElement
 	protected boolean isMainBehavior = false;
 	@JsonProperty("isOverridden")
 	protected boolean isOverridden = false;
-	@JsonProperty("itsClass")
-	protected JsonModelElementBase itsClass = null;
+	
+	@JsonProperty("statechartDiagram")
+	protected JsonModelElementBase statechartDiagram = null;
+	
 	
 	
 	public JsonStatechart(IRPModelElement aModelElement, int level)
@@ -40,13 +46,10 @@ public class JsonStatechart extends JsonModelElement
 		
 		if (aModelElement instanceof IRPStatechart)
 		{
-			com.telelogic.rhapsody.core.IRPStatechart theStatechart = (IRPStatechart) aModelElement;
+			IRPStatechart theStatechart = (IRPStatechart) aModelElement;
 			isMainBehavior = theStatechart.getIsMainBehavior() == 1;
 			isOverridden = theStatechart.getIsOverridden() == 1;
-			if (theStatechart.getItsClass() != null)
-			{
-				itsClass = new JsonModelElementBase(theStatechart.getItsClass());
-			}
+			statechartDiagram = new JsonModelElementBase(theStatechart.getStatechartDiagram(), 0);		
 		}
 	}
 	
@@ -58,29 +61,83 @@ public class JsonStatechart extends JsonModelElement
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode mode)
-    {
-        
-		IRPModelElement elem = super.toModelElement(parent, project, mode);
-
-		if (elem == null)
+	
+	@Override
+	protected void getNestedElements(IRPModelElement aModelElement)
+	{
+		
+		JsonModelFactory factory = JsonModelFactory.Instance();
+		
+		if (factory == null)
 		{
-			return null;
+			trace("Could not get JsonModelFactory instance");
+			return;
+		}
+		
+		IRPApplication app = factory.getRhapsodyApplication();
+		
+		
+		List<IRPModelElement> nestedElements = aModelElement.getNestedElements().toList();
+		IRPCollection nestedElementsCollection = app.createNewCollection();
+		for (IRPModelElement nestedElement : nestedElements)
+		{
+			if (nestedElement instanceof IRPState)
+			{
+				IRPState state = (IRPState) nestedElement;
+				if(state.isRoot()==1)
+				{
+					nestedElementsCollection.addItem(nestedElement);
+				}
+			}
+			else 
+			{
+				nestedElementsCollection.addItem(nestedElement);
+			}
 		}
 
-		if (elem instanceof IRPStatechart == false)
+		this.nestedElements = convertToJsonModelElementList(nestedElementsCollection);
+		nestedElementsCollection.empty();
+		
+	}
+	
+	
+	
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
+	{
+		if (aParentElement == null)
 		{
 			return null;
 		}
 		
-		if (mode == ImportMode.reference)
+		if (aParentElement instanceof IRPState)
 		{
-			return elem;
+			IRPState parentState = (IRPState) aParentElement;
+			return parentState.createNestedStatechart();
+		}
+		else if (aParentElement instanceof IRPClassifier)
+		{
+			IRPClassifier parentClassifier = (IRPClassifier) aParentElement;
+			return parentClassifier.addStatechart();
 		}
 		
-		IRPStatechart theStatechart = (IRPStatechart) elem;
-        
-        if(isMainBehavior)
+		trace("Could not create statechart for parent element " + aParentElement.getName());
+		return null;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
+		
+		if (aModelElement instanceof IRPStatechart == false)
+		{
+			return;
+		}
+		IRPStatechart theStatechart = (IRPStatechart) aModelElement;
+
+		if(isMainBehavior)
         {
         	theStatechart.setAsMainBehavior(); 
         }
@@ -89,55 +146,7 @@ public class JsonStatechart extends JsonModelElement
 		{
 			 theStatechart.overrideInheritance();
 		}
-        return theStatechart;
-    }
-	
-//	@Override
-//	protected void addNestedElements(IRPProject aProject, ImportMode aImportMode)
-//	{
-//		
-//		IRPModelElement modelElement = aProject.findElementByGUID(this.getGuid());
-//		
-//		if (modelElement == null)
-//		{
-//			return;
-//		}
-//		
-//		if (modelElement instanceof IRPStatechart == false)
-//		{
-//			return;
-//		}
-//		
-//		IRPStatechart theStatechart = (IRPStatechart) modelElement;
-//		
-//		
-//		for (JsonModelElementBase jsonNestedElement : this.nestedElements)
-//		{
-//			
-//			if(jsonNestedElement.getMetaclass() == MetaClass.State)
-//			{
-//				if(jsonNestedElement.getName().equals("ROOT"))
-//				{
-//					continue;
-//				}
-//			}
-//			
-//			if (jsonNestedElement.getMetaclass() == MetaClass.DefaultTransition)
-//			{
-//				
-//				if(jsonNestedElement instanceof JsonDefaultTransition)
-//				{
-//					theStatechart.set
-//				}
-//				// transitions are added to the statechart via the source and target states
-//				continue;
-//			}
-//			
-//			jsonNestedElement.toModelElement(this, aProject, aImportMode);
-//        
-//		}
-//	}
-
+	}
 	
 
 }

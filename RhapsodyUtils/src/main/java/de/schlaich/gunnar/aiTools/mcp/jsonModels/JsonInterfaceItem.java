@@ -34,11 +34,5 @@ public class JsonInterfaceItem extends JsonClassifier
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		IRPInterfaceItem theInterfaceItem = (IRPInterfaceItem) super.toModelElement(parent, project, importMode);
-		// signature is read-only
-		return theInterfaceItem;
-	}
 
 }

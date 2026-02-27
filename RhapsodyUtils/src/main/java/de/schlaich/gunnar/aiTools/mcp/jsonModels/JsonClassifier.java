@@ -3,6 +3,8 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
+
 public class JsonClassifier extends JsonUnit
 {
 
@@ -19,11 +21,11 @@ public class JsonClassifier extends JsonUnit
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		IRPModelElement modelElement = super.toModelElement(parent, project, importMode);
 
-		return modelElement;
+	
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
 	}
 
 }

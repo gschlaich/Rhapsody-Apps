@@ -27,10 +27,13 @@ import javax.swing.text.Document;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.text.html.StyleSheet;
 
-import org.apache.commons.imaging.ImageReadException;
+import org.apache.commons.imaging.ImagingException;
 import org.apache.commons.imaging.Imaging;
 
-import com.github.difflib.algorithm.DiffException;
+//import com.github.difflib.algorithm.DiffException;
+
+import com.github.difflib.algorithm.*;
+
 import com.github.difflib.text.DiffRow;
 import com.github.difflib.text.DiffRowGenerator;
 import com.github.difflib.text.DiffRow.Tag;
@@ -324,13 +327,10 @@ public class COperationalRoundtrip implements ActionListener {
 			bodyLines.add("");
 		}
 		
-		try {
+		
 			List<DiffRow> rows = generator.generateDiffRows(bodyLines,sourceLines);
 			ret = hasDiff(rows);
-		} catch (DiffException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		
 		return ret;
 	}
@@ -359,7 +359,7 @@ public class COperationalRoundtrip implements ActionListener {
 			icons = Imaging.getAllBufferedImages(f);
 			
 		} 
-		catch (ImageReadException e)
+		catch (ImagingException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();

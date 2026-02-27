@@ -1,12 +1,9 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
-
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClass;
-import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
 public class JsonClass extends JsonClassifier
@@ -44,8 +41,7 @@ public class JsonClass extends JsonClassifier
 		isBehaviorOverriden = theClass.getIsBehaviorOverriden()==1;
 		isComposite = theClass.getIsComposite()==1;
 		isFinal = theClass.getIsFinal()==1;	
-		
-			
+					
 	}
 
 	public JsonClass()
@@ -53,38 +49,42 @@ public class JsonClass extends JsonClassifier
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
 	{
-		
-		IRPModelElement model  = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
+		if (aModelElement instanceof IRPClass == false)
 		{
-			return null;
+			return;
 		}
-		
-		if (model instanceof IRPClass == false)
-		{
-			return null;
-		}
-		
-		IRPClass theClass = (IRPClass) model;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return theClass;
-		}
+
+		IRPClass theClass = (IRPClass) aModelElement;
 
 		theClass.setIsAbstract(isAbstract ? 1 : 0);
 		theClass.setIsActive(isActive ? 1 : 0);
 		theClass.setIsBehaviorOverriden(isBehaviorOverriden ? 1 : 0);
-		//theClass.setIsComposite(isComposite ? 1 : 0);
+		// theClass.setIsComposite(isComposite ? 1 : 0);
 		theClass.setIsFinal(isFinal ? 1 : 0);
-		
-
-		return theClass;
 	}
 	
-	
-
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parentElement)
+    {
+      
+        if (parentElement instanceof IRPClass)
+        {
+        	IRPClass parentClass = (IRPClass) parentElement;
+        	return parentClass.addClass(name);
+        }
+        else if(parentElement instanceof IRPPackage)
+        {
+			IRPPackage parentPackage = (IRPPackage) parentElement;
+			return parentPackage.addClass(name);
+		}
+		
+        return null;
+    }
+        	
 }

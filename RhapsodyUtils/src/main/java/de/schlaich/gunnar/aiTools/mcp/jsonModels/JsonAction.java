@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPState;
+import com.telelogic.rhapsody.core.IRPTransition;
 
 public class JsonAction extends JsonModelElement
 {
@@ -12,8 +14,15 @@ public class JsonAction extends JsonModelElement
     Gets the code defined as the action for the transition.
 	*/
 	
+	enum ActionType {
+		entry, exit, transition, unknown
+	}
+	
 	@JsonProperty("body")
 	protected String body = null;
+	
+	@JsonProperty("actionType")
+	protected ActionType actionType = ActionType.unknown;
 	
 	public JsonAction(IRPModelElement aModelElement, int level)
 	{
@@ -24,13 +33,40 @@ public class JsonAction extends JsonModelElement
 			return;
 		}
 		
-		if (aModelElement instanceof IRPAction)
+		if (aModelElement instanceof IRPAction == false)
 		{
-			IRPAction theAction = (IRPAction) aModelElement;
+			return;
+		}
+		
+		IRPModelElement ownerElement = aModelElement.getOwner();
+		if(ownerElement == null)
+		{
+			return;
+		}
+		
+		if (ownerElement instanceof IRPState)
+		{
+			IRPState parentState = (IRPState) ownerElement;
 
-			body = theAction.getBody();
+			if (parentState.getEntryAction() != null && parentState.getEntryAction().equals(aModelElement))
+			{
+				actionType = ActionType.entry;
+			}
+			else if (parentState.getExitAction() != null && parentState.getExitAction().equals(aModelElement))
+			{
+				actionType = ActionType.exit;
+			}
+			
+		}
+		else if(ownerElement instanceof IRPTransition)
+		{
+			actionType = ActionType.transition;
 		}
 
+		IRPAction theAction = (IRPAction) aModelElement;
+
+		body = theAction.getBody();
+	
 	}
 	
 	public JsonAction()
@@ -38,33 +74,112 @@ public class JsonAction extends JsonModelElement
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
+//	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
+//	{
+//		if (aImportMode == ImportMode.reference)
+//		{
+//			return super.toModelElement(parent, project, aImportMode);
+//		}
+//		
+//		IRPAction theAction = null;
+//		
+//		IRPModelElement parentElement = parent.toModelElement(project, ImportMode.reference);
+//		
+//		if (parentElement == null)
+//		{
+//			return null;
+//		}
+//		
+//		if (parentElement instanceof IRPState)
+//		{
+//			IRPState parentState = (IRPState) parentElement;
+//			
+//			theAction = parentState.setEntryAction(body);
+//			
+//		}
+//		
+//		
+//		IRPModelElement model = super.toModelElement(parent, project, aImportMode);
+//		
+//		if (model == null)
+//		{
+//			return null;
+//		}
+//		
+//		if (model instanceof IRPAction == false)
+//		{
+//			return null;
+//		}
+//		
+//		IRPAction theAction = (IRPAction) model;
+//		
+//		if (aImportMode == ImportMode.reference)
+//		{
+//			return theAction;
+//		}
+//		
+//		setAttributes(theAction, project, aImportMode);
+//
+//		return theAction;
+//	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, aImportMode);
-		
-		if (model == null)
+
+		if (aModelElement instanceof IRPAction == false)
 		{
-			return null;
+			return;
 		}
-		
-		if (model instanceof IRPAction == false)
-		{
-			return null;
-		}
-		
-		IRPAction theAction = (IRPAction) model;
-		
-		if (aImportMode == ImportMode.reference)
-		{
-			return theAction;
-		}
-		
-		if(isSet(body))
+
+		IRPAction theAction = (IRPAction) aModelElement;
+
+		if (isSet(body))
 		{
 			theAction.setBody(body);
 		}
+		
+		super.setAttributes(aModelElement, aProject, aImportMode);
 
-		return theAction;
 	}
+	
+	@Override
+	protected IRPModelElement createModelElement(IRPModelElement aParentElement)
+    {
+		IRPModelElement ret = null;
+		
+		if (aParentElement instanceof IRPState)
+		{
+			IRPState parentState = (IRPState) aParentElement;
+
+			if (actionType == ActionType.entry)
+			{
+				parentState.setEntryAction(body);
+				ret = parentState.getTheEntryAction();
+			}
+			else if (actionType == ActionType.exit)
+			{
+				parentState.setExitAction(body);
+				ret =  parentState.getTheExitAction();
+			}
+			
+		}
+		else if (aParentElement instanceof IRPTransition)
+		{
+			IRPTransition parentTransition = (IRPTransition) aParentElement;
+
+			if (actionType == ActionType.transition)
+			{
+				ret = parentTransition.setItsAction(body);
+			}
+			
+		}
+		
+		if (ret == null)
+		{
+			trace("Action type ("+actionType.name()+")does not match the owner element type "+ aParentElement.getMetaClass());
+		}
+		return ret;
+    }
 
 }

@@ -82,57 +82,65 @@ public class JsonComponent extends JsonUnit
 
 	}
 
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-
-		if (model == null)
+		if (parent instanceof IRPProject)
 		{
-			return null;
+			IRPProject theProject = (IRPProject) parent;
+			return theProject.addComponent(name);
 		}
-
-		if (model instanceof IRPComponent == false)
+		else if (parent instanceof IRPComponent)
 		{
-			return null;
+			IRPComponent theComponent = (IRPComponent) parent;
+			return theComponent.addNestedComponent(name);
 		}
-		
-		if (importMode == ImportMode.reference)
-		{
-			return model;
-		}
-
-		IRPComponent theComponent = (IRPComponent) model;
-
-		if (isSet(additionalSources))
-		{
-			theComponent.setAdditionalSources(additionalSources);
-		}
-		if (isSet(buildType))
-		{
-			theComponent.setBuildType(buildType);
-		}
-		if (isSet(includePath))
-		{
-			theComponent.setIncludePath(includePath);
-		}
-		if (isSet(libraries))
-		{
-			theComponent.setLibraries(libraries);
-		}
-		if (isSet(standardHeaders))
-		{
-			theComponent.setStandardHeaders(standardHeaders);
-		}
-
-		for (JsonModelElementBase jsonElem : scopeElements)
-		{
-			IRPModelElement elem = jsonElem.toModelElement( project, ImportMode.reference);
-			theComponent.addScopeElement(elem);
-		}
-
-		// variants?
-
-		return model;
+		return null;
 	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+
+        if (aModelElement instanceof IRPComponent == false)
+        {
+            return;
+        }
+
+        IRPComponent theComponent = (IRPComponent) aModelElement;
+
+        if (isSet(additionalSources))
+        {
+            theComponent.setAdditionalSources(additionalSources);
+        }
+        if (isSet(buildType))
+        {
+            theComponent.setBuildType(buildType);
+        }
+        if (isSet(includePath))
+        {
+            theComponent.setIncludePath(includePath);
+        }
+        if (isSet(libraries))
+        {
+            theComponent.setLibraries(libraries);
+        }
+        if (isSet(standardHeaders))
+        {
+            theComponent.setStandardHeaders(standardHeaders);
+        }
+        
+		if (scopeElements.isEmpty()==false)
+		{
+			for (JsonModelElementBase jsonScopeElement : scopeElements)
+			{
+				IRPModelElement e = jsonScopeElement.getReference(aProject);
+				theComponent.addScopeElement(e);
+			}
+		}
+    }
+	
 
 }

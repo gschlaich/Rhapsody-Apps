@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.telelogic.rhapsody.core.IRPAssociationClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPInstance;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -140,98 +141,110 @@ public class JsonRelation extends JsonUnit
 	{
 		// TODO Auto-generated constructor stub
 	}
-
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-
-		IRPRelation theRelation = null;
-
-		if (importMode == ImportMode.reference)
+		
+		IRPProject project = aParentElement.getProject();
+		
+		if(aParentElement instanceof IRPClassifier)
 		{
-			IRPModelElement model = super.toModelElement(parent, project, importMode);
+			IRPClassifier parentClass = (IRPClassifier) aParentElement;
 
-			return model;
-		}
-
-		if (parent == null || project == null)
-		{
-			return null;
-		}
-
-		IRPModelElement parentElement = project.findElementByGUID(parent.getGuid());
-
-		if (parentElement == null)
-		{
-			return null;
-		}
-
-		if (!(parentElement instanceof IRPClassifier))
-		{
-			return null;
-		}
-
-		IRPClassifier parentClassifier = (IRPClassifier) parentElement;
-
-		List<IRPRelation> existingRelations = parentClassifier.getRelations().toList();
-
-		for (IRPRelation rel : existingRelations)
-		{
-			if (rel.getGUID().equals(this.getGuid()))
-			{
-				theRelation = rel;
-			}
-		}
-
-		if (theRelation == null)
-		{
-
-			IRPModelElement otherElement = otherClass.toModelElement(project, ImportMode.update);
+			IRPModelElement otherElement = otherClass.getReference(project);
 
 			if (otherElement == null)
 			{
 				return null;
 			}
 
-			if (!(otherElement instanceof IRPClassifier))
+			if ((otherElement instanceof IRPClassifier)==false)
 			{
 				return null;
 			}
 
 			IRPClassifier otherClassifier = (IRPClassifier) otherElement;
-
-			LinkType linkType = LinkType.Association;
-
-			if (this instanceof JsonInstance)
+			
+			if(ofClass == null)
 			{
-				linkType = LinkType.Composition;
+				trace("Relation " + name + " has no ofClass specified. Cannot create relation.");
+				return null;
 			}
+			
+			if(ofClass.getGuid().equals(parentClass.getGUID()) == false)
+            {
+                trace("ofClass of relation " + name + " does not match the parent class. Cannot create relation.");
+                return null;
+            }
 
-			theRelation = parentClassifier.addUnidirectionalRelationTo(otherClassifier, relationRoleName,
-					linkType.toString(), multiplicity, relationLinkName);
+			//linkType - used to determine the type of association to create. The strings that can be used for this parameter are Association, Aggregation and Composition (parameter is case-sensitive).
+			//IRPClassifier.addUnidirectionalRelationTo(IRPClassifier otherClassifier, java.lang.String roleName, java.lang.String linkType, java.lang.String multiplicity, java.lang.String linkName)
 
+			return parentClass.addUnidirectionalRelationTo(otherClassifier, relationRoleName, relationType,
+					multiplicity, relationLinkName);
 		}
-
-		if (qualifierType != null)
-		{
-			IRPModelElement qualifierTypeME = qualifierType.toModelElement(project, ImportMode.update);
-			if (qualifierTypeME != null && qualifierTypeME instanceof IRPClassifier)
+		
+		else
+		{	
+			
+			if(ofClass == null)
 			{
-				theRelation.setQualifierType((IRPClassifier) qualifierTypeME);
+				trace("Relation " + name + " has no ofClass specified. Cannot create relation.");
+				return null;
 			}
-		}
-
-		if (theRelation instanceof IRPInstance == false)
-		{
-
-			if (isSet(relationType))
+			
+			IRPModelElement ofClassElement = ofClass.getReference(project);
+			if(ofClassElement == null)
 			{
-				theRelation.setRelationType(relationType);
+				trace("ofClass of relation " + name + " could not be resolved. Cannot create relation.");
+				return null;
 			}
+			
+			if(ofClassElement instanceof IRPClassifier == false)
+			{
+				trace("ofClass of relation " + name + " is not an IRPClassifier. Cannot create relation.");
+				return null;
+			}
+			
+			return createModelElement(ofClassElement);
+   
 		}
+		
+		
 
-		// theRelation.setVisibility(visibility);
-		// is property
-		if (isSet(visibility))
+	}
+
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
+    {
+        super.setAttributes(modelElement, project, importMode);
+
+        if (modelElement instanceof IRPRelation == false)
+        {
+            return;
+        }
+
+        IRPRelation theRelation = (IRPRelation) modelElement;
+
+        if (isSet(relationLabel))
+        {
+            theRelation.setRelationLabel(relationLabel);
+        }
+
+        if (isSet(relationLinkName))
+        {
+            theRelation.setRelationLinkName(relationLinkName);
+        }
+
+        if (isSet(relationRoleName))
+        {
+            theRelation.setRelationRoleName(relationRoleName);
+        }
+        
+        if (isSet(visibility))
 		{
 			theRelation.setPropertyValue("CPP_CG.Relation.DataMemberVisibility", visibility);
 		}
@@ -240,25 +253,29 @@ public class JsonRelation extends JsonUnit
 		{
 			theRelation.setQualifier(qualifier);
 		}
-
-		// theRelation.setTypelessObject(isTypelessObject ? 1 : 0);
-
+		
+		if(qualifierType!=null)
+		{
+			IRPModelElement qualifierTypeME = qualifierType.getReference(project);
+            if (qualifierTypeME != null && qualifierTypeME instanceof IRPClassifier)
+            {
+                theRelation.setQualifierType((IRPClassifier) qualifierTypeME);
+            }
+		}
+		
 		if (qualifiers != null)
 		{
 			for (JsonModelElementBase jsonQualifier : qualifiers)
 			{
-				IRPModelElement qualifierME = jsonQualifier.toModelElement(project, ImportMode.update);
+				IRPModelElement qualifierME = jsonQualifier.getReference(project);
 				if (qualifierME != null)
 				{
 					theRelation.addQualifier(qualifierME);
 				}
 			}
 		}
-
-		setProperties(theRelation, importMode);
-
-		return theRelation;
-
-	}
+    }
+        
+        
 
 }

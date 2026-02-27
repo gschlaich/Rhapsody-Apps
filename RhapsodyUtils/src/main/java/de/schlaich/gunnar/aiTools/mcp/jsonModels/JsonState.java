@@ -99,7 +99,9 @@ public class JsonState extends JsonStateVertex
 			{
 				itsSwimlane = new JsonModelElementBase(theState.getItsSwimlane());
 			}
-			subStates = convertToJsonModelElementBaseList(theState.getSubStates());
+			//subStates = convertToJsonModelElementBaseList(theState.getSubStates());
+			subStates = convertToJsonModelElementList(theState.getSubStates());
+			
 			stateType = theState.getStateType();
 			if (theState.getNestedStatechart() != null)
 			{
@@ -124,134 +126,109 @@ public class JsonState extends JsonStateVertex
 
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	public boolean hasSubState(JsonState aState)
 	{
-		if (importMode == ImportMode.reference)
+		if (subStates == null)
 		{
-			IRPModelElement refElement = super.toModelElement(project, importMode);
-			return refElement;
+			return false;
 		}
-		
 
-		IRPState theState = null;
-		
-		IRPModelElement parentElement = parent.toModelElement(project, ImportMode.reference);
-		if (parentElement == null)
+		for (JsonModelElementBase s : subStates)
 		{
-			return null;
-		}
-		
-		if (this.root)
-		{
-			
-			if (parentElement instanceof IRPStatechart == false)
+			if (s.name.equals(aState.name))
 			{
-				return null;
+				return true;
 			}
-			
-			IRPStatechart parentStatechart = (IRPStatechart) parentElement;
-			
-			theState = parentStatechart.getRootState();
-				
-			
 		}
-		else
-		{
 
-			
-			
-			IRPState parentState = null;
-			
-			IRPModelElement parentStateElement = this.parentState.toModelElement(project, ImportMode.reference);
-
-			if(parentStateElement == null)
-			{
-				return null;
-			}
-			
-			if (parentElement instanceof IRPStatechart)
-			{
-				IRPStatechart parentStatechart = (IRPStatechart) parentElement;
-				parentState = parentStatechart.getRootState();
-			}
-			else if (parentElement instanceof IRPState)
-			{
-				parentState = (IRPState) parentElement;
-			}
-			else
-			{
-				return null;
-			}
-			
-			if (parentState == null)
-			{
-				return null;
-			}
-			theState = parentState.addState(this.getName());
-			
-		}
-		
-		if (theState == null)
-		{
-			return null;
-		}
-		
-		if(project.findElementByGUID(this.getGuid())==null)
-		{
-			theState.setGUID(this.getGuid());
-		}
-		else
-		{
-			JsonModelFactory f = JsonModelFactory.Instance();
-			f.updateReferenceElement(this.getGuid(), theState);
-		}
+		return false;
+	}
 	
-		if (isSet(entryAction))
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
+	{
+		IRPState theState = null;
+
+		if (this.root == true)
 		{
-			theState.setEntryAction(entryAction);
+			if (aParentElement instanceof IRPStatechart == false)
+			{
+				return null;
+			}
+
+			IRPStatechart parentStatechart = (IRPStatechart) aParentElement;
+			theState = parentStatechart.getRootState();
 		}
-		if (isSet(exitAction))
+		else
 		{
-			theState.setExitAction(exitAction);
+			
+			if (aParentElement instanceof IRPState == false)
+			{
+				return null;
+			}
+			IRPState parentState = (IRPState) aParentElement;
+			theState = parentState.addState(this.name);
 		}
-		if (internalTransitions != null)
-		{
-			//theState.setInternalTransitions(convertToModelElementList(internalTransitions, null, project));
-		}
-		if (isOverridden == false)
-		{
-			//theState.overrideInheritance();
-			theState.unoverrideInheritance();
-		}
-		if (itsSwimlane != null)
-		{
-			theState.setItsSwimlane((IRPSwimlane) itsSwimlane.toModelElement(project, ImportMode.create));
-		}
-		if (subStates != null)
-		{
-			//theState.setSubStates(convertToModelElementList(subStates, null, project));
-		}
-		if (isSet(stateType))
-		{
-			theState.setStateType(stateType);
-		}
-		if (nestedStatechart != null)
-		{
-			//theState.setNestedStatechart((IRPStatechart) nestedStatechart.toModelElement(null, project));
-		}
-//		if (referenceToActivity != null)
-//		{
-//			theState.setReferenceToActivity((IRPModelElement) referenceToActivity.toModelElement(null, project));
-//		}
-//		if (sendAction != null)
-//		{
-//			//theState.setSendAction((IRPSendAction) sendAction.toModelElement(null, project));
-//		}
-		
-		
 
 		return theState;
+
 	}
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+        
+        if (aModelElement instanceof IRPState == false)
+        {
+            return;
+        }
+        IRPState theState = (IRPState) aModelElement;
+        
+        if (isSet(entryAction))
+        {
+            theState.setEntryAction(entryAction);
+        }
+        if (isSet(exitAction))
+        {
+            theState.setExitAction(exitAction);
+        }
+        if (internalTransitions != null)
+        {
+            convertToModelElementList( internalTransitions, aProject, ImportMode.create);
+        }
+        if (isOverridden == false)
+        {
+            //theState.overrideInheritance();
+            theState.unoverrideInheritance();
+        }
+        if (itsSwimlane != null)
+        {
+            //theState.setItsSwimlane((IRPSwimlane) itsSwimlane.toModelElement(aProject, ImportMode.create));
+        }
+        if (subStates != null)
+        {
+			convertToModelElementList( subStates, aProject, ImportMode.create);	
+        }
+        if (isSet(stateType))
+        {
+            theState.setStateType(stateType);
+        }
+        if (nestedStatechart != null)
+        {
+            nestedStatechart.toModelElement(this, aProject, ImportMode.create);
+        }
+        //        if (referenceToActivity != null)
+        //        {
+        //            theState.setReferenceToActivity((IRPModelElement) referenceToActivity.toModelElement(null, project));
+        //        }
+        //        if (sendAction != null)
+        //        {
+        //            //theState.setSendAction((IRPSendAction) sendAction.toModelElement(null, project));
+        //        }
+    }
 
 }
 

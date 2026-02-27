@@ -58,49 +58,64 @@ public class JsonGeneralization extends JsonModelElement
 
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
 		
-		if (model == null)
+		if (parent instanceof IRPClassifier)
 		{
-			return null;
-		}
-		
-		if (model instanceof IRPGeneralization == false)
-		{
-			return null;
-		}
-		
-		IRPGeneralization theGen = (IRPGeneralization) model;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return theGen;
+			
+			IRPClassifier parentClassifier = (IRPClassifier) parent;
+			IRPModelElement model = this.baseClass.getReference(parent.getProject());
+			if(model instanceof IRPClassifier)
+            {
+				IRPClassifier baseClass = (IRPClassifier) model;
+				parentClassifier.addGeneralization(baseClass);
+				
+				IRPGeneralization gen = parentClassifier.findGeneralization(this.baseClass.name);
+				return gen;				
+            }
+			
+			
 		}
 
-		if (isSet(extensionPoint))
+		return null;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+
+        if (aModelElement instanceof IRPGeneralization == false)
+        {
+            return;
+        }
+
+        IRPGeneralization theGen = (IRPGeneralization) aModelElement;
+
+        theGen.setExtensionPoint(extensionPoint);
+        theGen.setIsVirtual(isVirtual ? 1 : 0);
+        theGen.setVisibility(visibility);
+
+        if (derivedClass != null)
+        {
+            IRPModelElement derived = derivedClass.getReference(aProject);
+            if (derived instanceof IRPClassifier)
+            {
+                theGen.setDerivedClass((IRPClassifier) derived);
+            }
+        }
+        if (baseClass != null)
 		{
-			theGen.setExtensionPoint(extensionPoint);
-		}
-		theGen.setIsVirtual(isVirtual ? 1 : 0);
-		if (visibility != null)
-		{
-			theGen.setVisibility(visibility);
-		}
-		
-		
-		if (baseClass != null)
-		{
-			IRPModelElement base = baseClass.toModelElement(project, ImportMode.reference);
+			IRPModelElement base = baseClass.getReference(aProject);
 			if (base instanceof IRPClassifier)
 			{
 				theGen.setBaseClass((IRPClassifier) base);
 			}
 		}
-
-
-		return theGen;
-	}
+    }
 
 }

@@ -7,6 +7,8 @@ import com.telelogic.rhapsody.core.IRPConstraint;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
+
 public class JsonConstraint extends JsonAnnotation
 {
 
@@ -36,21 +38,20 @@ public class JsonConstraint extends JsonAnnotation
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
 	{
-		IRPModelElement elem = super.toModelElement(parent, project, importMode);
-		if (elem == null)
-		{
-			return null;
-		}
-		
-		if (elem instanceof IRPConstraint == false)
-		{
-			return null;
-		}
+		super.setAttributes(aModelElement, aProject, aImportMode);
 
-		return elem;
+		if (aModelElement instanceof IRPConstraint == false)
+		{
+			return;
+		}
 		
+		
+
 	}
-
+	
 }

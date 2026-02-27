@@ -38,26 +38,24 @@ public class JsonStatechartDiagram extends JsonDiagram
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode mode)
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-		if(parent == null)
+		IRPModelElement modelElement = null;
+
+		if (aParentElement instanceof IRPStatechart)
 		{
-			return super.toModelElement(parent, project, mode);
+			IRPStatechart parentStatechart = (IRPStatechart) aParentElement;
+			modelElement = parentStatechart.getStatechartDiagram();
 		}
-		
-		IRPModelElement parentElement = parent.toModelElement(project, ImportMode.reference);
-		
-		if(parentElement instanceof IRPStatechart == false)
+		else
 		{
-			return super.toModelElement(parent, project, mode);
+			trace("Parent element is not an IRPStatechart. Its " + aParentElement.getMetaClass());			
 		}
-		
-		IRPStatechart stateChart = (IRPStatechart)parentElement;
-		
-		IRPStatechartDiagram ret = stateChart.getStatechartDiagram();
-		
-		return ret;
-		
+
+		return modelElement;
+
 	}
+	
 
 }

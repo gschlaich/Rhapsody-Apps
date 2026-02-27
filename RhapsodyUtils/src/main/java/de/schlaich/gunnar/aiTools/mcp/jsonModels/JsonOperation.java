@@ -8,6 +8,7 @@ import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
 public class JsonOperation extends JsonInterfaceItem
@@ -129,108 +130,122 @@ public class JsonOperation extends JsonInterfaceItem
 		}
 
 	}
-
-	public IRPModelElement toModelElement(JsonModelElementBase aRootElement, IRPProject aProject, ImportMode importMode)
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-
-		if (importMode == ImportMode.reference)
+		
+		if(aParentElement == null)
+        {
+            return null;
+        }
+		
+		if(this.isDtor)
 		{
-			return super.toModelElement(aRootElement, aProject, importMode);
+			if(aParentElement instanceof IRPClass == false)
+            {
+                return null;
+            }
+			
+			IRPClass theClass = (IRPClass) aParentElement;
+			return theClass.addDestructor();
 		}
-
-		if (importMode == ImportMode.remove)
+		else if (this.isCtor)
 		{
-			return super.toModelElement(aRootElement, aProject, importMode);
-		}
-
-		IRPOperation operation = null;
-
-		if (importMode == ImportMode.update)
-		{
-			IRPModelElement existingElement = super.toModelElement(aRootElement, aProject, importMode);
-
-			if (existingElement == null)
+			if (aParentElement instanceof IRPClass == false)
 			{
 				return null;
 			}
 
-			if (existingElement instanceof IRPOperation == false)
+			IRPClass theClass = (IRPClass) aParentElement;
+			
+			String arguments = "";
+			
+			List<JsonArgument> jsonArguments = getArguments();
+			
+			int argCount = jsonArguments.size();
+			
+			for (JsonArgument jsonArgument : jsonArguments)
+			{
+				if (arguments.length() > 0)
+				{
+					arguments += ", ";
+				}
+				arguments += jsonArgument.name;
+				arguments += ", ";
+				JsonModelElementBase jsonArgumentType = jsonArgument.getType();
+				if (jsonArgumentType != null)
+				{
+					arguments += jsonArgumentType.name;
+				}
+				else
+				{
+					arguments += "int";
+				}
+				
+				if(argCount > 1)
+				{
+					arguments += ", ";
+				}
+				
+				argCount--;
+				
+			}
+
+			return theClass.addConstructor(arguments);
+		}
+		else if (this.isTrigger)
+        {
+			if (aParentElement instanceof IRPClass == false)
 			{
 				return null;
 			}
 
-			operation = (IRPOperation) existingElement;
-		}
-
-		else if (importMode == ImportMode.create)
+			IRPClass theClass = (IRPClass) aParentElement;
+            return theClass.addTriggeredOperation("_"+name);
+        }
+		else
 		{
-
-			if (this.isDtor || this.isCtor)
+			if (aParentElement instanceof IRPClassifier)
 			{
-				if (aRootElement == null)
-				{
-					return null;
-				}
-
-				IRPModelElement rootElement = aProject.findElementByGUID(aRootElement.getGuid());
-
-				if (rootElement == null)
-				{
-					return null;
-				}
-				if (rootElement instanceof IRPClass == false)
-				{
-					return null;
-				}
-
-				IRPClass theClass = (IRPClass) rootElement;
-
-				if (this.isCtor)
-				{
-
-					String argumentsData = "";
-
-					List<JsonArgument> arguments = getArguments();
-
-					for (JsonArgument jsonArg : arguments)
-					{
-						argumentsData += jsonArg.name + "," + jsonArg.vType.name + ",";
-					}
-
-					operation = theClass.addConstructor(argumentsData);
-
-				}
-				else if (this.isDtor)
-				{
-					operation = theClass.addDestructor();
-
-				}
-
-				if (operation == null)
-				{
-					return null;
-				}
+				IRPClassifier parentClassifier = (IRPClassifier) aParentElement;
+				return parentClassifier.addOperation("_"+name);
+				
+				
+				
+			}
+			else if (aParentElement instanceof IRPPackage)
+			{
+				IRPPackage parentPackage = (IRPPackage) aParentElement;
+				return parentPackage.addGlobalFunction("_"+name);
 			}
 			else
 			{
-				IRPModelElement modelElement = super.toModelElement(aRootElement, aProject, importMode);
-
-				if (modelElement == null)
-				{
-					return null;
-				}
-
-				if (modelElement instanceof IRPOperation == false)
-				{
-					return null;
-				}
-
-				operation = (IRPOperation) modelElement;
+				return null;
 			}
 		}
+	}
+	
 
-		operation.setDescription(description);
-		operation.setIsVirtual(isVirtual ? 1 : 0);
+	public JsonOperation()
+	{
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+
+        if (aModelElement instanceof IRPOperation == false)
+        {
+            return;
+        }
+        
+        IRPOperation operation = (IRPOperation) aModelElement;
+              
+        operation.setIsVirtual(isVirtual ? 1 : 0);
 		if (isSet(visibility))
 		{
 			operation.setVisibility(visibility);
@@ -240,16 +255,12 @@ public class JsonOperation extends JsonInterfaceItem
 			operation.setInitializer(initializer);
 		}
 
-		setStereotypes(operation, aProject, ImportMode.reference);
-
 		operation.setIsAbstract(isAbstract ? 1 : 0);
 
 		operation.setIsConst(isConst ? 1 : 0);
 
 		operation.setIsFinal(isFinal ? 1 : 0);
-
-		// property...
-		// theOperation.setIsInline(isInline ? 1 : 0);
+	
 		operation.setIsStatic(isStatic ? 1 : 0);
 
 		operation.setIsVirtual(isVirtual ? 1 : 0);
@@ -264,18 +275,13 @@ public class JsonOperation extends JsonInterfaceItem
 
 		if (returns != null)
 		{
-			IRPModelElement returnTypeElement = returns.toModelElement(aProject, ImportMode.update);
+			IRPModelElement returnTypeElement = returns.getReference(aProject);
 
 			operation.setReturns((IRPClassifier) returnTypeElement);
-		}
+		}	
+		operation.setName(name);
 
-		return operation;
-	}
-
-	public JsonOperation()
-	{
-		// TODO Auto-generated constructor stub
-	}
+    }
 
 	private List<JsonArgument> getArguments()
 	{

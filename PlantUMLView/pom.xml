@@ -1,23 +1,111 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>de.schlaich.gunnar</groupId>
-  <artifactId>PlantUMLView</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>jar</packaging>
-  <name>PlantUMLView</name>
-  <url>http://maven.apache.org</url>
-  
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  
-  <dependencies>
-  <!-- https://mvnrepository.com/artifact/net.sourceforge.plantuml/plantuml -->
-	<dependency>
-	    <groupId>net.sourceforge.plantuml</groupId>
-	    <artifactId>plantuml</artifactId>
-	    <version>1.2025.10</version>
-	</dependency>
-</dependencies>
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>de.schlaich.gunnar</groupId>
+	<artifactId>PlantUMLView</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	<name>PlantUMLView</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>require-omroot</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>OMROOT</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<!--
+		https://mvnrepository.com/artifact/net.sourceforge.plantuml/plantuml -->
+		<dependency>
+			<groupId>net.sourceforge.plantuml</groupId>
+			<artifactId>plantuml</artifactId>
+			<version>1.2025.10</version>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>rhapsody-local</id>
+			<activation>
+				<property>
+					<name>env.OMROOT</name>
+				</property>
+			</activation>
+
+			<properties>
+				<omroot>${env.OMROOT}</omroot>
+			</properties>
+
+			<dependencies>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsody</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/JavaAPI/Rhapsody.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>apps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/apps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsodyapps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>swt</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>jdom</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
+				</dependency>
+
+
+			</dependencies>
+
+		</profile>
+	</profiles>
+
+
 </project>

@@ -2,7 +2,9 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPModule;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.RPPackage;
 
 public class JsonModule extends JsonInstance
 {
@@ -35,6 +37,35 @@ public class JsonModule extends JsonInstance
 		IRPModule module = (IRPModule)model;
 
 		return module;
+	}
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
+	{
+		if (aParentElement instanceof IRPPackage == false)
+		{
+			return null;
+		}
+
+		IRPPackage p = (IRPPackage) aParentElement;
+
+		IRPModule module = p.addModule(this.name);
+
+		return module;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
+		if (aModelElement instanceof IRPModule == false)
+		{
+			return;
+		}
+
+		IRPModule module = (IRPModule) aModelElement;
+
 	}
 
 }

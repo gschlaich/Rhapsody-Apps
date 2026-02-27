@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPGuard;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPTransition;
 
 public class JsonGuard extends JsonModelElement
 {
@@ -38,30 +39,44 @@ public class JsonGuard extends JsonModelElement
 
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	
+	@Override
+	protected IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
+		IRPModelElement modelElement = null;
+
+		if (aParentElement instanceof IRPTransition)
 		{
-			return null;
+			IRPTransition transition = (IRPTransition) aParentElement;
+
+			modelElement = transition.setItsGuard(body);
+
 		}
-		
-		if (model instanceof IRPGuard == false)
+		else
 		{
-			return null;
+			trace("Parent element is not an IRPGuard. Its " + aParentElement.getMetaClass());
+			modelElement = super.createModelElement(aParentElement);
 		}
+
+		return modelElement;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+
+		super.setAttributes(aModelElement, aProject, aImportMode);
 		
-		IRPGuard theGuard = (IRPGuard) model;
-		
-		if (importMode == ImportMode.reference)
+		if (aModelElement instanceof IRPGuard == false)
 		{
-			return theGuard;
+			return;
 		}
+
+		IRPGuard theGuard = (IRPGuard) aModelElement;
 
 		theGuard.setBody(body);
 
-		return theGuard;
 	}
 
 }

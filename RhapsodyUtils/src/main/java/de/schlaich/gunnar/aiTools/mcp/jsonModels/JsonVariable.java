@@ -88,7 +88,7 @@ public class JsonVariable extends JsonModelElement
 			if (vType != null)
 			{
 
-				theVar.setType((IRPClassifier) vType.toModelElement(project, ImportMode.reference));
+				theVar.setType((IRPClassifier) vType.getReference(project));
 			}
 
 		}
@@ -100,6 +100,11 @@ public class JsonVariable extends JsonModelElement
 
 		return model;
 
+	}
+	
+	public JsonModelElementBase getType()
+	{
+		return vType;
 	}
 
 	public JsonVariable()

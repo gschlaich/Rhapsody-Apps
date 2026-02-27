@@ -95,75 +95,61 @@ public class JsonHyperLink extends JsonDependency
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
-		{
-			return null;
-		}
-		
-		if (model instanceof IRPHyperLink == false)
-		{
-			return null;
-		}
-		
-		IRPHyperLink theHyperLink = (IRPHyperLink) model;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return theHyperLink;
-		}
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+        
+        if (aModelElement instanceof IRPHyperLink == false)
+        {
+            return;
+        }
+        
+        IRPHyperLink theHyperLink = (IRPHyperLink) aModelElement;
+        
+        if (target != null)
+        {
+            theHyperLink.setTarget(target.getReference(aProject));
+        }
+        else
+        {
+            theHyperLink.setTarget(null);
+        }
+        
+        
+        String text = null;
 
-		if (target != null)
-		{
-			theHyperLink.setTarget(target.toModelElement(project, ImportMode.reference));
-		}
-		else
-		{
-			theHyperLink.setTarget(null);
-		}
-		
-		
-		String text = null;
+        if (isSet(textToDisplay))
+        {
+            text = textToDisplay;
+                
+        }
+        
+        char displayType = 0;
 
-		if (isSet(textToDisplay))
-		{
-			text = textToDisplay;
-				
-		}
-		
-		char displayType = 0;
-
-		if (textToDisplayType != null)
-		{
-			switch (textToDisplayType)
-			{
-			case RP_HYP_FREETEXT:
-				displayType = HYPNameType.RP_HYP_FREETEXT;
-				break;
-			case RP_HYP_LABELTEXT:
-				displayType = HYPNameType.RP_HYP_LABELTEXT;
-				break;
-			case RP_HYP_NAMETEXT:
-				displayType = HYPNameType.RP_HYP_NAMETEXT;
-				break;
-			case RP_HYP_TAGVALUETEXT:
-				displayType = HYPNameType.RP_HYP_TAGVALUETEXT;
-				break;
-			}
-		}
-		
-		theHyperLink.setDisplayOption(displayType, text);
-
-		if (isSet(URL))
-		{
-			theHyperLink.setURL(URL);
-		}
-
-		return theHyperLink;
-	}
+        if (textToDisplayType != null)
+        {
+            switch (textToDisplayType)
+            {
+            case RP_HYP_FREETEXT:
+                displayType = HYPNameType.RP_HYP_FREETEXT;
+                break;
+            case RP_HYP_LABELTEXT:
+                displayType = HYPNameType.RP_HYP_LABELTEXT;
+                break;
+            case RP_HYP_NAMETEXT:
+                displayType = HYPNameType.RP_HYP_NAMETEXT;
+                break;
+            case RP_HYP_TAGVALUETEXT:
+                displayType = HYPNameType.RP_HYP_TAGVALUETEXT;
+                break;
+            }
+            
+            theHyperLink.setDisplayOption(displayType, text);
+            
+        }
+    }
 
 }

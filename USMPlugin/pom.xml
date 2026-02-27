@@ -1,0 +1,94 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>USMPlugin</groupId>
+	<artifactId>USMPlugin</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>require-omroot</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>OMROOT</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>rhapsody-local</id>
+			<activation>
+				<property>
+					<name>env.OMROOT</name>
+				</property>
+			</activation>
+
+			<properties>
+				<omroot>${env.OMROOT}</omroot>
+			</properties>
+
+			<dependencies>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsody</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/JavaAPI/Rhapsody.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>apps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/apps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsodyapps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>swt</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>jdom</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
+				</dependency>
+
+
+			</dependencies>
+
+		</profile>
+	</profiles>
+
+
+</project>

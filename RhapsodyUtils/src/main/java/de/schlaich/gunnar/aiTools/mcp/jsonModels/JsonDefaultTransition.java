@@ -17,11 +17,7 @@ public class JsonDefaultTransition extends JsonTransition
 		// TODO Auto-generated constructor stub
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
-	{
-		IRPModelElement modelElement = super.toModelElement(parent, project, importMode);
 
-		return modelElement;
-	}
+
 
 }

@@ -61,6 +61,7 @@ public class JsonGraphElement
 	@JsonProperty("selectedImage")
 	protected String selectedImage = null;
 	
+	
 	@JsonProperty("graphicalPropertyMap")
 	protected Map<String, String> myGraphicalPropertyMap = null;
 
@@ -114,7 +115,31 @@ public class JsonGraphElement
 		// TODO Auto-generated constructor stub
 	}
 	
+	public void addAttributes(IRPGraphElement aGraphElement)
+	{
+		if (aGraphElement == null)
+		{
+			return;
+		}
+
+		for (Object theObj : aGraphElement.getAllGraphicalProperties().toList())
+		{
+			if (theObj instanceof IRPGraphicalProperty)
+			{
+				IRPGraphicalProperty theProp = (IRPGraphicalProperty) theObj;
+				JsonGraphicalProperty jsonProp = new JsonGraphicalProperty(theProp);
+				if (jsonProp.hasValue())
+				{
+					// only add properties that have a value
+					// allGraphicalProperties.add(new JsonGraphicalProperty(theProp));
+					myGraphicalPropertyMap.put(jsonProp.key, jsonProp.value);
+				}
+			}
+		}
+
+	}
 	
+
 //	public IRPGraphElement toGraphElement(JsonModelElementBase aDiagram, IRPProject project)
 //	{
 //		if (aDiagram != null)

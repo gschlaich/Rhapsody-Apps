@@ -1,98 +1,189 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>de.schlaich.gunnar</groupId>
-  <artifactId>RhapsodyUtils</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-   <packaging>jar</packaging>
+<project >
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>de.schlaich.gunnar</groupId>
+	<artifactId>RhapsodyUtils</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 
-  <name>RhapsodyUtils</name>
-  <url>http://maven.apache.org</url>
-  
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
-  
-  <dependencies>
-  <!-- https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils -->
-	<dependency>
-	    <groupId>io.github.java-diff-utils</groupId>
-	    <artifactId>java-diff-utils</artifactId>
-	    <version>4.15</version>
-	</dependency>
-	  <!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
-	<dependency>
-    	<groupId>org.bouncycastle</groupId>
-    	<artifactId>bcprov-jdk18on</artifactId>
-    	<version>1.80</version>
-	</dependency>
-	<!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
-	<dependency>
-	    <groupId>org.apache.httpcomponents</groupId>
-	    <artifactId>httpclient</artifactId>
-	    <version>4.5.14</version>
-	</dependency>
-	<dependency>
-  		<groupId>com.fasterxml.jackson.core</groupId>
-  		<artifactId>jackson-databind</artifactId>
-  		<version>2.15.2</version>
-	</dependency>
-	<dependency>
-    	<groupId>com.fasterxml.jackson.module</groupId>
-    	<artifactId>jackson-module-jsonSchema</artifactId>
-    	<version>2.15.0</version>
-	</dependency>
-	<dependency>
-    	<groupId>com.formdev</groupId>
-    	<artifactId>flatlaf</artifactId>
-    	<version>3.4</version> 
-	</dependency>
-	<dependency>
-    	<groupId>org.xerial</groupId>
-    	<artifactId>sqlite-jdbc</artifactId>
-    	<version>3.49.1.0</version>
-	</dependency>
-	 <dependency>
-      <groupId>com.vladsch.flexmark</groupId>
-      <artifactId>flexmark-all</artifactId>
-       <version>0.62.2</version>
-    </dependency>
- 
-    <dependency>
-      <groupId>com.fifesoft</groupId>
-      <artifactId>rsyntaxtextarea</artifactId>
-      <version>3.6.0</version>   
-    </dependency>
-    <dependency>
-     <groupId>com.fifesoft</groupId>
-     <artifactId>autocomplete</artifactId>
-     <version>3.3.2</version> 
-    </dependency>
-    <dependency>
-  		<groupId>net.sourceforge.plantuml</groupId>
-  		<artifactId>plantuml-mit</artifactId>   <!-- oder plantuml-epl usw. -->
-  		<version>1.2025.2</version>   
-	</dependency>
-	<dependency>
-		<groupId>com.google.code.gson</groupId>
-		<artifactId>gson</artifactId>
-		<version>2.13.1</version>
-	</dependency>
-	<dependency>
-		<groupId>org.slf4j</groupId>
-		<artifactId>slf4j-simple</artifactId>
-		<version>2.0.17</version>
-	</dependency>
-	<dependency>
-	    <groupId>com.github.victools</groupId>
-	    <artifactId>jsonschema-generator</artifactId>
-	    <version>4.31.1</version>
-	</dependency>
-	<dependency>
-	    <groupId>com.github.victools</groupId>
-	    <artifactId>jsonschema-module-jackson</artifactId>
-	    <version>4.31.1</version>
-	</dependency>
-		
-  </dependencies>
- 
+	<name>RhapsodyUtils</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+
+	<dependencies>
+		<!--
+		https://mvnrepository.com/artifact/io.github.java-diff-utils/java-diff-utils -->
+		<dependency>
+			<groupId>io.github.java-diff-utils</groupId>
+			<artifactId>java-diff-utils</artifactId>
+			<version>4.15</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcprov-jdk18on -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk18on</artifactId>
+			<version>1.80</version>
+		</dependency>
+		<!--
+		https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
+		<dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.14</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.module</groupId>
+			<artifactId>jackson-module-jsonSchema</artifactId>
+			<version>2.15.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.formdev</groupId>
+			<artifactId>flatlaf</artifactId>
+			<version>3.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.49.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.vladsch.flexmark</groupId>
+			<artifactId>flexmark-all</artifactId>
+			<version>0.62.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fifesoft</groupId>
+			<artifactId>rsyntaxtextarea</artifactId>
+			<version>3.6.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fifesoft</groupId>
+			<artifactId>autocomplete</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>net.sourceforge.plantuml</groupId>
+			<artifactId>plantuml-mit</artifactId>   <!-- oder plantuml-epl usw. -->
+			<version>1.2025.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.13.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>2.0.17</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.victools</groupId>
+			<artifactId>jsonschema-generator</artifactId>
+			<version>4.31.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.victools</groupId>
+			<artifactId>jsonschema-module-jackson</artifactId>
+			<version>4.31.1</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+	<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>require-omroot</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>OMROOT</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>rhapsody-local</id>
+			<activation>
+				<property>
+					<name>env.OMROOT</name>
+				</property>
+			</activation>
+
+			<properties>
+				<omroot>${env.OMROOT}</omroot>
+			</properties>
+
+			<dependencies>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsody</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/JavaAPI/Rhapsody.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>apps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/apps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsodyapps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
+				</dependency>
+				
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>swt</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
+				</dependency>
+				
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>jdom</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
+				</dependency>
+				
+				
+				
+				
+			</dependencies>
+
+		</profile>
+	</profiles>
+
 </project>

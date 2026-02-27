@@ -387,7 +387,7 @@ public class JsonModelFactory
 		}
 		catch (Exception e)
 		{
-			// TODO Auto-generated catch block
+			
 			trace(e.toString());
 			trace("Exception creating json model element for " + metaClass + ": " + e.getMessage());
 			ret = new JsonModelElementBase(aModelElement);
@@ -409,9 +409,16 @@ public class JsonModelFactory
 		{
 			return null;
 		}
+		
+		
 
 		return getJsonModelElement(element, 0);
 
+	}
+	
+	public IRPApplication getRhapsodyApplication()
+	{
+		return myApp;
 	}
 
 	public boolean registerJsonClass(MetaClass aMetaClass, Class<?> aClass)
@@ -453,7 +460,7 @@ public class JsonModelFactory
 	{
 		JsonModelElementBase parentJme = getJsonModelElement(parentElement, 0);
 		
-		IRPModelElement ret = aJsonElement.createModelElement(parentJme, project, ImportMode.create);
+		IRPModelElement ret = aJsonElement.toModelElement(parentJme, project, ImportMode.create);
 		
 		clearReferenceElements();
 		

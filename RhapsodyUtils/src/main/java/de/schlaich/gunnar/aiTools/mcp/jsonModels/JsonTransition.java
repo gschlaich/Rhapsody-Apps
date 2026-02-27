@@ -52,11 +52,16 @@ public class JsonTransition extends JsonModelElement
 	@JsonProperty("itsLabel")
 	protected String itsLabel = null;
 	@JsonProperty("itsTrigger")
-	protected String itsTrigger = null;
+	protected JsonModelElementBase itsTrigger = null;
 	@JsonProperty("itsSource")
 	protected JsonModelElementBase itsSource = null;
 	@JsonProperty("itsTarget")
 	protected JsonModelElementBase itsTarget = null;
+	@JsonProperty("isDefaultTransition")
+	protected boolean isDefaultTransition = false;
+	@JsonProperty("isStaticReaction")
+	protected boolean isStaticReaction = false;
+	
 	
 	
 	
@@ -98,12 +103,7 @@ public class JsonTransition extends JsonModelElement
 		if (theTransition.getItsTrigger() != null)
 		{
 			IRPTrigger trigger = theTransition.getItsTrigger();
-			
-			if(trigger != null)
-			{
-				itsTrigger = trigger.getBody();
-			}
-			
+			itsTrigger = new JsonModelElementBase(trigger);
 		}
 		
 		if (theTransition.getItsSource() != null)
@@ -115,6 +115,9 @@ public class JsonTransition extends JsonModelElement
 		{
 			itsTarget = new JsonModelElementBase(theTransition.getItsTarget());
 		}
+		
+		isDefaultTransition = theTransition.isDefaultTransition() == 1;
+		isStaticReaction = theTransition.isStaticReaction() == 1;
 
 	}
 
@@ -128,6 +131,106 @@ public class JsonTransition extends JsonModelElement
 	{
 		return itsTarget;
 	}
+	
+	
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParent)
+	{
+		if (aParent == null)
+		{
+			return null;
+		}
+		
+		IRPProject project = aParent.getProject();
+		
+		
+		if(isDefaultTransition)
+        {
+            if (aParent instanceof IRPState == false)
+            {
+                trace("Parent of default transition must be a state.");
+                return null;
+            }
+            
+			if (itsTarget == null)
+			{
+				trace("Default transition target is not set.");
+				return null;
+			}
+			
+			IRPState parentState = (IRPState) aParent;
+			IRPModelElement targetElement = itsTarget.getReference(project);
+			if (targetElement == null)
+			{
+				trace("Default transition target reference could not be resolved.");
+				return null;
+			}
+			if ((targetElement instanceof IRPState) == false)
+			{
+				trace("Default transition target must be a state. It is " + targetElement.getMetaClass());
+				return null;
+			}
+			
+			IRPState targetState = (IRPState) targetElement;
+			
+			IRPTransition defaultTransition = parentState.createDefaultTransition(targetState);
+			
+			return defaultTransition;
+            
+        }
+		if(isStaticReaction)
+        {
+            if (aParent instanceof IRPState == false)
+            {
+                trace("Parent of internal transition must be a state vertex.");
+                return null;
+            }
+            
+            if(itsTrigger!= null)
+            {
+                trace("Internal transition trigger is not set.");
+                return null;
+            }
+            
+            IRPState parentState = (IRPState) aParent;
+            
+            parentState.addStaticReaction(null);
+            
+        }
+
+		
+		IRPModelElement targetElement = itsTarget.getReference(project);
+		
+		if (targetElement == null)
+		{
+			trace("Transition target is not set.");
+			return null;
+		}
+		
+		if ((targetElement instanceof IRPStateVertex) == false)
+		{
+			trace("Transition target is not a state vertex. It is " + targetElement.getMetaClass());
+			return null;
+		}
+		
+		IRPStateVertex targetState = (IRPStateVertex) targetElement;
+		
+		if (aParent instanceof IRPState)
+		{
+			IRPState parentState = (IRPState) aParent;
+
+			return parentState.addTransition(targetState);
+		}
+		else if (aParent instanceof IRPStateVertex)
+		{
+			IRPStateVertex parentVertex = (IRPStateVertex) aParent;
+			return parentVertex.addTransition(null);
+		}
+		return null;
+	}
+	
+	
 	
 	
 	
@@ -146,7 +249,7 @@ public class JsonTransition extends JsonModelElement
 		
 		
 		
-		IRPModelElement sourceElement = this.itsSource.toModelElement(project, ImportMode.reference);
+		IRPModelElement sourceElement = this.itsSource.getReference(project);
 		
 		if(sourceElement == null)
 		{
@@ -248,9 +351,9 @@ public class JsonTransition extends JsonModelElement
 //			theTransition.overrideInheritance();
 //		}
 
-		if(isSet(itsTrigger))
+		if(itsTrigger!=null)
 		{
-			theTransition.setItsTrigger(itsTrigger);
+			itsTrigger.createModelElement(theTransition);
 		}
 		
 		if (isSet(itsGuard))

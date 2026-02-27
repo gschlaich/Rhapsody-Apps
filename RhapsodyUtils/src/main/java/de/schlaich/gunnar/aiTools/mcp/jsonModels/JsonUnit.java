@@ -153,7 +153,20 @@ public class JsonUnit extends JsonModelElement
 	
 	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, aImportMode);
+		
+		IRPModelElement parentElement = parent.getReference(project);
+		IRPModelElement model = null;
+		
+		if (aImportMode == ImportMode.reference)
+		{
+			return getReference(project);
+		}
+		
+		if (aImportMode == ImportMode.create)
+		{
+			model = createModelElement(parentElement);
+		}
+		
 		
 		if (model == null)
 		{
@@ -165,22 +178,34 @@ public class JsonUnit extends JsonModelElement
 			return null;
 		}
 		
-		if (aImportMode == ImportMode.reference)
-		{
-			return model;
-		}
 		
 		IRPUnit theUnit = (IRPUnit) model;
 		
-		theUnit.setIncludeInNextLoad(includeInNextLoad ? 1 : 0);
-		//theUnit.setReadOnly(isReadOnly ? 1 : 0);
-		//theUnit.setLanguage(language,0);
-		//theUnit.setFilename(filename);
-		//theUnit.setCMHeader(cMHeader);
-		theUnit.setSeparateSaveUnit(isSeparateSaveUnit ? 1 : 0);
-		//theUnit.setUnitPath(currentDirectory);
+		setAttributes(theUnit, project, aImportMode);
 
 		return theUnit;
+	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
+		if (aModelElement instanceof IRPUnit == false)
+		{
+			return;
+		}
+
+		IRPUnit theUnit = (IRPUnit) aModelElement;
+
+		theUnit.setIncludeInNextLoad(includeInNextLoad ? 1 : 0);
+		// theUnit.setReadOnly(isReadOnly ? 1 : 0);
+		// theUnit.setLanguage(language,0);
+		// theUnit.setFilename(filename);
+		// theUnit.setCMHeader(cMHeader);
+		theUnit.setSeparateSaveUnit(isSeparateSaveUnit ? 1 : 0);
+		// theUnit.setUnitPath(currentDirectory);
+
 	}
 
 }

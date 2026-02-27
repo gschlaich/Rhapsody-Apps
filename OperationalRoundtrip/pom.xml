@@ -1,0 +1,112 @@
+<project>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>OperationalRoundtrip</groupId>
+	<artifactId>OperationalRoundtrip</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>require-omroot</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>OMROOT</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>io.github.java-diff-utils</groupId>
+			<artifactId>java-diff-utils</artifactId>
+			<version>4.15</version>
+		</dependency>
+		<!-- Source:
+		https://mvnrepository.com/artifact/org.apache.commons/commons-imaging -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-imaging</artifactId>
+			<version>1.0.0-alpha6</version>
+			<scope>compile</scope>
+		</dependency>
+
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>rhapsody-local</id>
+			<activation>
+				<property>
+					<name>env.OMROOT</name>
+				</property>
+			</activation>
+
+			<properties>
+				<omroot>${env.OMROOT}</omroot>
+			</properties>
+
+			<dependencies>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsody</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/JavaAPI/Rhapsody.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>apps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/apps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>rhapsodyapps</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>swt</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
+				</dependency>
+
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>jdom</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
+				</dependency>
+
+
+			</dependencies>
+
+		</profile>
+	</profiles>
+
+
+</project>

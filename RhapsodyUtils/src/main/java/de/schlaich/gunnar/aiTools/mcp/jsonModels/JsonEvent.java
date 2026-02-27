@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPEvent;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
 public class JsonEvent extends JsonInterfaceItem
@@ -47,38 +48,42 @@ public class JsonEvent extends JsonInterfaceItem
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement parent)
 	{
-		
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
+		if (parent instanceof IRPPackage)
 		{
-			return null;
+			IRPPackage parentPackage = (IRPPackage) parent;
+			IRPEvent event = parentPackage.addEvent(name);
+			return event;
 		}
-		
-		if (model instanceof IRPEvent == false)
-		{
-			return null;
-		}
-		
-		IRPEvent theEvent = (IRPEvent) model;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return theEvent;
-		}
-
-		if (baseEvent != null)
-		{
-			theEvent.setBaseEvent((IRPEvent) baseEvent.toModelElement(project, ImportMode.reference));
-		}
-		if (superEvent != null)
-		{
-			theEvent.setSuperEvent((IRPEvent) superEvent.toModelElement(project, ImportMode.reference));
-		}
-
-		return theEvent;
+		trace("Parent element is not an IRPPackage. Its " + parent.getMetaClass());
+		return null;
+	
 	}
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+    {
+        super.setAttributes(aModelElement, aProject, aImportMode);
+        
+        if (aModelElement instanceof IRPEvent == false)
+        {
+            return;
+        }
+        
+        IRPEvent theEvent = (IRPEvent) aModelElement;
+        
+        if (baseEvent != null)
+        {
+        	theEvent.setBaseEvent((IRPEvent) baseEvent.getReference(aProject));
+        }
+        if (superEvent != null)
+        {
+            theEvent.setSuperEvent((IRPEvent) superEvent.getReference(aProject));
+        }
+    }
 
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPLiteralSpecification;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPVariable;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
 
@@ -24,33 +25,35 @@ public class JsonLiteralSpecification extends JsonValueSpecification
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	@Override
+	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
-		IRPModelElement model = super.toModelElement(parent, project, importMode);
-		
-		if (model == null)
+		if(aParentElement instanceof IRPVariable)
 		{
-			return null;
+			IRPVariable parentVariable = (IRPVariable) aParentElement;
+			return parentVariable.addStringDefaultValue(value);
 		}
 		
-		if (model instanceof IRPLiteralSpecification == false)
+		return null;
+	}
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
+		if (aModelElement instanceof IRPLiteralSpecification == false)
 		{
-			
-			return null;
+			return;
 		}
 
-		IRPLiteralSpecification literalSpec = (IRPLiteralSpecification) model;
-		
-		if (importMode == ImportMode.reference)
-		{		
-			return model;
-		}
+		IRPLiteralSpecification literalSpec = (IRPLiteralSpecification) aModelElement;
 
 		literalSpec.setValue(value);
 
-		return model;
 	}
-	
 	
 
 }

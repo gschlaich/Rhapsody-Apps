@@ -7,6 +7,9 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
+
 import com.telelogic.rhapsody.core.IRPGraphElement;
 import com.telelogic.rhapsody.core.IRPGraphicalProperty;
 
@@ -59,8 +62,7 @@ public class JsonDiagram extends JsonUnit
 				}
 			}
 			
-			
-			
+				
 			List<IRPGraphElement> graphElements = theDiagram.getGraphicalElements().toList();
 			
 			for (IRPGraphElement ge : graphElements)
@@ -80,57 +82,28 @@ public class JsonDiagram extends JsonUnit
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
 	{
-		IRPModelElement elem = super.toModelElement(parent, project, importMode);
-		
-		if (elem == null)
+		super.setAttributes(modelElement, project, importMode);
+		if (modelElement instanceof IRPDiagram == false)
 		{
-			return null;
+			return;
 		}
-		
-		if (elem instanceof IRPDiagram == false)
-		{
-			return null;
-		}
-		
-		IRPDiagram diagram = (IRPDiagram) elem;
-		
-		if (importMode == ImportMode.reference)
-		{
-			return diagram;
-		}
-		
-		
-		
-//		if (importMode == ImportMode.create)
-//		{
-//			if (diagram.getGraphicalElements().toList().size() != 0)
-//			{
-//				// in create mode we do not want to create graphical elements
-//				return null;
-//			}
-//
-//		}
-//		else
-//		{
-//			// remove existing graphical elements
-//			IRPCollection existingGraphElements = diagram.getGraphicalElements();
-//			diagram.removeGraphElements(existingGraphElements);
-//			
-//		}
-//		
-//		for (JsonGraphElement jsonGE : graphicalElements)
-//		{
-//			IRPGraphElement ge = (IRPGraphElement) jsonGE.toModelElement(null, project, ImportMode.reference);
-//			if (ge != null)
-//			{
-//				diagram.grap
-//			}
-//		}
 
-		return diagram;
+		IRPDiagram theDiagram = (IRPDiagram) modelElement;
 
+		// elementsInDiagram
+		for (JsonModelElementBase jsonME : elementsInDiagram)
+		{
+			IRPModelElement me = jsonME.getReference(project);
+			if (me != null)
+			{
+				//todo 
+			}
+		}
+
+		
 	}
-
+	
 }

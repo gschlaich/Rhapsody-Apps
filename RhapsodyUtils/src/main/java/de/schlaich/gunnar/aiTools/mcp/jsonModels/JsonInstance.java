@@ -72,16 +72,29 @@ public class JsonInstance extends JsonRelation
 		
 	}
 	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode importMode)
+	
+	
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
 	{
-		IRPInstance theInstance = (IRPInstance) super.toModelElement(parent, project, importMode  );
-		
+		super.setAttributes(modelElement, project, importMode);
+
+		if (modelElement instanceof IRPInstance == false)
+		{
+			return;
+		}
+
+		IRPInstance theInstance = (IRPInstance) modelElement;
+
+		if (importMode == ImportMode.reference)
+		{
+			return;
+		}
+
 		if (instantiatedBy != null)
 		{
-			theInstance.setInstantiatedBy((IRPOperation) instantiatedBy.toModelElement(project, ImportMode.reference));
+			theInstance.setInstantiatedBy((IRPOperation) instantiatedBy.getReference(project));
 		}
-		
-		return theInstance;
 
 	}
 
