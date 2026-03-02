@@ -116,6 +116,9 @@
 								<requireEnvironmentVariable>
 									<variableName>OMROOT</variableName>
 								</requireEnvironmentVariable>
+								<requireEnvironmentVariable>
+									<variableName>USM_ROOT</variableName>
+								</requireEnvironmentVariable>
 							</rules>
 						</configuration>
 					</execution>
@@ -125,6 +128,34 @@
 	</build>
 
 	<profiles>
+		<profile>
+			<id>USM</id>
+			<activation>
+				<property>
+					<name>env.USM_ROOT</name>
+				</property>
+			</activation>
+			<properties>
+				<usmroot>${env.USM_ROOT}</usmroot>
+			</properties>
+			<dependencies>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>cdt</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${usmroot}/Development/Share/Profiles/Bernina/CDT/cdt.jar</systemPath>
+				</dependency>
+				<dependency>
+					<groupId>vendor.local</groupId>
+					<artifactId>equinox</artifactId>
+					<version>1.0</version>
+					<scope>system</scope>
+					<systemPath>${usmroot}/Development/Share/Profiles/Bernina/CDT/equinox-common-3.2.0.jar</systemPath>
+				</dependency>
+			</dependencies>
+		</profile>
+		
 		<profile>
 			<id>rhapsody-local</id>
 			<activation>

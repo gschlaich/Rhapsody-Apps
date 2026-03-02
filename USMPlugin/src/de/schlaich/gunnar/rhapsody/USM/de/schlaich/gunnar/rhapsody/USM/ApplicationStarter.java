@@ -1,9 +1,11 @@
-package de.schlaich.gunnar.rhapsody.USM;
+package USM.de.schlaich.gunnar.rhapsody.USM;
 
 import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
+
+
 
 public class ApplicationStarter {
 
