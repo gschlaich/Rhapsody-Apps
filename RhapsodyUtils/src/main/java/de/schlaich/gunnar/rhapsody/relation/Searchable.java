@@ -1,4 +1,4 @@
-package apps;
+package de.schlaich.gunnar.rhapsody.relation;
 import java.util.Collection;
 
 /**

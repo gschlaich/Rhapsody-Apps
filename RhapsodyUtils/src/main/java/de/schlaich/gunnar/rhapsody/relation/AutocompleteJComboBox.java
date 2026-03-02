@@ -19,9 +19,6 @@ import javax.swing.text.JTextComponent;
 
 import com.telelogic.rhapsody.core.IRPClassifier;
 
-import apps.RhapsodyModelElementItem;
-import apps.Searchable;
-
 
 
 /**

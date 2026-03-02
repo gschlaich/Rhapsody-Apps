@@ -49,8 +49,6 @@ import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
-import apps.RhapsodyModelElementItem;
-import apps.RhapsodyModelElementSearchable;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
 public class CRhapsodyRelation {
@@ -67,7 +65,7 @@ public class CRhapsodyRelation {
 	private JButton myFeaturesButton = null;
 	private JFrame myFrame;
 	private boolean myIsWritable = false;
-	private RPApplicationListener myRelationListener;
+	//private RPApplicationListener myRelationListener;
 	private RhapsodyModelElementSearchable myRhapsodyModelSearchable;
 	
 	private IRPClassifier mySelectedClassifier = null;
@@ -348,8 +346,8 @@ public class CRhapsodyRelation {
 	    
 	    
 	    
-	    myRelationListener = new RelationListener(myFrame, mySelectedUnit , myRhapsodyModelSearchable);
-	 	myRelationListener.connect(rhapsody);
+	    //myRelationListener = new RelationListener(myFrame, mySelectedUnit , myRhapsodyModelSearchable);
+	 	//myRelationListener.connect(rhapsody);
 
 	 	
 	    myCombobox = new AutocompleteJComboBox(myRhapsodyModelSearchable);
@@ -721,6 +719,8 @@ public class CRhapsodyRelation {
 
 }
 
+/*
+
 class RelationListener extends RPApplicationListener
 {
 
@@ -820,3 +820,4 @@ class RelationListener extends RPApplicationListener
 	}
 	
 }
+*/

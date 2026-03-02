@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.rhapsody.plantUMLView;
+
 
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -13,6 +13,7 @@ import javax.swing.JScrollPane;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 //import net.sourceforge.plantuml.*;
 //import net.sourceforge.plantuml.core.DiagramDescription;
