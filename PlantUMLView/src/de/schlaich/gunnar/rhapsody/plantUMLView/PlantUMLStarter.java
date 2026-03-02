@@ -26,7 +26,7 @@ public class PlantUMLStarter {
 	
 public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose) {
 		
-		boolean showInSVG = false;
+		//boolean showInSVG = false;
 		PlantUMLGenerator gen = new PlantUMLGenerator(selected, false);
 		//System.out.print(gen.getPlanUml());
 		StringSelection stringSelection = new StringSelection(gen.getPlantUml());
@@ -40,31 +40,31 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		final ByteArrayOutputStream os = new ByteArrayOutputStream();
 		// Write the first image to "os"
-		if(showInSVG==true)
-		{
-			try
-			{
-			
-				@SuppressWarnings("deprecation")
-				String descSVG = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
-				DiagramDescription descc = reader.generateDiagramDescription(new FileFormatOption(FileFormat.SVG));
-				String descSVG2 = descc.getDescription();
-				os.close();
-		
-				// The XML is stored into svg
-				final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
-				showSVG sv = new showSVG(svg);
-				sv.setVisible(true);
-			
-			}
-			catch(IOException e)
-			{
-				System.out.println("SVG generation failed");
-				e.printStackTrace();
-			}
-		}
-		else
-		{
+//		if(showInSVG==true)
+//		{
+//			try
+//			{
+//			
+//				@SuppressWarnings("deprecation")
+//				String descSVG = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
+//				DiagramDescription descc = reader.generateDiagramDescription(new FileFormatOption(FileFormat.SVG));
+//				String descSVG2 = descc.getDescription();
+//				os.close();
+//		
+//				// The XML is stored into svg
+//				final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
+//				showSVG sv = new showSVG(svg);
+//				sv.setVisible(true);
+//			
+//			}
+//			catch(IOException e)
+//			{
+//				System.out.println("SVG generation failed");
+//				e.printStackTrace();
+//			}
+//		}
+//		else
+//		{
 	
 		
 		String imageName = selected.getIconFileName();
@@ -98,7 +98,7 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		}
+		//}
 		
 		
 	}	

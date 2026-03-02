@@ -77,6 +77,8 @@ public class JsonStatechart extends JsonClass
 		IRPApplication app = factory.getRhapsodyApplication();
 		
 		
+		
+		
 		List<IRPModelElement> nestedElements = aModelElement.getNestedElements().toList();
 		IRPCollection nestedElementsCollection = app.createNewCollection();
 		for (IRPModelElement nestedElement : nestedElements)
