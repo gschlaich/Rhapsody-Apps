@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.rhapsody.USM;
+package USM.de.schlaich.gunnar.rhapsody.USM;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -703,7 +703,7 @@ public class CUSMPlugin extends RPUserPlugin
 			JFileChooser fileChooser = new JFileChooser();
 			fileChooser.setDialogTitle("Save as");
 
-			// Filter für .csv, .html und .xml Dateien
+			// Filter fï¿½r .csv, .html und .xml Dateien
 			fileChooser.addChoosableFileFilter(new FileTypeFilter(".csv", "CSV Files"));
 			fileChooser.addChoosableFileFilter(new FileTypeFilter(".html", "HTML Files"));
 			fileChooser.addChoosableFileFilter(new FileTypeFilter(".xml", "XML Files"));
