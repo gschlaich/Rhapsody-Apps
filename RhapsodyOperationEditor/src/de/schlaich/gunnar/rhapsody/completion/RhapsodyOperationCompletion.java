@@ -3,7 +3,6 @@ package de.schlaich.gunnar.rhapsody.completion;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.imaging.common.mylzw.MyBitOutputStream;
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.CompletionProvider;

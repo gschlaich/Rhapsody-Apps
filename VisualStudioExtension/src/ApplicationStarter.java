@@ -1,9 +1,11 @@
-package de.schlaich.gunnar.rhapsody.vs;
+
 
 import java.util.List;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
+
+import de.schlaich.gunnar.rhapsody.vs.VSPlugin;
 
 public class ApplicationStarter {
 

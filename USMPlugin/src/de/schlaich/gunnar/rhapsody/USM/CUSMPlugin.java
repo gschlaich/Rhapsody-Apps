@@ -38,7 +38,7 @@ import com.telelogic.rhapsody.core.RPUserPlugin;
 import de.schlaich.gunnar.aiTools.GeminiAPIClient;
 import de.schlaich.gunnar.aiTools.mcp.McpStarter;
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelTester;
-import de.schlaich.gunnar.rhapsody.CCreateMessage;
+import de.schlaich.gunnar.rhapsody.MsgCreator.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;

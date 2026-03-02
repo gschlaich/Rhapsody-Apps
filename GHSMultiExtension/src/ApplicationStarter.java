@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.rhapsody.ghs;
+
 
 import java.util.List;
 
@@ -9,6 +9,8 @@ import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
+
+import de.schlaich.gunnar.rhapsody.ghs.MultiPlugin;
 
 
 

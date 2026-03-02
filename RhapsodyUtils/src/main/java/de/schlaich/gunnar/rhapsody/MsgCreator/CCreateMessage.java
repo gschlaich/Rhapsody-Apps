@@ -1,4 +1,4 @@
-package de.schlaich.gunnar.rhapsody;
+package de.schlaich.gunnar.rhapsody.MsgCreator;
 
 import java.util.List;
 

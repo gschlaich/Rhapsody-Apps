@@ -16,6 +16,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImagingOpException;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -43,7 +44,7 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
 
-import org.apache.commons.imaging.ImageReadException;
+//import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -348,20 +349,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			icons = Imaging.getAllBufferedImages(f);
 			
 		} 
-		catch (ImageReadException e)
+		catch( Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-		catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 		
-		
-		
-			
 			
 		Image img = null;
 		

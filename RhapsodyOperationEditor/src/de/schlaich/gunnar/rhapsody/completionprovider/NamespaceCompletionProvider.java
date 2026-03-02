@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.imaging.common.mylzw.MyBitOutputStream;
+
 import org.fife.ui.autocomplete.AbstractCompletionProvider;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.autocomplete.DefaultCompletionProvider;

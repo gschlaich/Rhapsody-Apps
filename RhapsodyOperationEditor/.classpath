@@ -11,31 +11,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/libs/swt.jar"/>
-	<classpathentry kind="lib" path="C:/Rhapsody/v840/Share/JavaAPI/rhapsody.jar">
-		<attributes>
-			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Rhapsody/v840/Share/JavaAPI"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/RhapsodyApps.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Rhapsody/v840/Share/RhapsodyApps/apps.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/cdt.jar" sourcepath="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.cdt.core.source_5.6.0.201402142303.jar"/>
-	<classpathentry exported="true" kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/commons-imaging-1.0-alpha2.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/CDC-1.0%Foundation-1.0">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.osgi.core-6.0.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.resources-3.7.100.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.jobs-3.8.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.osgi.service.prefs-1.1.1.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.osgi-3.18.100.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.core.runtime-3.1.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/org.eclipse.text-3.8.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/schl591/eclipse-workspace/RhapsodyAppCustom/lib/equinox-common-3.2.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/GHSMultiExtension"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/VisualStudioExtension"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/RhapsodyUtils"/>
 	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
 		<attributes>

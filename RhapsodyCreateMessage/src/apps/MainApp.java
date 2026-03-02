@@ -3,7 +3,7 @@ package apps;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
-import de.schlaich.gunnar.rhapsody.CCreateMessage;
+import de.schlaich.gunnar.rhapsody.MsgCreator.CCreateMessage;
 
 
 public class MainApp extends App {

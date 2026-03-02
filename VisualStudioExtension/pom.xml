@@ -1,11 +1,38 @@
 <project>
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>RhapsodyCreateMessage</groupId>
-	<artifactId>RhapsodyCreateMessage</artifactId>
+	<groupId>VisualStudioExtension</groupId>
+	<artifactId>VisualStudioExtension</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
+	<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>3.5.0</version>
+				<executions>
+					<execution>
+						<id>require-omroot</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireEnvironmentVariable>
+									<variableName>OMROOT</variableName>
+								</requireEnvironmentVariable>
+								<requireEnvironmentVariable>
+									<variableName>USM_ROOT</variableName>
+								</requireEnvironmentVariable>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
+
 	<profiles>
 		<profile>
 			<id>USM</id>
@@ -18,7 +45,7 @@
 				<usmroot>${env.USM_ROOT}</usmroot>
 			</properties>
 			<dependencies>
-				<dependency> 
+				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>cdt</artifactId>
 					<version>1.0</version>
@@ -34,6 +61,7 @@
 				</dependency>
 			</dependencies>
 		</profile>
+		
 		<profile>
 			<id>rhapsody-local</id>
 			<activation>
@@ -52,6 +80,7 @@
 					<artifactId>rhapsody</artifactId>
 					<version>1.0</version>
 					<scope>system</scope>
+					
 					<systemPath>${omroot}/JavaAPI/Rhapsody.jar</systemPath>
 				</dependency>
 
@@ -70,7 +99,7 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
 				</dependency>
-
+				
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>swt</artifactId>
@@ -78,7 +107,7 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
 				</dependency>
-
+				
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>jdom</artifactId>
@@ -86,19 +115,12 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
 				</dependency>
-
-
+				
+				
+				
+				
 			</dependencies>
 
 		</profile>
 	</profiles>
-
-
-	<dependencies>
-		<dependency>
-			<groupId>de.schlaich.gunnar</groupId>
-			<artifactId>RhapsodyUtils</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-	</dependencies>
 </project>

@@ -16,7 +16,6 @@ import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.JTextComponent;
 
-import org.apache.commons.imaging.common.mylzw.MyLzwCompressor;
 import org.apache.commons.imaging.icc.IccProfileParser;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
