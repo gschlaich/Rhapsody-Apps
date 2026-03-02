@@ -1,4 +1,4 @@
-package USM.de.schlaich.gunnar.rhapsody.USM;
+package de.schlaich.gunnar.rhapsody.USM;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;

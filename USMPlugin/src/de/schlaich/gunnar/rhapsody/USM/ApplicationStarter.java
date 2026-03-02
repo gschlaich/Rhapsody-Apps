@@ -1,4 +1,4 @@
-package USM.de.schlaich.gunnar.rhapsody.USM;
+package de.schlaich.gunnar.rhapsody.USM;
 
 import java.util.List;
 
@@ -93,8 +93,8 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunBatchCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunAllBatchesCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ListMetaClassesCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonPasteCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonPasteCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
 		
 	}
 
