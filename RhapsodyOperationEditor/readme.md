@@ -3,7 +3,7 @@ A C++ editor for operations in IBM rhapsody. This is a IBM Rhapsody Extension. U
 
 Tested with Rhapsody C++ Developer 8.4 and 9.0.1
 
-![grafik](https://user-images.githubusercontent.com/79119288/138944361-7ecaf38a-fee8-4c4c-b200-f930563d35f3.png)
+<img width="974" height="502" alt="image" src="https://github.com/user-attachments/assets/f8c265c9-5b91-4402-97ff-34776bea4081" />
 
 
 Additionally required java libraries (not included):
