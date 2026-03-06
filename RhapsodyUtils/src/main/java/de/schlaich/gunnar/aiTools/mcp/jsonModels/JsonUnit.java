@@ -6,6 +6,8 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPUnit;
 
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
+
 public class JsonUnit extends JsonModelElement
 {
 
@@ -151,6 +153,9 @@ public class JsonUnit extends JsonModelElement
 		
 	}
 	
+	/*
+	
+	
 	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
 	{
 		
@@ -185,6 +190,7 @@ public class JsonUnit extends JsonModelElement
 
 		return theUnit;
 	}
+	*/
 	
 	@Override
 	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)

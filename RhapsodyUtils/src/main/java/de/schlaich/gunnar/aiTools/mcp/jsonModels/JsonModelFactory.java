@@ -94,6 +94,7 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Project, JsonProject.class);
 		registerJsonClass(MetaClass.Profile, JsonProfile.class);
 		registerJsonClass(MetaClass.EnumerationLiteral, JsonEnumerationLiteral.class);
+		registerJsonClass(MetaClass.InterfaceItemTrigger, JsonTrigger.class);
 
 	}
 
@@ -268,14 +269,14 @@ public class JsonModelFactory
 		SchemaGeneratorConfigBuilder configBuilder = new SchemaGeneratorConfigBuilder(SchemaVersion.DRAFT_7,
 				OptionPreset.PLAIN_JSON);
 
-		// Erst die Custom NamingStrategy setzen, BEVOR das JacksonModule hinzugefügt
+		// Erst die Custom NamingStrategy setzen, BEVOR das JacksonModule hinzugefï¿½gt
 		// wird
 		configBuilder.forTypesInGeneral().withDefinitionNamingStrategy((type, context) ->
 		{
 			return type.getType().getTypeName();
 		});
 
-		// Dann das JacksonModule hinzufügen (ohne NamingStrategy-Option)
+		// Dann das JacksonModule hinzufï¿½gen (ohne NamingStrategy-Option)
 		JacksonModule jacksonModule = new JacksonModule();
 		configBuilder.with(jacksonModule).with(Option.DEFINITIONS_FOR_ALL_OBJECTS);
 
@@ -295,7 +296,7 @@ public class JsonModelFactory
 
 			JsonSchemaGenerator schemaGen = new JsonSchemaGenerator(mapper);
 
-			// Schema für die Basisklasse generieren
+			// Schema fï¿½r die Basisklasse generieren
 			JsonSchema schema = schemaGen.generateSchema(clazz);
 
 			schema.set$schema("http://json-schema.org/draft-04/schema#");

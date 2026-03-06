@@ -72,7 +72,7 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonProject.class, name = "Project"),
 		@JsonSubTypes.Type(value = JsonProfile.class, name = "Profile"),
 		@JsonSubTypes.Type(value = JsonEnumerationLiteral.class, name = "EnumerationLiteral"),
-		@JsonSubTypes.Type(value = JsonTrigger.class, name = "Trigger"),
+		@JsonSubTypes.Type(value = JsonTrigger.class, name = "InterfaceItemTrigger"),
 	
 
 })

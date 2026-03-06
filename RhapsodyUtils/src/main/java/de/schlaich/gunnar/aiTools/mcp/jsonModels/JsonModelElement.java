@@ -16,8 +16,7 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStereotype;
 
-public class JsonModelElement extends JsonModelElementBase
-{
+public class JsonModelElement extends JsonModelElementBase {
 
 	@JsonProperty("newTermStereotype")
 	protected JsonModelElementBase newTermStereotype = null;
@@ -40,108 +39,85 @@ public class JsonModelElement extends JsonModelElementBase
 	@JsonProperty("external")
 	protected boolean external = false;
 
-	public JsonModelElement(IRPModelElement aModelElement, int level)
-	{
+	public JsonModelElement(IRPModelElement aModelElement, int level) {
 		super(aModelElement, level);
 
 		IRPModelElement ownerElement = aModelElement.getOwner();
 
-		if (ownerElement != null)
-		{
+		if (ownerElement != null) {
 			owner = new JsonModelElementBase(ownerElement);
 		}
 
 		getNestedElements(aModelElement);
 
 		stereotypes = convertToJsonModelElementBaseList(aModelElement.getStereotypes());
-		
+
 		external = aModelElement.getIsExternal() != 0;
-		
+
 		this.changedProperties = getOverriddenProperties(aModelElement);
 
 		description = aModelElement.getDescription();
 
-		if (aModelElement.getNewTermStereotype() != null)
-		{
+		if (aModelElement.getNewTermStereotype() != null) {
 			newTermStereotype = new JsonModelElementBase(aModelElement.getNewTermStereotype());
 		}
 
 	}
 
-
-
-	protected void getNestedElements(IRPModelElement aModelElement)
-	{
+	protected void getNestedElements(IRPModelElement aModelElement) {
 		nestedElements = convertToJsonModelElementList(aModelElement.getNestedElements());
 	}
 
-
-
-	private Map<String, String> getOverriddenProperties(IRPModelElement aModelElement)
-	{
+	private Map<String, String> getOverriddenProperties(IRPModelElement aModelElement) {
 		List<String> overriddenProperties = aModelElement.getOverriddenProperties(0).toList();
-	
-		Map<String, String> ret = new HashMap<String, String>();
-		if (overriddenProperties != null && overriddenProperties.size() > 0)
-		{
 
-			for (String property : overriddenProperties)
-			{
+		Map<String, String> ret = new HashMap<String, String>();
+		if (overriddenProperties != null && overriddenProperties.size() > 0) {
+
+			for (String property : overriddenProperties) {
 				String[] propertyKeyValue = property.split(":", 2);
 				ret.put(propertyKeyValue[0], propertyKeyValue[1]);
 			}
 		}
 		return ret;
 	}
-	
-	
 
-	public JsonModelElement()
-	{
+	public JsonModelElement() {
 
 	}
 
-	public IRPModelElement toModelElement(JsonModelElementBase aRootElement, IRPProject aProject,
-			ImportMode aImportMode)
-	{
+	/*
+	 * 
+	 * public IRPModelElement toModelElement(JsonModelElementBase aRootElement,
+	 * IRPProject aProject, ImportMode aImportMode) {
+	 * 
+	 * 
+	 * IRPModelElement returnElement = null;
+	 * 
+	 * if (aImportMode == ImportMode.create) { IRPModelElement parentElement =
+	 * aRootElement.toModelElement((JsonModelElementBase)null, aProject,
+	 * ImportMode.reference); returnElement = createModelElement(parentElement); }
+	 * else { returnElement = super.toModelElement(aRootElement, aProject,
+	 * ImportMode.reference); return returnElement; }
+	 * 
+	 * if (returnElement == null) { return null; }
+	 * 
+	 * 
+	 * setAttributes(returnElement, aProject, aImportMode);
+	 * 
+	 * return returnElement; }
+	 * 
+	 */
 
-		
-		IRPModelElement returnElement = null;
-		
-		if (aImportMode == ImportMode.create)
-		{
-			IRPModelElement parentElement = aRootElement.toModelElement((JsonModelElementBase)null, aProject, ImportMode.reference);
-			returnElement = createModelElement(parentElement);
-		}
-		else
-		{
-			returnElement = super.toModelElement(aRootElement, aProject, ImportMode.reference);
-			return returnElement;
-		}
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode) {
 
-		if (returnElement == null)
-		{
-			return null;
-		}
-		
-		
-		setAttributes(returnElement, aProject, aImportMode);
-
-		return returnElement;
-	}
-	
-	
-	
-	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
-	{
-		
 		super.setAttributes(aModelElement, aProject, aImportMode);
-		
+
 		addNestedElements(aProject, aImportMode);
-		
+
 		// set description
-		if (isSet(description))
-		{
+		if (isSet(description)) {
 			aModelElement.setDescription(this.description);
 		}
 
@@ -151,45 +127,36 @@ public class JsonModelElement extends JsonModelElementBase
 
 	}
 
-	protected void addNestedElements(IRPProject aProject, ImportMode aImportMode)
-	{
-		for (JsonModelElementBase jsonNestedElement : this.nestedElements)
-		{
+	protected void addNestedElements(IRPProject aProject, ImportMode aImportMode) {
+		for (JsonModelElementBase jsonNestedElement : this.nestedElements) {
 			jsonNestedElement.toModelElement(this, aProject, aImportMode);
-        
+
 		}
 	}
 
-	protected void setStereotypes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
-	{
+	protected void setStereotypes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode) {
 
-		if (aImportMode == ImportMode.create)
-		{
-			if (aModelElement.getStereotypes().toList().size() > 0)
-			{
+		if (aImportMode == ImportMode.create) {
+			if (aModelElement.getStereotypes().toList().size() > 0) {
 				trace("On creation, the model must not have any stereotypes yet");
 				return;
 			}
 		}
-				
-		if (aImportMode == ImportMode.reference)
-		{
+
+		if (aImportMode == ImportMode.reference) {
 			// do nothing
 			return;
 		}
-		
+
 		// add new ones below
-		for (JsonModelElementBase jsonStereotype : this.stereotypes)
-		{
+		for (JsonModelElementBase jsonStereotype : this.stereotypes) {
 
 			IRPModelElement modelElement = jsonStereotype.getReference(aProject);
 
-			if (modelElement != null)
-			{
+			if (modelElement != null) {
 				IRPStereotype stereotype = (IRPStereotype) modelElement;
 
-				if (stereotype != null)
-				{
+				if (stereotype != null) {
 					aModelElement.addSpecificStereotype(stereotype);
 				}
 
@@ -199,33 +166,27 @@ public class JsonModelElement extends JsonModelElementBase
 
 	}
 
-	protected void setProperties(IRPModelElement aModelElement, ImportMode aImportMode)
-	{
-		
-		if (aImportMode == ImportMode.reference)
-		{
+	protected void setProperties(IRPModelElement aModelElement, ImportMode aImportMode) {
+
+		if (aImportMode == ImportMode.reference) {
 			// do nothing
 			return;
 		}
 
 		Set<String> keySet = changedProperties.keySet();
 
-		for (String key : keySet)
-		{
+		for (String key : keySet) {
 			String propertyValue = changedProperties.get(key);
 			String actualValue = aModelElement.getPropertyValue(key);
-			if (actualValue.equals(propertyValue) == false)
-			{
+			if (actualValue.equals(propertyValue) == false) {
 				aModelElement.setPropertyValue(key, propertyValue);
 			}
 		}
 
 	}
 
-	public static JsonModelElement GetJsonModelElement(IRPModelElement aModelElement, int level)
-	{
-		if (aModelElement instanceof IRPModelElement)
-		{
+	public static JsonModelElement GetJsonModelElement(IRPModelElement aModelElement, int level) {
+		if (aModelElement instanceof IRPModelElement) {
 			return new JsonModelElement(aModelElement, level);
 		}
 
@@ -233,42 +194,33 @@ public class JsonModelElement extends JsonModelElementBase
 
 	}
 
-	
-
-	List<JsonModelElementBase> getTemplates()
-	{
+	List<JsonModelElementBase> getTemplates() {
 		// todo
 		return null;
 	}
 
-	List<JsonModelElementBase> getStereotypes()
-	{
+	List<JsonModelElementBase> getStereotypes() {
 		return getFromList(nestedElements, MetaClass.Stereotype);
 	}
 
-	List<JsonModelElementBase> getHyperLinks()
-	{
+	List<JsonModelElementBase> getHyperLinks() {
 		return getFromList(nestedElements, MetaClass.HyperLink);
 	}
 
-	List<JsonModelElementBase> getLocalTags()
-	{
+	List<JsonModelElementBase> getLocalTags() {
 		return getFromList(nestedElements, MetaClass.Tag);
 	}
 
-	List<JsonModelElementBase> getOwnedDependencies()
-	{
+	List<JsonModelElementBase> getOwnedDependencies() {
 		return getFromList(nestedElements, MetaClass.Dependency);
 	}
 
-	JsonModelElementBase getNewTermStereotype()
-	{
+	JsonModelElementBase getNewTermStereotype() {
 		return newTermStereotype;
 	}
-	
+
 	@Override
-	public List<JsonModelElementBase> getNestedElements()
-	{
+	public List<JsonModelElementBase> getNestedElements() {
 		return nestedElements;
 	}
 

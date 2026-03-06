@@ -45,6 +45,7 @@
 				<usmroot>${env.USM_ROOT}</usmroot>
 			</properties>
 			<dependencies>
+			
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>cdt</artifactId>

@@ -11,36 +11,29 @@ import com.telelogic.rhapsody.core.IRPTrigger;
 
 public class JsonTransition extends JsonModelElement
 {
-	
-	 /*
-	 IRPTransition 	getInheritsFrom()
-	          For transitions inherited from a base statechart, returns the base transition from which this transition is derived.
-	 int 	getIsOverridden()
-	          Checks whether the transition is a new transition added to the derived statechart, or a transition inherited from the base statechart.
-	 IRPAction 	getItsAction()
-	          Returns the action that was set for the transition.
-	 IRPGuard 	getItsGuard()
-	          Returns the guard that was set for the transition.
-	 java.lang.String 	getItsLabel()
-	          Returns the trigger, guard, and action for the transition, as a single string, as it appears in the label for the transition in the statechart, for example, IgnitionEvent[gear == 0]/runStarter().
-	 IRPStateVertex 	getItsSource()
-	          Returns the state that is the source of the transition.
-	 IRPStatechart 	getItsStatechart()
-	          Returns the statechart that the transition belongs to.
-	 IRPStateVertex 	getItsTarget()
-	          Returns the state that is the target of the transition.
-	 IRPTrigger 	getItsTrigger()
-	          Returns the trigger that was set for the transition.
-	 IRPState 	getOfState()
-	          For default transitions, returns the state where the transition originates.
-	 int 	isDefaultTransition()
-	          Checks whether this is the default transition of the statechart.
-	 int 	isStaticReaction()
-	          Checks whether the transition is an internal transition in a state.
-	 IRPCollection 	itsCompoundSource()
-	          method itsCompoundSource 
+
+	/*
+	 * IRPTransition getInheritsFrom() For transitions inherited from a base
+	 * statechart, returns the base transition from which this transition is
+	 * derived. int getIsOverridden() Checks whether the transition is a new
+	 * transition added to the derived statechart, or a transition inherited from
+	 * the base statechart. IRPAction getItsAction() Returns the action that was set
+	 * for the transition. IRPGuard getItsGuard() Returns the guard that was set for
+	 * the transition. java.lang.String getItsLabel() Returns the trigger, guard,
+	 * and action for the transition, as a single string, as it appears in the label
+	 * for the transition in the statechart, for example, IgnitionEvent[gear ==
+	 * 0]/runStarter(). IRPStateVertex getItsSource() Returns the state that is the
+	 * source of the transition. IRPStatechart getItsStatechart() Returns the
+	 * statechart that the transition belongs to. IRPStateVertex getItsTarget()
+	 * Returns the state that is the target of the transition. IRPTrigger
+	 * getItsTrigger() Returns the trigger that was set for the transition. IRPState
+	 * getOfState() For default transitions, returns the state where the transition
+	 * originates. int isDefaultTransition() Checks whether this is the default
+	 * transition of the statechart. int isStaticReaction() Checks whether the
+	 * transition is an internal transition in a state. IRPCollection
+	 * itsCompoundSource() method itsCompoundSource
 	 */
-	
+
 	@JsonProperty("inheritsFrom")
 	protected JsonModelElementBase inheritsFrom = null;
 	@JsonProperty("isOverridden")
@@ -61,27 +54,23 @@ public class JsonTransition extends JsonModelElement
 	protected boolean isDefaultTransition = false;
 	@JsonProperty("isStaticReaction")
 	protected boolean isStaticReaction = false;
-	
-	
-	
-	
 
 	public JsonTransition(IRPModelElement aModelElement, int level)
 	{
 		super(aModelElement, level);
-		
+
 		if (aModelElement == null)
 		{
 			return;
 		}
-		
+
 		if (!(aModelElement instanceof IRPTransition))
 		{
 			return;
 		}
-		
-		IRPTransition theTransition = (IRPTransition)aModelElement;
-		
+
+		IRPTransition theTransition = (IRPTransition) aModelElement;
+
 		isOverridden = theTransition.getIsOverridden() == 1;
 		itsLabel = theTransition.getItsLabel();
 		if (theTransition.getInheritsFrom() != null)
@@ -95,27 +84,26 @@ public class JsonTransition extends JsonModelElement
 		if (theTransition.getItsGuard() != null)
 		{
 			IRPGuard g = theTransition.getItsGuard();
-			if(g != null)
+			if (g != null)
 			{
 				itsGuard = g.getBody();
 			}
 		}
 		if (theTransition.getItsTrigger() != null)
 		{
-			IRPTrigger trigger = theTransition.getItsTrigger();
-			itsTrigger = new JsonModelElementBase(trigger);
+			itsTrigger = new JsonModelElementBase(theTransition.getItsTrigger());
 		}
-		
+
 		if (theTransition.getItsSource() != null)
 		{
 			itsSource = new JsonModelElementBase(theTransition.getItsSource());
 		}
-		
+
 		if (theTransition.getItsTarget() != null)
 		{
 			itsTarget = new JsonModelElementBase(theTransition.getItsTarget());
 		}
-		
+
 		isDefaultTransition = theTransition.isDefaultTransition() == 1;
 		isStaticReaction = theTransition.isStaticReaction() == 1;
 
@@ -125,15 +113,12 @@ public class JsonTransition extends JsonModelElement
 	{
 		// TODO Auto-generated constructor stub
 	}
-	
-	
+
 	public JsonModelElementBase getItsTarget()
 	{
 		return itsTarget;
 	}
-	
-	
-	
+
 	@Override
 	public IRPModelElement createModelElement(IRPModelElement aParent)
 	{
@@ -141,227 +126,198 @@ public class JsonTransition extends JsonModelElement
 		{
 			return null;
 		}
-		
+
 		IRPProject project = aParent.getProject();
-		
-		
-		if(isDefaultTransition)
-        {
-            if (aParent instanceof IRPState == false)
-            {
-                trace("Parent of default transition must be a state.");
-                return null;
-            }
-            
-			if (itsTarget == null)
+
+		IRPStateVertex targetVertex = null;
+		IRPStateVertex sourceVertex = null;
+
+		IRPModelElement targetElement = itsTarget.getReference(project);
+		if (targetElement != null)
+		{
+			if (targetElement instanceof IRPStateVertex)
+			{
+				targetVertex = (IRPStateVertex) targetElement;
+			}
+
+		}
+
+		IRPModelElement sourceElement = itsSource.getReference(project);
+		if (sourceElement != null)
+		{
+			if (sourceElement instanceof IRPStateVertex)
+			{
+				sourceVertex = (IRPStateVertex) sourceElement;
+			}
+		}
+
+		if (isDefaultTransition)
+		{
+			if (targetVertex == null)
 			{
 				trace("Default transition target is not set.");
 				return null;
 			}
-			
-			IRPState parentState = (IRPState) aParent;
-			IRPModelElement targetElement = itsTarget.getReference(project);
-			if (targetElement == null)
+			if (sourceVertex == null)
 			{
-				trace("Default transition target reference could not be resolved.");
+				trace("Default transition source must not be set.");
 				return null;
 			}
-			if ((targetElement instanceof IRPState) == false)
+			IRPState targetState = null;
+			if (targetVertex instanceof IRPState)
 			{
-				trace("Default transition target must be a state. It is " + targetElement.getMetaClass());
-				return null;
-			}
-			
-			IRPState targetState = (IRPState) targetElement;
-			
-			IRPTransition defaultTransition = parentState.createDefaultTransition(targetState);
-			
-			return defaultTransition;
-            
-        }
-		if(isStaticReaction)
-        {
-            if (aParent instanceof IRPState == false)
-            {
-                trace("Parent of internal transition must be a state vertex.");
-                return null;
-            }
-            
-            if(itsTrigger!= null)
-            {
-                trace("Internal transition trigger is not set.");
-                return null;
-            }
-            
-            IRPState parentState = (IRPState) aParent;
-            
-            parentState.addStaticReaction(null);
-            
-        }
-
-		
-		IRPModelElement targetElement = itsTarget.getReference(project);
-		
-		if (targetElement == null)
-		{
-			trace("Transition target is not set.");
-			return null;
-		}
-		
-		if ((targetElement instanceof IRPStateVertex) == false)
-		{
-			trace("Transition target is not a state vertex. It is " + targetElement.getMetaClass());
-			return null;
-		}
-		
-		IRPStateVertex targetState = (IRPStateVertex) targetElement;
-		
-		if (aParent instanceof IRPState)
-		{
-			IRPState parentState = (IRPState) aParent;
-
-			return parentState.addTransition(targetState);
-		}
-		else if (aParent instanceof IRPStateVertex)
-		{
-			IRPStateVertex parentVertex = (IRPStateVertex) aParent;
-			return parentVertex.addTransition(null);
-		}
-		return null;
-	}
-	
-	
-	
-	
-	
-	
-	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
-	{
-		
-		
-		
-		
-		if(itsSource == null)
-        {
-            trace("Transition source is not set");
-			return null;
-        }
-		
-		
-		
-		IRPModelElement sourceElement = this.itsSource.getReference(project);
-		
-		if(sourceElement == null)
-		{
-			return null;
-		}
-		
-		if (!(sourceElement instanceof IRPStateVertex))
-		{
-			return null;
-		};
-		
-		IRPStateVertex sourceVertex = (IRPStateVertex) sourceElement;
-		
-		if (itsTarget == null)
-		{
-			trace("Transition target is not set");
-			return null;
-		}
-		
-		trace("Source vertex: "+sourceVertex.getName());
-		trace("Source vertex Fullname: " +sourceVertex.getFullPathName());
-		
-		IRPModelElement targetElement = this.itsTarget.toModelElement(this, project, ImportMode.reference);
-		
-		if (targetElement == null)
-		{
-			return null;
-		}
-		
-		if (!(targetElement instanceof IRPStateVertex))
-		{
-			return null;
-		}
-		
-		IRPStateVertex targetVertex = (IRPStateVertex) targetElement;
-		
-		trace("Target vertex: "+ targetVertex.getName());
-		trace("Target vertex Fullname: " + targetVertex.getFullPathName());
-		
-		IRPTransition theTransition = null;
-		
-		if (this instanceof JsonDefaultTransition)
-		{
-			if(targetVertex instanceof IRPState == false)
-			{
-				return null;
-			}
-			if (sourceVertex instanceof IRPState == false)
-			{
-				return null;
-			}
-			
-			
-			IRPState targetState = (IRPState) targetVertex;
-			IRPState sourceState = (IRPState) sourceVertex;
-			
-			//check if default transition already exists
-			IRPTransition existingDefaultTransition = targetState.getDefaultTransition();
-			if (existingDefaultTransition != null)
-			{
-				trace("Default transition from state "+targetState.getName()+" already exists. ");
-				trace("Name of existing default transition target: "+existingDefaultTransition.getName());
-				
-				theTransition = existingDefaultTransition;
-				
+				targetState = (IRPState) targetVertex;
 			}
 			else
 			{
-			
-				theTransition = targetState.createDefaultTransition(sourceState);
+				trace("Default transition target must be a state");
+				return null;
 			}
-			
-		}
-		else
-		{
-			if(sourceVertex instanceof IRPState)
+			IRPState sourceState = null;
+			if (sourceVertex instanceof IRPState)
 			{
-				IRPState sourceState = (IRPState) sourceVertex;
-				trace("SourceState " + sourceState.getName() + " Root? " + sourceState.isRoot());
+				sourceState = (IRPState) sourceVertex;
+			}
+			else
+			{
+				trace("Parent of default transition must be a state");
+				return null;
 			}
 			
-			if (targetVertex instanceof IRPState)
-			{
-				IRPState targetState = (IRPState) targetVertex;
-				trace("TargetState "+ targetState.getName() + " Root? " + targetState.isRoot());
-			}
-		
-			theTransition = sourceVertex.addTransition(targetVertex);
+			return targetState.createDefaultTransition(sourceState);
+				
 		}
-		
-		if (theTransition == null)
+		if (isStaticReaction)
 		{
+			if (sourceVertex == null)
+			{
+				trace("Static reaction source must not be set.");
+				return null;
+			}
+			
+			IRPState sourceState = null;
+			if (sourceVertex instanceof IRPState)
+			{
+				sourceState = (IRPState) sourceVertex;
+			}
+			else
+			{
+				trace("Source of static reaction must be a state");
+				return null;
+			}
+
+			return sourceState.addStaticReaction(null);
+		}
+
+		if(sourceVertex == null) {
+			trace("Transition source is not set");
 			return null;
 		}
-		
-		
-//		if (isOverridden)
-//		{
-//			theTransition.overrideInheritance();
-//		}
 
-		if(itsTrigger!=null)
+
+		return sourceVertex.addTransition(targetVertex);
+
+	}
+
+	@Override
+	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
+	{
+		super.setAttributes(aModelElement, aProject, aImportMode);
+
+		if (aModelElement instanceof IRPTransition == false)
 		{
-			itsTrigger.createModelElement(theTransition);
+			return;
 		}
-		
+
+		IRPTransition theTransition = (IRPTransition) aModelElement;
+
 		if (isSet(itsGuard))
 		{
 			theTransition.setItsGuard(itsGuard);
 		}
 
-		return theTransition;
 	}
+
+	/*
+	 * 
+	 * public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject
+	 * project, ImportMode aImportMode) {
+	 * 
+	 * 
+	 * 
+	 * 
+	 * if(itsSource == null) { trace("Transition source is not set"); return null; }
+	 * 
+	 * 
+	 * 
+	 * IRPModelElement sourceElement = this.itsSource.getReference(project);
+	 * 
+	 * if(sourceElement == null) { return null; }
+	 * 
+	 * if (!(sourceElement instanceof IRPStateVertex)) { return null; };
+	 * 
+	 * IRPStateVertex sourceVertex = (IRPStateVertex) sourceElement;
+	 * 
+	 * if (itsTarget == null) { trace("Transition target is not set"); return null;
+	 * }
+	 * 
+	 * trace("Source vertex: "+sourceVertex.getName());
+	 * trace("Source vertex Fullname: " +sourceVertex.getFullPathName());
+	 * 
+	 * IRPModelElement targetElement = itsTarget.getReference(project);
+	 * 
+	 * if (targetElement == null) { return null; }
+	 * 
+	 * if (!(targetElement instanceof IRPStateVertex)) { return null; }
+	 * 
+	 * IRPStateVertex targetVertex = (IRPStateVertex) targetElement;
+	 * 
+	 * trace("Target vertex: "+ targetVertex.getName());
+	 * trace("Target vertex Fullname: " + targetVertex.getFullPathName());
+	 * 
+	 * IRPTransition theTransition = null;
+	 * 
+	 * if (this instanceof JsonDefaultTransition) { if(targetVertex instanceof
+	 * IRPState == false) { return null; } if (sourceVertex instanceof IRPState ==
+	 * false) { return null; }
+	 * 
+	 * 
+	 * IRPState targetState = (IRPState) targetVertex; IRPState sourceState =
+	 * (IRPState) sourceVertex;
+	 * 
+	 * //check if default transition already exists IRPTransition
+	 * existingDefaultTransition = targetState.getDefaultTransition(); if
+	 * (existingDefaultTransition != null) {
+	 * trace("Default transition from state "+targetState.getName()
+	 * +" already exists. "); trace("Name of existing default transition target: "
+	 * +existingDefaultTransition.getName());
+	 * 
+	 * theTransition = existingDefaultTransition;
+	 * 
+	 * } else {
+	 * 
+	 * theTransition = targetState.createDefaultTransition(sourceState); }
+	 * 
+	 * } else { if(sourceVertex instanceof IRPState) { IRPState sourceState =
+	 * (IRPState) sourceVertex; trace("SourceState " + sourceState.getName() +
+	 * " Root? " + sourceState.isRoot()); }
+	 * 
+	 * if (targetVertex instanceof IRPState) { IRPState targetState = (IRPState)
+	 * targetVertex; trace("TargetState "+ targetState.getName() + " Root? " +
+	 * targetState.isRoot()); }
+	 * 
+	 * theTransition = sourceVertex.addTransition(targetVertex); }
+	 * 
+	 * if (theTransition == null) { return null; }
+	 * 
+	 * 
+	 * // if (isOverridden) // { // theTransition.overrideInheritance(); // }
+	 * 
+	 * if(itsTrigger!=null) { itsTrigger.createModelElement(theTransition); }
+	 * 
+	 * if (isSet(itsGuard)) { theTransition.setItsGuard(itsGuard); }
+	 * 
+	 * return theTransition; }
+	 */
 
 }
