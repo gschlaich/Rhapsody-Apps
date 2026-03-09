@@ -10,7 +10,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.telelogic.rhapsody.core.IRPDiagram;
+import com.telelogic.rhapsody.core.IRPGraphEdge;
 import com.telelogic.rhapsody.core.IRPGraphElement;
+import com.telelogic.rhapsody.core.IRPGraphNode;
 import com.telelogic.rhapsody.core.IRPGraphicalProperty;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -139,6 +141,10 @@ public class JsonGraphElement
 
 	}
 	
+	
+	
+	
+	
 
 //	public IRPGraphElement toGraphElement(JsonModelElementBase aDiagram, IRPProject project)
 //	{
@@ -182,6 +188,27 @@ public class JsonGraphElement
 	{
 		myTraceAction = aTraceAction;
 	}
+	
+
+	public static String GUID(IRPGraphElement graphElement)
+	{
+		if (graphElement == null)
+		{
+			return null;
+		}
+		
+		IRPGraphicalProperty guidProp = graphElement.getGraphicalProperty("GUID");
+		
+		if (guidProp == null)
+		{
+			return null;
+		}
+		
+		return guidProp.getValue();
+		
+	}
+	
+	
 	
 
 }

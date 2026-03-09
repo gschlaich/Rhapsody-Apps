@@ -41,27 +41,30 @@ public class JsonAction extends JsonModelElement
 		IRPModelElement ownerElement = aModelElement.getOwner();
 		if(ownerElement == null)
 		{
+			trace("Action [ "+ aModelElement.getName() + " ] has no owner element, cannot determine action type");
 			return;
 		}
 		
 		if (ownerElement instanceof IRPState)
 		{
 			IRPState parentState = (IRPState) ownerElement;
+			
 
-			if (parentState.getEntryAction() != null && parentState.getEntryAction().equals(aModelElement))
+			if (parentState.getTheEntryAction() != null && parentState.getTheEntryAction().equals(aModelElement))
 			{
 				actionType = ActionType.entry;
 			}
-			else if (parentState.getExitAction() != null && parentState.getExitAction().equals(aModelElement))
+			else if (parentState.getTheExitAction() != null && parentState.getTheExitAction().equals(aModelElement))
 			{
 				actionType = ActionType.exit;
 			}
 			
 		}
-		else if(ownerElement instanceof IRPTransition)
+		else
 		{
 			actionType = ActionType.transition;
 		}
+		
 
 		IRPAction theAction = (IRPAction) aModelElement;
 
@@ -177,7 +180,7 @@ public class JsonAction extends JsonModelElement
 		
 		if (ret == null)
 		{
-			trace("Action type ("+actionType.name()+")does not match the owner element type "+ aParentElement.getMetaClass());
+			trace("Action [ "+ body + " ]type ("+actionType.name()+") does not match the owner element type "+ aParentElement.getMetaClass());
 		}
 		return ret;
     }

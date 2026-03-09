@@ -5,12 +5,14 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDiagram;
+import com.telelogic.rhapsody.core.IRPGraphEdge;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
 
 import com.telelogic.rhapsody.core.IRPGraphElement;
+import com.telelogic.rhapsody.core.IRPGraphNode;
 import com.telelogic.rhapsody.core.IRPGraphicalProperty;
 
 public class JsonDiagram extends JsonUnit
@@ -36,8 +38,11 @@ public class JsonDiagram extends JsonUnit
 	
 	@JsonProperty("elementsInDiagram")
 	protected List<JsonModelElementBase> elementsInDiagram = new java.util.ArrayList<JsonModelElementBase>();
-	@JsonProperty("graphicalElements")
-	protected List<JsonGraphElement> graphicalElements = new java.util.ArrayList<JsonGraphElement>();
+	@JsonProperty("graphicalNodes")
+	protected List<JsonGraphNode> graphicalNodes = new java.util.ArrayList<JsonGraphNode>();
+	@JsonProperty("graphicalEdges")
+	protected List<JsonGraphEdge> graphicalEdges = new java.util.ArrayList<JsonGraphEdge>();
+	
 	@JsonProperty("lastVisualizationModifiedTime")
 	protected String lastVisualizationModifiedTime = "";
 	
@@ -61,19 +66,38 @@ public class JsonDiagram extends JsonUnit
 					elementsInDiagram.add(new JsonModelElementBase(theME,level));
 				}
 			}
-			
-				
+	
 			List<IRPGraphElement> graphElements = theDiagram.getGraphicalElements().toList();
 			
 			for (IRPGraphElement ge : graphElements)
 			{
-				JsonGraphElement jsonGE = new JsonGraphElement(ge);
-				
-				graphicalElements.add(jsonGE);
+				if(ge instanceof IRPGraphNode)
+				{
+					graphicalNodes.add(new JsonGraphNode((IRPGraphNode) ge));
+				}
+				else if (ge instanceof IRPGraphEdge)
+				{
+					graphicalEdges.add(new JsonGraphEdge((IRPGraphEdge) ge));
+				}
 			}
 			
 			// lastVisualizationModifiedTime
 			lastVisualizationModifiedTime = theDiagram.getLastVisualizationModifiedTime();
+		}
+	}
+	
+	public void replaceEdgeLinkGUID(String aGuid)
+	{
+		for (JsonGraphEdge edge : graphicalEdges)
+		{
+			if( edge.getSourceGUID().equals(aGuid) )
+			{
+				edge.setSourceGUID(null);
+			}
+			if( edge.getTargetGUID().equals(aGuid) )
+			{
+				edge.setTargetGUID(null);
+			}
 		}
 	}
 
@@ -102,8 +126,44 @@ public class JsonDiagram extends JsonUnit
 				//todo 
 			}
 		}
-
+		
+		for (JsonGraphNode node : graphicalNodes)
+		{		
+			node.createNodeElement(this, project);
+		}
+		
+		for (JsonGraphEdge edge : graphicalEdges)
+		{		
+			edge.createEdgeElement(theDiagram, project);
+		}
+	
+	}
+	
+	
+	public static IRPGraphNode GetGraphNodeByGUID(IRPDiagram aDiagram, String guid)
+	{
+		if (aDiagram == null || guid == null)
+		{
+			return null;
+		}
+		
+		List<IRPGraphElement> graphElements = aDiagram.getGraphicalElements().toList();
+		
+		for (IRPGraphElement ge : graphElements)
+		{
+			String geGuid = JsonGraphElement.GUID(ge);
+			if (guid.equals(geGuid))
+			{
+				if(ge instanceof IRPGraphNode)
+					
+				return (IRPGraphNode)ge;
+			}
+		}
+		
+		return null;
 		
 	}
+	
+	
 	
 }
