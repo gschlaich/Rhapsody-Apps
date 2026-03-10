@@ -10,8 +10,6 @@ import com.telelogic.rhapsody.core.IRPState;
 import com.telelogic.rhapsody.core.IRPType;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
-import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.MetaClass;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -73,7 +71,8 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonProfile.class, name = "Profile"),
 		@JsonSubTypes.Type(value = JsonEnumerationLiteral.class, name = "EnumerationLiteral"),
 		@JsonSubTypes.Type(value = JsonTrigger.class, name = "InterfaceItemTrigger"),
-	
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "Connector"),	
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "Condition")	
 
 })
 
@@ -93,7 +92,7 @@ public class JsonModelElementBase
 		MatrixLayout, MatrixView, Message, Module, Node, Object, ObjectModelDiagram, ObjectNode, Operation, Package,
 		PanelDiagram, Pin, Port, Profile, Project, Reception, ReferenceActivity, Requirement, SequenceDiagram, State,
 		Statechart, StatechartDiagram, Stereotype, StructureDiagram, Swimlane, SysMLPort, TableLayout, TableView, Tag,
-		TemplateInstantiation, Transition, TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger
+		TemplateInstantiation, Transition, TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger, Timeout
 	}
 
 	public enum ImportMode {

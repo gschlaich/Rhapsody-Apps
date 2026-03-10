@@ -95,6 +95,9 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Profile, JsonProfile.class);
 		registerJsonClass(MetaClass.EnumerationLiteral, JsonEnumerationLiteral.class);
 		registerJsonClass(MetaClass.InterfaceItemTrigger, JsonTrigger.class);
+		registerJsonClass(MetaClass.Timeout, JsonTrigger.class);
+		registerJsonClass(MetaClass.Connector, JsonConnector.class);
+		registerJsonClass(MetaClass.Condition, JsonConnector.class);
 
 	}
 
