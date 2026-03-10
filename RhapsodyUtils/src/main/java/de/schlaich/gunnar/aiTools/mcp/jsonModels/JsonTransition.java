@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPGuard;
+import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPState;
@@ -91,6 +92,8 @@ public class JsonTransition extends JsonModelElement
 		}
 		if (theTransition.getItsTrigger() != null)
 		{
+			trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
+			
 			itsTrigger = new JsonModelElementBase(theTransition.getItsTrigger());
 		}
 
@@ -183,9 +186,9 @@ public class JsonTransition extends JsonModelElement
 				trace("Parent of default transition must be a state");
 				return null;
 			}
-			
+
 			return targetState.createDefaultTransition(sourceState);
-				
+
 		}
 		if (isStaticReaction)
 		{
@@ -194,7 +197,7 @@ public class JsonTransition extends JsonModelElement
 				trace("Static reaction source must not be set.");
 				return null;
 			}
-			
+
 			IRPState sourceState = null;
 			if (sourceVertex instanceof IRPState)
 			{
@@ -206,14 +209,48 @@ public class JsonTransition extends JsonModelElement
 				return null;
 			}
 
-			return sourceState.addStaticReaction(null);
+			IRPInterfaceItem triggerOperation = null;
+
+			for (JsonModelElementBase nestedElement : this.nestedElements)
+			{
+				if (nestedElement instanceof JsonTrigger == false)
+				{
+					continue;
+				}
+				JsonTrigger jsonTrigger = (JsonTrigger) nestedElement;
+
+				JsonModelElementBase triggerJsonOperation = jsonTrigger.getItsOperation();
+
+				if (triggerJsonOperation == null)
+				{
+					trace("Trigger operation reference is not set.");
+					return null;
+				}
+				IRPModelElement triggerOperationElement = triggerJsonOperation.getReference(project);
+				if (triggerOperationElement == null)
+				{
+					trace("Trigger operation reference could not be resolved.");
+					return null;
+				}
+				if (triggerOperationElement instanceof IRPInterfaceItem == false)
+				{
+					trace("Trigger operation reference must be an operation.");
+					return null;
+				}
+
+				triggerOperation = (IRPInterfaceItem) triggerOperationElement;
+				break;
+			}
+
+			return sourceState.addStaticReaction(triggerOperation);
+
 		}
 
-		if(sourceVertex == null) {
+		if (sourceVertex == null)
+		{
 			trace("Transition source is not set");
 			return null;
 		}
-
 
 		return sourceVertex.addTransition(targetVertex);
 

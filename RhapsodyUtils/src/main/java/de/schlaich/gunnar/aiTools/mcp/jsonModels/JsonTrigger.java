@@ -13,6 +13,12 @@ public class JsonTrigger extends JsonModelElement
 
 	@JsonProperty("body")
 	protected String body = null;
+	@JsonProperty("isOperation")
+	protected boolean isOperation = false;
+	@JsonProperty("isTimeout")
+	protected boolean isTimeout = false;
+	@JsonProperty("itsOperation")
+	protected JsonModelElementBase itsOperation = null;
 	
 	
 	public JsonTrigger(IRPModelElement aModelElement, int level)
@@ -28,6 +34,20 @@ public class JsonTrigger extends JsonModelElement
 		{
 			IRPTrigger trigger = (IRPTrigger) aModelElement;
 			this.body = trigger.getBody();
+			
+			if(trigger.isOperation()==1)
+			{
+				this.isOperation = true;
+			}
+			if(trigger.isTimeout()==1)
+			{
+				this.isTimeout = true;
+			}
+			
+			if(trigger.getItsOperation() != null)
+			{
+				this.itsOperation = new JsonModelElementBase(trigger.getItsOperation());
+			}	
 		}
 		
 	}
@@ -35,6 +55,11 @@ public class JsonTrigger extends JsonModelElement
 	public JsonTrigger()
 	{
 		// TODO Auto-generated constructor stub
+	}
+	
+	public JsonModelElementBase getItsOperation() 
+	{
+		return itsOperation;
 	}
 	
 	

@@ -104,7 +104,7 @@ public class JsonGraphEdge extends JsonGraphElement
 			return null;
 		}
 		
-		//addAttributes(edge);
+		addAttributes(edge);
 		
 		return edge;
 		

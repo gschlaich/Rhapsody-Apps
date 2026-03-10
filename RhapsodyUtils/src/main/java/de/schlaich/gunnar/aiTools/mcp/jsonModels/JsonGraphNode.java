@@ -74,11 +74,14 @@ public class JsonGraphNode extends JsonGraphElement
 			return null;
 		}
 		
+		String oldGuid = myGraphicalPropertyMap.get("GUID");
 		
+		aJsonDiagram.replaceEdgeLinkGUID(oldGuid,GUID(node));
 		
 		myGraphicalPropertyMap.replace("GUID", GUID(node));
 		
-		//addAttributes(node);
+		addAttributes(node);
+		
 		return node;
 			
 	}

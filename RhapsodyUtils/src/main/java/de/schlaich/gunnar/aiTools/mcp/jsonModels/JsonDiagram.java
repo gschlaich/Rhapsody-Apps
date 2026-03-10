@@ -86,18 +86,22 @@ public class JsonDiagram extends JsonUnit
 		}
 	}
 	
-	public void replaceEdgeLinkGUID(String aGuid)
+	public void replaceEdgeLinkGUID(String aOldGuid, String aNewGuid)
 	{
 		for (JsonGraphEdge edge : graphicalEdges)
 		{
-			if( edge.getSourceGUID().equals(aGuid) )
+			
+			String sourceGuid = edge.getSourceGUID();
+			if( sourceGuid != null && sourceGuid.equals(aOldGuid) )
 			{
-				edge.setSourceGUID(null);
+				edge.setSourceGUID(aNewGuid);
 			}
-			if( edge.getTargetGUID().equals(aGuid) )
+			String targetGuid = edge.getTargetGUID();
+			if( targetGuid != null && targetGuid.equals(aOldGuid) )
 			{
-				edge.setTargetGUID(null);
+				edge.setTargetGUID(aNewGuid);
 			}
+			
 		}
 	}
 
