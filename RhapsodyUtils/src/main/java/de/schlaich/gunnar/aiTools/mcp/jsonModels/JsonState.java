@@ -261,7 +261,7 @@ public class JsonState extends JsonStateVertex
         }
         if (nestedStatechart != null)
         {
-            nestedStatechart.toModelElement(this, aProject, ImportMode.create);
+            //nestedStatechart.toModelElement(this, aProject, ImportMode.create);
         }
         //        if (referenceToActivity != null)
         //        {
