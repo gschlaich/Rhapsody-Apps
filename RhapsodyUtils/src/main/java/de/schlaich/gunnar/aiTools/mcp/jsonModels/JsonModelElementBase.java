@@ -490,6 +490,8 @@ public class JsonModelElementBase
 		}
 
 		List<JsonModelElementBase> theList = new ArrayList<JsonModelElementBase>();
+		List<JsonModelElementBase> transitions = new ArrayList<JsonModelElementBase>();
+		List<JsonModelElementBase> stateChartDiagrams = new ArrayList<JsonModelElementBase>();
 
 		if (aCollection == null)
 		{
@@ -505,9 +507,23 @@ public class JsonModelElementBase
 				JsonModelElementBase jsonME = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) obj,
 						nextLevel);
 
-				theList.add(jsonME);
+				if(jsonME instanceof JsonTransition)
+				{
+					transitions.add(jsonME);
+				}
+				else if(jsonME instanceof JsonStatechartDiagram)
+				{
+					stateChartDiagrams.add(jsonME);
+				}
+				else
+				{
+					theList.add(jsonME);
+				}
 			}
 		}
+		
+		theList.addAll(transitions);
+		theList.addAll(stateChartDiagrams);
 
 		return theList;
 	}
