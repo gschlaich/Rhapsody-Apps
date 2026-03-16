@@ -62,46 +62,46 @@ public class JsonStatechart extends JsonClass
 	}
 	
 	
-	@Override
-	protected void getNestedElements(IRPModelElement aModelElement)
-	{
-		
-		JsonModelFactory factory = JsonModelFactory.Instance();
-		
-		if (factory == null)
-		{
-			trace("Could not get JsonModelFactory instance");
-			return;
-		}
-		
-		IRPApplication app = factory.getRhapsodyApplication();
-		
-		
-		
-		
-		List<IRPModelElement> nestedElements = aModelElement.getNestedElements().toList();
-		IRPCollection nestedElementsCollection = app.createNewCollection();
-		for (IRPModelElement nestedElement : nestedElements)
-		{
-			if (nestedElement instanceof IRPState)
-			{
-				IRPState state = (IRPState) nestedElement;
-				if(state.isRoot()==1)
-				{
-					nestedElementsCollection.addItem(nestedElement);
-				}
-			}
-			else 
-			{
-				nestedElementsCollection.addItem(nestedElement);
-			}
-		}
-
-		this.nestedElements = convertToJsonModelElementList(nestedElementsCollection);
-		nestedElementsCollection.empty();
-		
-	}
-	
+//	@Override
+//	protected void getNestedElements(IRPModelElement aModelElement)
+//	{
+//		
+//		JsonModelFactory factory = JsonModelFactory.Instance();
+//		
+//		if (factory == null)
+//		{
+//			trace("Could not get JsonModelFactory instance");
+//			return;
+//		}
+//		
+//		IRPApplication app = factory.getRhapsodyApplication();
+//		
+//		
+//		
+//		
+//		List<IRPModelElement> nestedElements = aModelElement.getNestedElements().toList();
+//		IRPCollection nestedElementsCollection = app.createNewCollection();
+//		for (IRPModelElement nestedElement : nestedElements)
+//		{
+//			if (nestedElement instanceof IRPState)
+//			{
+//				IRPState state = (IRPState) nestedElement;
+//				if(state.isRoot()==1)
+//				{
+//					nestedElementsCollection.addItem(nestedElement);
+//				}
+//			}
+//			else 
+//			{
+//				nestedElementsCollection.addItem(nestedElement);
+//			}
+//		}
+//
+//		this.nestedElements = convertToJsonModelElementList(nestedElementsCollection);
+//		nestedElementsCollection.empty();
+//		
+//	}
+//	
 	
 	
 	
@@ -146,7 +146,7 @@ public class JsonStatechart extends JsonClass
         
 		if (isOverridden)
 		{
-			 theStatechart.overrideInheritance();
+			 //theStatechart.overrideInheritance();
 		}
 	}
 	

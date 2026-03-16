@@ -99,8 +99,8 @@ public class JsonState extends JsonStateVertex
 			{
 				itsSwimlane = new JsonModelElementBase(theState.getItsSwimlane());
 			}
-			//subStates = convertToJsonModelElementBaseList(theState.getSubStates());
-			subStates = convertToJsonModelElementList(theState.getSubStates());
+			subStates = convertToJsonModelElementBaseList(theState.getSubStates());
+			//subStates = convertToJsonModelElementList(theState.getSubStates());
 			
 			stateType = theState.getStateType();
 			if (theState.getNestedStatechart() != null)
@@ -148,6 +148,10 @@ public class JsonState extends JsonStateVertex
 	@Override
 	public IRPModelElement createModelElement(IRPModelElement aParentElement)
 	{
+		
+		
+		trace("Creating state: " + this.name + " in parent element: " + aParentElement.getFullPathName());
+		
 		IRPState theState = null;
 
 		if (this.root == true)
@@ -163,12 +167,51 @@ public class JsonState extends JsonStateVertex
 		else
 		{
 			
-			if (aParentElement instanceof IRPState == false)
+			IRPProject project = aParentElement.getProject();
+			
+			IRPModelElement parentModel = this.parentState.getReference(project);
+			if (parentModel == null)
 			{
 				return null;
 			}
-			IRPState parentState = (IRPState) aParentElement;
-			theState = parentState.addState(this.name);
+			if (parentModel instanceof IRPState == false)
+			{
+				return null;
+			}
+
+			IRPState parentState = (IRPState) parentModel;
+			
+			List<IRPState> subStates = parentState.getSubStates().toList();
+			
+			
+		
+			for (IRPState subState : subStates)
+			{
+				if(subState.getName().equals(this.name))
+				{
+					trace("State " + this.name + " already exists in parent state " + parentState.getFullPathName() + ". Reusing existing state.");
+					return subState;
+				}
+			}
+			
+				
+			try
+			{
+				theState = parentState.addState(this.name);
+			}
+			catch (Exception e)
+			{
+				trace("Could not create nested state " + this.fullName + " in parent state " + parentState.getFullPathName() + ". Exception: " + e.getMessage());
+				
+				List<IRPState> sStates = parentState.getSubStates().toList();
+				for (IRPState subState : sStates)
+				{
+					trace("Existing substate: " + subState.getName());
+				}
+				
+				return null;
+			}
+			
 		}
 
 		return theState;
@@ -197,7 +240,7 @@ public class JsonState extends JsonStateVertex
         }
         if (internalTransitions != null)
         {
-            convertToModelElementList( internalTransitions, aProject, ImportMode.create);
+            //convertToModelElementList( internalTransitions, aProject, ImportMode.create);
         }
         if (isOverridden == false)
         {
@@ -210,7 +253,7 @@ public class JsonState extends JsonStateVertex
         }
         if (subStates != null)
         {
-			convertToModelElementList( subStates, aProject, ImportMode.create);	
+			//convertToModelElementList( subStates, aProject, ImportMode.create);	
         }
         if (isSet(stateType))
         {
