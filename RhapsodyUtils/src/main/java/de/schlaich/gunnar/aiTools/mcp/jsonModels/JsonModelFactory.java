@@ -99,6 +99,7 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Connector, JsonConnector.class);
 		registerJsonClass(MetaClass.Condition, JsonConnector.class);
 		registerJsonClass(MetaClass.HistoryConnector, JsonConnector.class);
+		registerJsonClass(MetaClass.JunctionConnector, JsonConnector.class);
 
 	}
 

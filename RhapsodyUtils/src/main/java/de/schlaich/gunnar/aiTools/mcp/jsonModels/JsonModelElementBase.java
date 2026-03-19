@@ -73,7 +73,8 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonTrigger.class, name = "InterfaceItemTrigger"),
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "Connector"),	
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "Condition"),
-		@JsonSubTypes.Type(value = JsonConnector.class, name = "HistoryConnector")
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "HistoryConnector"),
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "JunctionConnector")
 
 })
 
@@ -89,7 +90,7 @@ public class JsonModelElementBase
 		Configuration, Connector, Constraint, Constructor, ControlledFile, DefaultTransition, Dependency,
 		DeploymentDiagram, Destructor, EnumerationLiteral, Event, EventReception, ExecutionOccurrence, File,
 		FileElement, Flow, Folder, Generalization, Guard, HistoryConnector, HyperLink, InterfaceItemTrigger, Initializer, InstanceSlot,
-		InstanceSpecification, InteractionOccurrence, InteractionOperand, ItemFlow, Link, LiteralSpecification,
+		InstanceSpecification, InteractionOccurrence, InteractionOperand, ItemFlow, JunctionConnector, Link, LiteralSpecification,
 		MatrixLayout, MatrixView, Message, Module, Node, Object, ObjectModelDiagram, ObjectNode, Operation, Package,
 		PanelDiagram, Pin, Port, Profile, Project, Reception, ReferenceActivity, Requirement, SequenceDiagram, State,
 		Statechart, StatechartDiagram, Stereotype, StructureDiagram, Swimlane, SysMLPort, TableLayout, TableView, Tag,
