@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -149,6 +150,82 @@ public class JsonStatechart extends JsonClass
 			 //theStatechart.overrideInheritance();
 		}
 	}
+	
+	
+	@Override
+	protected List<JsonModelElementBase> convertToJsonModelElementList(IRPCollection aCollection)
+	{
+		
+
+		List<JsonModelElementBase> theList = new ArrayList<JsonModelElementBase>();
+		List<JsonModelElementBase> transitions = new ArrayList<JsonModelElementBase>();
+		List<JsonModelElementBase> stateChartDiagrams = new ArrayList<JsonModelElementBase>();
+		List<JsonModelElementBase> states = new ArrayList<JsonModelElementBase>();
+
+		if (aCollection == null)
+		{
+			return theList;
+		}
+
+		int nextLevel = this.getLevel();
+
+		for (Object obj : aCollection.toList())
+		{
+			if (obj instanceof IRPModelElement)
+			{
+				JsonModelElementBase jsonME = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) obj,
+						nextLevel);
+
+				if(jsonME instanceof JsonTransition)
+				{
+					transitions.add(jsonME);
+				}
+				else if(jsonME instanceof JsonStatechartDiagram)
+				{
+					stateChartDiagrams.add(jsonME);
+				}
+				else if(jsonME instanceof JsonState)
+				{
+					/// when a parent of a state is in the list, put the state after the parent element into the list
+					String guid = jsonME.getGuid();
+					boolean added = false;
+					for(int i=0; i<states.size(); i++)
+					{
+						JsonModelElementBase state = states.get(i);
+						JsonState jsonState = (JsonState) state;
+						JsonModelElementBase parentState = jsonState.parentState;
+						if(parentState == null)
+						{
+							continue;
+						}
+						String parentStateGuid = parentState.getGuid();
+						if(parentStateGuid.equals(guid))
+						{
+							states.add(i, jsonME);
+							added = true;
+							break;
+						}
+					}
+					if(added == false)
+					{
+						states.add(jsonME);
+					}
+					
+				}
+				else
+				{
+					theList.add(jsonME);
+				}
+			}
+		}
+		
+		states.addAll(theList);
+		states.addAll(transitions);
+		states.addAll(stateChartDiagrams);
+		
+		return states;
+	}
+
 	
 
 }

@@ -179,7 +179,7 @@ public class JsonGraphElement
 			return;
 		}
 
-		aMessage = "JsonModel: " + aMessage;
+		aMessage = "JsonGraph: " + aMessage;
 
 		myTraceAction.accept(aMessage);
 	}

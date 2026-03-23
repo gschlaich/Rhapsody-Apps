@@ -55,6 +55,7 @@ public class JsonModelFactory
 		myTraceAction = aTraceAction;
 
 		JsonModelElementBase.SetTraceAction(myTraceAction);
+		JsonGraphElement.SetTraceAction(myTraceAction);
 
 		factoryMap = new HashMap<MetaClass, Class<?>>();
 		myApp = aApp;
