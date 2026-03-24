@@ -75,7 +75,10 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "Connector"),
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "Condition"),
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "HistoryConnector"),
-		@JsonSubTypes.Type(value = JsonConnector.class, name = "JunctionConnector")
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "JunctionConnector"),
+		@JsonSubTypes.Type(value = JsonCollaboration.class, name = "Collaboration"),
+		@JsonSubTypes.Type(value = JsonMessage.class, name = "Message"),
+		@JsonSubTypes.Type(value = JsonClassifierRole.class, name = "ClassifierRole"),
 
 })
 
@@ -97,7 +100,7 @@ public class JsonModelElementBase
 		ObjectModelDiagram, ObjectNode, Operation, Package, PanelDiagram, Pin, Port, Profile, Project, Reception,
 		ReferenceActivity, Requirement, SequenceDiagram, State, Statechart, StatechartDiagram, Stereotype,
 		StructureDiagram, Swimlane, SysMLPort, TableLayout, TableView, Tag, TemplateInstantiation, Transition,
-		TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger, Timeout
+		TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger, Timeout, Collaboration
 	}
 
 	public enum ImportMode

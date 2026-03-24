@@ -101,6 +101,11 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Condition, JsonConnector.class);
 		registerJsonClass(MetaClass.HistoryConnector, JsonConnector.class);
 		registerJsonClass(MetaClass.JunctionConnector, JsonConnector.class);
+		registerJsonClass(MetaClass.SequenceDiagram, JsonSequenceDiagram.class);
+		registerJsonClass(MetaClass.Collaboration, JsonCollaboration.class);
+		registerJsonClass(MetaClass.Message, JsonMessage.class);
+		registerJsonClass(MetaClass.ClassifierRole, JsonClassifierRole.class);
+		
 
 	}
 
