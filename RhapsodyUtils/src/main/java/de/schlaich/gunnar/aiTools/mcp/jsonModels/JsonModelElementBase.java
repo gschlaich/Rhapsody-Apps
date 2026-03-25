@@ -78,7 +78,7 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonConnector.class, name = "JunctionConnector"),
 		@JsonSubTypes.Type(value = JsonCollaboration.class, name = "Collaboration"),
 		@JsonSubTypes.Type(value = JsonMessage.class, name = "Message"),
-		@JsonSubTypes.Type(value = JsonClassifierRole.class, name = "ClassifierRole"),
+		@JsonSubTypes.Type(value = JsonClassifierRole.class, name = "ClassifierRole")
 
 })
 

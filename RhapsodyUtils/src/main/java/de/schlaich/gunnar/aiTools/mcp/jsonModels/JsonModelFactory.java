@@ -69,7 +69,6 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Generalization, JsonGeneralization.class);
 		registerJsonClass(MetaClass.Stereotype, JsonStereotype.class);
 		registerJsonClass(MetaClass.Type, JsonType.class);
-		// registerJsonClass(MetaClass.AssociationEnd, JsonAssociationClass.class);
 		registerJsonClass(MetaClass.ObjectModelDiagram, JsonObjectModelDiagram.class);
 		registerJsonClass(MetaClass.Argument, JsonArgument.class);
 		registerJsonClass(MetaClass.AssociationEnd, JsonRelation.class);
@@ -399,7 +398,7 @@ public class JsonModelFactory
 		}
 		catch (Exception e)
 		{
-			
+			e.printStackTrace();
 			trace(e.toString());
 			trace("Exception creating json model element for " + metaClass + ": " + e.getMessage());
 			ret = new JsonModelElementBase(aModelElement);
@@ -437,6 +436,7 @@ public class JsonModelFactory
 	{
 		if (factoryMap.put(aMetaClass, aClass) == null)
 		{
+			trace("Register json class " + aClass.getSimpleName() + " for MetaClass " + aMetaClass + " failed");
 			return false;
 		}
 

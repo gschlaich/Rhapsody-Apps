@@ -131,7 +131,7 @@ public class JsonMessage extends JsonModelElement
 			communicationConnection = new JsonModelElementBase(theMessage.getCommunicationConnection());
 		}
 		condition = theMessage.getCondition();
-		durationConstraint = theMessage.getDurationConstraint();
+		//durationConstraint = theMessage.getDurationConstraint();
 		if (theMessage.getFlowPort() != null)
 		{
 			flowPort = new JsonModelElementBase(theMessage.getFlowPort());
@@ -144,7 +144,7 @@ public class JsonMessage extends JsonModelElement
 		{
 			formalType = new JsonModelElementBase(theMessage.getFormalType());
 		}
-		invariant = theMessage.getInvariant();
+		//invariant = theMessage.getInvariant();
 		messageType = theMessage.getMessageType();
 		if (theMessage.getPort() != null)
 		{
@@ -225,7 +225,15 @@ public class JsonMessage extends JsonModelElement
 		}
 		
 		theMessage.setActualParameterList(actualParameterListCollection);
+	
 		
 	}
+	
+	@Override
+	protected IRPModelElement createModelElement(IRPModelElement aParentElement)
+	{
+		return null;
+	}
+
 
 }
