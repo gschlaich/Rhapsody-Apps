@@ -106,10 +106,10 @@ public class JsonUnit extends JsonModelElement
 		
 		if(theUnit.isSeparateSaveUnit()==0)
 		{
-			trace( name + "("+metaClass+"): unit is not a separate save unit.");
 			return;
 		}
 		
+		trace( name + "("+metaClass+"): unit is a separate save unit.");
 
 		switch (theUnit.getAddToModelMode())
 		{

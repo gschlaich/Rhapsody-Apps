@@ -22,7 +22,7 @@ public class JsonMessage extends JsonModelElement
 //				IRPCollection 	getActualParameterList()
 //				      get property actualParameterList
 	@JsonProperty("actualParameterList")
-	protected List<JsonModelElementBase> actualParameterList;
+	protected List<String> actualParameterList;
 //				IRPAssociationRole 	getCommunicationConnection()
 //				      get property communicationConnection
 	@JsonProperty("communicationConnection")
@@ -125,13 +125,18 @@ public class JsonMessage extends JsonModelElement
 			targetExecutionOccurrence = new JsonModelElementBase(theMessage.getTargetExecutionOccurrence());
 		}
 		
-		actualParameterList = convertToJsonModelElementBaseList(theMessage.getActualParameterList());
+		List<String> actualParameterListTemp = theMessage.getActualParameterList().toList();
+		actualParameterList = actualParameterListTemp;
+		
 		if (theMessage.getCommunicationConnection() != null)
 		{
 			communicationConnection = new JsonModelElementBase(theMessage.getCommunicationConnection());
 		}
 		condition = theMessage.getCondition();
-		//durationConstraint = theMessage.getDurationConstraint();
+		if(theMessage.getDurationConstraint() != null)
+		{
+			durationConstraint = theMessage.getDurationConstraint();
+		}
 		if (theMessage.getFlowPort() != null)
 		{
 			flowPort = new JsonModelElementBase(theMessage.getFlowPort());
@@ -160,8 +165,8 @@ public class JsonMessage extends JsonModelElement
 		{
 			target = new JsonModelElementBase(theMessage.getTarget());
 		}
-		timeConstraint = theMessage.getTimeConstraint();
-		timeObservation = theMessage.getTimeObservation();
+		//timeConstraint = theMessage.getTimeConstraint();
+		//timeObservation = theMessage.getTimeObservation();
 		timerValue = theMessage.getTimerValue();
 		
 	}
@@ -215,13 +220,16 @@ public class JsonMessage extends JsonModelElement
 		
 		theMessage.setActualParameterList(null);
 		
-		List<IRPModelElement> actualParameterListModelElements = convertToModelElementList(actualParameterList, aProject, ImportMode.reference);
+		
 		
 		IRPCollection actualParameterListCollection = theMessage.getActualParameterList();
+		actualParameterListCollection.empty();
+		int index = 0;
 		
-		for (IRPModelElement actualParameter : actualParameterListModelElements)
+		for (String actualParameter : actualParameterList)
 		{
-			actualParameterListCollection.addItem(actualParameter);
+			index++;
+			actualParameterListCollection.setString(index, actualParameter);
 		}
 		
 		theMessage.setActualParameterList(actualParameterListCollection);

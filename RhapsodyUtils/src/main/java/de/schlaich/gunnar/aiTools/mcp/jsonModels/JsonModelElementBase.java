@@ -463,10 +463,22 @@ public class JsonModelElementBase
 
 	protected List<JsonModelElementBase> convertToJsonModelElementBaseList(IRPCollection aCollection)
 	{
+		if(aCollection == null)
+		{
+			return new ArrayList<JsonModelElementBase>();
+		}
+		
 		List<JsonModelElementBase> jsonModelElements = new ArrayList<JsonModelElementBase>();
 		List<IRPModelElement> modelElements = aCollection.toList();
-		for (IRPModelElement modelElement : modelElements)
+		
+		for (Object  element : modelElements)
 		{
+			if(element instanceof IRPModelElement == false)
+			{
+				trace("Element in collection is a " + element.toString() + " and not an IRPModelElement. Skipping element.");
+				continue;
+			}
+			IRPModelElement modelElement = (IRPModelElement) element;
 			JsonModelElementBase jsonModelElement = new JsonModelElementBase(modelElement);
 			jsonModelElements.add(jsonModelElement);
 		}

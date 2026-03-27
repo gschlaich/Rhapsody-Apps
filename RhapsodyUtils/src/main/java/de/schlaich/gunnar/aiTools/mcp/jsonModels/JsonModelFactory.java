@@ -404,7 +404,7 @@ public class JsonModelFactory
 			ret = new JsonModelElementBase(aModelElement);
 		}
 
-		trace("Json Model: " + ret.getMetaclass() + " " + ret.getName());
+		trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );
 		return ret;
 
 	}
@@ -436,9 +436,11 @@ public class JsonModelFactory
 	{
 		if (factoryMap.put(aMetaClass, aClass) == null)
 		{
-			trace("Register json class " + aClass.getSimpleName() + " for MetaClass " + aMetaClass + " failed");
-			return false;
+			
+			return true;
 		}
+		
+		trace("Warning: MetaClass " + aMetaClass + " is already registered with class " +  factoryMap.get(aMetaClass).getSimpleName() + ". Overwriting with " + aClass.getSimpleName());
 
 		return true;
 	}

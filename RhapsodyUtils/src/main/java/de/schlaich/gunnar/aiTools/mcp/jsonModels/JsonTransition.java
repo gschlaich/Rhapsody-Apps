@@ -92,7 +92,7 @@ public class JsonTransition extends JsonModelElement
 		}
 		if (theTransition.getItsTrigger() != null)
 		{
-			trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
+			//trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
 			
 			itsTrigger = new JsonModelElementBase(theTransition.getItsTrigger());
 		}
