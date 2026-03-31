@@ -8,6 +8,7 @@ import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPGraphEdge;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPState;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
 
@@ -36,8 +37,8 @@ public class JsonDiagram extends JsonUnit
 	 
 	 */
 	
-	@JsonProperty("elementsInDiagram")
-	protected List<JsonModelElementBase> elementsInDiagram = new java.util.ArrayList<JsonModelElementBase>();
+//	@JsonProperty("elementsInDiagram")
+//	protected List<JsonModelElementBase> elementsInDiagram = new java.util.ArrayList<JsonModelElementBase>();
 	@JsonProperty("graphicalNodes")
 	protected List<JsonGraphNode> graphicalNodes = new java.util.ArrayList<JsonGraphNode>();
 	@JsonProperty("graphicalEdges")
@@ -57,15 +58,18 @@ public class JsonDiagram extends JsonUnit
 		if (aModelElement instanceof IRPDiagram)
 		{
 			IRPDiagram theDiagram = (IRPDiagram) aModelElement;
+			
+			IRPProject project = theDiagram.getProject();
+			
 			// elementsInDiagram
-			for (Object theObj : theDiagram.getElementsInDiagram().toList())
-			{
-				if (theObj instanceof IRPModelElement)
-				{
-					IRPModelElement theME = (IRPModelElement) theObj;
-					elementsInDiagram.add(new JsonModelElementBase(theME,level));
-				}
-			}
+//			for (Object theObj : theDiagram.getElementsInDiagram().toList())
+//			{
+//				if (theObj instanceof IRPModelElement)
+//				{
+//					IRPModelElement theME = (IRPModelElement) theObj;
+//					elementsInDiagram.add(new JsonModelElementBase(theME,level));
+//				}
+//			}
 	
 			List<IRPGraphElement> graphElements = theDiagram.getGraphicalElements().toList();
 			
@@ -73,7 +77,51 @@ public class JsonDiagram extends JsonUnit
 			{
 				if(ge instanceof IRPGraphNode)
 				{
-					graphicalNodes.add(new JsonGraphNode((IRPGraphNode) ge));
+					IRPModelElement modelElement = ge.getModelObject();
+					if(modelElement == null)
+					{
+						continue;
+					}
+					
+					if(modelElement instanceof IRPState)
+					{
+						String modelElementGuid = modelElement.getGUID();
+						IRPState theState = (IRPState)modelElement;
+						boolean added = false;
+						for(int i = 0; i < graphicalNodes.size(); i++)
+						{
+							
+							JsonGraphNode jg = graphicalNodes.get(i);
+							JsonModelElementBase jsonME = jg.modelObject;
+							
+							IRPModelElement modelElementOfJsonME = jsonME.getReference(project);
+							if(modelElementOfJsonME instanceof IRPState)
+							{
+								IRPState stateOfJsonME = (IRPState)modelElementOfJsonME;
+								IRPState parentStateOfJsonME = stateOfJsonME.getParent();
+								if(parentStateOfJsonME != null)
+								{
+									String parentStateOfJsonMEGuid = parentStateOfJsonME.getGUID();
+									if(parentStateOfJsonMEGuid.equals(modelElementGuid))
+									{
+										// if the state is already in the list, add the graph node after the state element
+										graphicalNodes.add(i, new JsonGraphNode((IRPGraphNode) ge));
+										added = true;
+										break;
+									}
+								}
+							}	
+						}
+						if(added == false)
+						{
+							graphicalNodes.add(new JsonGraphNode((IRPGraphNode) ge));
+						}
+					}
+					else
+					{
+					
+						graphicalNodes.add(new JsonGraphNode((IRPGraphNode) ge));
+					}
 				}
 				else if (ge instanceof IRPGraphEdge)
 				{
@@ -122,14 +170,14 @@ public class JsonDiagram extends JsonUnit
 		IRPDiagram theDiagram = (IRPDiagram) modelElement;
 
 		// elementsInDiagram
-		for (JsonModelElementBase jsonME : elementsInDiagram)
-		{
-			IRPModelElement me = jsonME.getReference(project);
-			if (me != null)
-			{
-				//todo 
-			}
-		}
+//		for (JsonModelElementBase jsonME : elementsInDiagram)
+//		{
+//			IRPModelElement me = jsonME.getReference(project);
+//			if (me != null)
+//			{
+//				//TODO 
+//			}
+//		}
 		
 		for (JsonGraphNode node : graphicalNodes)
 		{		

@@ -1099,6 +1099,7 @@ public class CUSMPlugin extends RPUserPlugin
 					
 					jsonModel = (String) contents.getTransferData(DataFlavor.stringFlavor);
 					tester.getRhapsodyModelElementFromJson(jsonModel, selected, project);
+					trace("----Model updated from JSON-----");
 				}
 				catch (UnsupportedFlavorException e)
 				{

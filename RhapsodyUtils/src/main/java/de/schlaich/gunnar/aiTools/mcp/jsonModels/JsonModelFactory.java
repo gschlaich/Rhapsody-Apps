@@ -55,6 +55,7 @@ public class JsonModelFactory
 		myTraceAction = aTraceAction;
 
 		JsonModelElementBase.SetTraceAction(myTraceAction);
+		JsonGraphElement.SetTraceAction(myTraceAction);
 
 		factoryMap = new HashMap<MetaClass, Class<?>>();
 		myApp = aApp;
@@ -68,7 +69,6 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Generalization, JsonGeneralization.class);
 		registerJsonClass(MetaClass.Stereotype, JsonStereotype.class);
 		registerJsonClass(MetaClass.Type, JsonType.class);
-		// registerJsonClass(MetaClass.AssociationEnd, JsonAssociationClass.class);
 		registerJsonClass(MetaClass.ObjectModelDiagram, JsonObjectModelDiagram.class);
 		registerJsonClass(MetaClass.Argument, JsonArgument.class);
 		registerJsonClass(MetaClass.AssociationEnd, JsonRelation.class);
@@ -98,6 +98,13 @@ public class JsonModelFactory
 		registerJsonClass(MetaClass.Timeout, JsonTrigger.class);
 		registerJsonClass(MetaClass.Connector, JsonConnector.class);
 		registerJsonClass(MetaClass.Condition, JsonConnector.class);
+		registerJsonClass(MetaClass.HistoryConnector, JsonConnector.class);
+		registerJsonClass(MetaClass.JunctionConnector, JsonConnector.class);
+		registerJsonClass(MetaClass.SequenceDiagram, JsonSequenceDiagram.class);
+		registerJsonClass(MetaClass.Collaboration, JsonCollaboration.class);
+		registerJsonClass(MetaClass.Message, JsonMessage.class);
+		registerJsonClass(MetaClass.ClassifierRole, JsonClassifierRole.class);
+		
 
 	}
 
@@ -391,13 +398,13 @@ public class JsonModelFactory
 		}
 		catch (Exception e)
 		{
-			
+			e.printStackTrace();
 			trace(e.toString());
 			trace("Exception creating json model element for " + metaClass + ": " + e.getMessage());
 			ret = new JsonModelElementBase(aModelElement);
 		}
 
-		trace("Json Model: " + ret.getMetaclass() + " " + ret.getName());
+		trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );
 		return ret;
 
 	}
@@ -429,8 +436,11 @@ public class JsonModelFactory
 	{
 		if (factoryMap.put(aMetaClass, aClass) == null)
 		{
-			return false;
+			
+			return true;
 		}
+		
+		trace("Warning: MetaClass " + aMetaClass + " is already registered with class " +  factoryMap.get(aMetaClass).getSimpleName() + ". Overwriting with " + aClass.getSimpleName());
 
 		return true;
 	}

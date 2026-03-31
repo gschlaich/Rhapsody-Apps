@@ -28,7 +28,8 @@ import javax.validation.constraints.NotNull;
 // AcceptEventAction,AcceptTimeEvent,ActionBlock,ActivityDiagram,Actor,Argument,Association,AssociationEnd,Attribute,CallOperation,Class,ClassifierRole,Cleanup,CombinedFragment,Comment,CommunicationDiagram,Component,ComponentDiagram,ComponentInstance,Condition,ConditionMark,Configuration,Connector,Constraint,Constructor,ControlledFile,DefaultTransition,Dependency,DeploymentDiagram,Destructor,EnumerationLiteral,Event,ExecutionOccurrence,File,Flow,Folder,Generalization,HyperLink,Initializer,InstanceSlot,InstanceSpecification,InteractionOccurrence,InteractionOperand,ItemFlow,Link,MatrixLayout,MatrixView,Message,Module,Node,Object,ObjectModelDiagram,ObjectNode,Operation,Package,PanelDiagram,Pin,Port,Profile,Project,Reception,ReferenceActivity,Requirement,SequenceDiagram,State,Statechart,Stereotype,StructureDiagram,Swimlane,SysMLPort,TableLayout,TableView,Tag,Transition,TriggeredOperation,Type,UseCase,UseCaseDiagram
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "Type")
-@JsonSubTypes({ @JsonSubTypes.Type(value = JsonModelElement.class, name = "ModelElement"),
+@JsonSubTypes(
+{ @JsonSubTypes.Type(value = JsonModelElement.class, name = "ModelElement"),
 		@JsonSubTypes.Type(value = JsonClass.class, name = "Class"),
 		@JsonSubTypes.Type(value = JsonPackage.class, name = "Package"),
 		@JsonSubTypes.Type(value = JsonLiteralSpecification.class, name = "LiteralSpecification"),
@@ -71,8 +72,13 @@ import javax.validation.constraints.NotNull;
 		@JsonSubTypes.Type(value = JsonProfile.class, name = "Profile"),
 		@JsonSubTypes.Type(value = JsonEnumerationLiteral.class, name = "EnumerationLiteral"),
 		@JsonSubTypes.Type(value = JsonTrigger.class, name = "InterfaceItemTrigger"),
-		@JsonSubTypes.Type(value = JsonConnector.class, name = "Connector"),	
-		@JsonSubTypes.Type(value = JsonConnector.class, name = "Condition")	
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "Connector"),
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "Condition"),
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "HistoryConnector"),
+		@JsonSubTypes.Type(value = JsonConnector.class, name = "JunctionConnector"),
+		@JsonSubTypes.Type(value = JsonCollaboration.class, name = "Collaboration"),
+		@JsonSubTypes.Type(value = JsonMessage.class, name = "Message"),
+		@JsonSubTypes.Type(value = JsonClassifierRole.class, name = "ClassifierRole")
 
 })
 
@@ -81,21 +87,24 @@ public class JsonModelElementBase
 
 	private static Consumer<String> myTraceAction = null;
 
-	public enum MetaClass {
+	public enum MetaClass
+	{
 		ModelElement, AcceptEventAction, AcceptTimeEvent, Action, ActionBlock, ActivityDiagram, Actor, Argument,
 		Association, AssociationEnd, Attribute, CallOperation, Class, ClassifierRole, Cleanup, CombinedFragment,
 		Comment, CommunicationDiagram, Component, ComponentDiagram, ComponentInstance, Condition, ConditionMark,
 		Configuration, Connector, Constraint, Constructor, ControlledFile, DefaultTransition, Dependency,
 		DeploymentDiagram, Destructor, EnumerationLiteral, Event, EventReception, ExecutionOccurrence, File,
-		FileElement, Flow, Folder, Generalization, Guard, HyperLink, InterfaceItemTrigger, Initializer, InstanceSlot,
-		InstanceSpecification, InteractionOccurrence, InteractionOperand, ItemFlow, Link, LiteralSpecification,
-		MatrixLayout, MatrixView, Message, Module, Node, Object, ObjectModelDiagram, ObjectNode, Operation, Package,
-		PanelDiagram, Pin, Port, Profile, Project, Reception, ReferenceActivity, Requirement, SequenceDiagram, State,
-		Statechart, StatechartDiagram, Stereotype, StructureDiagram, Swimlane, SysMLPort, TableLayout, TableView, Tag,
-		TemplateInstantiation, Transition, TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger, Timeout
+		FileElement, Flow, Folder, Generalization, Guard, HistoryConnector, HyperLink, InterfaceItemTrigger,
+		Initializer, InstanceSlot, InstanceSpecification, InteractionOccurrence, InteractionOperand, ItemFlow,
+		JunctionConnector, Link, LiteralSpecification, MatrixLayout, MatrixView, Message, Module, Node, Object,
+		ObjectModelDiagram, ObjectNode, Operation, Package, PanelDiagram, Pin, Port, Profile, Project, Reception,
+		ReferenceActivity, Requirement, SequenceDiagram, State, Statechart, StatechartDiagram, Stereotype,
+		StructureDiagram, Swimlane, SysMLPort, TableLayout, TableView, Tag, TemplateInstantiation, Transition,
+		TriggeredOperation, Type, UseCase, UseCaseDiagram, Variable, Trigger, Timeout, Collaboration
 	}
 
-	public enum ImportMode {
+	public enum ImportMode
+	{
 		create, reference
 	}
 
@@ -139,7 +148,7 @@ public class JsonModelElementBase
 		{
 			metaClass = MetaClass.valueOf(metaClassName);
 		}
-		catch (IllegalArgumentException e)
+		catch(IllegalArgumentException e)
 		{
 			metaClass = MetaClass.ModelElement;
 		}
@@ -353,7 +362,7 @@ public class JsonModelElementBase
 
 			modelElement = aParentElement.addNewAggr(metaClass.name(), creationName);
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace("Exception creating new element of type " + metaClass.name() + ": " + e.getMessage());
 		}
@@ -454,10 +463,22 @@ public class JsonModelElementBase
 
 	protected List<JsonModelElementBase> convertToJsonModelElementBaseList(IRPCollection aCollection)
 	{
+		if(aCollection == null)
+		{
+			return new ArrayList<JsonModelElementBase>();
+		}
+		
 		List<JsonModelElementBase> jsonModelElements = new ArrayList<JsonModelElementBase>();
 		List<IRPModelElement> modelElements = aCollection.toList();
-		for (IRPModelElement modelElement : modelElements)
+		
+		for (Object  element : modelElements)
 		{
+			if(element instanceof IRPModelElement == false)
+			{
+				trace("Element in collection is a " + element.toString() + " and not an IRPModelElement. Skipping element.");
+				continue;
+			}
+			IRPModelElement modelElement = (IRPModelElement) element;
 			JsonModelElementBase jsonModelElement = new JsonModelElementBase(modelElement);
 			jsonModelElements.add(jsonModelElement);
 		}
@@ -506,6 +527,7 @@ public class JsonModelElementBase
 						nextLevel);
 
 				theList.add(jsonME);
+
 			}
 		}
 
@@ -529,7 +551,7 @@ public class JsonModelElementBase
 		}
 		return JsonElements;
 	}
-	
+
 	public List<JsonModelElementBase> getNestedElements()
 	{
 		return new ArrayList<JsonModelElementBase>();

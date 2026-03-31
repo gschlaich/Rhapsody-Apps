@@ -12,7 +12,7 @@ public class JsonClassifier extends JsonUnit
 	{
 		super(aModelElement, level);
 		
-		trace("JsonClassifier created from model element: " + aModelElement.getName());
+		//trace("JsonClassifier created from model element: " + aModelElement.getName());
 		
 	}
 

@@ -92,7 +92,7 @@ public class JsonTransition extends JsonModelElement
 		}
 		if (theTransition.getItsTrigger() != null)
 		{
-			trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
+			//trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
 			
 			itsTrigger = new JsonModelElementBase(theTransition.getItsTrigger());
 		}
@@ -251,7 +251,11 @@ public class JsonTransition extends JsonModelElement
 			trace("Transition source is not set");
 			return null;
 		}
-
+		
+		
+		trace("Source vertex GUID: "+ sourceVertex.getGUID() + " Name: " + sourceVertex.getName() + " Fullname: " + sourceVertex.getFullPathName());
+		trace("Target vertex GUID: "+ targetVertex.getGUID() + " Name: " + targetVertex.getName() + " Fullname: " + targetVertex.getFullPathName());
+		
 		return sourceVertex.addTransition(targetVertex);
 
 	}

@@ -90,8 +90,9 @@ public class JsonModelTester
 			return "";
 		}
 
-		trace("JsonString: \n" + jsonString);
+		//trace("JsonString: \n" + jsonString);
 
+		trace("Successfully converted model element " + aModelElement.getFullPathName() + " to JSON string.");
 
 		return jsonString;
 

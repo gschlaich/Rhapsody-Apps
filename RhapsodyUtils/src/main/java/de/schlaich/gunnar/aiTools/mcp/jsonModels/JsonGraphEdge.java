@@ -98,7 +98,21 @@ public class JsonGraphEdge extends JsonGraphElement
 		IRPGraphNode sourceNode = JsonDiagram.GetGraphNodeByGUID(aDiagram, sourceGUID);
 		IRPGraphNode targetNode = JsonDiagram.GetGraphNodeByGUID(aDiagram, targetGUID);
 		
-		IRPGraphEdge edge = aDiagram.addNewEdgeForElement(modelElement, sourceNode, xSourcePosition, ySourcePosition, targetNode, xTargetPosition, yTargetPosition);
+		IRPGraphEdge edge = null;
+		
+		trace("Creating edge with model element: " + modelElement.getName() + " xSourcePosition: " + xSourcePosition + " ySourcePosition: " + ySourcePosition + " xTargetPosition: " + xTargetPosition + " yTargetPosition: " + yTargetPosition);
+		try
+		{
+			edge = aDiagram.addNewEdgeForElement(modelElement, sourceNode, xSourcePosition, ySourcePosition, targetNode, xTargetPosition, yTargetPosition);
+		}
+		catch (Exception ex)
+		{
+			trace("Exception on modelElement: " + modelElement.getFullPathName());
+			trace("Exception message: " + ex.getMessage() + " "+ ex.getLocalizedMessage());
+			
+			return null;
+		}
+			
 		if(edge == null)
 		{
 			return null;

@@ -67,8 +67,26 @@ public class JsonGraphNode extends JsonGraphElement
 			width = Integer.parseInt(widthStr);
 		}
 		
-		IRPGraphNode node = diagram.addNewNodeForElement(modelElement, xPosition, yPosition, width, height);
+		IRPGraphNode node = null;
 		
+		trace("Creating node for element " + modelElement.getName() + " at position (" + xPosition + "," + yPosition + ") with size (" + width + "," + height + ")");
+		
+		try
+		{
+		
+			node = diagram.addNewNodeForElement(modelElement, xPosition, yPosition, width, height);
+		
+		}
+		catch (Exception ex)
+		{
+			
+			trace("Error creating node for element " + modelElement.getFullPathName());
+			trace("Exception message: " + ex.getMessage() + " "+ ex.getLocalizedMessage());
+			
+			//ex.printStackTrace();
+			return null;
+		}
+			
 		if (node == null)
 		{
 			return null;

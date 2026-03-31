@@ -89,6 +89,13 @@ public class JsonGraphElement
 					myGraphicalPropertyMap.put(jsonProp.key, jsonProp.value);
                 }
 			}
+			else
+			{
+				
+				String propery = (String)theObj;
+				
+				trace("Property " + propery);
+			}
 		}
 		associatedImage = aGraphElement.getAssociatedImage();
 
@@ -179,7 +186,7 @@ public class JsonGraphElement
 			return;
 		}
 
-		aMessage = "JsonModel: " + aMessage;
+		aMessage = "JsonGraph: " + aMessage;
 
 		myTraceAction.accept(aMessage);
 	}

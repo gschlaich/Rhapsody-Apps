@@ -60,7 +60,7 @@ public class JsonConnector extends JsonStateVertex
 
 		IRPConnector theConnector = (IRPConnector) aModelElement;
 
-		connectorType.valueOf(theConnector.getConnectorType());
+		connectorType = ConnectorType.valueOf(theConnector.getConnectorType());
 
 		derivedInEdges = convertToJsonModelElementBaseList(theConnector.getDerivedInEdges());
 
@@ -85,6 +85,8 @@ public class JsonConnector extends JsonStateVertex
 		}
 
 		IRPProject project = parent.getProject();
+
+		trace("Parent of connector: " + this.parentState.fullName + " GUID: " + this.parentState.guid);
 
 		IRPModelElement parentModel = this.parentState.getReference(project);
 		if (parentModel == null)
