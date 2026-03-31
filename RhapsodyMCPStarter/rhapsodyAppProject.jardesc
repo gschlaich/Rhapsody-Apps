@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="WINDOWS-1252" standalone="no"?>
+<jardesc>
+    <jar path="C:/Rhapsody/v840/Share/RhapsodyApps/apps/appdb8cea63bbe54821a4f6cd59c89b0afc.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/LocatePackage/rhapsodyAppProject.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="true" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="true"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="false" manifestLocation="/LocatePackage/META-INF/MANIFEST.MF" manifestVersion="1.0" reuseManifest="false" saveManifest="false" usesManifest="true">
+        <sealing sealJar="false">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <file path="/LocatePackage/.project"/>
+        <file path="/LocatePackage/.classpath"/>
+		<javaElement handleIdentifier="=LocatePackage/src"/>
+		<file path="/LocatePackage/rhapsodyAppProject.jardesc"/>
+    </selectedElements>
+</jardesc>
