@@ -49,6 +49,7 @@ import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyReverseEngineering;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
+import de.schlaich.gunnar.rhapsody.utilities.SelectionHistory;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 import de.schlaich.gunnar.rhapsody.utilities.USMConfiguration;
 import de.schlaich.gunnar.rhapsody.utilities.WriterTemplateParser;
@@ -126,9 +127,13 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String RunBatchCmd = "Run Batch";
 	public static final String RunAllBatchesCmd = "Run all Batches";
 	public static final String ListMetaClassesCmd = "List MetaClasses";
+	public static final String NextCmd = "Next";
+	public static final String BackCmd = "Back";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
+	
+	private SelectionHistory mySelectionHistory = null;
 	
 	public CUSMPlugin()
 	{
@@ -192,6 +197,10 @@ public class CUSMPlugin extends RPUserPlugin
 		}
 		
 		RhapsodyPreferences.setUILightmode();
+		
+		mySelectionHistory = new SelectionHistory(this::trace, myRhapsody);
+		
+		mySelectionHistory.connect(myRhapsody);
 		
 		
 		
@@ -1170,6 +1179,18 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 		}
 		
+		if (menuItem.contains(NextCmd))
+		{
+			mySelectionHistory.next();
+			return;
+		}
+		
+		if (menuItem.contains(BackCmd))
+		{
+			mySelectionHistory.back();
+			return;
+		}
+		
 
 		trace("menue item unknown");
 
@@ -1311,7 +1332,8 @@ public class CUSMPlugin extends RPUserPlugin
 	public void OnTrigger(String trigger)
 	{
 		// TODO Auto-generated method stub
-		trace(trigger);
+		
+		trace("Ontrigger: " + trigger);
 
 	}
 

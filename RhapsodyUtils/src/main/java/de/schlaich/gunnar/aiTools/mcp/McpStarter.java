@@ -18,7 +18,6 @@ public class McpStarter
 	static public McpStarter INSTANCE;
 
 	private RhapsodyClient client;
-	private ModelIndexer indexer;
 	private ToolRegistry registry;
 	private HttpJsonRpcBridge http;
 	private Consumer<String> myTraceAction = null;
@@ -41,7 +40,7 @@ public class McpStarter
 	{
 
 		myTraceAction = aTraceAction;
-		// Rhapsody anbinden (in-process): holt aktive Instanz & öffnet Projekt
+		// Rhapsody anbinden (in-process): holt aktive Instanz & ï¿½ffnet Projekt
 		client = new RhapsodyClient(aApp, aTraceAction);
 
 		// Index bauen
