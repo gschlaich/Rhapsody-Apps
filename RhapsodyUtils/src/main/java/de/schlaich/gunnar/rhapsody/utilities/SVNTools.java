@@ -288,7 +288,7 @@ public class SVNTools
 
 		}
 
-		// Spaltennamen für die Tabelle
+		// Spaltennamen fï¿½r die Tabelle
 		String[] columnNames = { "Revision", "Author", "Date", "Jira", "Changed Elements" };
 
 		DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
@@ -463,7 +463,7 @@ public class SVNTools
 			}
 		});
 
-		// Tabelle in ein ScrollPane einfügen
+		// Tabelle in ein ScrollPane einfï¿½gen
 		JScrollPane scrollPane = new JScrollPane(table);
 
 		// Scrollbar-Strategie festlegen
@@ -485,7 +485,7 @@ public class SVNTools
 		dialog.setLayout(new BorderLayout());
 		dialog.add(scrollPane, BorderLayout.CENTER);
 
-		// Größe des Fensters festlegen
+		// Grï¿½ï¿½e des Fensters festlegen
 
 		int width = maxWidthColumn[0] + maxWidthColumn[1] + maxWidthColumn[2] + maxWidthColumn[3] + maxWidthColumn[4];
 
@@ -768,8 +768,8 @@ public class SVNTools
 		dialog.setLayout(new BorderLayout());
 		dialog.add(scrollPane, BorderLayout.CENTER);
 
-		// Größe des Fensters festlegen
-		dialog.setSize(600, 400); // Breite: 600px, Höhe: 400px
+		// Grï¿½ï¿½e des Fensters festlegen
+		dialog.setSize(600, 400); // Breite: 600px, Hï¿½he: 400px
 		dialog.setLocationRelativeTo(null); // Fenster zentrieren
 
 		// Dialog anzeigen
@@ -1023,8 +1023,8 @@ public class SVNTools
 		dialog.setLayout(new BorderLayout());
 		dialog.add(scrollPane, BorderLayout.CENTER);
 
-		// Größe des Fensters festlegen
-		dialog.setSize(600, 400); // Breite: 600px, Höhe: 400px
+		// Grï¿½ï¿½e des Fensters festlegen
+		dialog.setSize(600, 400); // Breite: 600px, Hï¿½he: 400px
 		dialog.setLocationRelativeTo(null); // Fenster zentrieren
 
 		// Dialog anzeigen
@@ -1564,8 +1564,8 @@ public class SVNTools
 		dialog.setLayout(new BorderLayout());
 		dialog.add(scrollPane, BorderLayout.CENTER);
 
-		// Größe des Fensters festlegen
-		dialog.setSize(600, 400); // Breite: 600px, Höhe: 400px
+		// Grï¿½ï¿½e des Fensters festlegen
+		dialog.setSize(600, 400); // Breite: 600px, Hï¿½he: 400px
 		dialog.setLocationRelativeTo(null); // Fenster zentrieren
 
 		// Dialog anzeigen
@@ -1963,9 +1963,9 @@ public class SVNTools
 
 	private static String getFirstLine(String str)
 	{
-		// Teilt den String an jedem Zeilenumbruch und gibt das erste Element zurück
+		// Teilt den String an jedem Zeilenumbruch und gibt das erste Element zurï¿½ck
 		String[] lines = str.split("\\R", 2); // "\\R" ist ein Zeilenumbruch-Metazeichen
-		return lines.length > 0 ? lines[0] : null; // Prüft, ob überhaupt eine Zeile vorhanden ist
+		return lines.length > 0 ? lines[0] : null; // Prï¿½ft, ob ï¿½berhaupt eine Zeile vorhanden ist
 	}
 
 	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom, int aRevisionTo)
@@ -3959,8 +3959,8 @@ public class SVNTools
 		{
 			// erzeuge zwei temp Dateien
 
-			List<String> sourceLinesA = ASTHelper.getLines(myBodyA);
-			List<String> sourceLinesB = ASTHelper.getLines(myBodyB);
+			List<String> sourceLinesA = ASTHelper.getLines(myBodyA, false);
+			List<String> sourceLinesB = ASTHelper.getLines(myBodyB, false);
 
 			File tempFileA = null;
 			File tempFileB = null;
@@ -4065,8 +4065,8 @@ public class SVNTools
 			try
 			{
 
-				List<String> sourceLinesA = ASTHelper.getLines(myBodyA);
-				List<String> sourceLinesB = ASTHelper.getLines(myBodyB);
+				List<String> sourceLinesA = ASTHelper.getLines(myBodyA, false);
+				List<String> sourceLinesB = ASTHelper.getLines(myBodyB, false);
 				List<DiffRow> rows = generator.generateDiffRows(sourceLinesA, sourceLinesB);
 
 				diffStringBuilder.append("<table>\n");
@@ -4603,7 +4603,7 @@ class OperationItem
 
 	public List<String> getBody()
 	{
-		List<String> lines = ASTHelper.getLines(myBody);
+		List<String> lines = ASTHelper.getLines(myBody, false);
 		for (int i = 1; i < lines.size() - 1; i++)
 		{
 			lines.set(i, "    " + lines.get(i));

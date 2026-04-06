@@ -67,9 +67,11 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.github.difflib.DiffUtils;
+import com.github.difflib.patch.AbstractDelta;
 import com.github.difflib.patch.Patch;
 import com.ibm.icu.util.ULocale.Minimize;
 import com.ibm.rhapsody.apps.ui.SearchRunDialog;
+import com.ibm.rhapsody.apps.utils.Reporter;
 import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPArgument;
@@ -394,6 +396,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		{
 			okButton.setEnabled(false);			
 			applyButton.setEnabled(false);
+			
 		}
 	
 		myApplication = rhapsody;
@@ -421,6 +424,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setCloseMarkupTags(true);
 		myTextArea.setHighlightCurrentLine(true);
 		myTextArea.setCodeFoldingEnabled(true);
+		
 		
 		
 		myTextArea.addFocusListener(new FocusListener() {
@@ -504,6 +508,10 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			setRhapsodyStyle();
 		}
 		
+		if(aOperation.isReadOnly()!=0)
+		{
+			myTextArea.setEditable(false);
+		}
 
 		
 	    ScreenMonitor.Instance.registerFrame(frame);
@@ -1098,11 +1106,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		
 		if(command.equals("cancel"))
 		{
-			if(textChanged())
+			
+			
+			if((mySelectedOperation.isReadOnly()==0)&&textChanged())
 			{
 				int n = JOptionPane.showConfirmDialog(
 				    null,
-				    "Changes are irretrievably deleted",
+				    "Ok: Changes are deleted\nCancel: Return to editor",
 				    "Discard all changes in the editor?",
 				    JOptionPane.OK_CANCEL_OPTION);
 			
@@ -1203,7 +1213,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				int n = JOptionPane.showConfirmDialog(
 				    null,
-				    "Will overwrite changes in editor",
+				    "Yes: Will overwrite changes in editor\nNo: Cancel roundtrip",
 				    "Roundtrip from source file?",
 				    JOptionPane.YES_NO_OPTION);
 			
@@ -1231,7 +1241,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			{
 				int n = JOptionPane.showConfirmDialog(
 					    null,
-					    "Will overwrite changes in editor",
+					    "Yes will overwrite changes in editor\nNo: Cancel revert",
 					    "Revert from model?",
 					    JOptionPane.YES_NO_OPTION);
 				
@@ -1310,8 +1320,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			
 			JOptionPane.showMessageDialog(
 				    null,
-				    "Exception: " + e1.getMessage()  ,"Changes are irretrievably deleted",JOptionPane.ERROR_MESSAGE);
-			
+				    "Exception occured: " + e1.getMessage()  ,"Changes are deleted",JOptionPane.ERROR_MESSAGE);
+			Reporter.report(e1);
+			e1.printStackTrace();
 			myFrame.dispose();
 			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
 			prefs.clearRhapsodyModelElement(myGuid);
@@ -1325,8 +1336,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 	
 	public boolean textChanged()
 	{
-		List<String> editorLines = ASTHelper.getLines(myTextArea.getText());
-		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody());
+		List<String> editorLines = ASTHelper.getLines(myTextArea.getText(), true);
+		List<String> bodyLines = ASTHelper.getLines(mySelectedOperation.getBody(), true);
 		try 
 		{
 			if((bodyLines==null)||(editorLines==null))
@@ -1334,6 +1345,12 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 				return false;
 			}
 			Patch<String> patch = DiffUtils.diff(bodyLines, editorLines);
+			List<AbstractDelta<String>> abstractDeltas = patch.getDeltas();
+			for(AbstractDelta<String> delta : abstractDeltas)
+			{
+				System.out.println("Source: " + delta.getSource() + "  Target: " + delta.getTarget());
+			}
+			
 			return(patch.getDeltas().isEmpty()==false);
 		} 
 		catch (Exception e) {

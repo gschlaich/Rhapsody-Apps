@@ -152,9 +152,9 @@ public class COperationalRoundtrip implements ActionListener
 
 				foundOperations++;
 
-				List<String> sourceLines = ASTHelper.getLines(sourceCode);
+				List<String> sourceLines = ASTHelper.getLines(sourceCode, false);
 
-				List<String> bodyLines = ASTHelper.getLines(operation.getBody());
+				List<String> bodyLines = ASTHelper.getLines(operation.getBody(), false);
 
 				if (bodyLines == null)
 				{
@@ -306,8 +306,8 @@ public class COperationalRoundtrip implements ActionListener
 		builder.inlineDiffByWord(true);
 		DiffRowGenerator generator = builder.build();
 		String sourceCode = ASTHelper.getSourceFromMap(myFunctions, operation);
-		List<String> sourceLines = ASTHelper.getLines(sourceCode);
-		List<String> bodyLines = ASTHelper.getLines(operation.getBody());
+		List<String> sourceLines = ASTHelper.getLines(sourceCode, false);
+		List<String> bodyLines = ASTHelper.getLines(operation.getBody(), false);
 
 		if (sourceLines == null)
 		{

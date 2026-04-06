@@ -40,7 +40,7 @@ public class DiffParser extends AbstractParser {
 	public DiffParser(String aOrigDoc, Gutter aGutter) 
 	{
 		myResult = new DefaultParseResult(this);
-		myOrigLines = ASTHelper.getLines(aOrigDoc);
+		myOrigLines = ASTHelper.getLines(aOrigDoc, false);
 		myGutter = aGutter;
 		myChangedIcon = RhapsodyOperation.getIcon("RhapsodyIcons_111.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
@@ -49,7 +49,7 @@ public class DiffParser extends AbstractParser {
 	
 	public void update(String aOrigDoc)
 	{
-		myOrigLines = ASTHelper.getLines(aOrigDoc);
+		myOrigLines = ASTHelper.getLines(aOrigDoc, false);
 		myResult.clearNotices();
 		for(GutterIconInfo info:myInfos)
 		{
@@ -84,7 +84,7 @@ public class DiffParser extends AbstractParser {
 			e.printStackTrace();
 		}
 		
-	    List<String> currentLines = ASTHelper.getLines(currentDoc);
+	    List<String> currentLines = ASTHelper.getLines(currentDoc, false);
 	       
 	    try 
 	    {

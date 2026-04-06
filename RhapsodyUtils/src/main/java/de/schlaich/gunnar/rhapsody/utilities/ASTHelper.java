@@ -802,7 +802,7 @@ public class ASTHelper
 		return qualifiedName.getLastName().toString();
 	}
 
-	public static List<String> getLines(String aText)
+	public static List<String> getLines(String aText, boolean aChangeTabsToSpaces)
 	{
 		List<String> ret = new ArrayList<String>();
 		ret.add("");
@@ -825,10 +825,16 @@ public class ASTHelper
 					continue;
 				}
 				
-				//line.replaceAll( "\0x09", "    ");
-				
-				//line = line.trim();
-				ret.add(line);
+				if(aChangeTabsToSpaces)
+				{
+					String result = line.replaceAll( "\t", "    ");
+					ret.add(result);
+					
+				}
+				else
+				{
+					ret.add(line);
+				}
 			}
 		}
 		catch (IOException e)

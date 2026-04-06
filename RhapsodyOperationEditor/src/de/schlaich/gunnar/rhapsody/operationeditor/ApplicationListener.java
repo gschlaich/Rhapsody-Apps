@@ -76,8 +76,8 @@ public class ApplicationListener extends RPApplicationListener {
 	
 	public boolean textChanged()
 	{
-		List<String> editorLines = ASTHelper.getLines(myTextarea.getText());
-		List<String> bodyLines = ASTHelper.getLines(myOperation.getBody());
+		List<String> editorLines = ASTHelper.getLines(myTextarea.getText(),false);
+		List<String> bodyLines = ASTHelper.getLines(myOperation.getBody(), false);
 		try 
 		{
 			if((bodyLines==null)||(editorLines==null))
@@ -109,9 +109,7 @@ public class ApplicationListener extends RPApplicationListener {
 			{
 				System.exit(0);
 			}
-			
-			
-			
+	
 		}
 		return false;
 	}
@@ -197,7 +195,8 @@ public class ApplicationListener extends RPApplicationListener {
 		Thread elementChangeThread = new Thread(new Runnable() {
 			
 			@Override
-			public void run() {
+			public void run() 
+			{
 				
 				String[] GUIDsArray = GUIDs.split(",");
 				

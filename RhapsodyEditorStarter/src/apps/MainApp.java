@@ -28,6 +28,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 //import org.apache.commons.imaging.Imaging;
 
 import com.ibm.rhapsody.apps.*;
+import com.ibm.rhapsody.apps.utils.Reporter;
 import com.telelogic.rhapsody.core.*;
 
 import de.schlaich.gunnar.rhapsody.completionprovider.ClassifierCompletionProvider;
@@ -86,9 +87,9 @@ public class MainApp extends App implements HistoryControl
 			}
 		}
 		
-	
+		Reporter.report("Build date: " + getBuildDate());
 		
-		rhapsody.writeToOutputWindow("Log", "Build date: " + getBuildDate() + "\n");
+		//rhapsody.writeToOutputWindow("Log", "Build date: " + getBuildDate() + "\n");
 		
 		LoadInIDE loadInIde = LoadInIDE.Instance(rhapsody);
 
@@ -96,10 +97,8 @@ public class MainApp extends App implements HistoryControl
 		{
 			myConnectingString = "develop";
 			if (prefs.isStarted(myConnectingString))
-			{
-				// editorstarter is already running...
-				// rhapsody.writeToOutputWindow("Log", "EditorStarter is already running");
-				println("EditorStarter is already running");
+			{	
+				Reporter.report("EditorStarter is already running");
 				return;
 			}
 
