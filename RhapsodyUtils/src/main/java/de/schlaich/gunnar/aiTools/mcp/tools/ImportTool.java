@@ -87,6 +87,8 @@ public class ImportTool extends Tool
 	public Object call(Map<String, Object> args) throws Exception
 	{
 		
+		trace ("import called with args: " + args.toString());
+		
 		String modelJson = (String) args.get("modelJson");
 		String targetGUID = (String) args.get("TargetGUID");
 		

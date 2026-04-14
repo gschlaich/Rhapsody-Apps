@@ -48,6 +48,7 @@ public class ReferencesTool extends Tool
 	@Override
 	public Object call(Map<String, Object> args) throws Exception
 	{
+		trace("references called with args: " + args.toString());
 		String guid = (String) args.get("Id");
 		List<IRPModelElement> relations = rh.findReferences(guid);
 		List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();

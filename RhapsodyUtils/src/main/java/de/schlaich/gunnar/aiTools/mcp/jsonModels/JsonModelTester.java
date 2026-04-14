@@ -155,7 +155,7 @@ public class JsonModelTester
 //		}
 //		result = sb.toString();
 		
-		trace(result);
+		//trace(result);
 		return result;
 	}
 

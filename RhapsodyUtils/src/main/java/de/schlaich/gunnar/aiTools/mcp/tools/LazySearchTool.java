@@ -10,17 +10,17 @@ import java.util.function.Consumer;
 /**
  * Lazy/On-Demand Suche ohne Vollindex.
  *
- * Argumente (alle optional außer query): - query : String (erforderlich) -
+ * Argumente (alle optional auï¿½er query): - query : String (erforderlich) -
  * top_k : int (Default 20) - timeout_ms : long (Default 250) - kinds :
- * Array<String> (z. B. ["Class","Block"]) – Filter auf MetaClass - stereotypes
- * : Array<String> – Filter, wenn Element Stereotypnamen enthält - under :
- * String – Qualified-Name-Präfix als Suchwurzel (Subbaum) - includeFeatures :
- * boolean – in Class-Features absteigen (Default false) - offset : int – Anzahl
- * bereits akzeptierter Treffer (für Pagination)
+ * Array<String> (z. B. ["Class","Block"]) ï¿½ Filter auf MetaClass - stereotypes
+ * : Array<String> ï¿½ Filter, wenn Element Stereotypnamen enthï¿½lt - under :
+ * String ï¿½ Qualified-Name-Prï¿½fix als Suchwurzel (Subbaum) - includeFeatures :
+ * boolean ï¿½ in Class-Features absteigen (Default false) - offset : int ï¿½ Anzahl
+ * bereits akzeptierter Treffer (fï¿½r Pagination)
  *
- * Rückgabe: { items: [ {id,kind,name,qualifiedName,stereotype} ... ],
+ * Rï¿½ckgabe: { items: [ {id,kind,name,qualifiedName,stereotype} ... ],
  * truncated: boolean, // true, wenn per timeout/Limit abgebrochen visited: int,
- * // besuchte Knoten next_offset: int // offset + items.length (für naive
+ * // besuchte Knoten next_offset: int // offset + items.length (fï¿½r naive
  * Pagination) }
  */
 public class LazySearchTool extends Tool
@@ -111,11 +111,20 @@ public class LazySearchTool extends Tool
 		List<Map<String, Object>> hits = new ArrayList<Map<String, Object>>();
 		List<IRPModelElement> results = rh.searchElements(query, kinds, SearchFindAsEnum.RP_SEARCH_WILDCARD);
 		
+		int count = 0;
+		
 		for (IRPModelElement el : results)
 		{
 			Map<String, Object> m = rh.serializeToJsonObject(el, true);
 
 			hits.add(m);
+			
+			count++;
+			if (count >= topK)
+			{
+				break;
+			}
+			
 		}
 		
 		
@@ -123,7 +132,7 @@ public class LazySearchTool extends Tool
 
 //		if ((kinds.isEmpty() == false) && (under == null || under.isEmpty()))
 //		{
-//			// wenn Filter, aber kein Startknoten, dann auf Top-Level beschränken
+//			// wenn Filter, aber kein Startknoten, dann auf Top-Level beschrï¿½nken
 //			List<IRPModelElement> found = new ArrayList<>();
 //
 //			for (String k : kinds)

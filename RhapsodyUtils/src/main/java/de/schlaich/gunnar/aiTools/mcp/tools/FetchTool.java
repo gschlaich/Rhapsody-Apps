@@ -53,6 +53,7 @@ public class FetchTool extends Tool
 	@Override
 	public Object call(Map<String, Object> args)
 	{
+		trace("fetch called with args: " + args.toString());
 		List<?> ids = (List<?>) args.get("ids");
 		List<Map<String, Object>> out = new ArrayList<Map<String, Object>>();
 		for (Object idObj : ids)

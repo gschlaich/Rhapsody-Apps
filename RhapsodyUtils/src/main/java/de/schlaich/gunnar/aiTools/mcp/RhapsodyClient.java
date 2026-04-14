@@ -488,6 +488,7 @@ public class RhapsodyClient
 		query.setSearchText(aSearchString);
 		query.addSearchScope(project);
 		query.setSearchFindAsOption(aSearchOption);
+		
 
 		List<IRPModelElement> results = searchManager.search(query).toList();
 

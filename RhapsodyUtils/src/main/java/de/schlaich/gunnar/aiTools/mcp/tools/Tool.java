@@ -53,7 +53,7 @@ public abstract class Tool implements McpProtocol.McpTool
 			return;
 		}
 
-		aMessage = getDerivedClassName() + ": " + aMessage;
+		aMessage = "Tool " + getDerivedClassName() + ": " + aMessage;
 
 		myTraceAction.accept(aMessage);
 	}
