@@ -396,7 +396,9 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		{
 			okButton.setEnabled(false);			
 			applyButton.setEnabled(false);
-			
+			revertButton.setEnabled(false);
+			formatButton.setEnabled(false);
+			roundTripButton.setEnabled(false);
 		}
 	
 		myApplication = rhapsody;
@@ -1237,7 +1239,8 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		if(command.equals("revert"))
 		{
 			
-			if(textChanged())
+			
+			if((mySelectedOperation.isReadOnly()==0) && textChanged())
 			{
 				int n = JOptionPane.showConfirmDialog(
 					    null,
@@ -1265,11 +1268,14 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		}
 		if(command.equals("format"))
 		{
-			//EditorCodeFormatter f = new EditorCodeFormatter();
-			String body = myTextArea.getText();
-			//String formatted = f.format(body);
-			String formatted = StaticCodeAnalysis.formatString(body);
-			myTextArea.setText(formatted);
+			if(mySelectedOperation.isReadOnly()==0)
+			{
+
+				String body = myTextArea.getText();
+			
+				String formatted = StaticCodeAnalysis.formatString(body);
+				myTextArea.setText(formatted);
+			}
 			
 		}
 		if(command.equals("IDE"))
