@@ -1141,7 +1141,10 @@ public class CUSMPlugin extends RPUserPlugin
 				JsonModelTester tester = JsonModelTester.Instance(myRhapsody, this::trace);
 
 				String schema = tester.getJsonSchema(modelElement);
-				trace("JSON Schema: " + schema);
+				StringSelection stringSelection = new StringSelection(schema);
+				
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				clipboard.setContents(stringSelection, null);
 
 			}
 			return;

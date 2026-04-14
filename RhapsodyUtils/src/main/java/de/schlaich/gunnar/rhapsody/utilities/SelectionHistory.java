@@ -23,6 +23,8 @@ public class SelectionHistory extends RPApplicationListener
 	
 	private Stack<IRPModelElement> myHistoryStack = new Stack<IRPModelElement>();
 	private Stack<IRPModelElement> myForwardStack = new Stack<IRPModelElement>();
+	
+	private boolean isNavigating = false;
 
 	public SelectionHistory(Consumer<String> aTraceAction, IRPApplication aRhapsody)
 	{
@@ -47,6 +49,7 @@ public class SelectionHistory extends RPApplicationListener
 	public void next()
 	{
 		
+		isNavigating = true;
 		if(myForwardStack.isEmpty())
 		{
 			trace("Forward stack is empty");
@@ -64,10 +67,12 @@ public class SelectionHistory extends RPApplicationListener
 		selection.addItem(element);
 		trace(" Next: Selected: " + element.getDisplayName());
 		myRhapsody.selectModelElements(selection);
+		addToHistory(element);
 	}
 	
 	public void back()
 	{
+		isNavigating = true;
 		if(myHistoryStack.isEmpty())
 		{
 			trace("Back stack is empty");
@@ -83,6 +88,7 @@ public class SelectionHistory extends RPApplicationListener
 		myForwardStack.push(element);
 		selection.addItem(element);
 		trace("Back: Selected: " + element.getDisplayName());
+		trace("Back stack size: " + myHistoryStack.size() + " Forward stack size: " + myForwardStack.size());
 		myRhapsody.selectModelElements(selection);
 	}
 
@@ -140,6 +146,12 @@ public class SelectionHistory extends RPApplicationListener
 	{
 		if (myRhapsody == null)
 		{
+			return false;
+		}
+		if(isNavigating)
+		{
+			trace("Navigation in progress. Skip selection change.");
+			isNavigating = false;
 			return false;
 		}
 

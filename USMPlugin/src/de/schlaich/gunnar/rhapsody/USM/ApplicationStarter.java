@@ -94,7 +94,8 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunAllBatchesCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ListMetaClassesCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonPasteCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.NextCmd);
 		
 	}
 
