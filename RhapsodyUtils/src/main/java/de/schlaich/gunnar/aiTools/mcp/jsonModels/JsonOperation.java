@@ -173,7 +173,7 @@ public class JsonOperation extends JsonInterfaceItem
 				}
 				arguments += jsonArgument.name;
 				arguments += ", ";
-				JsonModelElementBase jsonArgumentType = jsonArgument.getType();
+				JsonModelElementBase jsonArgumentType = jsonArgument.getvType();
 				if (jsonArgumentType != null)
 				{
 					arguments += jsonArgumentType.name;

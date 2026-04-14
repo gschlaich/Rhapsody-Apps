@@ -404,7 +404,7 @@ public class JsonModelFactory
 			ret = new JsonModelElementBase(aModelElement);
 		}
 
-		trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );
+		//trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );
 		return ret;
 
 	}

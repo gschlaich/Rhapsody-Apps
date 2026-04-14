@@ -43,10 +43,12 @@ public final class HttpJsonRpcBridge
 
 	public void start(int port) throws IOException
 	{
+		trace("Starting HTTP JSON-RPC Bridge on port " + port);
 		server = HttpServer.create(new InetSocketAddress("127.0.0.1", port), 0);
 		server.createContext("/rpc", this::handle);
 		server.setExecutor(null);
 		server.start();
+		
 	}
 
 	public void stop()
@@ -104,13 +106,13 @@ public final class HttpJsonRpcBridge
 			{
 				trace("Initialize received");
 				
-				// Request enthält u.a. protocolVersion, clientInfo, capabilities (des Clients)
+				// Request enthï¿½lt u.a. protocolVersion, clientInfo, capabilities (des Clients)
 			    // -> Wir antworten mit serverInfo und unseren capabilities
 			    JsonObject respCaps = new JsonObject();
 
 			    // Tools-Capabilities (empfohlen)
 			    JsonObject toolsCaps = new JsonObject();
-			    // Ob wir Tool-Liste-Änderungen pushen könnten – hier false:
+			    // Ob wir Tool-Liste-ï¿½nderungen pushen kï¿½nnten ï¿½ hier false:
 			    JsonObject listChanged = new JsonObject();
 			    listChanged.addProperty("enabled", false);
 			    toolsCaps.add("listChanged", listChanged);
@@ -118,7 +120,7 @@ public final class HttpJsonRpcBridge
 
 			    // OPTIONAL: Logging-Capability anbieten (dann muss logging/setLevel akzeptiert werden)
 			    //JsonObject loggingCaps = new JsonObject();
-			    // keine speziellen Felder nötig – das Vorhandensein signalisiert Support
+			    // keine speziellen Felder nï¿½tig ï¿½ das Vorhandensein signalisiert Support
 			    //respCaps.add("logging", loggingCaps);
 
 			    JsonObject serverInfo = new JsonObject();
@@ -152,7 +154,7 @@ public final class HttpJsonRpcBridge
 			else if ("notifications/initialized".equals(method))
 			{
 			    // MCP-Clients schicken das direkt nach dem Start.
-			    // Kein Ergebnis nötig; einfach acknowledge.
+			    // Kein Ergebnis nï¿½tig; einfach acknowledge.
 				trace("Client initialized notification received");
 			    result = Collections.singletonMap("ack", true);
 			}

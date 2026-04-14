@@ -8,7 +8,9 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPVariable;
 
-public class JsonVariable extends JsonModelElement
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
+
+public class JsonVariable extends JsonUnit
 {
 
 	/*
@@ -27,7 +29,7 @@ public class JsonVariable extends JsonModelElement
 	@JsonProperty("defaultValue")
 	protected String defaultValue = null;
 
-	@JsonProperty("type")
+	@JsonProperty("vtype")
 	protected JsonModelElementBase vType = null;
 
 	@JsonProperty("valueSpecifications")
@@ -41,6 +43,7 @@ public class JsonVariable extends JsonModelElement
 		{
 			return;
 		}
+		
 
 		if (aModelElement instanceof IRPVariable)
 		{
@@ -49,15 +52,49 @@ public class JsonVariable extends JsonModelElement
 			declaration = theVar.getDeclaration();
 			defaultValue = theVar.getDefaultValue();
 
+			
 			if (theVar.getType() != null)
 			{
 				vType = new JsonModelElementBase(theVar.getType());
 			}
+			
 
 			valueSpecifications = convertToJsonModelElementBaseList(theVar.getValueSpecifications());
 		}
 
 	}
+	
+	@Override
+	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)
+	{
+		super.setAttributes(modelElement, project, importMode);
+
+		if (modelElement instanceof IRPVariable)
+		{
+			IRPVariable theVar = (IRPVariable) modelElement;
+
+			if (isSet(declaration))
+			{
+				theVar.setDeclaration(declaration);
+			}
+			else
+			{
+				if (vType != null)
+				{
+
+					theVar.setType((IRPClassifier) vType.getReference(project));
+				}
+
+			}
+
+			if (isSet(defaultValue))
+			{
+				theVar.setDefaultValue(defaultValue);
+			}
+		}
+	}
+	
+	/*
 
 	public IRPModelElement toModelElement(JsonModelElementBase parent, IRPProject project, ImportMode aImportMode)
 	{
@@ -102,7 +139,9 @@ public class JsonVariable extends JsonModelElement
 
 	}
 	
-	public JsonModelElementBase getType()
+	*/
+	
+	public JsonModelElementBase getvType()
 	{
 		return vType;
 	}
@@ -111,5 +150,9 @@ public class JsonVariable extends JsonModelElement
 	{
 		// TODO Auto-generated constructor stub
 	}
+	
+	
 
 }
+
+	
