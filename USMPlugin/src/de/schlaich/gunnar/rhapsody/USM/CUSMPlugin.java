@@ -129,6 +129,10 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String ListMetaClassesCmd = "List MetaClasses";
 	public static final String NextCmd = "Next";
 	public static final String BackCmd = "Back";
+	public static final String NextChangedCmd = "Next Changed";
+	public static final String BackChangedCmd = "Back Changed";
+	public static final String ShowGUIDCmd = "Show GUID";
+	public static final String ShowChangeHistoryCmd = "Show Change History";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -201,6 +205,8 @@ public class CUSMPlugin extends RPUserPlugin
 		mySelectionHistory = new SelectionHistory(this::trace, myRhapsody);
 		
 		mySelectionHistory.connect(myRhapsody);
+		
+		activeProject.setNotifyPluginOnElementsChanged(1);
 		
 		
 		
@@ -1194,6 +1200,39 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 		}
 		
+		if (menuItem.contains(NextChangedCmd))
+		{
+			mySelectionHistory.nextChanged();
+			return;
+		}
+		
+		if (menuItem.contains(BackChangedCmd))
+		{
+			mySelectionHistory.backChanged();
+			return;
+		}
+		
+		if (menuItem.contains(ShowGUIDCmd))
+		{
+			if (selected == null)
+			{
+				trace("No element selected");
+				return;
+			}
+			trace("GUID of " + selected.getName() + ": " + selected.getGUID());
+			return;
+		}
+		
+		if (menuItem.contains(ShowChangeHistoryCmd))
+		{
+			if (selected == null)
+			{
+				trace("No element selected");
+				return;
+			}
+			mySelectionHistory.showChangeHistory();
+			return;
+		}
 
 		trace("menue item unknown");
 

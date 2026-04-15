@@ -1,7 +1,9 @@
 package de.schlaich.gunnar.rhapsody.utilities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Stack;
 import java.util.function.Consumer;
 
@@ -17,12 +19,15 @@ public class SelectionHistory extends RPApplicationListener
 
 	private Consumer<String> myTraceAction = null;
 	private IRPApplication myRhapsody = null;
+	private IRPProject myProject = null;
 	
-	private List<IRPModelElement> myPushHistory = new ArrayList<IRPModelElement>();
-	private List<IRPModelElement> myPopHistory = new ArrayList<IRPModelElement>();
+	private Stack<String> myHistoryStack = new Stack<String>();
+	private Stack<String> myForwardStack = new Stack<String>();
 	
-	private Stack<IRPModelElement> myHistoryStack = new Stack<IRPModelElement>();
-	private Stack<IRPModelElement> myForwardStack = new Stack<IRPModelElement>();
+	private Stack<String> myLastChangesStack = new Stack<String>();
+	private Stack<String> myLastChangesForwardStack = new Stack<String>();
+	
+	
 	
 	private boolean isNavigating = false;
 
@@ -30,6 +35,7 @@ public class SelectionHistory extends RPApplicationListener
 	{
 		myRhapsody = aRhapsody;
 		myTraceAction = aTraceAction;
+		myProject = myRhapsody.activeProject();
 		trace("Initialized");
 	}
 
@@ -57,8 +63,8 @@ public class SelectionHistory extends RPApplicationListener
 		}
 		
 		IRPCollection selection = myRhapsody.createNewCollection();
-		
-		IRPModelElement element = myForwardStack.pop();
+	
+		IRPModelElement element = pop(myForwardStack);
 		
 		if(element==null)
 		{
@@ -79,17 +85,152 @@ public class SelectionHistory extends RPApplicationListener
 			return;
 		}
 		IRPCollection selection = myRhapsody.createNewCollection();
-		IRPModelElement element = myHistoryStack.pop();
-		element = myHistoryStack.pop();
+		IRPModelElement element = pop(myHistoryStack);
+		element = pop(myHistoryStack);
 		if(element==null)
 		{
 			return;
 		}
-		myForwardStack.push(element);
+		push(myForwardStack, element);
 		selection.addItem(element);
 		trace("Back: Selected: " + element.getDisplayName());
 		trace("Back stack size: " + myHistoryStack.size() + " Forward stack size: " + myForwardStack.size());
 		myRhapsody.selectModelElements(selection);
+	}
+	
+	private IRPModelElement pop(Stack<String> stack)
+	{
+		if(stack.isEmpty())
+		{
+			return null;
+		}
+		
+		String elementGUID = stack.pop();
+		
+		IRPModelElement element = myProject.findElementByGUID(elementGUID);
+		
+		if(element == null)
+		{
+			return null;
+		}
+		
+		
+		return element;
+		
+		
+	}
+	
+	private boolean push(Stack<String> stack, IRPModelElement element)
+	{
+		if(element == null)
+		{
+			return false;
+		}
+		
+		String elementGUID = element.getGUID();
+		
+		if(stack.isEmpty()==false)
+		{
+			String topElementGUID = stack.peek();
+			if(topElementGUID.equals(elementGUID))
+			{
+				return false;
+			}
+		}
+
+		stack.push(elementGUID);
+		return true;
+	}
+
+	public void nextChanged()
+	{
+		IRPModelElement element = pop(myLastChangesForwardStack);
+		if(element==null)
+		{
+			return;
+		}
+		push(myLastChangesStack, element);
+		IRPCollection selection = myRhapsody.createNewCollection();
+		selection.addItem(element);
+		trace("Next Changed: Selected: " + element.getDisplayName());
+	}
+	
+	public void backChanged()
+	{
+		IRPModelElement element = pop(myLastChangesStack);
+		if(element==null)
+		{
+			return;
+		}
+		push(myLastChangesForwardStack, element);
+		IRPCollection selection = myRhapsody.createNewCollection();
+		selection.addItem(element);
+		trace("Back Changed: Selected: " + element.getDisplayName());
+		myRhapsody.selectModelElements(selection);
+	}
+
+	
+	@Override
+	public boolean onElementsChanged(String elementsGUIDs)
+	{
+		
+		if (elementsGUIDs.trim().length() == 0)
+			return true;
+	
+		String[] GUIDsArray = elementsGUIDs.split(",");
+		
+		IRPProject rhpProj = myRhapsody.activeProject();
+		String elementsChanged = "";
+		
+		List<IRPModelElement> changedElements = new ArrayList<IRPModelElement>();
+		
+		for (String guid : GUIDsArray)
+		{
+			IRPModelElement currElement = rhpProj.findElementByGUID(guid.trim());
+			if (currElement != null)
+			{
+				changedElements.add(currElement);
+			}
+			else
+			{
+				trace("Could not find element with GUID: " + guid);
+			}
+		}
+		
+		
+		
+		// Build once for O(1) membership checks when filtering nested changed elements.
+		Set<IRPModelElement> changedElementSet = new HashSet<IRPModelElement>(changedElements);
+
+		for (IRPModelElement changedElement : changedElements)
+		{
+			boolean addToStack = true;
+			List<IRPModelElement> nestedElements = changedElement.getNestedElements().toList();
+
+			for (IRPModelElement nestedElement : nestedElements)
+			{
+				if (changedElementSet.contains(nestedElement))
+				{
+					addToStack = false;
+					break;
+				}
+			}
+
+			if (addToStack)
+			{
+				trace("Adding to changes stack: " + changedElement.getDisplayName());
+				addToChangeHistory(changedElement);
+			}
+			else
+			{
+				trace("Skipped adding to changes stack (nested change): " + changedElement.getDisplayName());
+			}
+		}
+
+		
+		return true;
+		
+		
 	}
 
 	@Override
@@ -157,27 +298,56 @@ public class SelectionHistory extends RPApplicationListener
 
 		IRPModelElement element = myRhapsody.getSelectedElement();
 		
-		if(myHistoryStack.isEmpty()==false)
-		{
-			IRPModelElement top = myHistoryStack.peek();
-			if(top.equals(element)==false)
-			{
-				addToHistory(element);
-			}
-		}
-		else
-		{
-			addToHistory(element);
-		}
+		addToHistory(element);
 
 		return false;
 	}
 	
 	private void addToHistory(IRPModelElement element)
 	{
-		myHistoryStack.push(element);
+		if(push(myHistoryStack, element)==false)
+		{
+			return;
+		}
 		myForwardStack.clear();
-		trace("Selected: " + element.getDisplayName() + "Stack size: " + myHistoryStack.size());
+		
+		trace ("Added to history: " + element.getDisplayName() + " Back stack size: " + myHistoryStack.size());
+		
+	}
+	
+	private void addToChangeHistory(IRPModelElement element)
+	{
+		if(push(myLastChangesStack, element)==false)
+		{
+			return;
+		}
+		myLastChangesForwardStack.clear();
+		
+		trace ("Added to changes history: " + element.getDisplayName() + " Back stack size: " + myLastChangesStack.size());
+	}
+	
+	public boolean afterProjectOpen(IRPProject project)
+	{
+		myProject = project;
+		trace("Project opened: " + project.getName());
+		return true;
+	}
+	
+	public void showChangeHistory()
+	{
+		trace("Change History:");
+		for(String guid : myLastChangesStack)
+		{
+			IRPModelElement element = myProject.findElementByGUID(guid);
+			if(element != null)
+			{
+				trace(" - " + element.getDisplayName());
+			}
+			else
+			{
+				trace(" - Could not find element with GUID: " + guid);
+			}
+		}
 	}
 
 }
