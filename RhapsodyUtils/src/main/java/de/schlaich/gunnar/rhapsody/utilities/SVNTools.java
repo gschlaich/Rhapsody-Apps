@@ -164,7 +164,7 @@ public class SVNTools
 		{
 			myRevisionDatabase = new RevisionDatabase(getTempDir(), aTraceAction);
 		}
-		catch (SQLException e)
+		catch(SQLException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -182,7 +182,8 @@ public class SVNTools
 		return false;
 	}
 
-	public void showChangeList(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionStart, int aRevisionEnd)
+	public void showChangeList(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionStart,
+			int aRevisionEnd)
 	{
 		List<logRow> changesUnit = readHistory(aSelected, aLimit, aIsMonth, aRevisionStart, aRevisionEnd);
 
@@ -289,7 +290,8 @@ public class SVNTools
 		}
 
 		// Spaltennamen f�r die Tabelle
-		String[] columnNames = { "Revision", "Author", "Date", "Jira", "Changed Elements" };
+		String[] columnNames =
+		{ "Revision", "Author", "Date", "Jira", "Changed Elements" };
 
 		DefaultTableModel tableModel = new DefaultTableModel(data, columnNames);
 		JTable table = new JTable(tableModel);
@@ -376,7 +378,7 @@ public class SVNTools
 							{
 								java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
 							}
-							catch (Exception ex)
+							catch(Exception ex)
 							{
 								ex.printStackTrace();
 							}
@@ -434,7 +436,7 @@ public class SVNTools
 
 							compareOperationVersions(operation, previousRevision, currentRevision);
 						}
-						else if(element instanceof IRPAttribute)
+						else if (element instanceof IRPAttribute)
 						{
 							String revString = (String) table.getValueAt(row, 0);
 
@@ -516,10 +518,12 @@ public class SVNTools
 
 	}
 
-	public void showChangeStatistic(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom, int aRevisionTo)
+	public void showChangeStatistic(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom,
+			int aRevisionTo)
 	{
 
-		Map<IRPModelElement, Integer> changedElementsMap = getChangedElements(aSelected, aLimit, aIsMonth, aRevisionFrom, aRevisionTo);
+		Map<IRPModelElement, Integer> changedElementsMap = getChangedElements(aSelected, aLimit, aIsMonth,
+				aRevisionFrom, aRevisionTo);
 
 		if (changedElementsMap.size() == 0)
 		{
@@ -543,7 +547,7 @@ public class SVNTools
 
 		blameItem.setEnabled(false);
 		blameItem.setVisible(false);
-		
+
 		diffItem.setEnabled(false);
 		diffItem.setVisible(false);
 
@@ -594,7 +598,7 @@ public class SVNTools
 
 			}
 		});
-		
+
 		diffItem.addActionListener(new ActionListener()
 		{
 			@Override
@@ -604,7 +608,6 @@ public class SVNTools
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 				JTreeNode node = (JTreeNode) selectedNode.getUserObject();
 				IRPModelElement element = node.getElement();
-				
 
 				if (element instanceof IRPOperation)
 				{
@@ -675,10 +678,10 @@ public class SVNTools
 				JTreeNode node = (JTreeNode) selectedNode.getUserObject();
 				IRPModelElement element = node.getElement();
 				int changes = node.getChanges();
-				
+
 				if (element instanceof IRPOperation)
 				{
-					if((changes == 1)&&((aRevisionFrom > 0)||(aRevisionTo > 0)))
+					if ((changes == 1) && ((aRevisionFrom > 0) || (aRevisionTo > 0)))
 					{
 						diffItem.setEnabled(true);
 						diffItem.setVisible(true);
@@ -688,13 +691,13 @@ public class SVNTools
 					else
 					{
 						diffItem.setEnabled(false);
-						diffItem.setVisible(false);	
+						diffItem.setVisible(false);
 						blameItem.setEnabled(true);
 						blameItem.setVisible(true);
 					}
-						
+
 				}
-				
+
 				else if (element instanceof IRPAttribute)
 				{
 					if ((changes == 1) && ((aRevisionFrom > 0) || (aRevisionTo > 0)))
@@ -711,13 +714,13 @@ public class SVNTools
 					blameItem.setEnabled(false);
 					blameItem.setVisible(false);
 				}
-				
+
 				else
 				{
 					blameItem.setEnabled(false);
 					blameItem.setVisible(false);
 					diffItem.setEnabled(false);
-					diffItem.setVisible(false);	
+					diffItem.setVisible(false);
 				}
 
 				popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -871,7 +874,7 @@ public class SVNTools
 			dbTargetFile.setReadable(true);
 
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			e.printStackTrace();
 			return false;
@@ -1209,7 +1212,7 @@ public class SVNTools
 
 			int exitCode = p.waitFor();
 		}
-		catch (InterruptedException | IOException e)
+		catch(InterruptedException | IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -1655,7 +1658,7 @@ public class SVNTools
 
 					}
 				}
-				catch (SQLException e)
+				catch(SQLException e)
 				{
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -1680,7 +1683,7 @@ public class SVNTools
 			 */
 		}
 
-		if (aRevisionSource > 0)
+		if (aRevisionSource >= 0)
 		{
 			sbsFile = getVersion(aSelected, aRevisionSource);
 		}
@@ -1758,7 +1761,7 @@ public class SVNTools
 			}
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace(e.toString());
 		}
@@ -1769,6 +1772,11 @@ public class SVNTools
 
 	private void addToDatabase(int aRevision, List<IRPModelElement> aModelelements)
 	{
+		if(aRevision==0)
+		{
+			trace("Local changes, do not add to database");
+			return;
+		}
 		trace("Add elements to database: " + aRevision);
 		if (myRevisionDatabase != null)
 		{
@@ -1793,7 +1801,7 @@ public class SVNTools
 				}
 
 			}
-			catch (SQLException e)
+			catch(SQLException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -1862,7 +1870,7 @@ public class SVNTools
 				}
 			}
 		}
-		catch (SQLException e)
+		catch(SQLException e)
 		{
 			trace(e.toString());
 			e.printStackTrace();
@@ -1889,66 +1897,100 @@ public class SVNTools
 		File tempFile = null;
 
 		ProcessBuilder processBuilder = null;
+		String unitName = unit.getFullPathName();
+		unitName = unitName.replace("::", "_");
 
-		if (revision < 0)
+		File sbsTempDir = getSBSTempDir();
+
+		tempFile = new File(sbsTempDir, unitName + "_" + Integer.toString(revision) + ".sbs");
+		if (revision == 0)
 		{
-			processBuilder = new ProcessBuilder("svn", "cat", "-r", "HEAD", fileName);
-		}
-		else
-		{
-			processBuilder = new ProcessBuilder("svn", "cat", "-r", Integer.toString(revision), fileName);
-		}
-
-		processBuilder.redirectErrorStream(true);
-		processBuilder.directory(currentDirectory);
-		// trace("Current directory: " + processBuilder.directory().toString());
-
-		try
-		{
-
-			String unitName = unit.getFullPathName();
-			unitName = unitName.replace("::", "_");
-
-			File sbsTempDir = getSBSTempDir();
-
-			tempFile = new File(sbsTempDir, unitName + "_" + Integer.toString(revision) + ".sbs");
-
-			// tempFile = File.createTempFile(unitName, ".sbs", tempDir);
-
+			// local changes
 			if (tempFile.exists() == false)
 			{
 
-				tempFile.createNewFile();
-				Process process = processBuilder.start();
-				InputStream inputStream = process.getInputStream();
-				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-				BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
-
-				String line;
-				while ((line = reader.readLine()) != null)
+				File currentFileAbsolute = new File(currentDirectory, fileName).getAbsoluteFile();
+				
+				
+				if (currentFileAbsolute.exists() == false)
 				{
-					writer.write(line);
-					writer.newLine();
+					trace("Current file does not exist: " + currentFileAbsolute.toString());
+					return null;
 				}
-
-				writer.close();
-				reader.close();
-
-				int exitCode = process.waitFor();
-				if (exitCode == 0)
+				
+				try
 				{
-					trace("SVN cmd success " + tempFile.toString() + "  stored.");
+					Files.copy(currentFileAbsolute.toPath(), tempFile.toPath());
+					trace("Local version copied: " + tempFile.toString());
 				}
-				else
+				catch(IOException e)
 				{
-					trace("SVN cmd failed. Exit-Code: " + exitCode);
+					trace(e.toString());
+					trace("File: " + currentFile.toPath().toString());
+					trace("local directory: " + currentDirectory.toString());
+					e.printStackTrace();
 				}
 			}
-
 		}
-		catch (Exception e)
+		else
 		{
-			trace(e.toString());
+
+			if (revision < 0)
+			{
+				processBuilder = new ProcessBuilder("svn", "cat", "-r", "HEAD", fileName);
+			}
+			else
+			{
+				processBuilder = new ProcessBuilder("svn", "cat", "-r", Integer.toString(revision), fileName);
+			}
+
+			processBuilder.redirectErrorStream(true);
+			processBuilder.directory(currentDirectory);
+			// trace("Current directory: " + processBuilder.directory().toString());
+
+			try
+			{
+
+				// tempFile = new File(sbsTempDir, unitName + "_" + Integer.toString(revision) +
+				// ".sbs");
+
+				// tempFile = File.createTempFile(unitName, ".sbs", tempDir);
+
+				if (tempFile.exists() == false)
+				{
+
+					tempFile.createNewFile();
+					Process process = processBuilder.start();
+					InputStream inputStream = process.getInputStream();
+					BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+					BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+					String line;
+					while ((line = reader.readLine()) != null)
+					{
+						writer.write(line);
+						writer.newLine();
+					}
+
+					writer.close();
+					reader.close();
+
+					int exitCode = process.waitFor();
+					if (exitCode == 0)
+					{
+						trace("SVN cmd success " + tempFile.toString() + "  stored.");
+					}
+					else
+					{
+						trace("SVN cmd failed. Exit-Code: " + exitCode);
+					}
+				}
+
+			}
+			catch(Exception e)
+			{
+				trace(e.toString());
+			}
 		}
 
 		return tempFile;
@@ -1968,7 +2010,8 @@ public class SVNTools
 		return lines.length > 0 ? lines[0] : null; // Pr�ft, ob �berhaupt eine Zeile vorhanden ist
 	}
 
-	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom, int aRevisionTo)
+	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom,
+			int aRevisionTo)
 	{
 		try
 		{
@@ -1980,12 +2023,6 @@ public class SVNTools
 				return null;
 			}
 
-//			if (myLogMap.containsKey(unit.getGUID()))
-//			{
-//				trace("Log already exists for " + unit.getName());
-//				return  myLogMap.get(unit.getGUID());
-//			}
-
 			String fileName = unit.getFilename();
 			String directory = unit.getCurrentDirectory();
 
@@ -1994,6 +2031,27 @@ public class SVNTools
 
 			// svn log --limit 10 --xml
 			ProcessBuilder processBuilder = null;
+
+			/// check for local changes
+			/// svn status PFE.sbs
+			///
+
+			processBuilder = new ProcessBuilder("svn", "status", fileName);
+			processBuilder.directory(currentDirectory);
+			Process statusProcess = processBuilder.start();
+			InputStream statusInputStream = statusProcess.getInputStream();
+			BufferedReader statusReader = new BufferedReader(new InputStreamReader(statusInputStream));
+			statusProcess.waitFor(1000, TimeUnit.MILLISECONDS);
+			boolean hasLocalChanges = false;
+			String statusLine;
+			while ((statusLine = statusReader.readLine()) != null)
+			{
+				if (statusLine.startsWith("M") || statusLine.startsWith("A") || statusLine.startsWith("D"))
+				{
+					hasLocalChanges = true;
+					break;
+				}
+			}
 
 			if (aLimit > 0)
 			{
@@ -2012,14 +2070,16 @@ public class SVNTools
 					// svn log -r {2022-12-23}:{2024-12-23} --xml PFE.sbs
 
 					processBuilder = new ProcessBuilder("svn", "log", "-r", dateString, "--xml", fileName);
+
 				}
 				else if (aRevisionFrom > 0)
 				{
 					// svn log --limit 10 --xml -r 1234 PFE.sbs
-					
-					processBuilder = new ProcessBuilder("svn", "log", "-r", Integer.toString(aRevisionTo)+":"+Integer.toString(aRevisionFrom) , "--limit",
+
+					processBuilder = new ProcessBuilder("svn", "log", "-r",
+							Integer.toString(aRevisionTo) + ":" + Integer.toString(aRevisionFrom), "--limit",
 							Integer.toString(aLimit), "--xml", fileName);
-					
+
 				}
 				else
 				{
@@ -2032,18 +2092,18 @@ public class SVNTools
 			{
 				processBuilder = new ProcessBuilder("svn", "log", "--xml", fileName);
 			}
-			
+
 			trace("Log Command: " + processBuilder.command().toString());
 			trace("Log Directory: " + currentDirectory.toString());
-			
+
 			processBuilder.directory(currentDirectory);
 
 			Process process = processBuilder.start();
 			InputStream inputStream = process.getInputStream();
 			InputStream errorStream = process.getErrorStream();
-			
+
 			process.waitFor(1000, TimeUnit.MILLISECONDS);
-			
+
 			if (errorStream.available() > 0)
 			{
 				BufferedReader errorReader = new BufferedReader(new InputStreamReader(errorStream));
@@ -2070,15 +2130,23 @@ public class SVNTools
 //				}
 //			}
 
+			List<logRow> ret = new ArrayList<logRow>();
 
-			List<logRow> ret = parseLog(inputStream);
+			if (hasLocalChanges)
+			{
+				logRow localChangeRow = new logRow("0", LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME), "",
+						"There are local changes.");
+				ret.add(localChangeRow);
+			}
+
+			ret.addAll(parseLog(inputStream));
 
 			myLogMap.put(unit.getGUID(), ret);
 
 			return ret;
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace(e.toString());
 			e.printStackTrace();
@@ -2101,13 +2169,11 @@ public class SVNTools
 
 		DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
 		DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-		
+
 		if (inputStream.available() <= 0)
 		{
 			return ret;
 		}
-		
-		
 
 		Document doc = dBuilder.parse(inputStream);
 
@@ -2156,7 +2222,7 @@ public class SVNTools
 								row.getJiraIssue());
 
 					}
-					catch (SQLException e)
+					catch(SQLException e)
 					{
 						trace(e.toString());
 						e.printStackTrace();
@@ -2194,7 +2260,7 @@ public class SVNTools
 			processBuilder.start();
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace(e.getMessage());
 		}
@@ -2238,7 +2304,8 @@ public class SVNTools
 		// add the changes to the table model
 		for (logRow row : changesUnit)
 		{
-			model.addRow(new Object[] { row.getRevision(), row.getAuthor(), row.getDateTime(), row.getJiraIssue() });
+			model.addRow(new Object[]
+			{ row.getRevision(), row.getAuthor(), row.getDateTime(), row.getJiraIssue() });
 		}
 
 		// create a table
@@ -2483,7 +2550,7 @@ public class SVNTools
 				trace(line);
 			}
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 
 		}
@@ -2524,7 +2591,7 @@ public class SVNTools
 				trace(line);
 			}
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace(e.getMessage());
 		}
@@ -2563,7 +2630,8 @@ public class SVNTools
 		return rhapsodyTempDir;
 	}
 
-	private enum actionEnum {
+	private enum actionEnum
+	{
 		added, removed, changed, unchanged
 	};
 
@@ -2679,7 +2747,7 @@ public class SVNTools
 			myReport = reportBuffer.toString();
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			trace(e.getMessage());
 		}
@@ -2777,7 +2845,7 @@ public class SVNTools
 				trace(line);
 			}
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			// TODO: handle exception
 		}
@@ -2860,16 +2928,14 @@ public class SVNTools
 
 		IRPAttribute attributeA = (IRPAttribute) elementA;
 		IRPAttribute attributeB = (IRPAttribute) elementB;
-		
+
 		showAttributeDiff(attributeA, attributeB, aRevisionA, aRevisionB);
-		
+
 		defaultProject.becomeActiveProject();
 		svnProjectA.close();
 		svnProjectB.close();
 
 		tempApp.quit();
-		
-		
 
 	}
 
@@ -2925,10 +2991,7 @@ public class SVNTools
 		}
 
 		String guid = aModelElement.getGUID();
-		
-		
-		
-		
+
 		IRPProject svnProjectA = newSvnProject(tempApp, fileA, rhapsodyTempDir, "ProjectA");
 
 		IRPModelElement elementA = svnProjectA.findElementByGUID(guid);
@@ -2958,15 +3021,14 @@ public class SVNTools
 		{
 			operationB = (IRPOperation) elementB;
 		}
-		
-		
+
 		if (aModelElement instanceof IRPOperation == false)
 		{
 			trace("Selected element is not an Operation");
 			tempApp.quit();
 			return;
 		}
-		
+
 		IRPOperation aOperation = (IRPOperation) aModelElement;
 
 		OperationDiff oDiff = new OperationDiff(guid);
@@ -3064,7 +3126,7 @@ public class SVNTools
 		{
 			Process p = processBuilder.start();
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			trace(e.getMessage());
 			return null;
@@ -3075,7 +3137,7 @@ public class SVNTools
 		{
 			Thread.sleep(1000);
 		}
-		catch (InterruptedException e)
+		catch(InterruptedException e)
 		{
 			trace(e.getMessage());
 			return null;
@@ -3306,7 +3368,7 @@ public class SVNTools
 				}
 
 			}
-			catch (Exception e)
+			catch(Exception e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -3377,7 +3439,8 @@ public class SVNTools
 	public void showBlameDialog(List<blameLine> blameLines, IRPOperation aOperation, List<OperationItem> aOperationList,
 			int aStartsWith)
 	{
-		String[] columnNames = { "Revision", "Author", "Date", "Line", "Source" };
+		String[] columnNames =
+		{ "Revision", "Author", "Date", "Line", "Source" };
 		Object[][] data = new Object[blameLines.size()][5];
 
 		for (int i = 0; i < blameLines.size(); i++)
@@ -3603,7 +3666,7 @@ public class SVNTools
 			processBuilder.start();
 
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -3750,53 +3813,51 @@ public class SVNTools
 
 		return svnProject;
 	}
-	
-	
-	
+
 	public boolean showAttributeDiff(IRPAttribute aAttributeA, IRPAttribute aAttributeB, int aRevisionA, int aRevisionB)
 	{
-		
+
 		WriterTemplateParser parser = new WriterTemplateParser(myTraceAction);
-		
+
 		String attributeAString = parser.parse(aAttributeA, true);
 		String attributeBString = parser.parse(aAttributeB, true);
-		
+
 		try
 		{
-		
-			File tempFileA = File.createTempFile(aAttributeA.getName()+"_"+aRevisionA+"_", ".cpp");
+
+			File tempFileA = File.createTempFile(aAttributeA.getName() + "_" + aRevisionA + "_", ".cpp");
 			BufferedWriter writer = new BufferedWriter(new FileWriter(tempFileA));
-		    writer.write(attributeAString);
-		    writer.close();
-		    
-		    File tempFileB = File.createTempFile(aAttributeB.getName()+"_"+aRevisionB+"_", ".cpp");
-		    writer = new BufferedWriter(new FileWriter(tempFileB));
-		    writer.write(attributeBString);
-		    writer.close();
-		    
-		    File ccrcFile = new File(System.getenv("OMROOT"), "etc\\ccrc_diff\\win32\\ccrc_cleardiffmrg.exe");
+			writer.write(attributeAString);
+			writer.close();
+
+			File tempFileB = File.createTempFile(aAttributeB.getName() + "_" + aRevisionB + "_", ".cpp");
+			writer = new BufferedWriter(new FileWriter(tempFileB));
+			writer.write(attributeBString);
+			writer.close();
+
+			File ccrcFile = new File(System.getenv("OMROOT"), "etc\\ccrc_diff\\win32\\ccrc_cleardiffmrg.exe");
 			if (ccrcFile.exists() == false)
 			{
 				trace("ClearCase diff tool not found");
 				return false;
 			}
-	
-			ProcessBuilder processBuilder = new ProcessBuilder(ccrcFile.getAbsolutePath(),
-					tempFileA.getAbsolutePath(), tempFileB.getAbsolutePath());
-	
+
+			ProcessBuilder processBuilder = new ProcessBuilder(ccrcFile.getAbsolutePath(), tempFileA.getAbsolutePath(),
+					tempFileB.getAbsolutePath());
+
 			Process process = processBuilder.start();
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			trace(e.getMessage());
 			return false;
 		}
-		
+
 		return true;
 	}
 
-
-	enum DiffType {
+	enum DiffType
+	{
 		unchanged, changed, added, removed, unknown
 	}
 
@@ -4038,7 +4099,7 @@ public class SVNTools
 //					trace(line);
 //				}
 			}
-			catch (IOException e)
+			catch(IOException e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -4117,7 +4178,7 @@ public class SVNTools
 				diffStringBuilder.append("</table>\n");
 
 			}
-			catch (Exception e)
+			catch(Exception e)
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -4230,7 +4291,8 @@ public class SVNTools
 		{
 			for (int i = 0; i < lineNumbers.length; i++)
 			{
-				if (lineNumbers[i] == -1 || revisions.get(i) == null) return true;
+				if (lineNumbers[i] == -1 || revisions.get(i) == null)
+					return true;
 			}
 			return false;
 		}
@@ -4280,7 +4342,8 @@ public class SVNTools
 			}
 
 			currentRevision = revision;
-			if (!currentLines.equals(lines)) throw new RuntimeException("Patch application failed");
+			if (!currentLines.equals(lines))
+				throw new RuntimeException("Patch application failed");
 		}
 
 		/**
@@ -4309,16 +4372,14 @@ public class SVNTools
 		private IRPModelElement myElement = null;
 		private int myChanges = 0;
 		private boolean myLinesOfCode = false;
-		
-		
 
 		public JTreeNode(IRPModelElement aElement, int aChanges)
 		{
 			myElement = aElement;
 			myChanges = aChanges;
-			
+
 		}
-		
+
 		public JTreeNode(IRPModelElement aElement)
 		{
 			myElement = aElement;
@@ -4339,8 +4400,6 @@ public class SVNTools
 		{
 			return myChanges;
 		}
-		
-		
 
 		public String toString()
 		{
@@ -4511,7 +4570,7 @@ class logRow
 			{
 				java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
 			}
-			catch (Exception ex)
+			catch(Exception ex)
 			{
 				ex.printStackTrace();
 			}
