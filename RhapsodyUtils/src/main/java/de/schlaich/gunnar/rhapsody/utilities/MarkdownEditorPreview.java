@@ -51,7 +51,7 @@ public class MarkdownEditorPreview extends JDialog
 	
 	public MarkdownEditorPreview(Window owner, String initialText)
 	{
-		super(owner, "Markdown bearbeiten", ModalityType.APPLICATION_MODAL);
+		super(owner, "Edit Markdown", ModalityType.APPLICATION_MODAL);
 		
 		
 		CompletionProvider provider = createMarkdownProvider();
@@ -89,7 +89,7 @@ public class MarkdownEditorPreview extends JDialog
 	        // Button-Leiste unten
 	        JPanel buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 	        JButton ok     = new JButton("OK");
-	        JButton cancel = new JButton("Abbrechen");
+	        JButton cancel = new JButton("Cancel");
 
 	        ok.addActionListener(e -> { okPressed = true; dispose(); });
 	        cancel.addActionListener(e -> dispose());

@@ -11,6 +11,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -45,6 +46,7 @@ import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.MarkdownEditorPreview;
+import de.schlaich.gunnar.rhapsody.utilities.MarkdownViewer;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyReverseEngineering;
@@ -127,12 +129,13 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String RunBatchCmd = "Run Batch";
 	public static final String RunAllBatchesCmd = "Run all Batches";
 	public static final String ListMetaClassesCmd = "List MetaClasses";
-	public static final String NextCmd = "Next";
-	public static final String BackCmd = "Back";
+	public static final String NextCmd = "Next Selected";
+	public static final String BackCmd = "Back Selected";
 	public static final String NextChangedCmd = "Next Changed";
 	public static final String BackChangedCmd = "Back Changed";
 	public static final String ShowGUIDCmd = "Show GUID";
 	public static final String ShowChangeHistoryCmd = "Show Change History";
+	public static final String ShowMarkdownCmd = "Show Markdown";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -1231,6 +1234,52 @@ public class CUSMPlugin extends RPUserPlugin
 				return;
 			}
 			mySelectionHistory.showChangeHistory();
+			return;
+		}
+		
+		
+		if (menuItem.contains(ShowMarkdownCmd))
+		{
+			
+			if (selected instanceof IRPHyperLink == false)
+			{
+				trace("No markdown File");
+				return;
+			}
+
+			IRPHyperLink c = (IRPHyperLink) selected;
+
+			String absolutePath = RhapsodyHelper.getAbsolutePath(c);
+
+			if (absolutePath == null)
+			{
+				trace("Could not generate absolute Path from " + c.getURL());
+				return;
+			}
+
+			File markdownFile = new File(absolutePath);
+
+			if (markdownFile.exists() == false)
+			{
+				trace("File " + markdownFile.getPath() + " does not exist");
+				return;
+			}
+			
+			String markdownContent;
+			
+			try
+			{
+				markdownContent = new String(Files.readAllBytes(markdownFile.toPath()));
+			}
+			catch (IOException e)
+			{
+				trace("Error reading markdown file: " + e.getMessage());
+				return;
+			}
+			
+			MarkdownViewer.ShowDialog(null, markdownContent);
+			
+			//MarkdownEditorPreview.showDialog(null, markdownContent);
 			return;
 		}
 

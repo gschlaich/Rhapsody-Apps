@@ -24,12 +24,17 @@ public class SelectionHistory extends RPApplicationListener
 	private Stack<String> myHistoryStack = new Stack<String>();
 	private Stack<String> myForwardStack = new Stack<String>();
 	
-	private Stack<String> myLastChangesStack = new Stack<String>();
-	private Stack<String> myLastChangesForwardStack = new Stack<String>();
+	//private Stack<String> myLastChangesStack = new Stack<String>();
+	//private Stack<String> myLastChangesForwardStack = new Stack<String>();
+	
+	private List<String> myChangeHistoryList = new ArrayList<String>();
+	
+	private int myActualChangeHistoryIndex = -1;
 	
 	
 	
 	private boolean isNavigating = false;
+	private boolean myIsNavigatingChanges = false;
 
 	public SelectionHistory(Consumer<String> aTraceAction, IRPApplication aRhapsody)
 	{
@@ -70,6 +75,15 @@ public class SelectionHistory extends RPApplicationListener
 		{
 			return;
 		}
+		
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if(element.equals(selected))
+		{
+			trace("Already selected: " + element.getDisplayName());
+			return;
+		}
+		
 		selection.addItem(element);
 		trace(" Next: Selected: " + element.getDisplayName());
 		myRhapsody.selectModelElements(selection);
@@ -89,6 +103,14 @@ public class SelectionHistory extends RPApplicationListener
 		element = pop(myHistoryStack);
 		if(element==null)
 		{
+			return;
+		}
+		
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if(element.equals(selected))
+		{
+			trace("Already selected: " + element.getDisplayName());
 			return;
 		}
 		push(myForwardStack, element);
@@ -144,29 +166,63 @@ public class SelectionHistory extends RPApplicationListener
 
 	public void nextChanged()
 	{
-		IRPModelElement element = pop(myLastChangesForwardStack);
+		if(myActualChangeHistoryIndex >= myChangeHistoryList.size()-1)
+		{
+			trace("No next changes in history.");
+			return;
+		}
+		myActualChangeHistoryIndex++;
+		IRPModelElement element = getHistoryElement(myActualChangeHistoryIndex);
 		if(element==null)
 		{
 			return;
 		}
-		push(myLastChangesStack, element);
+		
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if(element.equals(selected))
+		{
+			trace("Already selected: " + element.getDisplayName());
+			return;
+		}
+				
+				
 		IRPCollection selection = myRhapsody.createNewCollection();
+		myIsNavigatingChanges = true;
 		selection.addItem(element);
-		trace("Next Changed: Selected: " + element.getDisplayName());
+		myRhapsody.selectModelElements(selection);
+		trace("Next Changed: " + element.getDisplayName());
 	}
 	
 	public void backChanged()
 	{
-		IRPModelElement element = pop(myLastChangesStack);
+		
+		if(myActualChangeHistoryIndex <= 0)
+		{
+			trace("No previous changes in history.");
+			return;
+		}	
+		myActualChangeHistoryIndex--;
+		IRPModelElement element = getHistoryElement(myActualChangeHistoryIndex);
 		if(element==null)
 		{
 			return;
 		}
-		push(myLastChangesForwardStack, element);
+		
+		IRPModelElement selected = myRhapsody.getSelectedElement();
+		
+		if(element.equals(selected))
+		{
+			trace("Already selected: " + element.getDisplayName());
+			return;
+		}
+		
 		IRPCollection selection = myRhapsody.createNewCollection();
 		selection.addItem(element);
 		trace("Back Changed: Selected: " + element.getDisplayName());
+		myIsNavigatingChanges = true;
 		myRhapsody.selectModelElements(selection);
+		trace("Back Changed: " + element.getDisplayName());
 	}
 
 	
@@ -244,6 +300,8 @@ public class SelectionHistory extends RPApplicationListener
 	public boolean afterProjectClose(String bstrProjectName)
 	{
 		// TODO Auto-generated method stub
+		myChangeHistoryList.clear();
+		myActualChangeHistoryIndex = -1;
 		return false;
 	}
 
@@ -285,6 +343,16 @@ public class SelectionHistory extends RPApplicationListener
 	@Override
 	public boolean onSelectionChanged()
 	{
+		if(myIsNavigatingChanges)
+		{
+			trace("Navigation in changes history in progress. Skip onElementsChanged.");
+			myIsNavigatingChanges = false;
+			return false;
+		}
+		
+		myActualChangeHistoryIndex = myChangeHistoryList.size()-1;
+		
+		
 		if (myRhapsody == null)
 		{
 			return false;
@@ -317,13 +385,22 @@ public class SelectionHistory extends RPApplicationListener
 	
 	private void addToChangeHistory(IRPModelElement element)
 	{
-		if(push(myLastChangesStack, element)==false)
-		{
-			return;
-		}
-		myLastChangesForwardStack.clear();
+		String elementGUID = element.getGUID();		
+		int lastIndex = myChangeHistoryList.size();
 		
-		trace ("Added to changes history: " + element.getDisplayName() + " Back stack size: " + myLastChangesStack.size());
+		if(lastIndex > 0)
+		{
+			String lastGUID = myChangeHistoryList.get(lastIndex-1);
+			if(lastGUID.equals(elementGUID))
+			{
+				return;
+			}
+		}
+		
+		myActualChangeHistoryIndex = lastIndex;		
+		myChangeHistoryList.add(elementGUID);
+		
+		trace ("Added to changes history: " + element.getDisplayName() + " Back stack size: " + myChangeHistoryList.size());
 	}
 	
 	public boolean afterProjectOpen(IRPProject project)
@@ -333,10 +410,24 @@ public class SelectionHistory extends RPApplicationListener
 		return true;
 	}
 	
+	private IRPModelElement getHistoryElement(int aIndex)
+	{
+		if(aIndex < 0 || aIndex >= myHistoryStack.size())
+		{
+			return null;
+		}
+		
+		String elementGUID = myHistoryStack.get(aIndex);
+		
+		IRPModelElement element = myProject.findElementByGUID(elementGUID);
+		
+		return element;
+	}
+	
 	public void showChangeHistory()
 	{
 		trace("Change History:");
-		for(String guid : myLastChangesStack)
+		for(String guid : myChangeHistoryList)
 		{
 			IRPModelElement element = myProject.findElementByGUID(guid);
 			if(element != null)
