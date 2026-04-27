@@ -1725,7 +1725,17 @@ public class SVNTools
 			if (aReport == true)
 			{
 
-				reportFile.createNewFile();
+				while (reportFile.createNewFile() == false)
+				{
+					boolean isDeleted = reportFile.delete();
+					if (isDeleted == false)
+					{
+						trace("Could not delete existing report file: " + reportFile.toString());
+						break;
+					}
+				}
+				
+				
 				processBuilder = new ProcessBuilder(diffMergeExe.toString(), sbsFile.toString(), headFile.toString(),
 						"-uname", sbsFile.toString(), "-compare", "-diffReport", reportFile.toString());
 
@@ -1755,7 +1765,11 @@ public class SVNTools
 
 					addToDatabase(aRevision, ret);
 
-					reportFile.delete();
+					boolean isDeleted = reportFile.delete();
+					if (isDeleted == false)
+					{
+						trace("Could not delete report file: " + reportFile.toString());
+					}
 
 				}
 			}
@@ -2638,6 +2652,7 @@ public class SVNTools
 	private List<IRPModelElement> parseReport(File aReportFile, IRPModelElement selected, boolean addToFavorites)
 	{
 
+		
 		List<IRPModelElement> ret = new ArrayList<IRPModelElement>();
 		try
 		{
@@ -2660,6 +2675,7 @@ public class SVNTools
 			while ((line = reportReader.readLine()) != null)
 			{
 
+				
 				Matcher matcher = pattern.matcher(line);
 				if (matcher.find() == false)
 				{
@@ -2743,6 +2759,8 @@ public class SVNTools
 				}
 
 			}
+			
+			reportReader.close();
 
 			myReport = reportBuffer.toString();
 
@@ -2751,6 +2769,8 @@ public class SVNTools
 		{
 			trace(e.getMessage());
 		}
+		
+		
 
 		ret = RhapsodyHelper.isPartOf(selected, ret);
 
