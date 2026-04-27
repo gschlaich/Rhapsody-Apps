@@ -44,7 +44,7 @@ public class ApplicationStarter {
 		
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
 		//myUSMPlugin.OnMenuItemSelect("Util\\PlantUML");
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
@@ -70,7 +70,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LOCStatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CompareOperationHeadCmd);

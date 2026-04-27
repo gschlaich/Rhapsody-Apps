@@ -98,6 +98,25 @@ public class COperationalRoundtrip implements ActionListener
 		DiffRowGenerator generator;
 
 		StringBuilder diffStringBuilder = new StringBuilder();
+		
+		diffStringBuilder.append("<style>\r\n"
+				+ ".editNewInline {\r\n"
+				+ "    background-color:  #c8f7c5;\r\n"
+				+ "}\r\n"
+				+ "</style>");
+		
+		diffStringBuilder.append("<style>\r\n"
+				+ ".editOldInline {\r\n"
+				+ "    background-color: #f8d7da;\r\n"
+				+ "}\r\n"
+				+ "</style>");
+		
+		diffStringBuilder.append("<style>\r\n"
+				+ ".signature {\r\n"
+				+ "    background-color: #f8f8f8;\r\n"
+				+ "}\r\n"
+				+ "</style>");
+		
 
 		diffStringBuilder.append("<html>\n<body>\n");
 
@@ -172,22 +191,30 @@ public class COperationalRoundtrip implements ActionListener
 
 				if (hasDiff(rows) == false)
 				{
-					diffStringBuilder.append("<table>\n <tbody>\n");
-					diffStringBuilder.append("<tr>no changes: " + operation.getImplementationSignature() + "</tr>\n");
-					diffStringBuilder.append("</table>\n </tbody>\n");
+					//diffStringBuilder.append("<table>\n <tbody>\n");
+					//diffStringBuilder.append("<tr>no changes: " + operation.getImplementationSignature() + "</tr>\n");
+					//diffStringBuilder.append("</table>\n </tbody>\n");
 
 					continue;
 				}
+				
+				
+				
 
 				diffStringBuilder.append("<table>\n <tbody>\n");
 				// diffStringBuilder.append("<tr><th>"+RhapsodyOperation.getOperation(operation)+"</th></tr>\n");
-				diffStringBuilder.append("<tr><th>" + operation.getImplementationSignature() + "</th></tr>\n");
+				diffStringBuilder.append("<tr><th><span class=\"signature\">" + operation.getImplementationSignature() + "</span></th></tr>\n");
 				diffStringBuilder.append("</table>\n </tbody>\n");
 				diffStringBuilder.append("<table>\n <tbody>\n");
-				diffStringBuilder.append(
-						"<tr><th style=\"width: 50px;\">Line</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th><th>Action</th></tr>\n");
+				//diffStringBuilder.append(
+				//		"<tr><th style=\"width: 50px;\">Line</th><th style=\"width: 50%;\" >Model</th><th style=\"width: 50%;\">Source</th><th>Action</th></tr>\n");
+				//diffStringBuilder.append("<tr><th style=\"width: 50px;\">Line</th><th style=\"width: 10px;\">A</th><th>Source</th></tr>\n");
 				int line = 0;
 				int changes = 0;
+				boolean lastLineChanged = false;
+				
+				String unchangedLine = "";
+				
 				for (DiffRow row : rows)
 				{
 					line++;
@@ -195,22 +222,65 @@ public class COperationalRoundtrip implements ActionListener
 
 					if (tag == tag.EQUAL)
 					{
+						if(lastLineChanged)
+						{
+							diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\"></td> <td>" + row.getNewLine() + "</td></tr>\n");
+							lastLineChanged = false;
+						}
+						else
+						{
+							unchangedLine = row.getNewLine();
+						}
 						continue;
 					}
 
-					if (row.getOldLine().trim().isEmpty() && row.getNewLine().trim().isEmpty())
-					{
-						continue;
-					}
-
-					if (row.getNewLine().trim().contains("<span class=\"editNewInline\"></span>".trim()))
-					{
-						continue;
-					}
+					//if (row.getOldLine().trim().isEmpty() && row.getNewLine().trim().isEmpty())
+					//{
+//						continue;
+//					}
+//
+//					if (row.getNewLine().trim().contains("<span class=\"editNewInline\"></span>".trim()))
+//					{
+//						continue;
+//					}
+					
+					
+//					
+//					
 
 					// diffOperator.append()
-					diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td>" + row.getOldLine()
-							+ "</td><td>" + row.getNewLine() + "</td><td>" + tag.name() + "</td></tr>\n");
+					//diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td>" + row.getOldLine()
+					//		+ "</td><td>" + row.getNewLine() + "</td><td>" + tag.name() + "</td></tr>\n");
+					
+					lastLineChanged = true;
+					
+					
+					
+					System.out.println("line: " + line + " tag: " + tag.name() + " old: " + row.getOldLine() + " new: " + row.getNewLine());
+					
+					if(unchangedLine.trim().isEmpty() == false)
+					{
+						diffStringBuilder.append("<tr><td style=\"width: 50px;\" >" + line + "</td><td style=\"width: 10px;\"></td> <td>" + unchangedLine + "</td></tr>\n");
+						unchangedLine = "";
+					}
+					
+					if(tag == tag.INSERT)
+					{
+						//diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\"></td> <td></td></tr>\n");
+						diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\">+</td> <td>" + row.getNewLine() + "</td></tr>\n");
+					}
+					else if(tag == tag.DELETE)
+					{
+						diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\">-</td> <td>" + row.getOldLine() + "</td></tr>\n");
+						//diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\"></td> <td></td></tr>\n");
+					}
+					else if(tag == tag.CHANGE)
+					{
+						diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\">-</td> <td>" + row.getOldLine() + "</td></tr>\n");
+						diffStringBuilder.append("<tr><td style=\"width: 50px;\">" + line + "</td><td style=\"width: 10px;\">+</td> <td>" + row.getNewLine() + "</td></tr>\n");
+					}
+					
+					
 					changes++;
 				}
 

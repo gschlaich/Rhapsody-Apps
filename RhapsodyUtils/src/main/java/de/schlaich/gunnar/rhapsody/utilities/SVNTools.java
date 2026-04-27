@@ -1588,6 +1588,8 @@ public class SVNTools
 		{
 			return ret;
 		}
+		
+		mySaveUnit.save(1);
 
 		IRPModelElement unitElement = (IRPModelElement) mySaveUnit;
 
