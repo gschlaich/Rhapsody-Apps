@@ -818,7 +818,7 @@ public class CUSMPlugin extends RPUserPlugin
 				public void run() 
 				{
                         
-                    addInclude(selected);
+                    addInclude(selected, false);
 				}
 			
 			
@@ -1288,7 +1288,7 @@ public class CUSMPlugin extends RPUserPlugin
 	}
 
 	@SuppressWarnings("unchecked")
-	private void addInclude(IRPModelElement selected)
+	private void addInclude(IRPModelElement selected, boolean addToComponent)
 	{
 		Path usmRoot = null;
 		try
@@ -1355,6 +1355,11 @@ public class CUSMPlugin extends RPUserPlugin
 
 		selected.setPropertyValue(IncludeProperty, libPropertyValue);
 		
+		if (addToComponent == false)
+		{
+			return;
+		}
+		
 		// change in Component configuration as well
 		
 		IRPProject project = selected.getProject();
@@ -1365,7 +1370,7 @@ public class CUSMPlugin extends RPUserPlugin
 		{
 			List<IRPModelElement> scopeElements = component.getScopeElements().toList();
 			
-			trace("Check Component " + component.getName() + " with " + scopeElements.size() + " scope elements");
+			//trace("Check Component " + component.getName() + " with " + scopeElements.size() + " scope elements");
 			
 			for(IRPModelElement elem : scopeElements)
             {
@@ -1374,7 +1379,7 @@ public class CUSMPlugin extends RPUserPlugin
 				if(elem.equals(selected))
                 {
 			
-					trace("Update Include path in Component " + component.getName());
+					//trace("Update Include path in Component " + component.getName());
                 	IRPConfiguration config = component.findConfiguration("DefaultConfig");
 					if(config != null)
 	                {
