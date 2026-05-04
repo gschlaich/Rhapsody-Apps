@@ -11,6 +11,8 @@ import java.util.function.Consumer;
 import javax.swing.JOptionPane;
 
 import org.eclipse.cdt.core.dom.ast.ASTTypeUtil;
+import org.eclipse.cdt.core.dom.ast.IASTComment;
+import org.eclipse.cdt.core.dom.ast.IASTFileLocation;
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
 import org.eclipse.cdt.core.dom.ast.IASTArrayDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTArrayModifier;
@@ -29,6 +31,7 @@ import org.eclipse.cdt.core.dom.ast.IASTParameterDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTPointer;
 import org.eclipse.cdt.core.dom.ast.IASTPointerOperator;
 import org.eclipse.cdt.core.dom.ast.IASTPreprocessorIncludeStatement;
+import org.eclipse.cdt.core.dom.ast.IASTPreprocessorMacroDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTSimpleDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTStandardFunctionDeclarator;
@@ -73,6 +76,9 @@ public class RhapsodyReverseEngineering
 	private IRPPackage myNamespaceElement = null;
 	
 	private IRPFile mySourceArtifact = null;
+
+	/** Maps end-line-number → cleaned comment text, built once per file. */
+	private Map<Integer, String> myCommentMap = new HashMap<>();
 	
 	private static RhapsodyReverseEngineering myRhapsodyReverseEngineering = null;
 	
@@ -108,9 +114,18 @@ public class RhapsodyReverseEngineering
 	public void update(IRPPackage selected) 
 	{
 		
+		String includePath = null;
 		
+		try
+		{
+			includePath = selected.getPropertyValueExplicit("CPP_CG.Package.USMIncludePath");
+		}
+		catch (Exception e)
+		{
+			trace("Property CPP_CG.Package.USMIncludePath not set for Package: " + selected.getName());
+			return;
+		}
 		
-		String includePath = selected.getPropertyValueExplicit("CPP_CG.Package.USMIncludePath");
 		Path usmPath = null;
 		
 		
@@ -260,6 +275,9 @@ public class RhapsodyReverseEngineering
 		{
 			translationUnit = GPPLanguage.getDefault().getASTTranslationUnit(fileContent, info, emptyIncludes, null, opts, log);
 			
+			// ── Build comment map for description lookup ───────────────────────────
+			buildCommentMap(translationUnit);
+
 			// ── Includes ──────────────────────────────────────────────────────────
 			IASTPreprocessorIncludeStatement[] includes = translationUnit.getIncludeDirectives();
 			for (IASTPreprocessorIncludeStatement include : includes)
@@ -268,9 +286,9 @@ public class RhapsodyReverseEngineering
 			}
 
 			// ── Defines (Macros) ───────────────────────────────────────────────────
-			org.eclipse.cdt.core.dom.ast.IASTPreprocessorMacroDefinition[] macros =
+			IASTPreprocessorMacroDefinition[] macros =
 					translationUnit.getMacroDefinitions();
-			for (org.eclipse.cdt.core.dom.ast.IASTPreprocessorMacroDefinition macro : macros)
+			for (IASTPreprocessorMacroDefinition macro : macros)
 			{
 				String macroName = macro.getName().toString();
 				String expansion = macro.getExpansion().trim();
@@ -294,6 +312,8 @@ public class RhapsodyReverseEngineering
 					{
 						newType.setKind("language");
 						newType.setDeclaration("#define %s "+expansion);
+						String macroComment = findCommentBefore(macro.getFileLocation() != null ? macro.getFileLocation().getStartingLineNumber() : 0);
+						if (macroComment != null) newType.setDescription(macroComment);
 						mySourceArtifact.addModelElement(newType, "specFragment");
 						trace("  -> Type (Define) created: " + macroName + (expansion.isEmpty() ? "" : " = " + expansion));
 					}
@@ -357,7 +377,11 @@ public class RhapsodyReverseEngineering
 								IASTExpression val = en.getValue();
 								String enName = en.getName().toString();
 								String enValue = (val != null) ? val.getRawSignature().trim() : "";
-								enumLiterals.add(new Pair<String, String>(enName, enValue));
+								int enLine = en.getFileLocation() != null ? en.getFileLocation().getStartingLineNumber() : 0;
+								String enComment = findCommentBefore(enLine);
+								enumLiterals.add(new Pair<String, String>(enName, enValue) {
+									public String comment() { return enComment; }
+								});
 								
 							}
 
@@ -371,6 +395,8 @@ public class RhapsodyReverseEngineering
 									if (newEnum != null)
 									{
 										newEnum.setKind("Enumeration");
+										String enumComment = findCommentBefore(sd.getFileLocation() != null ? sd.getFileLocation().getStartingLineNumber() : 0);
+										if (enumComment != null) newEnum.setDescription(enumComment);
 										for(Pair<String, String> literal : enumLiterals)
 										{
 											String literalName = literal.first();
@@ -384,7 +410,14 @@ public class RhapsodyReverseEngineering
 												trace("  -> Adding Enumeration Literal: " + literalName + " = " + literalValue);
 											}
 											IRPEnumerationLiteral l = newEnum.addEnumerationLiteral(literalName);
-											l.setValue(literalValue);	
+											l.setValue(literalValue);
+											if (literal instanceof Pair && ((Pair<?,?>) literal).getClass() != Pair.class)
+											{
+												try {
+													String litComment = (String) literal.getClass().getMethod("comment").invoke(literal);
+													if (litComment != null) l.setDescription(litComment);
+												} catch (Exception ignored) {}
+											}
 										}
 
 										mySourceArtifact.addModelElement(newEnum, "specFragment");
@@ -406,9 +439,45 @@ public class RhapsodyReverseEngineering
 						// ── typedef / using ────────────────────────────────────────
 						if (spec.getStorageClass() == IASTDeclSpecifier.sc_typedef)
 						{
-							for (IASTDeclarator dec : sd.getDeclarators())
+							// Skip typedef enum / typedef struct – handled by their own blocks
+							if (!(spec instanceof IASTEnumerationSpecifier)
+									&& !(spec instanceof IASTCompositeTypeSpecifier))
 							{
-								trace("[TYPEDEF] " + buildQuickType(spec, dec) + " -> " + dec.getName().toString());
+								for (IASTDeclarator dec : sd.getDeclarators())
+								{
+									String typedefName = dec.getName().toString();
+									String targetType  = buildQuickType(spec, dec);
+									trace("[TYPEDEF] " + targetType + " -> " + typedefName);
+
+									if (typedefName.isEmpty()) continue;
+
+									IRPType existingTypedef = (IRPType) aExternPackage.findNestedElement(typedefName, "Type");
+									if (existingTypedef == null)
+									{
+										IRPType newTypedef = (IRPType) aExternPackage.addNewAggr("Type", typedefName);
+										if (newTypedef != null)
+										{
+											newTypedef.setKind("language");
+											// Build declaration: "typedef <targetType> <name>;"
+											// Replace the typedef name with %s as placeholder
+											String decl = "typedef " + targetType + " " + typedefName + ";";
+											decl = decl.replace(typedefName, "%s");
+											newTypedef.setDeclaration(decl);
+											String typedefComment = findCommentBefore(sd.getFileLocation() != null ? sd.getFileLocation().getStartingLineNumber() : 0);
+											if (typedefComment != null) newTypedef.setDescription(typedefComment);
+											mySourceArtifact.addModelElement(newTypedef, "specFragment");
+											trace("  -> Type (typedef) created: " + typedefName + " = " + targetType);
+										}
+										else
+										{
+											trace("  -> Type (typedef) could not be created: " + typedefName);
+										}
+									}
+									else
+									{
+										trace("  -> Type (typedef) already exists: " + typedefName);
+									}
+								}
 							}
 							return PROCESS_SKIP;
 						}
@@ -428,8 +497,58 @@ public class RhapsodyReverseEngineering
 							if (dec instanceof IASTFunctionDeclarator)
 							{
 								IASTFunctionDeclarator fdec = (IASTFunctionDeclarator) dec;
-								String args = buildArgString(fdec);
+								List<argumentPair> args = extractArguments(fdec);
+								//String args = buildArgString(fdec);
 								trace("[FUNCTION] " + baseType + " " + fdec.getName().toString() + "(" + args + ")");
+								
+								String funcName = fdec.getName().toString();
+								if(aExternPackage.findNestedElement(funcName, "Operation") == null)
+								{
+								
+									IRPOperation globalFunction = aExternPackage.addGlobalFunction(fdec.getName().toString());
+									
+									globalFunction.setReturnTypeDeclaration(baseType);
+									String funcComment = findCommentBefore(sd.getFileLocation() != null ? sd.getFileLocation().getStartingLineNumber() : 0);
+									if (funcComment != null) globalFunction.setDescription(funcComment);
+									
+									mySourceArtifact.addModelElement(globalFunction, "specFragment");
+									
+									for (argumentPair arg : args)
+									{
+										String argType = arg.getType();
+										String argName = arg.getName();
+										trace("  -> Adding argument: " + argType + " " + argName);
+										IRPArgument newArg = globalFunction.addArgument(argName);
+										
+										IRPProject project = aExternPackage.getProject();
+										IRPClassifier type = project.findClass(argType);
+										if (type == null)
+										{
+											type = project.findType(argType);
+										}
+										if (type != null)
+										{
+											
+										
+											
+											newArg.setType(type);
+											if(arg.isReference==true)
+											{
+												trace("Argument is reference: " + argName);
+												
+											}
+											
+										}
+										else
+										{
+											trace("Type not found: " + argType + " - setting on the fly type");
+											newArg.setTypeDeclaration(argType);
+										}
+									}
+									
+									
+									
+								}
 							}
 							else
 							{
@@ -476,6 +595,8 @@ public class RhapsodyReverseEngineering
 									{
 										globalVar.setTypeDeclaration(typeDecl);
 									}
+									String varComment = findCommentBefore(sd.getFileLocation() != null ? sd.getFileLocation().getStartingLineNumber() : 0);
+									if (varComment != null) globalVar.setDescription(varComment);
 									trace("  -> GlobalVariable created: " + varName + " : " + typeDecl);
 									
 									mySourceArtifact.addModelElement(globalVar, "specFragment");
@@ -508,6 +629,7 @@ public class RhapsodyReverseEngineering
 				}
 
 				// helper: build comma-separated argument string from extracted list
+				
 				private String buildArgString(IASTFunctionDeclarator fdec)
 				{
 					List<argumentPair> args = extractArguments(fdec);
@@ -572,7 +694,55 @@ public class RhapsodyReverseEngineering
 		}
 		return sb.toString().replaceAll("\\s+", " ").trim();
 	}
-	
+
+	/**
+	 * Collects all comments from the translation unit into {@link #myCommentMap}.
+	 * The map key is the <em>last</em> line number of the comment so that a lookup
+	 * with the first line of the following declaration finds the preceding comment.
+	 */
+	private void buildCommentMap(IASTTranslationUnit tu)
+	{
+		myCommentMap.clear();
+		for (IASTComment c : tu.getComments())
+		{
+			IASTFileLocation loc = c.getFileLocation();
+			if (loc == null) continue;
+			int endLine = loc.getStartingLineNumber() + countNewlines(new String(c.getComment()));
+			String raw = new String(c.getComment()).trim();
+			String text = raw
+					.replaceAll("^/\\*+\\s*", "")
+					.replaceAll("\\s*\\*+/$", "")
+					.replaceAll("(?m)^\\s*\\*\\s?", "")
+					.replaceAll("^//+\\s*", "")
+					.trim();
+			if (!text.isEmpty())
+			{
+				myCommentMap.put(endLine, text);
+			}
+		}
+	}
+
+	private static int countNewlines(String s)
+	{
+		int n = 0;
+		for (char ch : s.toCharArray()) if (ch == '\n') n++;
+		return n;
+	}
+
+	/**
+	 * Returns the comment text whose last line is directly above
+	 * {@code declarationStartLine}, or {@code null} if none found.
+	 */
+	private String findCommentBefore(int declarationStartLine)
+	{
+		for (int offset = 0; offset <= 2; offset++)
+		{
+			String comment = myCommentMap.get(declarationStartLine - 1 - offset);
+			if (comment != null) return comment;
+		}
+		return null;
+	}
+
 	private IRPClass parseClass(IASTCompositeTypeSpecifier ct, IRPModelElement aParent)
 	{	
 		String className = ct.getName().toString();
@@ -765,6 +935,8 @@ public class RhapsodyReverseEngineering
 		        }
 				
 				newArg.setType(type);
+				
+				
 				
 			}
 			else
