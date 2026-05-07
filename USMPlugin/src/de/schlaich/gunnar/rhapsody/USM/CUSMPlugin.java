@@ -16,8 +16,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
 import java.util.List;
+
+import javax.swing.ActionMap;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
+import javax.swing.filechooser.FileView;
+
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
@@ -1302,13 +1306,13 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 		}
 
-		JFileChooser fileChooser = new JFileChooser(
+		JFileChooser fileChooser = createDetailFileChooser(
 				usmRoot.resolve("Development").resolve("ExternalSource").toFile());
 
 		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
 		fileChooser.setAcceptAllFileFilterUsed(false);
-
+		
 		int userSelection = fileChooser.showOpenDialog(null);
 
 		if (userSelection != JFileChooser.APPROVE_OPTION)
@@ -1343,14 +1347,22 @@ public class CUSMPlugin extends RPUserPlugin
 
 		for (String s : libArray)
 		{
-			if (s.equals(libString))
+			
+			if (s.trim().equals(libString))
 			{
 				trace("Include path already added");
 				return;
 			}
 		}
-
-		libPropertyValue += delimiter + libString;
+		
+		if(libArray.length == 1 && libArray[0].length() == 0)
+		{
+			libPropertyValue = libString;
+		}
+		else
+		{
+			libPropertyValue += delimiter+'\n'+ libString;
+		}
 		trace("set Include Path: " + libPropertyValue);
 
 		selected.setPropertyValue(IncludeProperty, libPropertyValue);
@@ -1368,13 +1380,17 @@ public class CUSMPlugin extends RPUserPlugin
 		
 		for (IRPComponent component : components)
 		{
-			List<IRPModelElement> scopeElements = component.getScopeElements().toList();
+			List<IRPModelElement> scopeElements = component.getScopeElementsByCategory("Package").toList();
+			
 			
 			//trace("Check Component " + component.getName() + " with " + scopeElements.size() + " scope elements");
 			
 			for(IRPModelElement elem : scopeElements)
             {
-                
+                if(elem instanceof IRPPackage == false)
+				{
+					continue;
+				}
 				trace(elem.getName() + " of type " + elem.getMetaClass());
 				if(elem.equals(selected))
                 {
@@ -1401,6 +1417,18 @@ public class CUSMPlugin extends RPUserPlugin
 	}
 	
 	
+
+	private JFileChooser createDetailFileChooser(File directory)
+	{
+		JFileChooser fc = new JFileChooser(directory);
+		// Switch to details view
+		javax.swing.Action detailsAction = fc.getActionMap().get("viewTypeDetails");
+		if (detailsAction != null)
+		{
+			detailsAction.actionPerformed(null);
+		}
+		return fc;
+	}
 
 	private String getFileExtension(File file)
 	{
@@ -1460,6 +1488,9 @@ public class CUSMPlugin extends RPUserPlugin
 				usmRoot.resolve("Development").resolve("ExternalSource").toFile());
 
 		// fileChooser.setFileSelectionMode(JFileChooser.);
+		fileChooser.setDialogTitle("Select Library Folder");
+		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
 
 		fileChooser.setAcceptAllFileFilterUsed(false);
 

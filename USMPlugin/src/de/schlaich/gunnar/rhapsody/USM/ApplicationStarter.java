@@ -66,7 +66,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CreateMsgCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddParamMsgCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddIncludePathCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddIncludePathCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
@@ -83,7 +83,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.UpdateDatabaseCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MarkdownEditorCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ReverseEngineeringCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ReverseEngineeringCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GoogleTestRoundTripCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.FormatCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ParseElementCmd);
