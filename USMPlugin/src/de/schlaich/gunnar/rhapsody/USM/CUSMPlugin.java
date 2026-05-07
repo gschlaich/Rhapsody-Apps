@@ -140,6 +140,8 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String ShowGUIDCmd = "Show GUID";
 	public static final String ShowChangeHistoryCmd = "Show Change History";
 	public static final String ShowMarkdownCmd = "Show Markdown";
+	public static final String ActivateHistoryCmd = "Activate History";
+	public static final String DeactivateHistoryCmd = "Deactivate History";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -211,7 +213,7 @@ public class CUSMPlugin extends RPUserPlugin
 		
 		mySelectionHistory = new SelectionHistory(this::trace, myRhapsody);
 		
-		mySelectionHistory.connect(myRhapsody);
+		//mySelectionHistory.connect(myRhapsody);
 		
 		activeProject.setNotifyPluginOnElementsChanged(1);
 		
@@ -977,6 +979,8 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			reverseEngineering.update(rpackage);
 			
+			trace("Reverse Engineering finished");
+			
 			
 			return;
 		}
@@ -1286,6 +1290,17 @@ public class CUSMPlugin extends RPUserPlugin
 			//MarkdownEditorPreview.showDialog(null, markdownContent);
 			return;
 		}
+		if(menuItem.contains(ActivateHistoryCmd))
+		{
+			mySelectionHistory.connect(myRhapsody);
+			return;
+		}
+		if(menuItem.contains(DeactivateHistoryCmd))
+		{
+			mySelectionHistory.disconnect();
+			return;
+		}
+		
 
 		trace("menue item unknown");
 

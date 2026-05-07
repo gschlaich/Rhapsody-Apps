@@ -339,6 +339,16 @@ public class SelectionHistory extends RPApplicationListener
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	@Override
+	public boolean disconnect()
+	{
+		super.disconnect();
+		myChangeHistoryList.clear();
+		myForwardStack.clear();
+		myHistoryStack.clear();
+		return true;
+	}
 
 	@Override
 	public boolean onSelectionChanged()
