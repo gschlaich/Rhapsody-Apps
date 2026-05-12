@@ -5,7 +5,12 @@ import java.util.function.Consumer;
 import com.telelogic.rhapsody.core.IRPApplication;
 
 import de.schlaich.gunnar.aiTools.mcp.tools.AvailableMetaClassesTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.CompileElementTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.FetchTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.GenerateActiveComponentCodeTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.GenerateCodeTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.GetGeneratedCodeTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.SetActiveComponentTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.ImportTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.LazySearchTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.ReferencesTool;
@@ -50,6 +55,11 @@ public class McpStarter
 		// Tools registrieren
 		registry = new ToolRegistry();
 		registry.register(new FetchTool(client, aTraceAction));
+		registry.register(new GenerateCodeTool(client, aTraceAction));
+		registry.register(new GenerateActiveComponentCodeTool(client, aTraceAction));
+		registry.register(new GetGeneratedCodeTool(client, aTraceAction));
+		registry.register(new CompileElementTool(client, aTraceAction));
+		registry.register(new SetActiveComponentTool(client, aTraceAction));
 		registry.register(new LazySearchTool(client, aTraceAction));
 		registry.register(new SearchTool(client, aTraceAction));
 		registry.register(new AvailableMetaClassesTool(client, aTraceAction));

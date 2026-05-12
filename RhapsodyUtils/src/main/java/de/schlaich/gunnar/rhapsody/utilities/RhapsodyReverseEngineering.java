@@ -465,13 +465,58 @@ public class RhapsodyReverseEngineering
 						// ── typedef / using ────────────────────────────────────────
 						if (spec.getStorageClass() == IASTDeclSpecifier.sc_typedef)
 						{
-							// Skip typedef enum / typedef struct – handled by their own blocks
-							if (!(spec instanceof IASTEnumerationSpecifier)
-									&& !(spec instanceof IASTCompositeTypeSpecifier))
+							if (spec instanceof IASTCompositeTypeSpecifier)
 							{
+								// typedef struct { } Name;
+								IASTCompositeTypeSpecifier ct = (IASTCompositeTypeSpecifier) spec;
+								if (ct.getKey() == IASTCompositeTypeSpecifier.k_struct)
+								{
+									String structName = ct.getName().toString();
+									if (structName.isEmpty())
+									{
+										IASTDeclarator[] decls = sd.getDeclarators();
+										if (decls != null && decls.length > 0 && decls[0].getName() != null)
+											structName = decls[0].getName().toString();
+									}
+									trace("[STRUCT]  " + structName + " (typedef)");
+									if (!structName.isEmpty())
+									{
+										IRPType existingStruct = (IRPType) aExternPackage.findNestedElement(structName, "Type");
+										if (existingStruct == null)
+										{
+											IRPType newStruct = (IRPType) aExternPackage.addNewAggr("Type", structName);
+											if (newStruct != null)
+											{
+												newStruct.setKind("Structure");
+												String structComment = findCommentBefore(sd.getFileLocation() != null
+														? sd.getFileLocation().getStartingLineNumber() : 0);
+												if (structComment != null)
+													newStruct.setDescription(structComment);
+												addStructMembers(newStruct, ct, aExternPackage);
+												mySourceArtifact.addModelElement(newStruct, "specFragment");
+												trace("  -> Type (Struct) created: " + structName);
+											}
+											else
+											{
+												trace("  -> Type (Struct) could not be created: " + structName);
+											}
+										}
+										else
+										{
+											trace("  -> Type (Struct) already exists: " + structName);
+										}
+									}
+								}
+							}
+							else if (!(spec instanceof IASTEnumerationSpecifier))
+							{
+								// plain typedef (not enum, not struct)
 								for (IASTDeclarator dec : sd.getDeclarators())
 								{
 									String typedefName = dec.getName().toString();
+									
+									trace("Class of Typedef: " + dec.getClass().getSimpleName());
+									
 									String targetType = buildQuickType(spec, dec);
 									trace("[TYPEDEF] " + targetType + " -> " + typedefName);
 
@@ -488,7 +533,7 @@ public class RhapsodyReverseEngineering
 											newTypedef.setKind("language");
 											// Build declaration: "typedef <targetType> <name>;"
 											// Replace the typedef name with %s as placeholder
-											String decl = "typedef " + targetType + " " + typedefName + ";";
+											String decl = targetType + " " + typedefName + ";";
 											decl = decl.replace(typedefName, "%s");
 											newTypedef.setDeclaration(decl);
 											String typedefComment = findCommentBefore(sd.getFileLocation() != null
@@ -517,7 +562,39 @@ public class RhapsodyReverseEngineering
 						if (spec instanceof IASTCompositeTypeSpecifier)
 						{
 							IASTCompositeTypeSpecifier ct = (IASTCompositeTypeSpecifier) spec;
-							trace("[CLASS]   " + ct.getName().toString());
+							String structName = ct.getName().toString();
+							if (ct.getKey() == IASTCompositeTypeSpecifier.k_struct && !structName.isEmpty())
+							{
+								trace("[STRUCT]  " + structName);
+								IRPType existingStruct = (IRPType) aExternPackage.findNestedElement(structName, "Type");
+								if (existingStruct == null)
+								{
+									IRPType newStruct = (IRPType) aExternPackage.addNewAggr("Type", structName);
+									if (newStruct != null)
+									{
+										newStruct.setKind("Structure");
+										String structComment = findCommentBefore(sd.getFileLocation() != null
+												? sd.getFileLocation().getStartingLineNumber() : 0);
+										if (structComment != null)
+											newStruct.setDescription(structComment);
+										addStructMembers(newStruct, ct, aExternPackage);
+										mySourceArtifact.addModelElement(newStruct, "specFragment");
+										trace("  -> Type (Struct) created: " + structName);
+									}
+									else
+									{
+										trace("  -> Type (Struct) could not be created: " + structName);
+									}
+								}
+								else
+								{
+									trace("  -> Type (Struct) already exists: " + structName);
+								}
+							}
+							else
+							{
+								trace("[CLASS]   " + structName);
+							}
 							return PROCESS_SKIP;
 						}
 
@@ -745,6 +822,92 @@ public class RhapsodyReverseEngineering
 			}
 		}
 		return sb.toString().replaceAll("\\s+", " ").trim();
+	}
+
+	/**
+	 * Adds all fields of a C struct to the given IRPType (kind="Structure").
+	 */
+	private void addStructMembers(IRPType aStruct, IASTCompositeTypeSpecifier ct, IRPPackage aPackage)
+	{
+		for (IASTDeclaration member : ct.getMembers())
+		{
+			if (!(member instanceof IASTSimpleDeclaration))
+				continue;
+			IASTSimpleDeclaration sd = (IASTSimpleDeclaration) member;
+			IASTDeclSpecifier spec = sd.getDeclSpecifier();
+			for (IASTDeclarator dec : sd.getDeclarators())
+			{
+				String memberName = dec.getName().toString();
+				//if (memberName.isEmpty())
+				//	continue;
+
+				String memberComment = findCommentBefore(
+						member.getFileLocation() != null ? member.getFileLocation().getStartingLineNumber() : 0);
+
+				// ── function pointer member ────────────────────────────────
+				if (dec instanceof IASTFunctionDeclarator)
+				{
+					// Build full type declaration from raw signature, e.g. "void (*fp)(int, char*)"
+					// Replace the member name with %s for Rhapsody placeholder
+					String rawDecl = sd.getRawSignature().trim();
+					// Remove trailing semicolon
+					if (rawDecl.endsWith(";"))
+						rawDecl = rawDecl.substring(0, rawDecl.length() - 1).trim();
+					trace("  -> Adding struct function-pointer member: " + memberName);
+					IRPAttribute attr = (IRPAttribute) aStruct.addNewAggr("Attribute", memberName);
+					if (attr != null)
+					{
+						// Use the full declaration; replace member name with %s placeholder
+						String typeDecl = rawDecl.replace(memberName, "%s");
+						attr.setTypeDeclaration(typeDecl);
+						if (memberComment != null)
+							attr.setDescription(memberComment);
+					}
+					continue;
+				}
+
+				// ── regular member ─────────────────────────────────────────
+				String memberType = buildQuickType(spec, dec);
+
+				// array dimension
+				String dims = "";
+				if (dec instanceof IASTArrayDeclarator)
+				{
+					StringBuilder sb = new StringBuilder();
+					for (IASTArrayModifier am : ((IASTArrayDeclarator) dec).getArrayModifiers())
+					{
+						sb.append("[");
+						if (am.getConstantExpression() != null)
+							sb.append(am.getConstantExpression().getRawSignature().trim());
+						sb.append("]");
+					}
+					dims = sb.toString();
+				}
+
+				trace("  -> Adding struct member: " + memberType + " " + memberName + dims);
+
+				IRPAttribute attr = (IRPAttribute) aStruct.addNewAggr("Attribute", memberName);
+				if (attr != null)
+				{
+					IRPProject project = aPackage.getProject();
+					IRPClassifier classifier = project.findClass(memberType);
+					if (classifier == null)
+						classifier = project.findType(memberType);
+					if (classifier != null)
+					{
+						attr.setType(classifier);
+						if (!dims.isEmpty())
+							attr.setMultiplicity(dims.replace("[", "").replace("]", ""));
+					}
+					else
+					{
+						attr.setTypeDeclaration(memberType + dims);
+					}
+					if (memberComment != null)
+						attr.setDescription(memberComment);
+				}
+			}
+		}
 	}
 
 	/**

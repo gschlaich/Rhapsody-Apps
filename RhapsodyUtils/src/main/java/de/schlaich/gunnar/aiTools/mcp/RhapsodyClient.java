@@ -60,6 +60,11 @@ public class RhapsodyClient
 
 	}
 
+	public IRPApplication getApp()
+	{
+		return app;
+	}
+
 	private void trace(String aMessage)
 	{
 		if (myTraceAction == null)
