@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -2024,6 +2025,26 @@ public class SVNTools
 		// Teilt den String an jedem Zeilenumbruch und gibt das erste Element zur�ck
 		String[] lines = str.split("\\R", 2); // "\\R" ist ein Zeilenumbruch-Metazeichen
 		return lines.length > 0 ? lines[0] : null; // Pr�ft, ob �berhaupt eine Zeile vorhanden ist
+	}
+
+	public List<Map<String, Object>> readHistoryAsMaps(IRPModelElement aSelected, int aLimit)
+	{
+		List<logRow> rows = readHistory(aSelected, aLimit, false, 0, 0);
+		if (rows == null)
+		{
+			return null;
+		}
+		List<Map<String, Object>> result = new ArrayList<>();
+		for (logRow row : rows)
+		{
+			Map<String, Object> entry = new LinkedHashMap<>();
+			entry.put("revision", row.getRevision());
+			entry.put("author", row.getAuthor());
+			entry.put("date", row.getDateTime());
+			entry.put("message", row.getMessage());
+			result.add(entry);
+		}
+		return result;
 	}
 
 	public List<logRow> readHistory(IRPModelElement aSelected, int aLimit, boolean aIsMonth, int aRevisionFrom,

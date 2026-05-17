@@ -105,7 +105,7 @@ public class JsonModelElementBase
 
 	public enum ImportMode
 	{
-		create, reference
+		create, reference, delete
 	}
 
 	@JsonProperty(value = "Type", required = true)

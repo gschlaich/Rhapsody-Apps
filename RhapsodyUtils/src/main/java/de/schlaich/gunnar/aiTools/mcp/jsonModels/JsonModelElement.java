@@ -168,8 +168,15 @@ public class JsonModelElement extends JsonModelElementBase {
 
 	protected void setProperties(IRPModelElement aModelElement, ImportMode aImportMode) {
 
-		if (aImportMode == ImportMode.reference) {
+		if (aImportMode == ImportMode.reference) 
+		{
 			// do nothing
+			return;
+		}
+		
+		if (changedProperties == null || changedProperties.size() == 0) 
+		{
+			// no changed properties, so nothing to do
 			return;
 		}
 

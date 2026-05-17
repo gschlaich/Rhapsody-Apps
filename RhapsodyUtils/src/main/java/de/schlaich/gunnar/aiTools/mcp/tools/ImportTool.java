@@ -40,11 +40,11 @@ public class ImportTool extends Tool
 										put("description", "JSON representation of the model element");
 									}
 								});
-								put("TargetGUID", new LinkedHashMap<String, Object>()
+								put("ParentGUID", new LinkedHashMap<String, Object>()
 								{
 									{
 										put("type", "string");
-										put("description", "GUID of the target element on update and root element on create und remove ");
+										put("description", "GUID of the parent element to import into");
 									}
 								});
 								
@@ -58,7 +58,7 @@ public class ImportTool extends Tool
 										
 										 */
 										put("type", "string");
-										put("enum", Arrays.asList("create", "update", "remove"));
+										put("enum", Arrays.asList("create","update", "remove"));
 										put("description",
 												"Import mode: create new element, update existing, or remove existing");
 										put("default", "update");
@@ -106,7 +106,7 @@ public class ImportTool extends Tool
 			throw new IllegalArgumentException("modelJson is empty");
 		}
 
-		ImportMode importMode = ImportMode.valueOf(importModeStr);
+		RhapsodyClient.ImportMode importMode = RhapsodyClient.ImportMode.valueOf(importModeStr);
 
 		String ret = rh.importModelFromJson(modelJson, targetGUID, importMode, validateOnly != null && validateOnly);
 		trace("Return from import: " + ret);

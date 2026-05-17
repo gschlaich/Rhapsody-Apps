@@ -148,7 +148,47 @@ public final class HttpJsonRpcBridge
 				String name = p.get("name").getAsString();
 				@SuppressWarnings("unchecked")
 				Map<String, Object> args = gson.fromJson(p.get("arguments"), Map.class);
-				result = registry.call(name, args);
+				Object rawResult = registry.call(name, args);
+
+				// Convert to MCP-compliant tool result:
+				// { "content": [ { "type": "text", "text": "..." } ], "isError": false }
+				JsonObject toolResult = new JsonObject();
+				JsonArray contentArray = new JsonArray();
+				JsonObject textItem = new JsonObject();
+				textItem.addProperty("type", "text");
+
+				JsonElement rawJson = gson.toJsonTree(rawResult);
+				boolean isError = false;
+
+				if (rawJson.isJsonObject())
+				{
+					JsonObject rawObj = rawJson.getAsJsonObject();
+					if (rawObj.has("error"))
+					{
+						isError = true;
+						textItem.addProperty("text", rawObj.get("error").getAsString());
+					}
+					else if (rawObj.has("content"))
+					{
+						JsonElement inner = rawObj.get("content");
+						textItem.addProperty("text", inner.isJsonPrimitive()
+								? inner.getAsString()
+								: gson.toJson(inner));
+					}
+					else
+					{
+						textItem.addProperty("text", gson.toJson(rawObj));
+					}
+				}
+				else
+				{
+					textItem.addProperty("text", gson.toJson(rawJson));
+				}
+
+				contentArray.add(textItem);
+				toolResult.add("content", contentArray);
+				toolResult.addProperty("isError", isError);
+				result = toolResult;
 			}
 			
 			else if ("notifications/initialized".equals(method))

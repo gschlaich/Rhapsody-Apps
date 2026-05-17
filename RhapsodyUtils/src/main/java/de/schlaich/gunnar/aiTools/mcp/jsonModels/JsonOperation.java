@@ -202,22 +202,19 @@ public class JsonOperation extends JsonInterfaceItem
 			}
 
 			IRPClass theClass = (IRPClass) aParentElement;
-            return theClass.addTriggeredOperation("_"+name);
+            return theClass.addTriggeredOperation(name);
         }
 		else
 		{
 			if (aParentElement instanceof IRPClassifier)
 			{
 				IRPClassifier parentClassifier = (IRPClassifier) aParentElement;
-				return parentClassifier.addOperation("_"+name);
-				
-				
-				
+				return parentClassifier.addOperation(name);
 			}
 			else if (aParentElement instanceof IRPPackage)
 			{
 				IRPPackage parentPackage = (IRPPackage) aParentElement;
-				return parentPackage.addGlobalFunction("_"+name);
+				return parentPackage.addGlobalFunction(name);
 			}
 			else
 			{

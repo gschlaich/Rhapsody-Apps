@@ -28,6 +28,12 @@ import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelFactory;
 
 public class RhapsodyClient
 {
+
+	public enum ImportMode
+	{
+		create, update, delete
+	}
+
 	private final IRPApplication app;
 	private final IRPProject project;
 	// private MCP_JSONExporter myJsonExporter = null;
@@ -94,7 +100,8 @@ public class RhapsodyClient
 			for (int i = 1; i <= pkgs.getCount(); i++)
 			{
 				Object it = pkgs.getItem(i);
-				if (it instanceof IRPModelElement) out.add((IRPModelElement) it);
+				if (it instanceof IRPModelElement)
+					out.add((IRPModelElement) it);
 			}
 		}
 
@@ -226,24 +233,22 @@ public class RhapsodyClient
 		return parent.getNestedElementsByMetaClass(aMetaClass, 1).toList();
 
 	}
-	
-	
-	public JsonModelElementBase updateFromJson(String partialJson, JsonModelElementBase existing) 
-		    throws JsonProcessingException
-		{
-		    ObjectMapper mapper = new ObjectMapper();
-		    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-		    ObjectReader updater = mapper.readerForUpdating(existing);
-		    JsonModelElementBase updated = updater.readValue(partialJson);
+	public JsonModelElementBase updateFromJson(String partialJson, JsonModelElementBase existing)
+			throws JsonProcessingException
+	{
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-		    return updated;
-		}
-	
-	
+		ObjectReader updater = mapper.readerForUpdating(existing);
+		JsonModelElementBase updated = updater.readValue(partialJson);
+
+		return updated;
+	}
+
 	public JsonModelElementBase updateModelFromJson(IRPModelElement aTargetModel, String aJsonModelString)
 	{
-		
+
 		JsonModelElementBase targetJson = toJsonObject(aTargetModel, false);
 
 		JsonModelElementBase mergedJson = null;
@@ -251,81 +256,129 @@ public class RhapsodyClient
 		{
 			mergedJson = updateFromJson(aJsonModelString, targetJson);
 		}
-		catch (JsonProcessingException e)
+		catch(JsonProcessingException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
-		
+
 		return mergedJson;
 
 	}
-	
-	
-	
 
-	public String importModelFromJson(String aJsonModelString, String aTargetGUID, JsonModelElementBase.ImportMode aImportMode,
+	public String importModelFromJson(String aJsonModelString, String aParentGUID, ImportMode aImportMode,
 			boolean aValidateOnly)
 	{
 
-		if (aTargetGUID == null || aTargetGUID.isEmpty())
+		if (aParentGUID == null || aParentGUID.isEmpty())
 		{
-			
-			return null;
-		}
-		
-		
-		Optional<IRPModelElement> targetModelOpt = byGUID(aTargetGUID);
 
-		if (targetModelOpt.isPresent() == false)
-		{
-			return null;
+			return "Error: Parent GUID is required.";
 		}
-		
-		IRPModelElement targetModel = targetModelOpt.get();
-		
-		JsonModelElementBase modifiedJson = null;
-	
-		modifiedJson = myJsonModelFactory.fromJson(aJsonModelString);
-		
-		
-		JsonModelElementBase parentJson = new JsonModelElementBase(targetModel);
-		
-		
-		
-		if(aValidateOnly == false)
+
+		Optional<IRPModelElement> parentModelOpt = byGUID(aParentGUID);
+
+		if (parentModelOpt.isPresent() == false)
 		{
-			IRPModelElement modifiedModel =  modifiedJson.toModelElement(parentJson, project, aImportMode);
-			if (modifiedModel == null)
+			return "Error: Parent GUID is required.";
+		}
+
+		JsonModelElementBase modifiedJson = null;
+
+		modifiedJson = myJsonModelFactory.fromJson(aJsonModelString);
+
+		if (modifiedJson == null)
+		{
+			return "Error: Could not parse JSON model.";
+		}
+
+		String jsonGuid = modifiedJson.getGuid();
+
+		if (aImportMode == ImportMode.update || aImportMode == ImportMode.delete)
+		{
+			if (jsonGuid == null || jsonGuid.isEmpty())
 			{
-				return "Error: Could not import model from JSON.";
+				return "Error: GUID is required in JSON for update or delete operations.";
 			}
 
-			//String ret = toJsonString(modifiedModel, false);
-            String ret = "OK: Model imported successfully.";
-			
-			return ret;
 		}
-		else
+
+		Optional<IRPModelElement> modelFromJsonGuidOpt = Optional.empty();
+
+		if (jsonGuid != null && jsonGuid.isEmpty() == false)
 		{
-//			String ret = "";
-//			try
-//			{
-//				ret = modifiedJson.toJsonString();
-//			}
-//			catch (IOException e)
-//			{
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//				ret = "Error: Could not serialize modified JSON model.";
-//			}
-//			return ret;
+			if (jsonGuid.equals(aParentGUID))
+			{
+				return "Error: The GUID of the model to import is the same as the parent model. This would cause a conflict. Please remove the GUID from the JSON or use a different one.";
+			}
+			modelFromJsonGuidOpt = byGUID(jsonGuid);
+			if (modelFromJsonGuidOpt.isPresent())
+			{
+				if (aImportMode == ImportMode.create)
+				{
+					return "Error: A model with the same GUID already exists. Cannot create a new model with the same GUID. Please remove the GUID from the JSON or use a different one.";
+				}
+			}
+			else
+			{
+				if (aImportMode == ImportMode.update || aImportMode == ImportMode.delete)
+				{
+					return "Error: No existing model found with the GUID specified in the JSON. Cannot update or delete a non-existing model. Please check the GUID in the JSON.";
+				}
+			}
+		}
+
+		if (aValidateOnly == true)
+		{
 			return "OK: JSON model validated successfully.";
 		}
-		
-	}
 
+		JsonModelElementBase parentJson = new JsonModelElementBase(parentModelOpt.get());
+		JsonModelElementBase existingJson = null;
+
+		if (aImportMode == ImportMode.update)
+		{
+			// get json model from existing model
+			existingJson = toJsonObject(modelFromJsonGuidOpt.get(), false);
+			modelFromJsonGuidOpt.get().deleteFromProject();
+
+		}
+
+		try
+		{
+
+			IRPModelElement modifiedModel = modifiedJson.toModelElement(parentJson, project,
+					JsonModelElementBase.ImportMode.create);
+			if (modifiedModel == null)
+			{
+				if (ImportMode.update == aImportMode)
+				{
+					// restore existing model from json
+					IRPModelElement restoredModel = existingJson.toModelElement(parentJson, project,
+							JsonModelElementBase.ImportMode.create);
+					return "Error: Could not import model from JSON. Tried to restore existing model.";
+				}
+				return "Error: Could not import model from JSON.";
+			}
+		}
+		catch(Exception ex)
+		{
+			ex.printStackTrace();
+			if (ImportMode.update == aImportMode)
+			{
+				// restore existing model from json
+				IRPModelElement restoredModel = existingJson.toModelElement(parentJson, project,
+						JsonModelElementBase.ImportMode.create);
+				return "Error: Exception occurred while importing model from JSON: " + ex.getMessage()
+						+ ". Tried to restore existing model.";
+			}
+			return "Error: Exception occurred while importing model from JSON: " + ex.getMessage();
+		}
+
+		return "OK: Model imported successfully.";
+
+	}
 
 	public static String qname(IRPModelElement e)
 	{
@@ -345,7 +398,7 @@ public class RhapsodyClient
 	public String toJsonString(IRPModelElement aModelElement, boolean asStub)
 	{
 		JsonModelElementBase jme = toJsonObject(aModelElement, asStub);
-		
+
 		if (jme == null)
 		{
 			return null;
@@ -357,7 +410,7 @@ public class RhapsodyClient
 		{
 			json = jme.toJsonString();
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -396,8 +449,6 @@ public class RhapsodyClient
 		}
 		return jme;
 	}
-	
-	
 
 	public String toJsonBase64(IRPModelElement aModelElement, boolean asStub)
 	{
@@ -459,11 +510,11 @@ public class RhapsodyClient
 
 	public List<String> getAllMetaClassNames()
 	{
-		
-		//List<String> metaClasses = myJsonModelFactory.getRegisteredMetaClasses();
-		
+
+		// List<String> metaClasses = myJsonModelFactory.getRegisteredMetaClasses();
+
 		List<String> metaClassNames = myJsonModelFactory.getRegisteredMetaClassNames();
-		
+
 		return metaClassNames;
 
 	}
@@ -493,7 +544,6 @@ public class RhapsodyClient
 		query.setSearchText(aSearchString);
 		query.addSearchScope(project);
 		query.setSearchFindAsOption(aSearchOption);
-		
 
 		List<IRPModelElement> results = searchManager.search(query).toList();
 
