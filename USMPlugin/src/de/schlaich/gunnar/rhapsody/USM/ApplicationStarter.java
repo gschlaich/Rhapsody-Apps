@@ -80,10 +80,10 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.TortoiseLogCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GeminiDescribeCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.UpdateDatabaseCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MarkdownEditorCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ReverseEngineeringCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ReverseEngineeringCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GoogleTestRoundTripCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.FormatCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ParseElementCmd);

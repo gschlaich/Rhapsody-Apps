@@ -121,6 +121,8 @@ import com.telelogic.rhapsody.core.IRPTrigger;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
+import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelTester;
+
 public class SVNTools
 {
 
@@ -622,6 +624,10 @@ public class SVNTools
 					IRPAttribute attribute = (IRPAttribute) element;
 					compareAttributeVersion(attribute, aRevisionTo, aRevisionFrom);
 				}
+				else
+				{
+					compareJsonOfRevisions(element, aRevisionTo, aRevisionFrom);
+				}
 
 			}
 		});
@@ -720,8 +726,8 @@ public class SVNTools
 				{
 					blameItem.setEnabled(false);
 					blameItem.setVisible(false);
-					diffItem.setEnabled(false);
-					diffItem.setVisible(false);
+					diffItem.setEnabled(true);
+					diffItem.setVisible(true);
 				}
 
 				popupMenu.show(e.getComponent(), e.getX(), e.getY());
@@ -2980,6 +2986,112 @@ public class SVNTools
 
 		tempApp.quit();
 
+	}
+	
+	public String getJsonFromRevision(IRPModelElement aModelElement, int aRevision)
+	{
+		
+		IRPApplication tempApp = null;
+		tempApp = createTempRhapsodyApp();
+		if (tempApp == null)
+		{
+			trace("TempApp not created");
+			return null;
+		}
+		
+		IRPProject defaultProject = aModelElement.getProject();
+		File file = getVersion(aModelElement, aRevision);
+		trace("File: " + file.toString());
+		if(file.exists() == false)
+		{
+			trace("File does not exist");
+			tempApp.quit();
+			return null;
+		}
+		
+		String guid = aModelElement.getGUID();
+		File rhapsodyTempDir = getRhapsodyTempDir();
+		IRPProject svnProject = newSvnProject(tempApp, file, rhapsodyTempDir, "ProjectA");
+		IRPModelElement element = svnProject.findElementByGUID(guid);
+		
+		if (element == null)
+		{
+			trace("Element not found");
+			svnProject.close();
+			tempApp.quit();
+			return null;
+		}
+		
+		JsonModelTester tester = JsonModelTester.Instance(tempApp, this::trace);
+
+		String jsonModel = tester.getJson(element);
+		
+		svnProject.close();
+		
+		tempApp.quit();
+		
+		
+		
+		return jsonModel;
+	}
+	
+	public void compareJsonOfRevisions(IRPModelElement aModelElement, int aRevisionA, int aRevisionB)
+	{
+		
+		if(aRevisionA == aRevisionB)
+		{
+			trace("Both revisions are the same");
+			return;
+		}
+		
+		trace("Getting JSON for revision A: " + aRevisionA);
+		String jsonA = getJsonFromRevision(aModelElement, aRevisionA);
+		
+		File tempFileA = new File(getTempDir(), "revisionA.json");
+		try
+		{
+			Files.write(tempFileA.toPath(), jsonA.getBytes());
+		}
+		catch(Exception e)
+		{
+			trace(e.getMessage());
+			return;
+		}
+				
+		trace("Getting JSON for revision B: " + aRevisionB);
+		String jsonB = getJsonFromRevision(aModelElement, aRevisionB);
+		
+		File tempFileB = new File(getTempDir(), "revisionB.json");
+		try
+		{
+			Files.write(tempFileB.toPath(), jsonB.getBytes());
+		}
+		catch(Exception e)
+		{
+			trace(e.getMessage());
+			return;
+		}
+		
+		File ccrcFile = new File(System.getenv("OMROOT"), "etc\\ccrc_diff\\win32\\ccrc_cleardiffmrg.exe");
+		if (ccrcFile.exists() == false)
+		{
+			trace("ClearCase CCRC DiffMerge executable not found at: " + ccrcFile.toString());
+			return;
+		}
+
+		ProcessBuilder processBuilder = new ProcessBuilder(ccrcFile.getAbsolutePath(),
+				tempFileA.getAbsolutePath(), tempFileB.getAbsolutePath());
+
+		try
+		{
+			Process process = processBuilder.start();
+		}
+		catch(IOException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	@SuppressWarnings("unchecked")
