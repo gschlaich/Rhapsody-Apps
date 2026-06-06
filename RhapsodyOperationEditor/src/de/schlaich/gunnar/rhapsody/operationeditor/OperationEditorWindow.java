@@ -175,7 +175,13 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myAction = aAction;
 		myExitOnClose = aExitOnClose;
 		
-		JFrame frame = new JFrame (RhapsodyOperation.getOperation(aOperation));
+		String title = RhapsodyOperation.getOperation(aOperation);
+		if(aOperation.isReadOnly()!=0)
+		{
+			title = title + " (read only)";
+		}
+		
+		JFrame frame = new JFrame (title);
 		
 		
 		

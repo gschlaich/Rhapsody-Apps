@@ -66,7 +66,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	private boolean myAddType = false;
 	
-	private boolean myClassCompletionCreated = false;
+	private volatile boolean myClassCompletionCreated = false;
 	
 	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProvidersPrivate = null;
 	private static Map<IRPClassifier,ClassifierCompletionProvider> ClassifierCompletionProvidersPublic = null;
@@ -95,7 +95,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 	
 	}
 	
-	public void resetClassCompletionCreated()
+	public synchronized void resetClassCompletionCreated()
 	{
 		myClassCompletionCreated = false;
 	}
@@ -188,7 +188,7 @@ public class ClassifierCompletionProvider extends DefaultCompletionProvider {
 		return myClassifier;
 	}
 	
-	public void createClassCompletion()
+	public synchronized void createClassCompletion()
 	{
 		if(myClassCompletionCreated)
 		{

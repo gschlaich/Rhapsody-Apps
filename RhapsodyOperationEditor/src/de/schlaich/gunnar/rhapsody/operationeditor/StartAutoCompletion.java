@@ -112,199 +112,218 @@ public class StartAutoCompletion extends Thread
 	public void startAutoComplete()
 	{
 
-		instance = this;
-
-		Date started = new Date();
-		// String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new
-		// Date());
-
-		myApplication.writeToOutputWindow("Log", RhapsodyOperation.getOperation(mySelectedOperation));
-		myApplication.writeToOutputWindow("Log",
-				" in " + mySelectedOperation.getOwner().getOwner().getFullPathName() + "\n\n");
-
-		myApplication.writeToOutputWindow("log", "Start Autocomplete collection \n");
-		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
-
-		// Install auto-completion onto our text area.
-		myAutoComplete = new AutoCompletion(provider);
-		myAutoComplete.setListCellRenderer(new CPPCellRenderer());
-		myAutoComplete.setShowDescWindow(true);
-		myAutoComplete.setParameterAssistanceEnabled(true);
-		myAutoComplete.setAutoCompleteEnabled(true);
-		myAutoComplete.setAutoActivationEnabled(true);
-		myAutoComplete.setAutoActivationDelay(750);
-		myAutoComplete.install(myTextArea);
-
-		myGutterEndpoints = new ArrayList<GutterIconInfo>();
-
-		myAutoComplete.setAutoCompleteSingleChoices(false);
-		myAutoComplete.addAutoCompletionListener(new AutoCompletionListener()
+		try
 		{
 
-			@Override
-			public void autoCompleteUpdate(AutoCompletionEvent e)
+			instance = this;
+
+			Date started = new Date();
+			// String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new
+			// Date());
+
+			myApplication.writeToOutputWindow("Log", RhapsodyOperation.getOperation(mySelectedOperation));
+			myApplication.writeToOutputWindow("Log",
+					" in " + mySelectedOperation.getOwner().getOwner().getFullPathName() + "\n\n");
+
+			myApplication.writeToOutputWindow("log", "Start Autocomplete collection \n");
+			CompletionProvider provider = createCompletionProvider(mySelectedOperation);
+
+			// Install auto-completion onto our text area.
+			myAutoComplete = new AutoCompletion(provider);
+			myAutoComplete.setListCellRenderer(new CPPCellRenderer());
+			myAutoComplete.setShowDescWindow(true);
+			myAutoComplete.setParameterAssistanceEnabled(true);
+			myAutoComplete.setAutoCompleteEnabled(true);
+			myAutoComplete.setAutoActivationEnabled(true);
+			myAutoComplete.setAutoActivationDelay(750);
+			myAutoComplete.install(myTextArea);
+
+			myGutterEndpoints = new ArrayList<GutterIconInfo>();
+
+			myAutoComplete.setAutoCompleteSingleChoices(false);
+			myAutoComplete.addAutoCompletionListener(new AutoCompletionListener()
 			{
-				System.out.println("AutoCompletionUpdate " + e.toString());
 
-			}
-		});
+				@Override
+				public void autoCompleteUpdate(AutoCompletionEvent e)
+				{
+					System.out.println("AutoCompletionUpdate " + e.toString());
 
-		myAutoComplete.setExternalURLHandler(new ExternalURLHandler()
+				}
+			});
+
+			myAutoComplete.setExternalURLHandler(new ExternalURLHandler()
+			{
+
+				@Override
+				public void urlClicked(HyperlinkEvent e, Completion c, DescWindowCallback callback)
+				{
+
+					System.out.println("Summary: " + c.getSummary());
+					IRPProject project = myApplication.activeProject();
+
+					System.out.println(mySelectedOperation.getToolTipHTML());
+
+					if (project == null)
+					{
+						return;
+					}
+
+					List<IRPHyperLink> links = mySelectedOperation.getHyperLinks().toList();
+
+					for (IRPHyperLink link : links)
+					{
+						System.out.println("Clicked URL: " + link.getURL());
+					}
+
+					/*
+					 * project.view
+					 * 
+					 * 
+					 * 
+					 * 
+					 * String elementName = c.toString();
+					 * 
+					 * 
+					 * if(c instanceof RhapsodyClassifier) { RhapsodyClassifier rc =
+					 * (RhapsodyClassifier)c;
+					 * 
+					 * IRPModelElement element = rc.getElement(); if(element==null) { return; }
+					 * element.openFeaturesDialog(1); }
+					 * 
+					 */
+
+					/*
+					 * System.out.println(elementName);
+					 * 
+					 * IRPProject project = myApplication.activeProject();
+					 * 
+					 * 
+					 * if(project==null) { return; }
+					 * 
+					 * 
+					 * 
+					 * 
+					 * IRPModelElement clickedElement = project.fin
+					 * 
+					 * if(clickedElement==null) { System.out.println(guid + " is not a GUID?!");
+					 * return; }
+					 * 
+					 * clickedElement.openFeaturesDialog(1);
+					 */
+
+				}
+			});
+
+			JPopupMenu popup = myTextArea.getPopupMenu();
+
+			popup.addSeparator();
+			popup.add(new JMenuItem(new GetInfo(myAutoComplete)));
+			popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider, myApplication)));
+			popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider, myApplication)));
+			popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
+			popup.add(new JMenuItem(new SetBreakpoint(mySelectedOperation, myTextArea, this)));
+			popup.addSeparator();
+			// popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
+			// popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
+
+			FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
+
+			myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
+			myTextArea.setCodeFoldingEnabled(true);
+
+			// start parser
+			Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
+
+			gutter.setBookmarkIcon(RhapsodyOperation.getIcon("RhapsodyIcons_110.gif"));
+			gutter.setBookmarkingEnabled(true);
+
+			myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
+			myTextArea.addParser(myCppParser);
+			myDiffParser = new DiffParser(myTextArea.getText(), gutter);
+			myTextArea.addParser(myDiffParser);
+			myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
+			myTextArea.addParser(myCodeAnalysisParser);
+
+			myClassifierCompletionProvider.createClassCompletion();
+			myTextArea.forceReparsing(myCppParser);
+			myTextArea.forceReparsing(myCodeAnalysisParser);
+
+			myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(),
+					myClassifierCompletionProvider);
+
+			traceBreakpoint(gutter, mySelectedOperation);
+
+			// timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+
+			Date finished = new Date();
+
+			double diffMs = finished.getTime() - started.getTime();
+
+			double diffS = diffMs / 1000;
+
+			myApplication.writeToOutputWindow("log",
+					"Complete Autocomplete collection after " + diffS + " Seconds\n\n\n");
+		}
+		catch(Exception e)
 		{
-
-			@Override
-			public void urlClicked(HyperlinkEvent e, Completion c, DescWindowCallback callback)
-			{
-
-				System.out.println(c.getSummary());
-				IRPProject project = myApplication.activeProject();
-
-				System.out.println(mySelectedOperation.getToolTipHTML());
-
-				if (project == null)
-				{
-					return;
-				}
-
-				List<IRPHyperLink> links = mySelectedOperation.getHyperLinks().toList();
-
-				for (IRPHyperLink link : links)
-				{
-					System.out.println(link.getURL());
-				}
-
-				/*
-				 * project.view
-				 * 
-				 * 
-				 * 
-				 * 
-				 * String elementName = c.toString();
-				 * 
-				 * 
-				 * if(c instanceof RhapsodyClassifier) { RhapsodyClassifier rc =
-				 * (RhapsodyClassifier)c;
-				 * 
-				 * IRPModelElement element = rc.getElement(); if(element==null) { return; }
-				 * element.openFeaturesDialog(1); }
-				 * 
-				 */
-
-				/*
-				 * System.out.println(elementName);
-				 * 
-				 * IRPProject project = myApplication.activeProject();
-				 * 
-				 * 
-				 * if(project==null) { return; }
-				 * 
-				 * 
-				 * 
-				 * 
-				 * IRPModelElement clickedElement = project.fin
-				 * 
-				 * if(clickedElement==null) { System.out.println(guid + " is not a GUID?!");
-				 * return; }
-				 * 
-				 * clickedElement.openFeaturesDialog(1);
-				 */
-
-			}
-		});
-
-		JPopupMenu popup = myTextArea.getPopupMenu();
-
-		popup.addSeparator();
-		popup.add(new JMenuItem(new GetInfo(myAutoComplete)));
-		popup.add(new JMenuItem(new SearchElement(myClassifierCompletionProvider, myApplication)));
-		popup.add(new JMenuItem(new OpenFeature(myClassifierCompletionProvider, myApplication)));
-		popup.add(new JMenuItem(new AddDependency(mySelectedOperation)));
-		popup.add(new JMenuItem(new SetBreakpoint(mySelectedOperation, myTextArea, this)));
-		popup.addSeparator();
-		// popup.add(new JMenuItem(new AskGPtIssue(myApplication)));
-		// popup.add(new JMenuItem(new AskGPtOptimize(myApplication)));
-
-		FoldParserManager.get().addFoldParserMapping("text/RhapsodyCPP", new CurlyFoldParser());
-
-		myTextArea.setSyntaxEditingStyle("text/RhapsodyCPP");
-		myTextArea.setCodeFoldingEnabled(true);
-
-		// start parser
-		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
-
-		gutter.setBookmarkIcon(RhapsodyOperation.getIcon("RhapsodyIcons_110.gif"));
-		gutter.setBookmarkingEnabled(true);
-
-		myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
-		myTextArea.addParser(myCppParser);
-		myDiffParser = new DiffParser(myTextArea.getText(), gutter);
-		myTextArea.addParser(myDiffParser);
-		myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
-		myTextArea.addParser(myCodeAnalysisParser);
-
-		myClassifierCompletionProvider.createClassCompletion();
-		myTextArea.forceReparsing(myCppParser);
-		myTextArea.forceReparsing(myCodeAnalysisParser);
-
-		myLocalCompletionProvider = new LocalCompletionProvider(myTextArea.getText(), myClassifierCompletionProvider);
-
-		traceBreakpoint(gutter, mySelectedOperation);
-
-		// timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
-
-		Date finished = new Date();
-
-		double diffMs = finished.getTime() - started.getTime();
-
-		double diffS = diffMs / 1000;
-
-		myApplication.writeToOutputWindow("log", "Complete Autocomplete collection after " + diffS + " Seconds\n\n\n");
+			myApplication.writeToOutputWindow("log",
+					"Error during Autocomplete collection: " + e.getMessage() + "\n\n\n");
+		}
 
 	}
 
 	public void updateCompletionProvider()
 	{
 		Date started = new Date();
-
-		myFrame.setTitle(RhapsodyOperation.getOperation(mySelectedOperation));
-
-		myClassifierCompletionProvider.clear();
-		myApplication.writeToOutputWindow("log", "Start Autocomplete update \n");
-		CompletionProvider provider = createCompletionProvider(mySelectedOperation);
-		myAutoComplete.setCompletionProvider(provider);
-		myClassifierCompletionProvider.createClassCompletion();
-
-		Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
-
-		myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
-		myTextArea.addParser(myCppParser);
-		myDiffParser = new DiffParser(myTextArea.getText(), gutter);
-		myTextArea.addParser(myDiffParser);
-		myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
-		myTextArea.addParser(myCodeAnalysisParser);
-
-		myClassifierCompletionProvider.resetClassCompletionCreated();
-
-		getNameSpaces(myClassifierCompletionProvider, mySelectedOperation);
-
-		@SuppressWarnings("unchecked")
-		List<IRPArgument> arguments = mySelectedOperation.getArguments().toList();
-		for (IRPArgument argument : arguments)
+		try
 		{
-			RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(myClassifierCompletionProvider, argument);
-			myClassifierCompletionProvider.addCompletion(rac);
+
+			myFrame.setTitle(RhapsodyOperation.getOperation(mySelectedOperation));
+
+			myClassifierCompletionProvider.clear();
+			myApplication.writeToOutputWindow("log", "Start Autocomplete update \n");
+			CompletionProvider provider = createCompletionProvider(mySelectedOperation);
+			myAutoComplete.setCompletionProvider(provider);
+			myClassifierCompletionProvider.createClassCompletion();
+
+			Gutter gutter = RSyntaxUtilities.getGutter(myTextArea);
+
+			myCppParser = new CppParser(myClassifierCompletionProvider, gutter);
+			myTextArea.addParser(myCppParser);
+			myDiffParser = new DiffParser(myTextArea.getText(), gutter);
+			myTextArea.addParser(myDiffParser);
+			myCodeAnalysisParser = new CodeAnalysisParser(mySelectedOperation, gutter);
+			myTextArea.addParser(myCodeAnalysisParser);
+
+			myClassifierCompletionProvider.resetClassCompletionCreated();
+
+			getNameSpaces(myClassifierCompletionProvider, mySelectedOperation);
+
+			@SuppressWarnings("unchecked")
+			List<IRPArgument> arguments = mySelectedOperation.getArguments().toList();
+			for (IRPArgument argument : arguments)
+			{
+				RhapsodyArgumentCompletion rac = new RhapsodyArgumentCompletion(myClassifierCompletionProvider,
+						argument);
+				myClassifierCompletionProvider.addCompletion(rac);
+			}
+
+			myClassifierCompletionProvider.createClassCompletion();
+			myTextArea.forceReparsing(myCppParser);
+			myTextArea.forceReparsing(myCodeAnalysisParser);
+
+			traceBreakpoint(gutter, mySelectedOperation);
+
+			Date finished = new Date();
+			double diffMs = finished.getTime() - started.getTime();
+			double diffS = diffMs / 1000;
+			myApplication.writeToOutputWindow("log", "Complete Autocomplete update after " + diffS + " Seconds\n\n\n");
 		}
-
-		myClassifierCompletionProvider.createClassCompletion();
-		myTextArea.forceReparsing(myCppParser);
-		myTextArea.forceReparsing(myCodeAnalysisParser);
-
-		traceBreakpoint(gutter, mySelectedOperation);
-
-		Date finished = new Date();
-		double diffMs = finished.getTime() - started.getTime();
-		double diffS = diffMs / 1000;
-		myApplication.writeToOutputWindow("log", "Complete Autocomplete update after " + diffS + " Seconds\n\n\n");
+		catch(Exception e)
+		{
+			myApplication.writeToOutputWindow("log", "Error during Autocomplete update: " + e.getMessage() + "\n\n\n");
+		}
 
 	}
 
@@ -331,46 +350,42 @@ public class StartAutoCompletion extends Thread
 		{
 			myGutterEndpoints = new ArrayList<GutterIconInfo>();
 		}
-			
-			
-			
-		
-			for (GutterIconInfo info : myGutterEndpoints)
-			{
-				aGutter.removeTrackingIcon(info);
 
-			}
+		for (GutterIconInfo info : myGutterEndpoints)
+		{
+			aGutter.removeTrackingIcon(info);
 
-			myGutterEndpoints.clear();
-			// check for breakpoint (IRPComment - Breakpoint)
-			List<IRPComment> comments = aOperation.getNestedElementsByMetaClass("Comment", 0).toList();
-			for (IRPComment comment : comments)
+		}
+
+		myGutterEndpoints.clear();
+		// check for breakpoint (IRPComment - Breakpoint)
+		List<IRPComment> comments = aOperation.getNestedElementsByMetaClass("Comment", 0).toList();
+		for (IRPComment comment : comments)
+		{
+			if (comment.getUserDefinedMetaClass().equals("BreakPoint"))
 			{
-				if (comment.getUserDefinedMetaClass().equals("BreakPoint"))
+				IRPTag offsetTag = comment.getTag("Offset");
+				if (offsetTag != null)
 				{
-					IRPTag offsetTag = comment.getTag("Offset");
-					if (offsetTag != null)
+					int line = Integer.parseInt(offsetTag.getValue());
+
+					try
 					{
-						int line = Integer.parseInt(offsetTag.getValue());
+						GutterIconInfo info = aGutter.addLineTrackingIcon(line,
+								RhapsodyOperation.getIcon("RhapsodyIcons_12.gif"), "BreakPoint " + comment.getName());
 
-						try
-						{
-							GutterIconInfo info = aGutter.addLineTrackingIcon(line,
-									RhapsodyOperation.getIcon("RhapsodyIcons_12.gif"),
-									"BreakPoint " + comment.getName());
+						myGutterEndpoints.add(info);
 
-							myGutterEndpoints.add(info);
-
-						}
-						catch (BadLocationException e)
-						{
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+					}
+					catch(BadLocationException e)
+					{
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			}
-		
+		}
+
 	}
 
 	/**
