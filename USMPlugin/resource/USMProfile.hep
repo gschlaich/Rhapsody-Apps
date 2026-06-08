@@ -1,5 +1,5 @@
 [helpers]
-numberOfElements=56
+numberOfElements=57
 
 name1=USMPlugin
 JavaMainClass1=de.schlaich.gunnar.rhapsody.USM.CUSMPlugin
@@ -421,6 +421,14 @@ command56=USMPlugin
 applicableTo56=All
 isVisible56=1
 DLLServerCompatible56=1
+
+name57=Copy to AppData
+isPluginCommand57=1
+command57=USMPlugin
+applicableTo57=USMDataItem
+isVisible57=1
+DLLServerCompatible57=1
+
 
 
 
