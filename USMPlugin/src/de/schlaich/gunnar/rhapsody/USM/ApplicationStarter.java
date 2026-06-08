@@ -80,7 +80,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DiffCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.TortoiseLogCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GeminiDescribeCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd2);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.UpdateDatabaseCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MarkdownEditorCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ReverseEngineeringCmd);
@@ -101,6 +101,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowMarkdownCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ActivateHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DeactivateHistoryCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CopyToAppDataCmd);
 		
 	}
 

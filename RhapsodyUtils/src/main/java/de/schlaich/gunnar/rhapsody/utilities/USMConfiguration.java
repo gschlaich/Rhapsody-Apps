@@ -37,15 +37,31 @@ import com.telelogic.rhapsody.core.IRPTableView;
 public class USMConfiguration
 {
 
+	private static USMConfiguration myInstance = null;
+	
 	private IRPApplication myApplication = null;
 	private Consumer<String> myTraceAction = null;
+	
+	private String myAppDataPath = null;
+	
 	List<CClassClass> myClassList = null;
 	List<CClassClass> myParamSetList = null;
 	private Path myDataPath = null;
 
 	Map<String, IRPComponent> myComponentMap = null;
+	
+	
+	public static USMConfiguration Instance(IRPApplication aApplication, Consumer<String> aTraceAction)
+	{
+		if(myInstance==null)
+		{
+			myInstance = new USMConfiguration(aApplication, aTraceAction);
+		}
+		
+		return myInstance;
+	}
 
-	public USMConfiguration(IRPApplication aApplication, Consumer<String> aTraceAction)
+	private USMConfiguration(IRPApplication aApplication, Consumer<String> aTraceAction)
 	{
 		myTraceAction = aTraceAction;
 		myApplication = aApplication;
@@ -66,10 +82,7 @@ public class USMConfiguration
 
 	public void loadConfiguration(IRPProject aProject)
 	{
-		
-		
-		
-		
+
 		File classCatalog = loadClassCatalog(aProject);
 		if (classCatalog == null)
 		{
@@ -282,6 +295,34 @@ public class USMConfiguration
 		usmDataView.open();
 
 	}
+	
+	public void copyToAppData(IRPHyperLink aConfigFile)
+	{
+		String link = aConfigFile.getURL();
+		
+		
+		
+		Path sourcePath = Paths.get(link).toAbsolutePath();
+		
+		if(sourcePath.toFile().exists()==false)
+		{
+			trace("Source file not found: " + sourcePath);
+			return;
+		}
+		
+		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject()), sourcePath.getFileName().toString());
+		
+		try
+		{
+			java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+			trace("File copied to: " + targetPath);
+		}
+		catch(IOException e)
+		{
+			trace("Error copying file: " + e.getMessage());
+		}
+		
+	}
 
 	public void addLibraryLinks(IRPProject aProject)
 	{
@@ -296,7 +337,6 @@ public class USMConfiguration
 		for(IRPComponent component : myComponentMap.values())
         {
             
-			
 			
 			@SuppressWarnings("unchecked")
 			List<IRPPackage> packages = component.getScopeElementsByCategory("Package").toList();
@@ -403,6 +443,26 @@ public class USMConfiguration
 
 		}
 
+	}
+	
+	private String getAppDataPath(IRPProject aProject)
+	{
+		if(myAppDataPath!=null)
+		{
+			return myAppDataPath;
+		}
+		
+		Path appDataPath = Paths.get(aProject.getName() + "App","DefaultConfig","AppData").toAbsolutePath();
+		
+		if(appDataPath.toFile().exists()==false)
+		{
+			appDataPath.toFile().mkdirs();
+		}
+		
+		myAppDataPath = appDataPath.toString();
+		
+		return myAppDataPath;
+		
 	}
 
 	private File loadClassCatalog(IRPProject aProject)
@@ -702,7 +762,7 @@ public class USMConfiguration
 			// XPath-Ausdruck, um die ObjectId im ParameterSetRef zu finden
 			String expression = "//ParameterSetRef/ObjectId";
 
-			// Führe den XPath-Ausdruck aus und finde die ObjectId
+			// Fï¿½hre den XPath-Ausdruck aus und finde die ObjectId
 			XPathExpression xpathExpression = xpath.compile(expression);
 			NodeList nodes = (NodeList) xpathExpression.evaluate(doc, XPathConstants.NODESET);
 

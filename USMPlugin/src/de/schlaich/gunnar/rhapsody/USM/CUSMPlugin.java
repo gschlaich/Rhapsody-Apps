@@ -142,6 +142,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String ShowMarkdownCmd = "Show Markdown";
 	public static final String ActivateHistoryCmd = "Activate History";
 	public static final String DeactivateHistoryCmd = "Deactivate History";
+	public static final String CopyToAppDataCmd = "Copy to AppData";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -844,10 +845,33 @@ public class CUSMPlugin extends RPUserPlugin
 
 			IRPProject project = (IRPProject) selected;
 
-			USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
+			USMConfiguration config = USMConfiguration.Instance(myRhapsody, this::trace);
 			config.loadConfiguration(project);
 
 			trace("End Add Configuration");
+
+			return;
+		}
+		
+		if (menuItem.contains(CopyToAppDataCmd))
+		{
+			trace("Copy to AppData");
+			if (selected instanceof IRPHyperLink == false)
+			{
+				trace("No Data File selected");
+				return;
+			}
+			
+			IRPHyperLink link = (IRPHyperLink) selected;
+			
+			
+			
+			
+			USMConfiguration config = USMConfiguration.Instance(myRhapsody, this::trace);
+			
+			config.copyToAppData(link);
+			
+			trace("End Copy to AppData");
 
 			return;
 		}
@@ -863,7 +887,7 @@ public class CUSMPlugin extends RPUserPlugin
 
 			IRPProject project = (IRPProject) selected;
 
-			USMConfiguration config = new USMConfiguration(myRhapsody, this::trace);
+			USMConfiguration config = USMConfiguration.Instance(myRhapsody, this::trace);
 			config.addLibraryLinks(project);
 
 			trace("End Add Library Links");
