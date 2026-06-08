@@ -1,0 +1,440 @@
+[helpers]
+numberOfElements=56
+
+name1=USMPlugin
+JavaMainClass1=de.schlaich.gunnar.rhapsody.USM.CUSMPlugin
+JavaClassPath1="USMPlugin.jar"
+isPlugin1=1
+isVisible1=0
+DLLServerCompatible1=1
+
+name2=SVN\Jira Changed
+isPluginCommand2=1
+command2=USMPlugin
+applicableTo2=All
+isVisible2=1
+DLLServerCompatible2=1
+
+name3=Statistic\Code Analyze
+isPluginCommand3=1
+command3=USMPlugin
+applicableTo3=Class,Package
+isVisible3=1
+DLLServerCompatible3=1
+
+name4=Statistic\Clear Analyze
+isPluginCommand4=1
+command4=USMPlugin
+applicableTo4=Class,Package
+isVisible4=1
+DLLServerCompatible4=1
+
+name5=Start OperationEditor
+MenuStringResourceID5=
+command5=$OMROOT\..\jdk\bin\javaw.exe "-Djava.library.path=$OMROOT\JavaAPI" -Dfile.encoding=Cp1252 -jar ..\..\Development\Share\Profiles\Bernina\RhapsodyEditorStarter.jar
+arguments5=$RHPCONNECTIONID
+initialDir5=
+JavaMainClass5=
+JavaClassPath5=
+JavaLibPath5=
+isVisible5=1
+isMacro5=0
+isPlugin5=0
+isSynced5=0
+UsingJava5=0
+applicableTo5=Operation,Constructor,Destructor
+applicableToProfile5=
+helperTriggers5=0
+isPluginCommand5=0
+
+name6=Util\PlantUML
+isPluginCommand6=1
+command6=USMPlugin
+applicableTo6=Class,Package,ObjectModelDiagram
+isVisible6=1
+DLLServerCompatible6=1
+
+name7=Operational Roundtrip
+isPluginCommand7=1
+command7=USMPlugin
+applicableTo7=Class,Interface
+isVisible7=1
+DLLServerCompatible7=1
+
+name8=Util\Search Element
+isPluginCommand8=1
+command8=USMPlugin
+applicableTo8=All
+isVisible8=1
+DLLServerCompatible8=1
+
+name9=Set Active
+isPluginCommand9=1
+command9=USMPlugin
+applicableTo9=All
+isVisible9=1
+DLLServerCompatible9=1
+
+name10=Locate Active
+isPluginCommand10=1
+command10=USMPlugin
+applicableTo10=All
+isVisible10=1
+DLLServerCompatible10=1
+
+name11=BCL Scriptrunner
+isPluginCommand11=1
+command11=USMPlugin
+applicableTo11=BCLScript,BCLScriptExt
+isVisible11=1
+DLLServerCompatible11=1
+
+name12=Util\Set Component Dependency
+isPluginCommand12=1
+command12=USMPlugin
+applicableTo12=Dependency
+isVisible12=1
+DLLServerCompatible12=1
+
+name13=Util\Select Relation
+isPluginCommand13=1
+command13=USMPlugin
+applicableTo13=Class,Operation,Package
+isVisible13=1
+DLLServerCompatible13=1
+
+name14=Util\Move Package to SVN
+isPluginCommand14=1
+command14=USMPlugin
+applicableTo14=Package
+isVisible14=1
+DLLServerCompatible14=1
+
+name15=Util\Create Message
+isPluginCommand15=1
+command15=USMPlugin
+applicableTo15=Class
+isVisible15=1
+DLLServerCompatible15=1
+
+name16=Build All
+isPluginCommand16=1
+command16=USMPlugin
+applicableTo16=Project
+isVisible16=1
+DLLServerCompatible16=1
+
+name17=SVN\Jira
+isPluginCommand17=1
+command17=USMPlugin
+applicableTo17=All
+isVisible17=1
+DLLServerCompatible17=1
+
+name18=Relative Path
+isPluginCommand18=1
+command18=USMPlugin
+applicableTo18=BCLScriptExt,mFile,HyperLink,Markdown
+isVisible18=1
+DLLServerCompatible18=1
+
+name19=Run m File
+isPluginCommand19=1
+command19=USMPlugin
+applicableTo19=mFile
+isVisible19=1
+DLLServerCompatible19=1
+
+name20=Util\InitCode\Get init code of class
+isPluginCommand20=1
+command20=USMPlugin
+applicableTo20=Class
+isVisible20=1
+DLLServerCompatible20=1
+
+name21=Util\InitCode\Set init code of class
+isPluginCommand21=1
+command21=USMPlugin
+applicableTo21=Class
+isVisible21=1
+DLLServerCompatible21=1
+
+name22=Explorer
+isPluginCommand22=1
+command22=USMPlugin
+applicableTo22=All
+isVisible22=1
+DLLServerCompatible22=1
+
+name23=SVN\Get Lock
+isPluginCommand23=1
+command23=USMPlugin
+applicableTo23=All
+isVisible23=1
+DLLServerCompatible23=1
+
+name24=SVN\Commit
+isPluginCommand24=1
+command24=USMPlugin
+applicableTo24=All
+isVisible24=1
+DLLServerCompatible24=1
+
+name25=SVN\Show Log
+isPluginCommand25=1
+command25=USMPlugin
+applicableTo25=All
+isVisible25=1
+DLLServerCompatible25=1
+
+name26=SVN\Tortoise Log
+isPluginCommand26=1
+command26=USMPlugin
+applicableTo26=All
+isVisible26=1
+DLLServerCompatible26=1
+
+name27=SVN\diffMerge\Diff Head
+isPluginCommand27=1
+command27=USMPlugin
+applicableTo27=All
+isVisible27=1
+DLLServerCompatible27=1
+
+name28=SVN\diffMerge\Diff Trunk
+isPluginCommand28=1
+command28=USMPlugin
+applicableTo28=All
+isVisible28=1
+DLLServerCompatible28=1
+
+name29=SVN\diffMerge\Diff Report Head
+isPluginCommand29=1
+command29=USMPlugin
+applicableTo29=All
+isVisible29=1
+DLLServerCompatible29=1
+
+name30=SVN\diffMerge\Diff Report Trunk
+isPluginCommand30=1
+command30=USMPlugin
+applicableTo30=All
+isVisible30=1
+DLLServerCompatible30=1
+
+name31=Util\Export Table
+isPluginCommand31=1
+command31=USMPlugin
+applicableTo31=TableView
+isVisible31=1
+DLLServerCompatible31=1
+
+name32=Util\Add Library
+isPluginCommand32=1
+command32=USMPlugin
+applicableTo32=Package
+isVisible32=1
+DLLServerCompatible32=1
+
+name33=Util\Add include path
+isPluginCommand33=1
+command33=USMPlugin
+applicableTo33=Package
+isVisible33=1
+DLLServerCompatible33=1
+
+name34=Add Configuration
+isPluginCommand34=1
+command34=USMPlugin
+applicableTo34=Project
+isVisible34=1
+DLLServerCompatible34=1
+
+name35=SVN\Show History
+isPluginCommand35=1
+command35=USMPlugin
+applicableTo35=All
+isVisible35=1
+DLLServerCompatible35=1
+
+name36=Statistic\Change Statistic
+isPluginCommand36=1
+command36=USMPlugin
+applicableTo36=All
+isVisible36=1
+DLLServerCompatible36=1
+
+name37=Statistic\Lines of Code
+isPluginCommand37=1
+command37=USMPlugin
+applicableTo37=All
+isVisible37=1
+DLLServerCompatible37=1
+
+name38=SVN\Blame
+isPluginCommand38=1
+command38=USMPlugin
+applicableTo38=Operation,Constructor,Destructor
+isVisible38=1
+DLLServerCompatible38=1
+
+name39=SVN\Change Statistics
+isPluginCommand39=1
+command39=USMPlugin
+applicableTo39=All
+isVisible39=1
+DLLServerCompatible39=1
+
+name40=SVN\Diff
+isPluginCommand40=1
+command40=USMPlugin
+applicableTo40=All
+isVisible40=1
+DLLServerCompatible40=1
+
+name41=Statistic\Code Complexity
+isPluginCommand41=1
+command41=USMPlugin
+applicableTo41=Class
+isVisible41=1
+DLLServerCompatible41=1
+
+name42=Util\Add Description
+isPluginCommand42=1
+command42=USMPlugin
+applicableTo42=All
+isVisible42=1
+DLLServerCompatible42=1
+
+name43=Next
+isPluginCommand43=1
+command43=USMPlugin
+isVisible43=1
+DLLServerCompatible43=1
+menuName43=Tools
+addMenuAfter43=Browser
+
+name44=Back
+isPluginCommand44=1
+command44=USMPlugin
+isVisible44=1
+DLLServerCompatible44=1
+menuName44=Tools
+addMenuAfter44=Browser
+
+name45=JsonTools\JSON copy
+isPluginCommand45=1
+command45=USMPlugin
+applicableTo45=All
+isVisible45=1
+DLLServerCompatible45=1
+
+name46=JsonTools\JSON paste
+isPluginCommand46=1
+command46=USMPlugin
+applicableTo46=All
+isVisible46=1
+DLLServerCompatible46=1
+
+name47=JsonTools\List MetaClasses
+isPluginCommand47=1
+command47=USMPlugin
+isVisible47=1
+DLLServerCompatible47=1
+
+name48=JsonTools\JSON Schema
+isPluginCommand48=1
+command48=USMPlugin
+applicableTo48=All
+isVisible48=1
+DLLServerCompatible48=1
+
+name49=Start MCP Server
+MenuStringResourceID49=
+command49=$OMROOT\..\jdk\bin\javaw.exe "-Djava.library.path=$OMROOT\JavaAPI" -Dfile.encoding=Cp1252 -jar ..\..\Development\Share\Profiles\Bernina\RhapsodyMCPStarter.jar
+arguments49=$RHPCONNECTIONID
+initialDir49=
+JavaMainClass49=
+JavaClassPath49=
+JavaLibPath49=
+isVisible49=1
+isMacro49=0
+isPlugin49=0
+isSynced49=0
+UsingJava49=0
+applicableToProfile49=
+helperTriggers49=0
+isPluginCommand49=0
+
+name50=Run Batch
+isPluginCommand50=1
+command50=USMPlugin
+applicableTo50=BatchFile
+isVisible50=1
+DLLServerCompatible50=1
+
+name51=NextChanged
+isPluginCommand51=1
+toolbarName51=Util
+command51=USMPlugin
+isVisible51=1
+DLLServerCompatible51=1
+menuName51=Tools
+pluginAcceleratorKey51=<Shift+Alt+M>
+toolbarDescription51=Select next changed Element
+pluginIcon51=$OMROOT/../Metrics/slide_right.png
+addMenuAfter51=Browser
+
+name52=BackChanged
+isPluginCommand52=1
+command52=USMPlugin
+isVisible52=1
+DLLServerCompatible52=1
+menuName52=Tools
+addMenuAfter52=Browser
+
+name53=Util\Show GUID
+isPluginCommand53=1
+command53=USMPlugin
+applicableTo53=All
+isVisible53=1
+DLLServerCompatible53=1
+
+name54=Show Change History
+isPluginCommand54=1
+command54=USMPlugin
+isVisible54=1
+DLLServerCompatible54=1
+menuName54=Tools
+addMenuAfter54=Browser
+
+name55=Show Markdown
+isPluginCommand55=1
+command55=USMPlugin
+applicableTo55=Markdown
+isVisible55=1
+DLLServerCompatible55=1
+
+name56=Util\Description Markdown Editor
+isPluginCommand56=1
+command56=USMPlugin
+applicableTo56=All
+isVisible56=1
+DLLServerCompatible56=1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
