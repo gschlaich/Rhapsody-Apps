@@ -61,9 +61,9 @@ public class MultiPlugin extends RPUserPlugin
 
 	//environment variables
 	
-	private String myGhsPath = "C:\\ghs\\multi_814\\";
-	private String myCmd = myGhsPath+"mpythonrun";
-	private String myMultiCmd = myGhsPath+"multi.exe";
+	//private String myGhsPath = "C:\\ghs\\multi_814\\";
+	private String myCmd = "mpythonrun";
+	private String myMultiCmd = "multi.exe";
 	private String myArgsDebugView = " -s \"dw = winreg.GetDebugger()\" -s \"dw.RunCommands('e {0} ')\"";
 	private String myArgDebugView1 = "\"dw = winreg.GetDebugger()\"";
 	private String myArgDebugView2Begin = "\"dw.RunCommands('e ";
@@ -146,9 +146,9 @@ public class MultiPlugin extends RPUserPlugin
 			return false;
 		}
 		
-		myGhsPath = ghsPathRunning;
-		myCmd = myGhsPath + "mpythonrun";
-		myMultiCmd = myGhsPath + "multi.exe";
+		//myGhsPath = ghsPathRunning;
+		//myCmd = myGhsPath + "mpythonrun";
+		//myMultiCmd = myGhsPath + "multi.exe";
 		return true;
 		
 	}
