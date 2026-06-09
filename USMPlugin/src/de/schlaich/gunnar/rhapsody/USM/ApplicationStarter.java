@@ -70,7 +70,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LOCStatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CompareOperationHeadCmd);
@@ -101,7 +101,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowMarkdownCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ActivateHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DeactivateHistoryCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CopyToAppDataCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CopyToAppDataCmd);
 		
 	}
 

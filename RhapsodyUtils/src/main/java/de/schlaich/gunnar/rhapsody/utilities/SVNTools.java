@@ -1596,7 +1596,14 @@ public class SVNTools
 			return ret;
 		}
 		
-		mySaveUnit.save(1);
+		if(aRevision == 0)
+		{
+			if(mySaveUnit.isReadOnly()==0)
+			{
+				mySaveUnit.save(0);
+			}
+		}
+		
 
 		IRPModelElement unitElement = (IRPModelElement) mySaveUnit;
 
