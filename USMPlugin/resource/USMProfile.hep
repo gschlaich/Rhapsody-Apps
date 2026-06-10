@@ -134,7 +134,7 @@ DLLServerCompatible17=1
 name18=Relative Path
 isPluginCommand18=1
 command18=USMPlugin
-applicableTo18=BCLScriptExt,mFile,HyperLink,Markdown
+applicableTo18=BCLScriptExt,mFile,HyperLink,Markdown,BatchFile,USMDataItem
 isVisible18=1
 DLLServerCompatible18=1
 
