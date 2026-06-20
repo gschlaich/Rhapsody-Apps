@@ -65,7 +65,7 @@ public class ApplicationStarter {
 		}
 		else if(app.getSelectedElement() instanceof IRPOperation)
 		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.SET_BREAKPOINT_CMD);
+			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
 		}
 		else
 		{

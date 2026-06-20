@@ -646,7 +646,7 @@ public class MultiPlugin extends RPUserPlugin
         );
         
 
-        pb.redirectErrorStream(true); // stderr -> stdout zusammenführen
+        pb.redirectErrorStream(true); // stderr -> stdout zusammenfï¿½hren
         Process p;
 		try
 		{
@@ -748,11 +748,6 @@ public class MultiPlugin extends RPUserPlugin
 	public void compile(IRPModelElement aElement)
 	{
 
-		if (setMyCmd() == false)
-		{
-			trace("Could not compile - Multi not running");
-			return;
-		}
 		
 		boolean viewTable = false;
 		
@@ -774,6 +769,13 @@ public class MultiPlugin extends RPUserPlugin
 		myRhapsody.generateElements(generateCollection);
 
 		trace("Start compile");
+		
+
+		if (setMyCmd() == false)
+		{
+			trace("Could not compile - Multi not running");
+			return;
+		}
 
 		String path = null;
 

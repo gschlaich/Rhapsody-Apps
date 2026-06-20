@@ -14,6 +14,7 @@ import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNodeLocation;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.ast.cpp.ICPPASTTemplateId;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTProblem;
 import org.fife.ui.rsyntaxtextarea.RSyntaxDocument;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -151,6 +152,15 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				DefaultParserNotice notice = null;
 				IASTName astName = namedSpecifier.getName().getLastName();
 				String typeName = astName.toString();
+				
+				// skip template instantiations (e.g. vector<int>)
+				if(astName instanceof ICPPASTTemplateId)
+				{
+					ICPPASTTemplateId templateId = (ICPPASTTemplateId) astName;
+					typeName = templateId.getTemplateName().toString();
+				}
+				
+				
 				if(myClassifierCompletionProvider.getFirstCompletion(typeName)==null)
 				{
 					if(NamespaceCompletionProvider.GetCompletion(typeName)==null)

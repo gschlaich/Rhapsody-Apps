@@ -19,6 +19,7 @@ public class ApplicationStarter {
 		CUSMPlugin myUSMPlugin = new CUSMPlugin();
 		// get Rhapsody application that is currently running
 		IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplication();
+	
 		
 		
 		if(app==null)
@@ -70,7 +71,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CommitCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddConfigCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.AddLibraryLinksCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LOCStatisticCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CompareOperationHeadCmd);

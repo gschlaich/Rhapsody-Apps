@@ -48,7 +48,7 @@ public class RhapsodyPreferences {
 	
 	public boolean isStarted(String aConnectingString)
 	{
-		myConnectingString =aConnectingString;
+		myConnectingString = aConnectingString;
 		
 		boolean ret = myPrefs.getBoolean("Starter_" + aConnectingString, false);
 		
@@ -59,7 +59,7 @@ public class RhapsodyPreferences {
 		
 		if(ret==false)
 		{
-			myPrefs.putBoolean("Starter_"+ aConnectingString, true);
+			myPrefs.putBoolean("Starter_" + aConnectingString, true);
 		}
 		return ret;
 	}
@@ -78,7 +78,7 @@ public class RhapsodyPreferences {
 				{
 					line = line.trim();
 					String[] parts = line.split("\\s+");
-					// Der Wert ist 0 für Dark Mode, 1 für Light Mode
+					// Der Wert ist 0 fï¿½r Dark Mode, 1 fï¿½r Light Mode
 					String valueString = parts[parts.length - 1];
 					// Konvertiere den hex 0x0 Wert in einen Integer
 					int value = Integer.decode(valueString);
