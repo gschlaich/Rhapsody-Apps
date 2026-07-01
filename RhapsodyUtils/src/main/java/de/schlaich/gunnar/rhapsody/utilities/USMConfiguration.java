@@ -359,15 +359,17 @@ public class USMConfiguration
 						CExternalLibrary lib = libraryMap.get(library);
 						if(lib == null)
 						{
+							
 							Path path = Paths.get(library);
 							Path libraryParent = path.getParent();
 							
 							
 							lib = new CExternalLibrary(path.getFileName().toString(), libraryParent);
+							trace("Add library: " + lib.getName());
 							libraryMap.put(library, lib);
 						}
 						
-						trace("Library: " + library + " for package: " + pack.getName());
+						
 						lib.addDependency(pack.getGUID());
 					}
 
@@ -376,7 +378,7 @@ public class USMConfiguration
 			}
 			catch(Exception e)
 			{
-				trace(e.getMessage());
+				
 				continue;
 			}
 		}
@@ -394,9 +396,10 @@ public class USMConfiguration
 			for(String guid : el.getDependencies())
 			{
 				IRPModelElement modelElement = aProject.findElementByGUID(guid);
-				trace("Add dependency to: " + guid + " for library: " + el.getName());
+				
 				if(modelElement != null)
 				{
+					trace("Add dependency to: "+ modelElement.getName() + " for library: " + el.getName());
 					link.addDependencyTo(modelElement);
 				}
 			}
