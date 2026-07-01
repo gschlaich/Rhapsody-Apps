@@ -337,6 +337,7 @@ public class RhapsodyReverseEngineering
 					trace("  -> Type (Define) already exists: " + macroName);
 				}
 			}
+			
 
 			ASTVisitor visitor = new ASTVisitor()
 			{
@@ -594,6 +595,29 @@ public class RhapsodyReverseEngineering
 							else
 							{
 								trace("[CLASS]   " + structName);
+								IRPClass existingClass = (IRPClass) aExternPackage.findNestedElement(structName, "Class");
+								if (existingClass == null)
+								{
+									IRPClass newClass = (IRPClass) aExternPackage.addNewAggr("Class", structName);
+									if (newClass != null)
+									{
+										String classComment = findCommentBefore(sd.getFileLocation() != null
+												? sd.getFileLocation().getStartingLineNumber() : 0);
+										if (classComment != null)
+											newClass.setDescription(classComment);
+										//addStructMembers(newClass, ct, aExternPackage);
+										mySourceArtifact.addModelElement(newClass, "specFragment");
+										trace("  -> Class created: " + structName);
+									}
+									else
+									{
+										trace("  -> Class could not be created: " + structName);
+									}
+								}
+								else
+								{
+									trace("  -> Class already exists: " + structName);
+								}
 							}
 							return PROCESS_SKIP;
 						}
@@ -909,7 +933,49 @@ public class RhapsodyReverseEngineering
 			}
 		}
 	}
+	
+	private void addClassMembers(IRPClass aClass, IASTCompositeTypeSpecifier ct, IRPPackage aPackage)
+	{
+		for (IASTDeclaration member : ct.getMembers())
+		{
+			if (!(member instanceof IASTSimpleDeclaration))
+				continue;
+			IASTSimpleDeclaration sd = (IASTSimpleDeclaration) member;
+			IASTDeclSpecifier spec = sd.getDeclSpecifier();
+			for (IASTDeclarator dec : sd.getDeclarators())
+			{
+				String memberName = dec.getName().toString();
+				if (memberName.isEmpty())
+					continue;
 
+				String memberComment = findCommentBefore(
+						member.getFileLocation() != null ? member.getFileLocation().getStartingLineNumber() : 0);
+
+				// ── function pointer member ────────────────────────────────
+				if (dec instanceof IASTFunctionDeclarator)
+				{
+					// Build full type declaration from raw signature, e.g. "void (*fp)(int, char*)"
+					// Replace the member name with %s for Rhapsody placeholder
+					String rawDecl = sd.getRawSignature().trim();
+					// Remove trailing semicolon
+					if (rawDecl.endsWith(";"))
+						rawDecl = rawDecl.substring(0, rawDecl.length() - 1).trim();
+					trace("  -> Adding class function-pointer member: " + memberName);
+					IRPAttribute attr = (IRPAttribute) aClass.addNewAggr("Attribute", memberName);
+					if (attr != null)
+					{
+						// Use the full declaration; replace member name with %s placeholder
+						String typeDecl = rawDecl.replace(memberName, "%s");
+						attr.setTypeDeclaration(typeDecl);
+						if (memberComment != null)
+							attr.setDescription(memberComment);
+					}
+					continue;
+				}
+
+			}
+		}
+	}
 	/**
 	 * Collects all comments from the translation unit into {@link #myCommentMap}.
 	 * The map key is the <em>last</em> line number of the comment so that a lookup

@@ -8,8 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -38,26 +40,25 @@ public class USMConfiguration
 {
 
 	private static USMConfiguration myInstance = null;
-	
+
 	private IRPApplication myApplication = null;
 	private Consumer<String> myTraceAction = null;
-	
+
 	private String myAppDataPath = null;
-	
+
 	List<CClassClass> myClassList = null;
 	List<CClassClass> myParamSetList = null;
 	private Path myDataPath = null;
 
 	Map<String, IRPComponent> myComponentMap = null;
-	
-	
+
 	public static USMConfiguration Instance(IRPApplication aApplication, Consumer<String> aTraceAction)
 	{
-		if(myInstance==null)
+		if (myInstance == null)
 		{
 			myInstance = new USMConfiguration(aApplication, aTraceAction);
 		}
-		
+
 		return myInstance;
 	}
 
@@ -100,8 +101,6 @@ public class USMConfiguration
 
 		loadComponents(aProject);
 
-		
-
 		removeHyperlinks();
 		for (CClassClass cClass : myParamSetList)
 		{
@@ -142,13 +141,14 @@ public class USMConfiguration
 
 			trace("Paramset: " + cClass.getName() + " ObjectId: " + objectId);
 
-			//IRPHyperLink link = (IRPHyperLink) component.addNewAggr("HyperLink", cClass.getName());
-			
+			// IRPHyperLink link = (IRPHyperLink) component.addNewAggr("HyperLink",
+			// cClass.getName());
+
 			IRPHyperLink link = (IRPHyperLink) component.addNewAggr("ParameterSet", cClass.getName());
-			
+
 			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
-			
+
 			IRPTableView paramSetView = null;
 
 			List<IRPTableView> tableViews = aProject.getNestedElementsByMetaClass("TableView", 1).toList();
@@ -160,7 +160,7 @@ public class USMConfiguration
 					break;
 				}
 			}
-			
+
 			if (paramSetView == null)
 			{
 				trace("No USMDataView found!");
@@ -169,12 +169,7 @@ public class USMConfiguration
 
 			paramSetView.open();
 
-			
-			
-
 		}
-		
-		
 
 		// check if any part of the path is a component name
 
@@ -285,7 +280,7 @@ public class USMConfiguration
 				break;
 			}
 		}
-		
+
 		if (usmDataView == null)
 		{
 			trace("No USMDataView found!");
@@ -295,23 +290,21 @@ public class USMConfiguration
 		usmDataView.open();
 
 	}
-	
+
 	public void copyToAppData(IRPHyperLink aConfigFile)
 	{
 		String link = aConfigFile.getURL();
-		
-		
-		
+
 		Path sourcePath = Paths.get(link).toAbsolutePath();
-		
-		if(sourcePath.toFile().exists()==false)
+
+		if (sourcePath.toFile().exists() == false)
 		{
 			trace("Source file not found: " + sourcePath);
 			return;
 		}
-		
+
 		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject()), sourcePath.getFileName().toString());
-		
+
 		try
 		{
 			java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -321,7 +314,7 @@ public class USMConfiguration
 		{
 			trace("Error copying file: " + e.getMessage());
 		}
-		
+
 	}
 
 	public void addLibraryLinks(IRPProject aProject)
@@ -333,53 +326,83 @@ public class USMConfiguration
 		}
 
 		loadComponents(aProject);
+
+		List<IRPPackage> packages = aProject.getNestedElementsByMetaClass("Package", 1).toList();
 		
-		for(IRPComponent component : myComponentMap.values())
-        {
-            
-			
-			@SuppressWarnings("unchecked")
-			List<IRPPackage> packages = component.getScopeElementsByCategory("Package").toList();
-            for(IRPPackage pack:packages)
-            {
-            	try
-            	{
-            		String usmLibraries = pack.getPropertyValue("CPP_CG.Package.USMLibraries");
-            		if(usmLibraries!=null && usmLibraries.length()>0)
-            		{
-            			// split the string by comma
-            			String[] libraries = usmLibraries.split(",");
-            			for(String library : libraries)
-            			{
-            				
-            					// replace "<usm_root>" by the path of the USM root
-            					library = library.replace("<usm_root>", RhapsodyHelper.getUSMPath(aProject).toString());
-            					// remove leading and trailing spaces
-            					library = library.trim();
-            					Path path = Paths.get(library);
-            					
-            					trace("Library: " + path.toString());
-            					
-            					Path libraryParent = path.getParent();
-            					
-            					//IRPHyperLink link = (IRPHyperLink) component.addNewAggr("USMLibrary", path.getFileName().toString());
-            					//link.setURL(path.toString());
-            					//link.setName(path.getFileName().toString());
-            					//link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, path.getFileName().toString());
+		
+		
+		Map<String, CExternalLibrary> libraryMap = new HashMap<>();
 
-            			}
-            			
-            		}
-            		
-            	}
-            	catch(Exception e)
+		for (IRPPackage pack : packages)
+		{
+
+			try
+			{
+				String usmLibraries = pack.getPropertyValueExplicit("CPP_CG.Package.USMLibraries");
+
+				if (usmLibraries != null && usmLibraries.length() > 0)
 				{
-					trace(e.getMessage());
-					continue;
-				}
-            }
-        }
+					// split the string by comma
+					String[] libraries = usmLibraries.split("[,;]");
+					for (String library : libraries)
+						
+					{
+						if(library.trim().length() == 0)
+						{
+							continue;
+						}
+						// replace "<usm_root>" by the path of the USM root
+						library = library.replace("<usm_root>", RhapsodyHelper.getUSMPath(aProject).toString());
+						// remove leading and trailing spaces
+						library = library.trim();
+						
+						CExternalLibrary lib = libraryMap.get(library);
+						if(lib == null)
+						{
+							Path path = Paths.get(library);
+							Path libraryParent = path.getParent();
+							
+							
+							lib = new CExternalLibrary(path.getFileName().toString(), libraryParent);
+							libraryMap.put(library, lib);
+						}
+						
+						trace("Library: " + library + " for package: " + pack.getName());
+						lib.addDependency(pack.getGUID());
+					}
 
+				}
+
+			}
+			catch(Exception e)
+			{
+				trace(e.getMessage());
+				continue;
+			}
+		}
+		
+		for (CExternalLibrary el : libraryMap.values())
+		{
+
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ExternalLibrary",
+			el.getName());
+			
+			link.setURL(el.getPath().toString());
+			link.setName(el.getName());
+			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, el.getName());
+			
+			for(String guid : el.getDependencies())
+			{
+				IRPModelElement modelElement = aProject.findElementByGUID(guid);
+				trace("Add dependency to: " + guid + " for library: " + el.getName());
+				if(modelElement != null)
+				{
+					link.addDependencyTo(modelElement);
+				}
+			}
+
+		}
+			
 	}
 
 	public boolean removeHyperlinks()
@@ -444,25 +467,25 @@ public class USMConfiguration
 		}
 
 	}
-	
+
 	private String getAppDataPath(IRPProject aProject)
 	{
-		if(myAppDataPath!=null)
+		if (myAppDataPath != null)
 		{
 			return myAppDataPath;
 		}
-		
-		Path appDataPath = Paths.get(aProject.getName() + "App","DefaultConfig","AppData").toAbsolutePath();
-		
-		if(appDataPath.toFile().exists()==false)
+
+		Path appDataPath = Paths.get(aProject.getName() + "App", "DefaultConfig", "AppData").toAbsolutePath();
+
+		if (appDataPath.toFile().exists() == false)
 		{
 			appDataPath.toFile().mkdirs();
 		}
-		
+
 		myAppDataPath = appDataPath.toString();
-		
+
 		return myAppDataPath;
-		
+
 	}
 
 	private File loadClassCatalog(IRPProject aProject)
@@ -523,7 +546,7 @@ public class USMConfiguration
 			return classCatalogFile;
 
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			// TODO Auto-generated catch block
 			trace(e.getMessage());
@@ -590,7 +613,7 @@ public class USMConfiguration
 			return dataListFile;
 
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			// TODO Auto-generated catch block
 			trace(e.getMessage());
@@ -680,7 +703,7 @@ public class USMConfiguration
 			 */
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -735,7 +758,7 @@ public class USMConfiguration
 				}
 			}
 		}
-		catch (IOException e)
+		catch(IOException e)
 		{
 			trace(e.getMessage());
 		}
@@ -772,7 +795,7 @@ public class USMConfiguration
 			}
 
 		}
-		catch (Exception e)
+		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -820,5 +843,38 @@ class CClassClass
 		return "CClassClass{" + "clsId=" + myClsId + ", name='" + myName + '\'' + ", archiveName='" + myArchiveName
 				+ '\'' + ", Path" + myPath.toString() + '\'' + ", nextObjId=" + myNextObjId + ", storeCompressed="
 				+ myStoreCompressed + '}';
+	}
+}
+
+class CExternalLibrary
+{
+	private String myName;
+	private Path myPath;
+	private List<String> myDependencies = new ArrayList<String>();
+	
+
+	public CExternalLibrary(String aName, Path aPath)
+	{
+		this.myName = aName;
+		this.myPath = aPath;
+	}
+
+	public String getName()
+	{
+		return myName;
+	}
+
+	public Path getPath()
+	{
+		return myPath;
+	}
+	public void addDependency(String aDependency)
+	{
+		myDependencies.add(aDependency);
+	}
+	
+	public List<String> getDependencies()
+	{
+		return myDependencies;
 	}
 }
