@@ -864,9 +864,7 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			IRPHyperLink link = (IRPHyperLink) selected;
 			
-			
-			
-			
+	
 			USMConfiguration config = USMConfiguration.Instance(myRhapsody, this::trace);
 			
 			config.copyToAppData(link);
@@ -1254,7 +1252,7 @@ public class CUSMPlugin extends RPUserPlugin
 				trace("No element selected");
 				return;
 			}
-			trace("GUID of " + selected.getName() + ": " + selected.getGUID());
+			trace("GUID of " + selected.getFullPathName() + ": \"" + selected.getGUID() + "\"");
 			return;
 		}
 		
