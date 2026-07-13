@@ -14,6 +14,7 @@ import de.schlaich.gunnar.aiTools.mcp.tools.GetGeneratedCodeTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.GetHistoryTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.GetPropertyValueTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.SetActiveComponentTool;
+import de.schlaich.gunnar.aiTools.mcp.tools.SetAttributeInitialValueTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.SetDescriptionTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.SetOperationBodyTool;
 import de.schlaich.gunnar.aiTools.mcp.tools.SetPropertyValueTool;
@@ -68,6 +69,7 @@ public class McpStarter
 		registry.register(new GetHistoryTool(client, aTraceAction));
 		registry.register(new GetDiffTool(client, aTraceAction));
 		registry.register(new SetPropertyValueTool(client, aTraceAction));
+		registry.register(new SetAttributeInitialValueTool(client, aTraceAction));
 		registry.register(new CompileElementTool(client, aTraceAction));
 		registry.register(new SetActiveComponentTool(client, aTraceAction));
 		registry.register(new SetDescriptionTool(client, aTraceAction));
