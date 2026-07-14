@@ -1448,11 +1448,7 @@ public class CUSMPlugin extends RPUserPlugin
 
             }
 		}
-		
-		
-		
 	}
-	
 	
 
 	private JFileChooser createDetailFileChooser(File directory)

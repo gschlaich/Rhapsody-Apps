@@ -148,6 +148,10 @@ public class USMConfiguration
 
 			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
+			
+			
+			
+			
 
 			IRPTableView paramSetView = null;
 
@@ -267,6 +271,19 @@ public class USMConfiguration
 			}
 
 		}
+		
+		String appDataPath = getAppDataPath(aProject, true);
+		
+		IRPHyperLink appDatalink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "AppData");
+		
+		appDatalink.setURL(appDataPath);
+		
+		String mainAppPath = getMainAppPath(aProject, true);
+		IRPHyperLink mainAppLink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "MainApp");
+		mainAppLink.setURL(mainAppPath);
+		
+		
+		
 
 		// show table
 		IRPTableView usmDataView = null;
@@ -303,7 +320,7 @@ public class USMConfiguration
 			return;
 		}
 
-		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject()), sourcePath.getFileName().toString());
+		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject(), true), sourcePath.getFileName().toString());
 
 		try
 		{
@@ -471,23 +488,46 @@ public class USMConfiguration
 
 	}
 
-	private String getAppDataPath(IRPProject aProject)
+	private String getAppDataPath(IRPProject aProject, boolean aRelative)
 	{
 		if (myAppDataPath != null)
 		{
 			return myAppDataPath;
 		}
+		
+		Path relativeAppdataPath =  Paths.get(aProject.getName() + "App", "DefaultConfig", "AppData");
 
-		Path appDataPath = Paths.get(aProject.getName() + "App", "DefaultConfig", "AppData").toAbsolutePath();
+		Path appDataPath = relativeAppdataPath.toAbsolutePath();
 
 		if (appDataPath.toFile().exists() == false)
 		{
 			appDataPath.toFile().mkdirs();
 		}
+		
+		if(aRelative == true)
+		{
+			return relativeAppdataPath.toString();
+		}
+		
+		
+		return appDataPath.toString();
+		
 
-		myAppDataPath = appDataPath.toString();
 
-		return myAppDataPath;
+	}
+	
+	private String getMainAppPath(IRPProject aProject, boolean aRelative)
+	{
+		
+		Path relativeMainAppPath =  Paths.get(aProject.getName() + "App", "DefaultConfig", "Main"+aProject.getName()+"App.cpp");
+		Path mainAppPath = relativeMainAppPath.toAbsolutePath();
+
+		if (mainAppPath.toFile().exists() == false)
+		{
+			mainAppPath.toFile().mkdirs();
+		}
+
+		return mainAppPath.toString();
 
 	}
 
