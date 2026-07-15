@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.ghs;
 
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
@@ -348,16 +349,32 @@ public class MultiPlugin extends RPUserPlugin
 		if(aElement instanceof IRPOperation)
 		{
 			IRPOperation op = (IRPOperation) aElement;
-			path = getOperationLocation(op);
+			path = getModelElementLocation(op);
 		}
 		else if(aElement instanceof IRPHyperLink)
 		{
-			
+			IRPHyperLink link = (IRPHyperLink) aElement;
+			path = link.getURL();
+		}
+		else if(aElement instanceof IRPClass)
+		{
+			IRPClass cls = (IRPClass) aElement;
+			path = getPath(cls);
+		}
+		else if(aElement instanceof IRPAttribute)
+		{
+			IRPAttribute attr = (IRPAttribute) aElement;
+			path = getModelElementLocation(attr);
 		}
 		
-		String component = getOperationLocation(aOperation);
+		if(path == null)
+		{
+			trace("Could not determine path for element: " + aElement.getName());
+			return;
+		}
+		
 
-		String arg2 = myArgDebugView2Begin + component + myArgDebugView2End;
+		String arg2 = myArgDebugView2Begin + path + myArgDebugView2End;
 
 		// build string...
 		// String args = MessageFormat.format(myArgs, component);
@@ -385,7 +402,7 @@ public class MultiPlugin extends RPUserPlugin
 			return;
 		}
 		
-		String component = getOperationLocation(aOperation);
+		String component = getModelElementLocation(aOperation);
 		if (aOffset > 0)
 		{
 			component = component + "#" + (aOffset + 3);
@@ -479,11 +496,11 @@ public class MultiPlugin extends RPUserPlugin
 
 	}
 
-	private String getOperationLocation(IRPOperation aOperation)
+	private String getModelElementLocation(IRPModelElement aModelElement)
 	{
 		String nameSpace = null;
 		String component = null;
-		IRPModelElement selected = aOperation;
+		IRPModelElement selected = aModelElement;
 
 		if (selected == null)
 		{
