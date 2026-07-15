@@ -148,10 +148,6 @@ public class USMConfiguration
 
 			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
-			
-			
-			
-			
 
 			IRPTableView paramSetView = null;
 
@@ -271,19 +267,35 @@ public class USMConfiguration
 			}
 
 		}
-		
+
 		String appDataPath = getAppDataPath(aProject, true);
+
+		if (aProject.findNestedElement("AppData", "HyperLink") == null)
+		{
 		
-		IRPHyperLink appDatalink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "AppData");
-		
-		appDatalink.setURL(appDataPath);
-		
+
+			IRPHyperLink appDatalink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "AppData");
+
+			appDatalink.setURL(appDataPath);
+		}
+		else
+		{
+			trace("AppData link already exists!");
+		}
+
 		String mainAppPath = getMainAppPath(aProject, true);
-		IRPHyperLink mainAppLink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "MainApp");
-		mainAppLink.setURL(mainAppPath);
 		
-		
-		
+		if (aProject.findNestedElement("MainApp", "HyperLink") == null)
+		{
+			
+			IRPHyperLink mainAppLink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "MainApp");
+			mainAppLink.setURL(mainAppPath);
+			
+		}
+		else
+		{
+			trace("MainApp link already exists!");
+		}
 
 		// show table
 		IRPTableView usmDataView = null;
@@ -320,14 +332,15 @@ public class USMConfiguration
 			return;
 		}
 
-		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject(), true), sourcePath.getFileName().toString());
+		Path targetPath = Paths.get(getAppDataPath(aConfigFile.getProject(), true),
+				sourcePath.getFileName().toString());
 
 		try
 		{
 			java.nio.file.Files.copy(sourcePath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 			trace("File copied to: " + targetPath);
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			trace("Error copying file: " + e.getMessage());
 		}
@@ -345,9 +358,7 @@ public class USMConfiguration
 		loadComponents(aProject);
 
 		List<IRPPackage> packages = aProject.getNestedElementsByMetaClass("Package", 1).toList();
-		
-		
-		
+
 		Map<String, CExternalLibrary> libraryMap = new HashMap<>();
 
 		for (IRPPackage pack : packages)
@@ -362,9 +373,9 @@ public class USMConfiguration
 					// split the string by comma
 					String[] libraries = usmLibraries.split("[,;]");
 					for (String library : libraries)
-						
+
 					{
-						if(library.trim().length() == 0)
+						if (library.trim().length() == 0)
 						{
 							continue;
 						}
@@ -372,57 +383,64 @@ public class USMConfiguration
 						library = library.replace("<usm_root>", RhapsodyHelper.getUSMPath(aProject).toString());
 						// remove leading and trailing spaces
 						library = library.trim();
-						
+
 						CExternalLibrary lib = libraryMap.get(library);
-						if(lib == null)
+						if (lib == null)
 						{
-							
+
 							Path path = Paths.get(library);
 							Path libraryParent = path.getParent();
-							
-							
+
 							lib = new CExternalLibrary(path.getFileName().toString(), libraryParent);
 							trace("Add library: " + lib.getName());
 							libraryMap.put(library, lib);
 						}
-						
-						
+
 						lib.addDependency(pack.getGUID());
 					}
 
 				}
 
 			}
-			catch(Exception e)
+			catch (Exception e)
 			{
-				
+
 				continue;
 			}
 		}
-		
+
 		for (CExternalLibrary el : libraryMap.values())
 		{
 
-			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ExternalLibrary",
-			el.getName());
-			
+			// check if link already exists
+			IRPHyperLink existingLink = (IRPHyperLink) aProject.findNestedElement(el.getName(), "ExternalLibrary");
+
+			if (existingLink != null)
+			{
+				// aProject.deleteDependency(existingLink);
+				continue;
+
+			}
+
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ExternalLibrary", el.getName());
+
 			link.setURL(el.getPath().toString());
 			link.setName(el.getName());
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, el.getName());
-			
-			for(String guid : el.getDependencies())
+
+			for (String guid : el.getDependencies())
 			{
 				IRPModelElement modelElement = aProject.findElementByGUID(guid);
-				
-				if(modelElement != null)
+
+				if (modelElement != null)
 				{
-					trace("Add dependency to: "+ modelElement.getName() + " for library: " + el.getName());
+					trace("Add dependency to: " + modelElement.getName() + " for library: " + el.getName());
 					link.addDependencyTo(modelElement);
 				}
 			}
 
 		}
-			
+
 	}
 
 	public boolean removeHyperlinks()
@@ -494,8 +512,8 @@ public class USMConfiguration
 		{
 			return myAppDataPath;
 		}
-		
-		Path relativeAppdataPath =  Paths.get(aProject.getName() + "App", "DefaultConfig", "AppData");
+
+		Path relativeAppdataPath = Paths.get(aProject.getName() + "App", "DefaultConfig", "AppData");
 
 		Path appDataPath = relativeAppdataPath.toAbsolutePath();
 
@@ -503,30 +521,27 @@ public class USMConfiguration
 		{
 			appDataPath.toFile().mkdirs();
 		}
-		
-		if(aRelative == true)
+
+		if (aRelative == true)
 		{
 			return relativeAppdataPath.toString();
 		}
-		
-		
-		return appDataPath.toString();
-		
 
+		return appDataPath.toString();
 
 	}
-	
+
 	private String getMainAppPath(IRPProject aProject, boolean aRelative)
 	{
-		
-		Path relativeMainAppPath =  Paths.get(aProject.getName() + "App", "DefaultConfig", "Main"+aProject.getName()+"App.cpp");
+
+		Path relativeMainAppPath = Paths.get(aProject.getName() + "App", "DefaultConfig",
+				"Main" + aProject.getName() + "App.cpp");
 		Path mainAppPath = relativeMainAppPath.toAbsolutePath();
 
-		if (mainAppPath.toFile().exists() == false)
+		if (aRelative == true)
 		{
-			mainAppPath.toFile().mkdirs();
+			return relativeMainAppPath.toString();
 		}
-
 		return mainAppPath.toString();
 
 	}
@@ -589,7 +604,7 @@ public class USMConfiguration
 			return classCatalogFile;
 
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			trace(e.getMessage());
@@ -656,7 +671,7 @@ public class USMConfiguration
 			return dataListFile;
 
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			// TODO Auto-generated catch block
 			trace(e.getMessage());
@@ -746,7 +761,7 @@ public class USMConfiguration
 			 */
 
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -801,7 +816,7 @@ public class USMConfiguration
 				}
 			}
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			trace(e.getMessage());
 		}
@@ -838,7 +853,7 @@ public class USMConfiguration
 			}
 
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
@@ -894,7 +909,6 @@ class CExternalLibrary
 	private String myName;
 	private Path myPath;
 	private List<String> myDependencies = new ArrayList<String>();
-	
 
 	public CExternalLibrary(String aName, Path aPath)
 	{
@@ -911,11 +925,12 @@ class CExternalLibrary
 	{
 		return myPath;
 	}
+
 	public void addDependency(String aDependency)
 	{
 		myDependencies.add(aDependency);
 	}
-	
+
 	public List<String> getDependencies()
 	{
 		return myDependencies;
