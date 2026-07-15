@@ -6,6 +6,7 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
+import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
@@ -340,9 +341,20 @@ public class MultiPlugin extends RPUserPlugin
 		return ret;
 	}
 
-	public void viewInDebugger(IRPOperation aOperation)
+	public void viewInDebugger(IRPModelElement aElement)
 	{
 		trace("Start viewInDebugger");
+		String path = null;
+		if(aElement instanceof IRPOperation)
+		{
+			IRPOperation op = (IRPOperation) aElement;
+			path = getOperationLocation(op);
+		}
+		else if(aElement instanceof IRPHyperLink)
+		{
+			
+		}
+		
 		String component = getOperationLocation(aOperation);
 
 		String arg2 = myArgDebugView2Begin + component + myArgDebugView2End;
@@ -352,6 +364,15 @@ public class MultiPlugin extends RPUserPlugin
 
 		runCmd(myArgDebugView1, arg2, null, null);
 
+	}
+	
+	public void viewInDebugger(IRPHyperLink aLink)
+	{
+		trace("Start viewInDebugger from hyperlink");
+        
+        String path = aLink.getURL();
+        String arg2 = myArgDebugView2Begin + path + myArgDebugView2End;
+        runCmd(myArgDebugView1, arg2, null, null);
 	}
 
 	public void setBreakPoint(IRPOperation aOperation, int aOffset)
