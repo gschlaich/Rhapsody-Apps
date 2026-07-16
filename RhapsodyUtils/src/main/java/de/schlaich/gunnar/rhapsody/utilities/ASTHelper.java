@@ -1406,18 +1406,31 @@ public class ASTHelper
 		return roundTripText;
 	}
 
-	public static int getSourceOffset(IRPOperation aOperation, IRPApplication aApplication)
+	public static int getSourceOffset(IRPModelElement aModelElement, IRPApplication aApplication)
 	{
-		IRPModelElement element = aOperation.getOwner();
-		if (element instanceof IRPClass == false)
+		
+		IRPModelElement owner = aModelElement.getOwner();
+		
+		if((owner instanceof IRPClass) == false)
 		{
-			trace("owner of operation is not a class!");
 			return -1;
 		}
-
-		IRPClass selectedClass = (IRPClass) element;
+		
+		IRPClass selectedClass = (IRPClass) owner;
+		
+		
 		String filePath = getSourcePath(selectedClass, aApplication);
-		if ((aOperation.isATemplate() == 1) || (aOperation.getIsInline() == 1))
+		
+		if (aModelElement instanceof IRPOperation == false)
+		{
+			filePath = filePath + ".h";
+			return 0;
+		}
+		
+		IRPOperation operation = (IRPOperation) aModelElement;
+		
+		
+		if ((operation.isATemplate() == 1) || (operation.getIsInline() == 1))
 		{
 			filePath = filePath + ".h";
 		}
@@ -1435,14 +1448,13 @@ public class ASTHelper
 		String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
 
 		String className = selectedClass.getName();
-		IRPModelElement owner = selectedClass.getOwner();
 		while (owner instanceof IRPClass)
 		{
 			className = owner.getName() + "::" + className;
 			owner = owner.getOwner();
 		}
 
-		String operationSignature = aOperation.getSignatureNoArgNames();
+		String operationSignature = operation.getSignatureNoArgNames();
 
 		IASTTranslationUnit translationUnit = getTranslationUnit(filePath);
 

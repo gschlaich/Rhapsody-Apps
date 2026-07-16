@@ -45,31 +45,31 @@ public class ApplicationStarter {
 		// simulate a call to the plug-in
 		multiPlugin.RhpPluginInvokeItem();
 		
-		//multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
+		multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
 		
-		if(app.getSelectedElement() instanceof IRPProject)
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.OPEN_MULTI_CMD);
-		}
-		else if(app.getSelectedElement() instanceof IRPPackage )
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_RHAPSODY_CMD);
-		} 
-		else if(app.getSelectedElement() instanceof IRPClass)
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
-		}
-		else if(app.getSelectedElement() instanceof IRPComment)
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.SET_BREAKPOINT_CMD);
-		}
-		else if(app.getSelectedElement() instanceof IRPOperation)
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
-		}
-		else
-		{
-			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
-		}
+//		if(app.getSelectedElement() instanceof IRPProject)
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.OPEN_MULTI_CMD);
+//		}
+//		else if(app.getSelectedElement() instanceof IRPPackage )
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_RHAPSODY_CMD);
+//		} 
+//		else if(app.getSelectedElement() instanceof IRPClass)
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
+//		}
+//		else if(app.getSelectedElement() instanceof IRPComment)
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.SET_BREAKPOINT_CMD);
+//		}
+//		else if(app.getSelectedElement() instanceof IRPOperation)
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.COMPILE_MULTI_CMD);
+//		}
+//		else
+//		{
+//			multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
+//		}
 	}
 }

@@ -7,6 +7,8 @@ import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComment;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPConfiguration;
+import com.telelogic.rhapsody.core.IRPDependency;
+import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -15,6 +17,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProfile;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
+import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPUnit;
@@ -165,7 +168,7 @@ public class MultiPlugin extends RPUserPlugin
 
 		if (menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))
 		{
-			viewInDebugger(null);
+			viewInDebugger(selected);
 			return;
 		}
 		if (menuItem.equals(VIEW_MULTI_EDITOR_CMD))
@@ -344,28 +347,47 @@ public class MultiPlugin extends RPUserPlugin
 
 	public void viewInDebugger(IRPModelElement aElement)
 	{
-		trace("Start viewInDebugger");
+		trace("Start viewInDebugger Name: " +aElement.getName()+ ": Metaclass: " + aElement.getMetaClass());
 		String path = null;
-		if(aElement instanceof IRPOperation)
-		{
-			IRPOperation op = (IRPOperation) aElement;
-			path = getModelElementLocation(op);
-		}
-		else if(aElement instanceof IRPHyperLink)
+		if(aElement instanceof IRPHyperLink)
 		{
 			IRPHyperLink link = (IRPHyperLink) aElement;
 			path = link.getURL();
 		}
-		else if(aElement instanceof IRPClass)
+		else if(aElement instanceof IRPDependency)
 		{
-			IRPClass cls = (IRPClass) aElement;
-			path = getPath(cls);
+			IRPDependency dependency = (IRPDependency) aElement;
+			IRPModelElement dependent = dependency.getDependent();
+			
+			path = dependent.getName()+".cpp";
 		}
-		else if(aElement instanceof IRPAttribute)
+		else if(aElement instanceof IRPFile)
 		{
-			IRPAttribute attr = (IRPAttribute) aElement;
-			path = getModelElementLocation(attr);
+			IRPFile file = (IRPFile) aElement;
+			
+			path = file.getPath(0);
+			if (path.isEmpty())
+			{
+				
+				path = file.getName();
+				if(file.getFileType().equalsIgnoreCase("specification"))
+				{
+					path+= ".h";
+				}
+				else
+				{
+					path+= ".cpp";
+				}
+				
+			}
+			//path = aElement.getName();
 		}
+		else 
+		{
+			
+			path = getModelElementLocation(aElement);
+		}
+		
 		
 		if(path == null)
 		{
@@ -383,14 +405,14 @@ public class MultiPlugin extends RPUserPlugin
 
 	}
 	
-	public void viewInDebugger(IRPHyperLink aLink)
-	{
-		trace("Start viewInDebugger from hyperlink");
-        
-        String path = aLink.getURL();
-        String arg2 = myArgDebugView2Begin + path + myArgDebugView2End;
-        runCmd(myArgDebugView1, arg2, null, null);
-	}
+//	public void viewInDebugger(IRPHyperLink aLink)
+//	{
+//		trace("Start viewInDebugger from hyperlink");
+//        
+//        String path = aLink.getURL();
+//        String arg2 = myArgDebugView2Begin + path + myArgDebugView2End;
+//        runCmd(myArgDebugView1, arg2, null, null);
+//	}
 
 	public void setBreakPoint(IRPOperation aOperation, int aOffset)
 	{
@@ -513,8 +535,15 @@ public class MultiPlugin extends RPUserPlugin
 
 		while (selected instanceof IRPClass)
 		{
-			component = selected.getName() + "::" + component;
+			
+			String selectedName = selected.getName();
 			selected = selected.getOwner();
+			if(selectedName.equals("TopLevel"))
+			{
+				continue;
+			}
+			component = selectedName + "::" + component;
+			
 		}
 
 		if (nameSpace != null)
