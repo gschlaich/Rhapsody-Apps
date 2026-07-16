@@ -346,6 +346,107 @@ public class USMConfiguration
 		}
 
 	}
+	
+	public void addIncludeLinks(IRPProject aProject)
+	{
+		if (aProject == null)
+		{
+			trace("No project found!");
+			return;
+		}
+
+		loadComponents(aProject);
+
+		List<IRPPackage> packages = aProject.getNestedElementsByMetaClass("Package", 1).toList();
+		
+		Map<String, CExternalLibrary> includeMap = new HashMap<>();
+
+		for (IRPPackage pack : packages)
+		{
+
+			try
+			{
+				
+				//CPP_CG::Package::USMIncludePath
+				String includeFiles = pack.getPropertyValueExplicit("CPP_CG.Package.USMIncludePath");
+
+				if (includeFiles != null && includeFiles.length() > 0)
+				{
+					String[] files = includeFiles.split("[,;]");
+					for (String file : files)
+
+					{
+						if (file.trim().length() == 0)
+						{
+							continue;
+						}
+						
+						String name = file;
+					
+						file = file.replace("<usm_root>", RhapsodyHelper.getUSMPath(aProject).toString());
+						// remove leading and trailing spaces
+						file = file.trim();
+						
+						CExternalLibrary inc = includeMap.get(file);
+						
+						if (inc == null)
+						{
+
+							Path path = Paths.get(file);
+							
+
+							inc = new CExternalLibrary(name, path);
+							trace("Add include: " + inc.getName());
+							includeMap.put(file, inc);
+						}
+						inc.addDependency(pack.getGUID());
+
+					}
+
+				}
+
+			}
+			catch (Exception e)
+			{
+
+				continue;
+			}
+		}
+		
+		for (CExternalLibrary el : includeMap.values())
+		{
+
+			// check if link already exists
+			IRPHyperLink existingLink = (IRPHyperLink) aProject.findNestedElement(el.getName(), "ExternalInclude");
+
+			if (existingLink != null)
+			{
+				// aProject.deleteDependency(existingLink);
+				continue;
+
+			}
+
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ExternalInclude", el.getName());
+
+			link.setURL(el.getPath().toString());
+			link.setName(el.getName());
+			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, el.getName());
+			
+
+			for (String guid : el.getDependencies())
+			{
+				IRPModelElement modelElement = aProject.findElementByGUID(guid);
+
+				if (modelElement != null)
+				{
+					trace("Add dependency to: " + modelElement.getName() + " for library: " + el.getName());
+					link.addDependencyTo(modelElement);
+				}
+			}
+
+		}
+
+	}
 
 	public void addLibraryLinks(IRPProject aProject)
 	{

@@ -848,6 +848,7 @@ public class CUSMPlugin extends RPUserPlugin
 			USMConfiguration config = USMConfiguration.Instance(myRhapsody, this::trace);
 			config.loadConfiguration(project);
 			config.addLibraryLinks(project);
+			config.addIncludeLinks(project);
 
 			trace("End Add Configuration");
 
