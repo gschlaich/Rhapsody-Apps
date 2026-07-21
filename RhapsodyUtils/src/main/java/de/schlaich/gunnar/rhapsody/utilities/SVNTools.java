@@ -2074,6 +2074,14 @@ public class SVNTools
 			}
 
 			String fileName = unit.getFilename();
+			
+			if(fileName.endsWith(".sbs")==false)
+			{
+				trace("File is not a .sbs file: " + fileName);
+				fileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".sbs";
+			}
+			
+			
 			String directory = unit.getCurrentDirectory();
 
 			File currentFile = new File(fileName);
@@ -2096,6 +2104,7 @@ public class SVNTools
 			String statusLine;
 			while ((statusLine = statusReader.readLine()) != null)
 			{
+				
 				if (statusLine.startsWith("M") || statusLine.startsWith("A") || statusLine.startsWith("D"))
 				{
 					hasLocalChanges = true;
@@ -2152,7 +2161,7 @@ public class SVNTools
 			InputStream inputStream = process.getInputStream();
 			InputStream errorStream = process.getErrorStream();
 
-			process.waitFor(1000, TimeUnit.MILLISECONDS);
+			process.waitFor(2000, TimeUnit.MILLISECONDS);
 
 			if (errorStream.available() > 0)
 			{
