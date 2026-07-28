@@ -104,7 +104,8 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.DeactivateHistoryCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CopyToAppDataCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowGUIDCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
 		
 	}
 

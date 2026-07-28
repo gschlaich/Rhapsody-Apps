@@ -47,6 +47,7 @@ import de.schlaich.gunnar.rhapsody.MsgCreator.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
+import de.schlaich.gunnar.rhapsody.test.PluginCommandTests;
 import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
@@ -145,6 +146,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String DeactivateHistoryCmd = "Deactivate History";
 	public static final String CopyToAppDataCmd = "Copy to AppData";
 	public static final String GetOperationLocationCmd = "Get Operation Location";
+	public static final String RunTestsCmd = "Run Tests";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -1350,6 +1352,29 @@ public class CUSMPlugin extends RPUserPlugin
 			trace("File Path: " + location.getFilePath());
 			trace("Line Number: " + location.getLineNumber());
 			trace("Full Location: " + location.toString());
+			
+			return;
+		}
+		
+		if(menuItem.contains(RunTestsCmd))
+		{
+			trace("Running Plugin Tests...");
+			
+			PluginCommandTests tests = new PluginCommandTests();
+			
+			// Redirect test output to Rhapsody trace
+			tests.runAll();
+			
+			trace(tests.getSummary());
+			
+			if (tests.allPassed())
+			{
+				trace("All tests passed!");
+			}
+			else
+			{
+				trace("Some tests failed!");
+			}
 			
 			return;
 		}
