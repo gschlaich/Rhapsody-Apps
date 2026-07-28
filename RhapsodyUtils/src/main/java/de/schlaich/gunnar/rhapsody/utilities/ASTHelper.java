@@ -83,6 +83,37 @@ public class ASTHelper
 
 	private static Consumer<String> myTraceAction = null;
 
+	/**
+	 * Holds the source file path and line number for an operation
+	 */
+	public static class SourceLocation
+	{
+		private final String filePath;
+		private final int lineNumber;
+
+		public SourceLocation(String filePath, int lineNumber)
+		{
+			this.filePath = filePath;
+			this.lineNumber = lineNumber;
+		}
+
+		public String getFilePath()
+		{
+			return filePath;
+		}
+
+		public int getLineNumber()
+		{
+			return lineNumber;
+		}
+		
+		@Override
+		public String toString()
+		{
+			return filePath + ":" + lineNumber;
+		}
+	}
+
 	public static void setTraceAction(Consumer<String> aAction)
 	{
 		myTraceAction = aAction;
@@ -1641,6 +1672,134 @@ public class ASTHelper
 			}
 		}
 
+		return null;
+	}
+
+	/**
+	 * Gets the source file path and line number for an operation in the generated code.
+	 * 
+	 * @param aOperation The Rhapsody operation to find in the generated code
+	 * @param aApplication The Rhapsody application
+	 * @return A SourceLocation containing the file path (*.cpp or *.h) and line number,
+	 *         or null if the operation could not be found
+	 */
+	public static SourceLocation getOperationSourceLocation(IRPOperation aOperation, IRPApplication aApplication)
+	{
+		if (aOperation == null || aApplication == null)
+		{
+			return null;
+		}
+		
+		IRPModelElement owner = aOperation.getOwner();
+		
+		if ((owner instanceof IRPClass) == false)
+		{
+			trace("owner of operation is not a class");
+			return null;
+		}
+		
+		IRPClass selectedClass = (IRPClass) owner;
+		
+		String filePath = getSourcePath(selectedClass, aApplication);
+		
+		if (filePath == null)
+		{
+			trace("Could not determine source path for class: " + selectedClass.getName());
+			return null;
+		}
+		
+		// Determine file extension based on operation type
+		if ((aOperation.isATemplate() == 1) || (aOperation.getIsInline() == 1))
+		{
+			filePath = filePath + ".h";
+		}
+		else
+		{
+			filePath = filePath + ".cpp";
+		}
+		
+		// Verify file exists
+		File sourceFile = new File(filePath);
+		if (!sourceFile.exists())
+		{
+			trace("Source file does not exist: " + filePath);
+			return null;
+		}
+		
+		String nameSpace = RhapsodyOperation.getNamespace(selectedClass);
+		
+		// Build fully qualified class name for nested classes
+		String className = selectedClass.getName();
+		IRPModelElement classOwner = selectedClass.getOwner();
+		while (classOwner instanceof IRPClass)
+		{
+			className = classOwner.getName() + "::" + className;
+			classOwner = classOwner.getOwner();
+		}
+		
+		String operationSignature = aOperation.getSignatureNoArgNames();
+		
+		IASTTranslationUnit translationUnit = getTranslationUnit(filePath);
+		
+		if (translationUnit == null)
+		{
+			trace("Could not parse source file: " + filePath);
+			return null;
+		}
+		
+		IASTNode source = translationUnit;
+		
+		// Handle namespace if present
+		if (nameSpace != null)
+		{
+			ASTNode<ICPPASTNamespaceDefinition> parseNameSpace = new ASTNode<ICPPASTNamespaceDefinition>(
+					ICPPASTNamespaceDefinition.class);
+			List<ICPPASTNamespaceDefinition> nameSpaceDefinitions = parseNameSpace.getNodes(translationUnit);
+			ICPPASTNamespaceDefinition theNameSpaceDefinition = null;
+			for (ICPPASTNamespaceDefinition nameSpaceDefiniton : nameSpaceDefinitions)
+			{
+				if (nameSpace.equals(nameSpaceDefiniton.getName().toString()))
+				{
+					theNameSpaceDefinition = nameSpaceDefiniton;
+					break;
+				}
+			}
+			
+			if (theNameSpaceDefinition == null)
+			{
+				trace("Namespace not found: " + nameSpace);
+				return null;
+			}
+			source = theNameSpaceDefinition;
+		}
+		
+		// Find the function definition matching the operation signature
+		ASTNode<IASTFunctionDefinition> parseFunctionDefinition = new ASTNode<IASTFunctionDefinition>(
+				IASTFunctionDefinition.class);
+		List<IASTFunctionDefinition> functionDefinitions = parseFunctionDefinition.getNodes(source);
+		
+		for (IASTFunctionDefinition functionDefinition : functionDefinitions)
+		{
+			Map.Entry<String, String> functionEntry = getSourceFromFunction(functionDefinition, filePath);
+			
+			if (functionEntry == null)
+			{
+				continue;
+			}
+			
+			String rawSignature = functionEntry.getKey();
+			
+			if (rawSignature.equals(operationSignature))
+			{
+				int lineNumber = getOffsetFromFunction(functionDefinition, filePath);
+				if (lineNumber != -1)
+				{
+					return new SourceLocation(filePath, lineNumber);
+				}
+			}
+		}
+		
+		trace("Operation not found in source file: " + aOperation.getName());
 		return null;
 	}
 

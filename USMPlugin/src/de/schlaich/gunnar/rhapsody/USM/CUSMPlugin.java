@@ -48,6 +48,7 @@ import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
 import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
+import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 import de.schlaich.gunnar.rhapsody.utilities.BuildTools;
 import de.schlaich.gunnar.rhapsody.utilities.MarkdownEditorPreview;
 import de.schlaich.gunnar.rhapsody.utilities.MarkdownViewer;
@@ -143,6 +144,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String ActivateHistoryCmd = "Activate History";
 	public static final String DeactivateHistoryCmd = "Deactivate History";
 	public static final String CopyToAppDataCmd = "Copy to AppData";
+	public static final String GetOperationLocationCmd = "Get Operation Location";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -1323,6 +1325,32 @@ public class CUSMPlugin extends RPUserPlugin
 		if(menuItem.contains(DeactivateHistoryCmd))
 		{
 			mySelectionHistory.disconnect();
+			return;
+		}
+		
+		if(menuItem.contains(GetOperationLocationCmd))
+		{
+			if (selected instanceof IRPOperation == false)
+			{
+				trace("No Operation selected");
+				return;
+			}
+			
+			IRPOperation operation = (IRPOperation) selected;
+			
+			ASTHelper.SourceLocation location = ASTHelper.getOperationSourceLocation(operation, myRhapsody);
+			
+			if (location == null)
+			{
+				trace("Could not find source location for operation: " + operation.getName());
+				return;
+			}
+			
+			trace("Operation: " + operation.getName());
+			trace("File Path: " + location.getFilePath());
+			trace("Line Number: " + location.getLineNumber());
+			trace("Full Location: " + location.toString());
+			
 			return;
 		}
 		
