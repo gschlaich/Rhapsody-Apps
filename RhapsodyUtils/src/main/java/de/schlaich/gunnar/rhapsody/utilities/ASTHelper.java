@@ -1249,6 +1249,9 @@ public class ASTHelper
 		return signature;
 
 	}
+	
+	
+	
 
 	@SuppressWarnings("rawtypes")
 	private static Map.Entry<String, String> getSourceFromFunction(IASTFunctionDefinition aFunctionDefinition,
