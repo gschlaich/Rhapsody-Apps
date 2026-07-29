@@ -2,6 +2,7 @@ package de.schlaich.gunnar.rhapsody.ghs;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -12,6 +13,8 @@ import java.util.function.Consumer;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPOperation;
+
+import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
 
 public class OzoneSupport
 {
@@ -219,6 +222,8 @@ public class OzoneSupport
 	
 	public boolean view(IRPOperation aOperation)
 	{
+		File sourcePath = ASTHelper.getSourcePath(aOperation, myApplication, "cpp");
+		return false;
 		
 	}
 	
