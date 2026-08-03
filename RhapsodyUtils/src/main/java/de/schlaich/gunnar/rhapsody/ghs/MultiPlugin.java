@@ -59,6 +59,14 @@ public class MultiPlugin extends RPUserPlugin
 	public static final String COMPILE_MULTI_CMD = "Compile in GHS Multi";
 	public static final String VIEW_MULTI_RHAPSODY_CMD = "View in Rhapsody";
 	public static final String SET_BREAKPOINT_CMD = "Set Breakpoint";
+	
+	// Ozone Commands
+	public static final String OZONE_CONNECT_CMD = "Ozone Connect";
+	public static final String OZONE_DISCONNECT_CMD = "Ozone Disconnect";
+	public static final String OZONE_VIEW_CMD = "View in Ozone";
+	public static final String OZONE_SET_BREAKPOINT_CMD = "Ozone Set Breakpoint";
+	public static final String OZONE_DELETE_BREAKPOINT_CMD = "Ozone Delete Breakpoint";
+	public static final String OZONE_DELETE_ALL_BREAKPOINTS_CMD = "Ozone Delete All Breakpoints";
 
 	private static final String CompilerIssue = "CompilerIssue";
 	private static final String BREAK_POINT_META_NAME = "BreakPoint";
@@ -89,6 +97,7 @@ public class MultiPlugin extends RPUserPlugin
 
 	private IRPApplication myRhapsody = null;
 	private IRPProfile myProfile = null;
+	private OzoneSupport myOzoneSupport = null;
 
 	public MultiPlugin()
 	{
@@ -196,6 +205,39 @@ public class MultiPlugin extends RPUserPlugin
 			setBreakPoint(selected);
 			return;
 		}
+		
+		// Ozone Commands
+		if (menuItem.equals(OZONE_CONNECT_CMD))
+		{
+			ozoneConnect();
+			return;
+		}
+		if (menuItem.equals(OZONE_DISCONNECT_CMD))
+		{
+			ozoneDisconnect();
+			return;
+		}
+		if (menuItem.equals(OZONE_VIEW_CMD))
+		{
+			ozoneView(selected);
+			return;
+		}
+		if (menuItem.equals(OZONE_SET_BREAKPOINT_CMD))
+		{
+			ozoneSetBreakpoint(selected);
+			return;
+		}
+		if (menuItem.equals(OZONE_DELETE_BREAKPOINT_CMD))
+		{
+			ozoneDeleteBreakpoint(selected);
+			return;
+		}
+		if (menuItem.equals(OZONE_DELETE_ALL_BREAKPOINTS_CMD))
+		{
+			ozoneDeleteAllBreakpoints();
+			return;
+		}
+		
 		trace("Unknown Command: \"" + menuItem + "\"");
 
 	}
@@ -226,6 +268,321 @@ public class MultiPlugin extends RPUserPlugin
 		myRhapsody.writeToOutputWindow("Log", "MultiPlugin: " + aMsg + "\n");
 		System.out.println("MultiPlugin: " + aMsg);
 	}
+	
+	// ==================== Ozone Methods ====================
+	
+	/**
+	 * Connect to Ozone debugger
+	 */
+	private void ozoneConnect()
+	{
+		trace("Connecting to Ozone...");
+		
+		if (myOzoneSupport != null && myOzoneSupport.isConnected())
+		{
+			trace("Already connected to Ozone");
+			return;
+		}
+		
+		myOzoneSupport = new OzoneSupport(myRhapsody, this::trace);
+		
+		if (myOzoneSupport.isConnected())
+		{
+			trace("Successfully connected to Ozone");
+		}
+		else
+		{
+			trace("Failed to connect to Ozone - make sure Ozone is running with telnet server enabled");
+			myOzoneSupport = null;
+		}
+	}
+	
+	/**
+	 * Disconnect from Ozone debugger
+	 */
+	private void ozoneDisconnect()
+	{
+		trace("Disconnecting from Ozone...");
+		
+		if (myOzoneSupport == null)
+		{
+			trace("Not connected to Ozone");
+			return;
+		}
+		
+		myOzoneSupport.disconnect();
+		myOzoneSupport = null;
+		trace("Disconnected from Ozone");
+	}
+	
+	/**
+	 * View the selected operation in Ozone debugger
+	 */
+	private void ozoneView(IRPModelElement aElement)
+	{
+		trace("View in Ozone: " + (aElement != null ? aElement.getName() : "null"));
+		
+		if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+		{
+			trace("Not connected to Ozone - connecting now...");
+			ozoneConnect();
+			
+			if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+			{
+				trace("Could not connect to Ozone");
+				return;
+			}
+		}
+		
+		if (aElement == null)
+		{
+			trace("No element selected");
+			return;
+		}
+		
+		if (aElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation) aElement;
+			if (myOzoneSupport.view(operation))
+			{
+				trace("Opened operation in Ozone: " + operation.getName());
+			}
+			else
+			{
+				trace("Failed to open operation in Ozone");
+			}
+		}
+		else
+		{
+			trace("Selected element is not an operation: " + aElement.getMetaClass());
+		}
+	}
+	
+	/**
+	 * Set a breakpoint at the selected operation in Ozone.
+	 * Supports IRPOperation, BreakPoint metaclass (IRPComment with offset), 
+	 * and BreakPointCollection metaclass.
+	 */
+	private void ozoneSetBreakpoint(IRPModelElement aElement)
+	{
+		trace("Set Breakpoint in Ozone: " + (aElement != null ? aElement.getName() : "null"));
+		
+		if (!ensureOzoneConnected())
+		{
+			return;
+		}
+		
+		if (aElement == null)
+		{
+			trace("No element selected");
+			return;
+		}
+		
+		// Handle BreakPoint metaclass (IRPComment with Offset tag)
+		if (aElement instanceof IRPComment)
+		{
+			IRPComment comment = (IRPComment) aElement;
+			ozoneSetBreakpointFromComment(comment);
+			return;
+		}
+		
+		// Search for BreakPoint comments in the element
+		List<IRPComment> comments = aElement.getNestedElementsByMetaClass("Comment", 1).toList();
+		boolean foundBreakpoint = false;
+		
+		for (IRPComment comment : comments)
+		{
+			if (comment.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
+			{
+				ozoneSetBreakpointFromComment(comment);
+				foundBreakpoint = true;
+			}
+		}
+		
+		if (foundBreakpoint)
+		{
+			return;
+		}
+		
+		// Handle IRPOperation directly
+		if (aElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation) aElement;
+			if (myOzoneSupport.setBreakpoint(operation))
+			{
+				trace("Breakpoint set for operation: " + operation.getName());
+			}
+			else
+			{
+				trace("Failed to set breakpoint for operation");
+			}
+		}
+		else
+		{
+			trace("Selected element is not an operation or breakpoint: " + aElement.getMetaClass());
+		}
+	}
+	
+	/**
+	 * Set breakpoint in Ozone from a BreakPoint comment (with offset)
+	 */
+	private void ozoneSetBreakpointFromComment(IRPComment aBreakpoint)
+	{
+		// Handle BreakPointCollection
+		if (aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME))
+		{
+			ozoneSetBreakpointCollection(aBreakpoint);
+			return;
+		}
+		
+		// Must be a BreakPoint
+		if (!aBreakpoint.getUserDefinedMetaClass().equals(BREAK_POINT_META_NAME))
+		{
+			trace("Comment is not a BreakPoint: " + aBreakpoint.getUserDefinedMetaClass());
+			return;
+		}
+		
+		if (!(aBreakpoint.getOwner() instanceof IRPOperation))
+		{
+			trace("Owner of BreakPoint has to be an operation");
+			return;
+		}
+		
+		IRPTag offsetTag = aBreakpoint.getTag("Offset");
+		int offset = 0;
+		
+		if (offsetTag != null)
+		{
+			try
+			{
+				offset = Integer.parseInt(offsetTag.getValue());
+			}
+			catch (NumberFormatException e)
+			{
+				trace("Invalid offset value: " + offsetTag.getValue());
+			}
+		}
+		
+		IRPOperation owner = (IRPOperation) aBreakpoint.getOwner();
+		
+		if (myOzoneSupport.setBreakpoint(owner, offset))
+		{
+			trace("Breakpoint set for " + owner.getName() + " at offset " + offset);
+		}
+		else
+		{
+			trace("Failed to set breakpoint for " + owner.getName());
+		}
+	}
+	
+	/**
+	 * Set breakpoints from a BreakPointCollection in Ozone
+	 */
+	private void ozoneSetBreakpointCollection(IRPComment aBreakpointCollection)
+	{
+		if (!aBreakpointCollection.getUserDefinedMetaClass().equals(BREAK_POINT_COLLECTION_META_NAME))
+		{
+			return;
+		}
+		
+		trace("Setting breakpoints from collection: " + aBreakpointCollection.getName());
+		
+		List<IRPModelElement> breakPoints = aBreakpointCollection.getAnchoredByMe().toList();
+		for (IRPModelElement element : breakPoints)
+		{
+			if (element instanceof IRPComment)
+			{
+				IRPComment breakpoint = (IRPComment) element;
+				ozoneSetBreakpointFromComment(breakpoint);
+			}
+		}
+	}
+	
+	/**
+	 * Ensure Ozone is connected, connect if not
+	 */
+	private boolean ensureOzoneConnected()
+	{
+		if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+		{
+			trace("Not connected to Ozone - connecting now...");
+			ozoneConnect();
+			
+			if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+			{
+				trace("Could not connect to Ozone");
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	/**
+	 * Delete breakpoint at the selected operation in Ozone
+	 */
+	private void ozoneDeleteBreakpoint(IRPModelElement aElement)
+	{
+		trace("Delete Breakpoint in Ozone: " + (aElement != null ? aElement.getName() : "null"));
+		
+		if (!ensureOzoneConnected())
+		{
+			return;
+		}
+		
+		if (aElement == null)
+		{
+			trace("No element selected");
+			return;
+		}
+		
+		if (aElement instanceof IRPOperation)
+		{
+			IRPOperation operation = (IRPOperation) aElement;
+			if (myOzoneSupport.deleteBreakpoint(operation))
+			{
+				trace("Breakpoint deleted for operation: " + operation.getName());
+			}
+			else
+			{
+				trace("Failed to delete breakpoint for operation");
+			}
+		}
+		else
+		{
+			trace("Selected element is not an operation: " + aElement.getMetaClass());
+		}
+	}
+	
+	/**
+	 * Delete all breakpoints in Ozone
+	 */
+	private void ozoneDeleteAllBreakpoints()
+	{
+		trace("Delete all Breakpoints in Ozone");
+		
+		if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+		{
+			trace("Not connected to Ozone - connecting now...");
+			ozoneConnect();
+			
+			if (myOzoneSupport == null || !myOzoneSupport.isConnected())
+			{
+				trace("Could not connect to Ozone");
+				return;
+			}
+		}
+		
+		if (myOzoneSupport.deleteAllBreakpoints())
+		{
+			trace("All breakpoints deleted");
+		}
+		else
+		{
+			trace("Failed to delete all breakpoints");
+		}
+	}
+	
+	// ==================== End Ozone Methods ====================
 
 	private IRPOperation getSelectedOperation(IRPOperation aOperation)
 	{

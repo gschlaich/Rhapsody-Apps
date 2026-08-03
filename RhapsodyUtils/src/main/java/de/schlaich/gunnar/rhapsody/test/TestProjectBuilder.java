@@ -421,6 +421,7 @@ public class TestProjectBuilder
 				{
 					trace("Closing test project: " + myProject.getName());
 					myProject.save();
+					myProject.close();
 				}
 				catch (Exception e)
 				{
