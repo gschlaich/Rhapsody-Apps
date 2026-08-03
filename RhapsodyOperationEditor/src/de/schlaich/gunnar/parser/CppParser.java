@@ -40,9 +40,8 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 	private Gutter myGutter = null;
 	private Icon myErrorIcon = null;
 	private List<GutterIconInfo> myInfos = null;
-	//private AskIssues myAskIssues = null;
-	
-	
+	// private AskIssues myAskIssues = null;
+
 	public CppParser(ClassifierCompletionProvider aProvider, Gutter aGutter)
 	{
 		myResult = new DefaultParseResult(this);
@@ -50,39 +49,37 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 		myGutter = aGutter;
 		myErrorIcon = RhapsodyOperation.getIcon("RhapsodyIcons_110.gif");
 		myInfos = new ArrayList<GutterIconInfo>();
-		
-		
+
 	}
-	
+
 	@Override
-	public ParseResult parse(RSyntaxDocument aDoc, String aStyle) 
+	public ParseResult parse(RSyntaxDocument aDoc, String aStyle)
 	{
-		
+
 		Element root = aDoc.getDefaultRootElement();
 		int lineCount = root.getElementCount();
 		myResult.clearNotices();
 		// Always spell check all lines, for now.
-		myResult.setParsedLines(0, lineCount-1);
-		
-		for(GutterIconInfo info:myInfos)
+		myResult.setParsedLines(0, lineCount - 1);
+
+		for (GutterIconInfo info : myInfos)
 		{
 			myGutter.removeTrackingIcon(info);
 		}
-		
-		
+
 		String text;
-		try 
+		try
 		{
 			text = aDoc.getText(0, aDoc.getLength());
-			IASTTranslationUnit unit = ASTHelper.getTranslationUnitFromBody(text);	
+			IASTTranslationUnit unit = ASTHelper.getTranslationUnitFromBody(text);
 			List<IASTProblem> problems = ASTHelper.getProblems(unit);
-			
-			for(IASTProblem problem : problems)
+
+			for (IASTProblem problem : problems)
 			{
-				
+
 				String message = "C++ ";
-				
-				if(problem.isError())
+
+				if (problem.isError())
 				{
 					message = message + "Error: ";
 				}
@@ -90,46 +87,46 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				{
 					message = message + "Warning: ";
 				}
-				
-				
+
 				message = message + problem.getMessage();
-				
+
 				int length = problem.getSourceEnd() - problem.getSourceStart();
-				int pos = problem.getSourceStart()-ASTHelper.Prolog.length();
-				int line = problem.getSourceLineNumber()-2;
-				
-				//System.out.println("Problem RawSignature: "+ unit.);
-				System.out.println(line+ " " + pos + " " + length);
-				
+				int pos = problem.getSourceStart() - ASTHelper.Prolog.length();
+				int line = problem.getSourceLineNumber() - 2;
+
+				// System.out.println("Problem RawSignature: "+ unit.);
+				System.out.println("Problem at Line: " + line + " Pos: " + pos + " Length: " + length);
+
 				int start = pos;
-				
-				while(text.charAt(start)!='\n')
+
+				if ((length > 0) && (start > 0))
 				{
-					start--;
-					if(start<0)
+
+					while (text.charAt(start) != '\n')
 					{
-						//begin of text
-						break;
+						start--;
+						if (start == 0)
+						{
+							// begin of text
+							break;
+						}
+
 					}
 				}
-				
+
 				int end = pos;
-				
-				
-				
-				
-				
-				GutterIconInfo info = myGutter.addLineTrackingIcon(line,myErrorIcon, message);
+
+				GutterIconInfo info = myGutter.addLineTrackingIcon(line, myErrorIcon, message);
 				myInfos.add(info);
-				
+
 				DefaultParserNotice notice = null;
-				
-				if(line>lineCount)
+
+				if (line > lineCount)
 				{
 					line = lineCount;
 				}
-				
-				if(length<=0)
+
+				if (length <= 0)
 				{
 					notice = new DefaultParserNotice(this, message, line);
 				}
@@ -137,80 +134,72 @@ public class CppParser extends AbstractParser implements ExtendedHyperlinkListen
 				{
 					notice = new DefaultParserNotice(this, message, line, pos, length);
 				}
-				
-				
 
-				
 				myResult.addNotice(notice);
-				
+
 			}
-			
+
 			new ArrayList<String>();
 			List<IASTNamedTypeSpecifier> namedSpecifiers = ASTHelper.getNamedTypeSpecifiers(unit);
-			for(IASTNamedTypeSpecifier namedSpecifier:namedSpecifiers)
+			for (IASTNamedTypeSpecifier namedSpecifier : namedSpecifiers)
 			{
 				DefaultParserNotice notice = null;
 				IASTName astName = namedSpecifier.getName().getLastName();
 				String typeName = astName.toString();
-				
+
 				// skip template instantiations (e.g. vector<int>)
-				if(astName instanceof ICPPASTTemplateId)
+				if (astName instanceof ICPPASTTemplateId)
 				{
 					ICPPASTTemplateId templateId = (ICPPASTTemplateId) astName;
 					typeName = templateId.getTemplateName().toString();
 				}
-				
-				
-				if(myClassifierCompletionProvider.getFirstCompletion(typeName)==null)
+
+				if (myClassifierCompletionProvider.getFirstCompletion(typeName) == null)
 				{
-					if(NamespaceCompletionProvider.GetCompletion(typeName)==null)
+					if (NamespaceCompletionProvider.GetCompletion(typeName) == null)
 					{
-						//unknown type
-						
+						// unknown type
+
 						int length = 0;
 						int pos = 0;
-						
+
 						IASTNodeLocation[] locations = astName.getNodeLocations();
-						
-						if(locations.length>0)
+
+						if (locations.length > 0)
 						{
 							length = locations[0].getNodeLength();
-							pos = locations[0].getNodeOffset()-ASTHelper.Prolog.length();
+							pos = locations[0].getNodeOffset() - ASTHelper.Prolog.length();
 						}
-						
-						
-						
+
 						System.out.println("unknown type: " + typeName);
-						notice = new DefaultParserNotice(this, "unknown type: "+typeName, 0, pos, length);
+						notice = new DefaultParserNotice(this, "unknown type: " + typeName, 0, pos, length);
 						notice.setColor(Color.ORANGE);
-						
+
 						myResult.addNotice(notice);
 					}
 				}
-				
+
 			}
-			
-			
+
 			System.out.println("End problems");
-			
-		} 
-		catch (BadLocationException e) 
+
+		}
+		catch (BadLocationException e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		
-		
+		}
+
 		return myResult;
-		
+
 	}
 
 	@Override
-	public void linkClicked(RSyntaxTextArea arg0, HyperlinkEvent arg1) {
+	public void linkClicked(RSyntaxTextArea arg0, HyperlinkEvent arg1)
+	{
 		// TODO Auto-generated method stub
 		System.out.println("Link Clicked ");
-		
+
 	}
-	
 
 }
