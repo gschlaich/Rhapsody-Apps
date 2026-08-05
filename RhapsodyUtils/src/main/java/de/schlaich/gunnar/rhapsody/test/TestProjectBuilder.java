@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.rhapsody.test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -14,11 +15,15 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPOperation;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.RhapsodyAppServer;
 
 /**
  * Builder class for creating a new independent Rhapsody test project.
  * This allows running tests on a controlled, reproducible project structure
  * that is completely isolated from any existing projects.
+ * 
+ * The test project is created in a separate hidden Rhapsody instance,
+ * ensuring complete isolation from the main Rhapsody application.
  * 
  * The test project contains:
  * - A package "USMTestPackage"
@@ -36,7 +41,8 @@ public class TestProjectBuilder
 	public static final String TEST_OPERATION_NAME = "simpleOperation";
 	
 	private Consumer<String> myTraceAction = null;
-	private IRPApplication myApplication = null;
+	private IRPApplication myMainApplication = null;
+	private IRPApplication myTestApplication = null;
 	private IRPProject myProject = null;
 	private IRPPackage myTestPackage = null;
 	private IRPClass myTestClass = null;
@@ -44,13 +50,22 @@ public class TestProjectBuilder
 	private IRPConfiguration myTestConfiguration = null;
 	
 	private String myProjectPath = null;
-	private IRPProject myOriginalProject = null;
+	private boolean myUseHiddenRhapsody = true;
 	
 	public TestProjectBuilder(IRPApplication aApplication)
 	{
-		myApplication = aApplication;
-		// Default project path in temp directory
-		myProjectPath = System.getProperty("java.io.tmpdir") + File.separator + TEST_PROJECT_NAME;
+		myMainApplication = aApplication;
+		// Default project path in test folder under USM_ROOT
+		String usmRoot = System.getenv("USM_ROOT");
+		if (usmRoot != null && !usmRoot.isEmpty())
+		{
+			myProjectPath = usmRoot + File.separator + "test" + File.separator + TEST_PROJECT_NAME;
+		}
+		else
+		{
+			// Fallback to temp directory if USM_ROOT is not set
+			myProjectPath = System.getProperty("java.io.tmpdir") + File.separator + TEST_PROJECT_NAME;
+		}
 	}
 	
 	public TestProjectBuilder(IRPApplication aApplication, Consumer<String> aTraceAction)
@@ -81,11 +96,29 @@ public class TestProjectBuilder
 	}
 	
 	/**
+	 * Set whether to use a hidden Rhapsody instance (default: true)
+	 * If false, uses the main application (not recommended for isolation)
+	 */
+	public TestProjectBuilder setUseHiddenRhapsody(boolean aUseHidden)
+	{
+		myUseHiddenRhapsody = aUseHidden;
+		return this;
+	}
+	
+	/**
 	 * Get the project path
 	 */
 	public String getProjectPath()
 	{
 		return myProjectPath;
+	}
+	
+	/**
+	 * Get the test Rhapsody application (hidden instance)
+	 */
+	public IRPApplication getTestApplication()
+	{
+		return myTestApplication;
 	}
 	
 	/**
@@ -97,13 +130,6 @@ public class TestProjectBuilder
 		try
 		{
 			trace("Building new test project at: " + myProjectPath);
-			
-			// Remember current project to restore later if needed
-			myOriginalProject = myApplication.activeProject();
-			if (myOriginalProject != null)
-			{
-				trace("Saving reference to original project: " + myOriginalProject.getName());
-			}
 			
 			// Clean up any existing test project files
 			cleanupProjectFiles();
@@ -117,6 +143,21 @@ public class TestProjectBuilder
 					trace("Failed to create project directory: " + myProjectPath);
 					return false;
 				}
+			}
+			
+			// Start a separate hidden Rhapsody instance for test isolation
+			if (myUseHiddenRhapsody)
+			{
+				myTestApplication = createHiddenRhapsodyApp();
+				if (myTestApplication == null)
+				{
+					trace("Failed to start hidden Rhapsody instance");
+					return false;
+				}
+			}
+			else
+			{
+				myTestApplication = myMainApplication;
 			}
 			
 			// Create the new project
@@ -144,7 +185,7 @@ public class TestProjectBuilder
 			}
 			
 			// Save the project
-			myProject.save();
+			//myProject.save();
 			
 			// Generate code
 			if (!generateCode())
@@ -163,6 +204,90 @@ public class TestProjectBuilder
 		}
 	}
 	
+	/**
+	 * Create a hidden Rhapsody application instance for test isolation.
+	 * This is the same approach used in SVNTools.createTempRhapsodyApp()
+	 */
+	private IRPApplication createHiddenRhapsodyApp()
+	{
+		trace("Starting hidden Rhapsody instance...");
+		
+		IRPApplication tempApp = null;
+		File rhapsodyShareFile = new File(System.getenv("OMROOT"));
+		
+		if (!rhapsodyShareFile.exists())
+		{
+			trace("OMROOT does not exist: " + rhapsodyShareFile.getAbsolutePath());
+			return null;
+		}
+		
+		File rhapsodyDir = rhapsodyShareFile.getParentFile();
+		
+		if (!rhapsodyDir.exists())
+		{
+			trace("Rhapsody directory does not exist: " + rhapsodyDir.getAbsolutePath());
+			return null;
+		}
+		
+		File rhapsodyExe = new File(rhapsodyDir, "rhapsody.exe");
+		if (!rhapsodyExe.exists())
+		{
+			trace("Rhapsody executable not found: " + rhapsodyExe.getAbsolutePath());
+			return null;
+		}
+		
+		// Start Rhapsody with hidden UI
+		ProcessBuilder processBuilder = new ProcessBuilder(rhapsodyExe.getAbsolutePath() ,"-hiddenui");
+		
+		try
+		{
+			Process p = processBuilder.start();
+			trace("Rhapsody process started");
+		}
+		catch (IOException e)
+		{
+			trace("Failed to start Rhapsody: " + e.getMessage());
+			return null;
+		}
+		
+		// Wait for Rhapsody to start
+		try
+		{
+			trace("Waiting for Rhapsody to initialize...");
+			Thread.sleep(3000); // Give Rhapsody more time to start
+		}
+		catch (InterruptedException e)
+		{
+			trace("Wait interrupted: " + e.getMessage());
+			return null;
+		}
+		
+		// Find the newly started Rhapsody instance (one without a project loaded)
+		List<String> idList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
+		trace("Found " + idList.size() + " Rhapsody instances");
+		
+		for (String id : idList)
+		{
+			IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplicationByID(id);
+			if (app != null && app.activeProject() == null)
+			{
+				tempApp = app; // Found an instance with no project loaded
+				trace("Found empty Rhapsody instance: " + id);
+				break;
+			}
+		}
+		
+		if (tempApp == null)
+		{
+			trace("No empty Rhapsody application found");
+			return null;
+		}
+		
+		tempApp.setHiddenUI(true);
+		trace("Hidden Rhapsody instance ready");
+		return tempApp;
+	}
+	
 	private boolean createProject()
 	{
 		trace("Creating new project: " + TEST_PROJECT_NAME);
@@ -171,10 +296,10 @@ public class TestProjectBuilder
 		{
 			// Use createAndInsertProject to create a new project
 			// This is the same method used in SVNTools.newSvnProject
-			myApplication.createAndInsertProject(myProjectPath, TEST_PROJECT_NAME);
+			myTestApplication.createAndInsertProject(myProjectPath, TEST_PROJECT_NAME);
 			
 			// Get the newly created project (it becomes the active project)
-			myProject = myApplication.activeProject();
+			myProject = myTestApplication.activeProject();
 			
 			if (myProject == null)
 			{
@@ -207,7 +332,7 @@ public class TestProjectBuilder
 				return false;
 			}
 			
-			myTestPackage.setPropertyValue("CPP_CG.Package.DefineNameSpace", "1");
+			myTestPackage.setPropertyValue("CPP_CG.Package.DefineNameSpace", "true");
 			
 			trace("Test package created: " + myTestPackage.getName());
 			return true;
@@ -352,15 +477,15 @@ public class TestProjectBuilder
 	{
 		trace("Generating code for test class");
 		
-		myProject.save();
+		//myProject.save();
 		
 		try
 		{
 			// Generate code using application's generateElements method
-			IRPCollection col = myApplication.createNewCollection();
+			IRPCollection col = myTestApplication.createNewCollection();
 			col.addItem(myTestClass);
 			
-			myApplication.generateElements(col);
+			myTestApplication.generateElements(col);
 			
 			// Wait for generation to complete
 			Thread.sleep(3000);
@@ -406,7 +531,7 @@ public class TestProjectBuilder
 	}
 	
 	/**
-	 * Clean up the test project - close project and delete files
+	 * Clean up the test project - close project, quit hidden Rhapsody, and delete files
 	 */
 	public void cleanup()
 	{
@@ -425,25 +550,34 @@ public class TestProjectBuilder
 				}
 				catch (Exception e)
 				{
-					trace("Error saving project: " + e.getMessage());
+					trace("Error closing project: " + e.getMessage());
 				}
 				myProject = null;
 			}
 			
-			// Restore original project if there was one
-			if (myOriginalProject != null)
+			// Quit the hidden Rhapsody instance if we started one
+			if (myUseHiddenRhapsody && myTestApplication != null)
 			{
 				try
 				{
-					// Check if original project is still valid and reopen it
-					String originalName = myOriginalProject.getName();
-					trace("Original project reference: " + originalName);
+					trace("Quitting hidden Rhapsody instance");
+					myTestApplication.quit();
 				}
 				catch (Exception e)
 				{
-					trace("Original project no longer available");
-					myOriginalProject = null;
+					trace("Error quitting Rhapsody: " + e.getMessage());
 				}
+				myTestApplication = null;
+			}
+			
+			// Wait a moment for Rhapsody to fully close
+			try
+			{
+				Thread.sleep(1000);
+			}
+			catch (InterruptedException e)
+			{
+				// Ignore
 			}
 			
 			// Delete project files
@@ -513,9 +647,9 @@ public class TestProjectBuilder
 	public IRPConfiguration getTestConfiguration() { return myTestConfiguration; }
 	
 	/**
-	 * Get the original project that was active before the test project was created
+	 * Get the main application that was passed to the constructor
 	 */
-	public IRPProject getOriginalProject() { return myOriginalProject; }
+	public IRPApplication getMainApplication() { return myMainApplication; }
 	
 	/**
 	 * Get the first operation from test class

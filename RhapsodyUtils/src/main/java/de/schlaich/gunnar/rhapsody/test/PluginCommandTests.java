@@ -254,7 +254,9 @@ public class PluginCommandTests
 						"Could not find simpleOperation in test class", 0);
 				}
 				
-				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, app);
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, testApp);
 				
 				if (location == null)
 				{
@@ -300,7 +302,9 @@ public class PluginCommandTests
 						"Could not find constructor in test class", 0);
 				}
 				
-				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, app);
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, testApp);
 				
 				if (location == null)
 				{
@@ -331,7 +335,9 @@ public class PluginCommandTests
 						"Could not find setValues in test class", 0);
 				}
 				
-				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, app);
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, testApp);
 				
 				if (location == null)
 				{
@@ -362,7 +368,9 @@ public class PluginCommandTests
 						"Could not find getCount in test class", 0);
 				}
 				
-				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, app);
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				SourceLocation location = ASTHelper.getOperationSourceLocation(operation, testApp);
 				
 				if (location == null)
 				{
@@ -387,7 +395,10 @@ public class PluginCommandTests
 				}
 				
 				IRPClass testClass = myTestProjectBuilder.getTestClass();
-				String path = ASTHelper.getSourcePath(testClass, app);
+				
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				String path = ASTHelper.getSourcePath(testClass, testApp);
 				
 				if (path == null)
 				{
@@ -472,9 +483,11 @@ public class PluginCommandTests
 						"Could not find all test operations", 0);
 				}
 				
-				SourceLocation loc1 = ASTHelper.getOperationSourceLocation(op1, app);
-				SourceLocation loc2 = ASTHelper.getOperationSourceLocation(op2, app);
-				SourceLocation loc3 = ASTHelper.getOperationSourceLocation(op3, app);
+				// Use the test application (hidden Rhapsody instance)
+				IRPApplication testApp = myTestProjectBuilder.getTestApplication();
+				SourceLocation loc1 = ASTHelper.getOperationSourceLocation(op1, testApp);
+				SourceLocation loc2 = ASTHelper.getOperationSourceLocation(op2, testApp);
+				SourceLocation loc3 = ASTHelper.getOperationSourceLocation(op3, testApp);
 				
 				if (loc1 == null || loc2 == null || loc3 == null)
 				{
