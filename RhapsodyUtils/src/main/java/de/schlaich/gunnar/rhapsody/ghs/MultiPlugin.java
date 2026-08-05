@@ -67,6 +67,7 @@ public class MultiPlugin extends RPUserPlugin
 	public static final String OZONE_SET_BREAKPOINT_CMD = "Ozone Set Breakpoint";
 	public static final String OZONE_DELETE_BREAKPOINT_CMD = "Ozone Delete Breakpoint";
 	public static final String OZONE_DELETE_ALL_BREAKPOINTS_CMD = "Ozone Delete All Breakpoints";
+	public static final String OZONE_START_CMD = "Start Ozone";
 
 	private static final String CompilerIssue = "CompilerIssue";
 	private static final String BREAK_POINT_META_NAME = "BreakPoint";
@@ -237,6 +238,11 @@ public class MultiPlugin extends RPUserPlugin
 			ozoneDeleteAllBreakpoints();
 			return;
 		}
+		if (menuItem.equals(OZONE_START_CMD))
+		{
+			ozoneStart();
+			return;
+		}
 		
 		trace("Unknown Command: \"" + menuItem + "\"");
 
@@ -284,9 +290,12 @@ public class MultiPlugin extends RPUserPlugin
 			return;
 		}
 		
-		myOzoneSupport = new OzoneSupport(myRhapsody, this::trace);
+		if (myOzoneSupport == null)
+		{
+			myOzoneSupport = new OzoneSupport(myRhapsody, this::trace);
+		}
 		
-		if (myOzoneSupport.isConnected())
+		if (myOzoneSupport.connect())
 		{
 			trace("Successfully connected to Ozone");
 		}
@@ -579,6 +588,51 @@ public class MultiPlugin extends RPUserPlugin
 		else
 		{
 			trace("Failed to delete all breakpoints");
+		}
+	}
+	
+	/**
+	 * Start Ozone debugger with the current project name
+	 */
+	private void ozoneStart()
+	{
+		trace("Starting Ozone...");
+		
+		IRPProject project = myRhapsody.activeProject();
+		
+		if (project == null)
+		{
+			trace("No active project - cannot start Ozone");
+			return;
+		}
+		
+		String projectName = project.getName();
+		trace("Using project name: " + projectName);
+		
+		// Get the working folder from project configuration
+		IRPConfiguration config = RhapsodyHelper.getProjectConfig(project, "DefaultConfig");
+		
+		if (config == null)
+		{
+			trace("ProjectPath of " + projectName + " not found");
+			return;
+		}
+		
+		String workingFolder = config.getDirectory(1, "");
+		trace("Working Folder: " + workingFolder);
+		
+		if (myOzoneSupport == null)
+		{
+			myOzoneSupport = new OzoneSupport(myRhapsody, this::trace);
+		}
+		
+		if (myOzoneSupport.startOzone(projectName, workingFolder))
+		{
+			trace("Ozone started successfully with project: " + projectName);
+		}
+		else
+		{
+			trace("Failed to start Ozone");
 		}
 	}
 	

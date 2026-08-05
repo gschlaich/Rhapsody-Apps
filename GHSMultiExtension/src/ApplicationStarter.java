@@ -45,7 +45,10 @@ public class ApplicationStarter {
 		// simulate a call to the plug-in
 		multiPlugin.RhpPluginInvokeItem();
 		
-		multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
+		//multiPlugin.OnMenuItemSelect(MultiPlugin.VIEW_MULTI_DEBUGGER_CMD);
+		//multiPlugin.OnMenuItemSelect(MultiPlugin.OZONE_START_CMD);
+		//multiPlugin.OnMenuItemSelect(MultiPlugin.OZONE_VIEW_CMD);
+		multiPlugin.OnMenuItemSelect(MultiPlugin.OZONE_SET_BREAKPOINT_CMD);
 		
 //		if(app.getSelectedElement() instanceof IRPProject)
 //		{
