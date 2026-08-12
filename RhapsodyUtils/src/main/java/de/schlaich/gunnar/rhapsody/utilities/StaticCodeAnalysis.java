@@ -522,7 +522,7 @@ public class StaticCodeAnalysis {
 			
 			/*
 
-            // Batchdatei als Prozess ausführen
+            // Batchdatei als Prozess ausfï¿½hren
            
            
             process.waitFor();
@@ -847,19 +847,13 @@ public class StaticCodeAnalysis {
 		if (matcher.find() == true)
 		{
 			String errorType = matcher.group(1);
-			errorType.replace(",", "_");
-			errorType.replace(" ", "_");
-			errorLevel = errorType.substring(0);
 			
-//			int endIndex =  errorType.indexOf(",");
-//			if (endIndex > 0)
-//			{
-//				errorLevel = errorType.substring(0);
-//			}
-//			else
-//			{
-//				errorLevel = errorType;
-//			}
+			errorLevel = errorType.substring(0);
+			errorLevel = errorLevel.replace(",", "_");
+			errorLevel = errorLevel.replace(" ", "_");
+			errorLevel = errorLevel.replace("-", "_");
+			
+			
 			
 		}
 		

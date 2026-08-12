@@ -51,7 +51,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.LocateActiveCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraIssueCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JiraChangedCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.StaticCodeAnalyzeCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunMFileCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ConvertToRelativePathCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateInitCodeCmd);
@@ -105,7 +105,7 @@ public class ApplicationStarter {
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.CopyToAppDataCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowGUIDCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
 		
 	}
 
