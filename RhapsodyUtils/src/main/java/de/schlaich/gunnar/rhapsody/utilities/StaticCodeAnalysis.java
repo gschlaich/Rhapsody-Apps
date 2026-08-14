@@ -49,6 +49,7 @@ import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPState;
 import com.telelogic.rhapsody.core.IRPStatechart;
+import com.telelogic.rhapsody.core.IRPTag;
 import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.IRPUnit;
 
@@ -385,12 +386,20 @@ public class StaticCodeAnalysis {
 //			checks.add("");
 			
 			//enable all checks
-			checks.add("*");
+			//checks.add("*");
 			
 			
+			
+			IRPTag clangTag = aClass.getTag("clang_tidy");
 			
 			String checkString = "";
+			if(clangTag!=null)
+			{
+				checkString = clangTag.getValue();
+			}
 			
+			
+			/*
 			for (String check : checks)
 			{
 				if (checkString.equals("") == false)
@@ -399,7 +408,7 @@ public class StaticCodeAnalysis {
 				}
 				checkString += check;
 			}
-			
+			*/
 			trace("Checks: " + checkString);
 			
 			
@@ -412,7 +421,7 @@ public class StaticCodeAnalysis {
 			
 			params.add(fileName);
 			//params.add("--checks=clang-analyzer-*,readability-*,-readability-identifier-length,-readability-simplify-boolean-expr,modernize-*,-modernize-use-trailing-return-type,-modernize-use-auto,-modernize-use-nullptr,bugprone-*,cppcoreguidelines-*,cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-owning-memory,misc-*,-misc-include-cleaner");
-			params.add("--checks="+checkString);
+			params.add("--config="+checkString);
 			params.add("--");
 			params.add("-std=c++14");
 			params.add(PrecompiledInclude);
@@ -860,6 +869,17 @@ public class StaticCodeAnalysis {
 		String operationNameD = operationName.replace("~", "_");
 
 		String issueName = errorLevel + "_" + operationNameD + "_" + offset;
+		
+		issueName = issueName.replace("=", "_equal_");
+		issueName = issueName.replace(">", "_greater_");
+		issueName = issueName.replace("<", "_less_");
+		issueName = issueName.replace("+", "_plus_");
+		issueName = issueName.replace("-", "_minus_");
+		issueName = issueName.replace("&", "_and_");
+		issueName = issueName.replace("|", "_or_");
+		issueName = issueName.replace("!", "_not_");
+		
+		
 
 		List<IRPComment> issues = aClass.getNestedElementsByMetaClass("Comment", 0).toList();
 		
