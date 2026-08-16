@@ -69,6 +69,7 @@ public class StaticCodeAnalysis {
 	private static final String PrecompiledInclude = "-I../../../../../Development/ExternalSource/PrecompiledHeader";
 	private static final String OxfInclude = "/LangCpp";
 	private static final String OmThreadInclude = "-I../../../../../Development/ExternalSource/oxf/oxf";
+	private static final String OxfIncludeWin = "-I../../../../../Development/ExternalSource/oxf/oxfWin32";
 	private static final String OsConfigInclude = "/LangCpp/osconfig/WIN32";
 	
 	private static final String FlawfinderPath = "J:/Utilities/flawfinder-2.0.19"; //TODO: correct path...
@@ -234,7 +235,7 @@ public class StaticCodeAnalysis {
 
 			sca.clang(selectedClass, project);
 			sca.cppTest(selectedClass, project);
-			sca.flawfinder(selectedClass, project);
+			//sca.flawfinder(selectedClass, project);
 			return "ok";
 		}
 		else if(aSelected instanceof IRPPackage)
@@ -312,7 +313,7 @@ public class StaticCodeAnalysis {
 		{
 			ret+=aSca.clang(c, aPackage.getProject());
 			ret+=aSca.cppTest(c, aPackage.getProject());
-			ret+=aSca.flawfinder(c, aPackage.getProject());
+			//ret+=aSca.flawfinder(c, aPackage.getProject());
 		}
 		
 		List<IRPPackage> packages = aPackage.getPackages().toList();
@@ -350,6 +351,8 @@ public class StaticCodeAnalysis {
 		try {
 			
 			File workingFolder = RhapsodyHelper.getActiveDefaultPath(aClass);
+			
+			trace("Working folder: " + workingFolder.getAbsolutePath());
 		
 			String omRoot = System.getenv("OMROOT");
 			
@@ -372,66 +375,44 @@ public class StaticCodeAnalysis {
 			
 			List<String> checks = new ArrayList<String>();
 			
+		
 			
-			
-//			checks.add("clang-analyzer-*");
-//			checks.add("readability-*,-readability-identifier-length,-readability-simplify-boolean-expr");
-//			checks.add("modernize-*,-modernize-use-trailing-return-type,-modernize-use-auto,-modernize-use-nullptr");
-//			checks.add("bugprone-*");
-//			checks.add("cppcoreguidelines-*,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-owning-memory");
-//			checks.add("misc-*,-misc-include-cleaner");
-//			checks.add("performance-*,-performance-implicit-cast-in-loop");
-//			checks.add("portability-*");
-//			checks.add("clang-analyzer-cplusplus*");
-//			checks.add("");
-			
-			//enable all checks
-			//checks.add("*");
+			String checkString = aClass.getPropertyValue("CPP_CG.Class.clang-tidy");
 			
 			
 			
-			IRPTag clangTag = aClass.getTag("clang_tidy");
-			
-			String checkString = "";
-			if(clangTag!=null)
+			if(checkString==null||checkString.equals(""))
 			{
-				checkString = clangTag.getValue();
-			}
-			
-			
-			/*
-			for (String check : checks)
-			{
-				if (checkString.equals("") == false)
+				IRPTag clangTag = aClass.getTag("clang_tidy");
+				
+				
+				if(clangTag!=null)
 				{
-					checkString += ",";
+					checkString = clangTag.getValue();
 				}
-				checkString += check;
+				
 			}
-			*/
+			
+			
+			
+			
 			trace("Checks: " + checkString);
 			
-			
-			
-			
-			
-			
-			
-			
+
 			
 			params.add(fileName);
-			//params.add("--checks=clang-analyzer-*,readability-*,-readability-identifier-length,-readability-simplify-boolean-expr,modernize-*,-modernize-use-trailing-return-type,-modernize-use-auto,-modernize-use-nullptr,bugprone-*,cppcoreguidelines-*,cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-owning-memory,misc-*,-misc-include-cleaner");
 			params.add("--config="+checkString);
+			//params.add("-extra-arg=-H");
 			params.add("--");
 			params.add("-std=c++14");
 			params.add(PrecompiledInclude);
-			params.add("-I"+omRoot+OxfInclude);
 			params.add("-I../../../../../Development/ExternalSource/oxf");
 			params.add(OmThreadInclude);
+			params.add(OxfIncludeWin);
+			params.add("-I"+omRoot+OxfInclude);
 			params.add("-I"+omRoot+OsConfigInclude);
-			params.addAll(componentIncludes.getIncludes());
 			
-			//trace(params.toString());
+			params.addAll(componentIncludes.getIncludes());	
 			
 			 ProcessBuilder processBuilder = new ProcessBuilder(ClangCmd);
 			 
@@ -502,19 +483,29 @@ public class StaticCodeAnalysis {
 		            
 		            int offset = (ASTHelper.getOffset(operationDefinition, lineNumber));
 		            
-		            createIssue(aClass, errorLevel, infoText, operationName, offset, positionInLine);
+		            File f = new File(fName);
 		            
+		            if(f.getName().equals(fileName)==false)
+		            {
+		            	//trace("File name does not match - skip");
+		            	continue;
+		            }
+		            
+		            IRPComment issue = createIssue(aClass, errorLevel, infoText, operationName, offset, positionInLine);
+		            
+		            if(issue!=null)
+		            {
 		           
-		            trace("Clang: ---------------------------------------");
-		            trace("File: " + fName);
-		            trace("Line: " + lineNumber);
-		            trace("Operation: "+ operationSignature);			
-					trace("Offset: "+ offset);
-		            trace("Column: " + positionInLine);
-		            trace("Errorlevel: " + errorLevel);
-		            trace("Infotext: " + infoText);
-		            trace("----------------------------------------------");
-		            
+			            trace("Clang: ---------------------------------------");
+			            trace("File: " + fName);
+			            trace("Line: " + lineNumber);
+			            trace("Operation: "+ operationSignature);			
+						trace("Offset: "+ offset);
+			            trace("Column: " + positionInLine);
+			            trace("Errorlevel: " + errorLevel);
+			            trace("Infotext: " + infoText);
+			            trace("----------------------------------------------");
+		            }
 		            
 		           
 		            
@@ -622,7 +613,7 @@ public class StaticCodeAnalysis {
 			
 			while ((line = inputReader.readLine()) != null) 
             {
-            	trace(line);
+            	//trace(line);
 				output.add(line);
             }
 			
@@ -651,20 +642,24 @@ public class StaticCodeAnalysis {
 			         String errorType = matcher.group(4);
 			         String errorMessage = matcher.group(5);
 			         
-			         trace("CppCheck: ------------------------------------");
-			         trace(errorType);
-			         trace("LineNumber:" + lineNumber);
-			         trace("errorMessage: "+ errorMessage);
-			         trace("----------------------------------------------");
 			         
 			         IASTFunctionDefinition operationDefinition = ASTHelper.getFunctionDefinition(lineNumber, translationUnit);
 			         String operationName = ASTHelper.getOperationName(operationDefinition);
 			            
 			         int offset = (ASTHelper.getOffset(operationDefinition, lineNumber)-1);
 			            
-			         createIssue(aClass, errorType, errorMessage, operationName, offset, columnNumber);
-     
-			         
+			         if(name == fileName)
+			         {
+			        	 trace("CppCheck: ------------------------------------");
+				         trace("File: " + name);
+				         trace(errorType);
+				         trace("LineNumber:" + lineNumber);
+				         trace("errorMessage: "+ errorMessage);
+				         trace("----------------------------------------------");
+				         
+			        	 createIssue(aClass, errorType, errorMessage, operationName, offset, columnNumber);
+			         }
+			        
 				}
 			}
 			
@@ -824,7 +819,7 @@ public class StaticCodeAnalysis {
 	{
 		if (operationName == null)
 		{
-			trace("OperationName is null");
+			
 			return null;
 		}
 
@@ -943,7 +938,7 @@ public class StaticCodeAnalysis {
 class ComponentIncludes
 {
 	
-	private static final String IncludeBegin = "-I../../";
+	private static final String IncludeBegin = "-I ../../";
 	private static final String IncludeEnd = "/DefaultConfig";
 	
 	private IRPComponent myComponent = null;
