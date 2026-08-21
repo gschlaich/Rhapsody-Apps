@@ -234,7 +234,7 @@ public class StaticCodeAnalysis {
 			IRPClass selectedClass = (IRPClass) aSelected; 
 
 			sca.clang(selectedClass, project);
-			sca.cppTest(selectedClass, project);
+			sca.cppCheck(selectedClass, project);
 			//sca.flawfinder(selectedClass, project);
 			return "ok";
 		}
@@ -312,7 +312,7 @@ public class StaticCodeAnalysis {
 		for(IRPClass c : classes)
 		{
 			ret+=aSca.clang(c, aPackage.getProject());
-			ret+=aSca.cppTest(c, aPackage.getProject());
+			ret+=aSca.cppCheck(c, aPackage.getProject());
 			//ret+=aSca.flawfinder(c, aPackage.getProject());
 		}
 		
@@ -540,7 +540,7 @@ public class StaticCodeAnalysis {
 		}
 
 	
-	public String cppTest(IRPClass aClass, IRPProject aProject) 
+	public String cppCheck(IRPClass aClass, IRPProject aProject) 
 	{
 	
 		trace("CppTest: Class "+aClass.getName()+": ");
