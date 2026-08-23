@@ -19,115 +19,153 @@ import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 
-public class Listener extends RPApplicationListener {
-	
+public class Listener extends RPApplicationListener
+{
+
 	private IRPApplication myApplication = null;
 	private MainApp myMainApp = null;
 	private String myProjectName = null;
 	private IRPProject myProject = null;
-	
-	private String myContextGuid = null;
-	
-	
-	private RhapsodyPreferences myPrefs = null;
-	
 
-	public Listener(IRPApplication aApplication, MainApp aMainApp) {
+	private String myContextGuid = null;
+
+	private RhapsodyPreferences myPrefs = null;
+
+	public Listener(IRPApplication aApplication, MainApp aMainApp)
+	{
 		myApplication = aApplication;
 		myMainApp = aMainApp;
-		
+
 		myProject = myApplication.activeProject();
-		if(myProject != null)
+		if (myProject != null)
 		{
 			myProjectName = myProject.getName();
 		}
-		
+
 		myPrefs = RhapsodyPreferences.Get(true);
-		
+
 	}
-	
-	
-	
 
 	@Override
-	public boolean afterAddElement(IRPModelElement pModelElement) {
-		if(myPrefs.getStartEditorAfterElementAdded())
+	public boolean afterAddElement(IRPModelElement pModelElement)
+	{
+		if (myPrefs.getStartEditorAfterElementAdded())
 		{
 			return startEditorThread(pModelElement);
 		}
 		return false;
 	}
-	
-	
 
 	@Override
-	public boolean afterProjectClose(String bstrProjectName) {
-		if(bstrProjectName.equals(myProjectName))
+	public boolean afterProjectClose(String bstrProjectName)
+	{
+		if (bstrProjectName.equals(myProjectName))
 		{
-			
+
 			myPrefs.removeStarter();
-			
+
 			System.exit(0);
 		}
-		
+
 		return true;
 	}
 
 	@Override
-	public boolean beforeProjectClose(IRPProject pProject) {
-		
+	public boolean beforeProjectClose(IRPProject pProject)
+	{
+
 		return false;
 	}
 
 	@Override
-	public String getId() {
+	public String getId()
+	{
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public boolean onDiagramOpen(IRPDiagram pDiagram) {
+	public boolean onDiagramOpen(IRPDiagram pDiagram)
+	{
 		// TODO Auto-generated method stub
 		return false;
 	}
-	
-	private boolean checkModel(IRPModelElement pModelElement)
+
+	private boolean checkModel(IRPModelElement pModelElement, boolean onFeatureOpen)
 	{
-		if((pModelElement instanceof IRPOperation) == false)
+		
+	
+		if ((pModelElement instanceof IRPOperation) == true)
 		{
-			if(pModelElement instanceof IRPTransition == false)
+			return true;
+		}
+
+		if (pModelElement instanceof IRPTransition == true)
+		{
+			return true;
+		}
+
+		if (pModelElement instanceof IRPAction == true)
+		{
+			return true;
+		}
+
+		if (pModelElement instanceof IRPState == true)
+		{
+			return true;
+		}
+		
+		if (onFeatureOpen == true)
+		{
+			
+			
+				return false;
+			
+		}
+		
+		if (pModelElement instanceof IRPComment == true)
+		{
+
+			IRPComment comment = (IRPComment) pModelElement;
+			String userDefinedMetaClass = comment.getUserDefinedMetaClass();
+			if(userDefinedMetaClass.equals("CodeAnalysisIssue"))
 			{
-				if(pModelElement instanceof IRPAction == false)
+				String spec = comment.getSpecification();
+				List<IRPModelElement> elements = comment.getAnchoredByMe().toList();
+				for(IRPModelElement element:elements)
 				{
-					
-					if(pModelElement instanceof IRPState == false)
+					if (myPrefs.getStartEditorOnDoubleClick())
 					{
-						return false;
+						return startEditorThread(element);
 					}
 				}
 			}
+
+
 		}
 		
-		return true;
+		
+
+		return false;
 	}
 
 	@Override
-	public boolean onDoubleClick(IRPModelElement pModelElement) 
+	public boolean onDoubleClick(IRPModelElement pModelElement)
 	{
-		
-		if(checkModel(pModelElement)==false)
+
+		if (checkModel(pModelElement, false) == false)
 		{
 			return false;
 		}
-		
-		if(myPrefs.getStartEditorOnDoubleClick())
+
+		if (myPrefs.getStartEditorOnDoubleClick())
 		{
 			return startEditorThread(pModelElement);
 		}
 		return false;
-		
+
 	}
-	
+
 //	@Override
 //	
 //	commented out because of deadlock issue
@@ -163,121 +201,113 @@ public class Listener extends RPApplicationListener {
 //		return false;
 //	}
 //	
-	
-	
+
 	private boolean startEditorThread(IRPModelElement aModelElement)
 	{
-		
-		Thread t = new Thread(new Runnable() {
-		    public void run() {
-		        
-		        startEditor(aModelElement);
-		    }
+
+		Thread t = new Thread(new Runnable()
+		{
+			public void run()
+			{
+
+				startEditor(aModelElement);
+			}
 		});
 
 		t.start(); // Thread starten
 
 		return true;
 	}
-	
-	
 
-	private boolean startEditor(IRPModelElement aModelElement) {
-		
-		myApplication.writeToOutputWindow("log", "Start Editor on " + aModelElement.getName()+" Type: " + aModelElement.getMetaClass()+"\n");
-		
-		if(aModelElement instanceof IRPState)
+	private boolean startEditor(IRPModelElement aModelElement)
+	{
+
+		myApplication.writeToOutputWindow("log",
+				"Start Editor on " + aModelElement.getName() + " Type: " + aModelElement.getMetaClass() + "\n");
+
+		if (aModelElement instanceof IRPState)
 		{
-			IRPState state = (IRPState)aModelElement;
+			IRPState state = (IRPState) aModelElement;
 			IRPAction entryAction = state.getTheEntryAction();
 			IRPAction exitAction = state.getTheExitAction();
-			
+
 			try
 			{
-				if(entryAction==null)
+				if (entryAction == null)
 				{
 					state.setEntryAction("");
 				}
 				entryAction.setName("entryAction");
 				OperationEditorWindow.Run(myApplication, entryAction, false);
-				
-				if(exitAction==null)
+
+				if (exitAction == null)
 				{
 					state.setExitAction("");
 				}
 				exitAction.setName("exitAction");
 				OperationEditorWindow.Run(myApplication, exitAction, false);
-				
+
 			}
 			catch(Exception e)
 			{
-				
+
 			}
 		}
-		
-		if((aModelElement instanceof IRPOperation) == false)
+
+		if ((aModelElement instanceof IRPOperation) == false)
 		{
-			if(aModelElement instanceof IRPTransition == false)
+			if (aModelElement instanceof IRPTransition == false)
 			{
-				if(aModelElement instanceof IRPAction ==false)
+				if (aModelElement instanceof IRPAction == false)
 				{
 					return false;
 				}
 			}
 		}
-		
-		
-		
-	
-		try 
+
+		try
 		{
 			OperationEditorWindow.Run(myApplication, aModelElement, false);
-			
-		}
-		catch (Exception ex)
-		{
-			
-			
-			ex.printStackTrace();
-			
-			StackTraceElement[] stes = ex.getStackTrace();
-			
-		
-			for(StackTraceElement ste:stes)
-			{
-				myApplication.writeToOutputWindow("log", ste.toString()+"\n");
-			}
-			
-			
-			myApplication.writeToOutputWindow("log", ex.toString()+"\n");
 
 		}
-		
-		
-				
+		catch(Exception ex)
+		{
+
+			ex.printStackTrace();
+
+			StackTraceElement[] stes = ex.getStackTrace();
+
+			for (StackTraceElement ste : stes)
+			{
+				myApplication.writeToOutputWindow("log", ste.toString() + "\n");
+			}
+
+			myApplication.writeToOutputWindow("log", ex.toString() + "\n");
+
+		}
+
 		return false;
 	}
 
 	@Override
-	public boolean onFeaturesOpen(IRPModelElement pModelElement) {
-		
-		if(myPrefs.getStartEditorOnFeatureOpen()==false)
+	public boolean onFeaturesOpen(IRPModelElement pModelElement)
+	{
+
+		if (myPrefs.getStartEditorOnFeatureOpen() == false)
 		{
 			return false;
 		}
-		
-		if(checkModel(pModelElement)==false)
+
+		if (checkModel(pModelElement, true) == false)
 		{
 			return false;
 		}
-		
-		
-		
-		if(myPrefs.getStartEditorOnFeatureOpen())
+
+		if (myPrefs.getStartEditorOnFeatureOpen())
 		{
 			startEditorThread(pModelElement);
 		}
-		
+
 		return false;
 	}
 
