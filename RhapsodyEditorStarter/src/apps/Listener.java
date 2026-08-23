@@ -128,7 +128,7 @@ public class Listener extends RPApplicationListener
 
 			IRPComment comment = (IRPComment) pModelElement;
 			String userDefinedMetaClass = comment.getUserDefinedMetaClass();
-			if(userDefinedMetaClass.equals("CodeAnalysisIssue"))
+			if(userDefinedMetaClass.equals("CodeAnalysisIssue")||userDefinedMetaClass.equals("CompilerIssue"))
 			{
 				String spec = comment.getSpecification();
 				List<IRPModelElement> elements = comment.getAnchoredByMe().toList();
