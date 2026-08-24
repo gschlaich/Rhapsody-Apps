@@ -125,13 +125,15 @@ public class StaticCodeAnalysis {
 		}
 
 		String source = aOperation.getBody();
+		
+		String style = aOperation.getPropertyValue("CPP_CG.Class.clang-format");
 
 		if (source == null)
 		{
 			return;
 		}
 
-		String dest = formatString(source);
+		String dest = formatString(source, style);
 
 		if (dest.equals(source) == false)
 		{
@@ -165,13 +167,13 @@ public class StaticCodeAnalysis {
 	}
 	
 	
-	public static String formatString(String aSource)
+	public static String formatString(String aSource, String aStyle)
 	{
 		Process p;
 		String ret = "";
 		try
 		{
-			p = Runtime.getRuntime().exec("clang-format --style=Microsoft");
+			p = Runtime.getRuntime().exec("clang-format --style=\"" + aStyle + "\"");
 			BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
 			BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
