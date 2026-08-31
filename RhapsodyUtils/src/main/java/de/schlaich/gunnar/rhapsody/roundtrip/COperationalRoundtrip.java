@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -61,12 +62,28 @@ public class COperationalRoundtrip implements ActionListener
 	private List<IRPOperation> myChangedOperations;
 	private IRPApplication myRhapsody = null;
 	private Map<String, String> myFunctions;
+	
+	private Consumer<String> myTraceAction = null;
 
-	public COperationalRoundtrip()
+	public COperationalRoundtrip(Consumer<String> aTraceAction)
 	{
-		// TODO Auto-generated constructor stub
+		myTraceAction = aTraceAction;
 		myOperationalRoundtrip = this;
 	}
+	
+	private void trace(String aMessage)
+	{
+		if(myTraceAction==null)
+		{
+			//no traceaction set...
+			return;
+		}
+		
+		aMessage = "OperationalRoundtrip: " +aMessage;
+		
+		myTraceAction.accept(aMessage);
+	}
+	
 
 	public void startRoundtrip(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose)
 	{
@@ -297,7 +314,8 @@ public class COperationalRoundtrip implements ActionListener
 
 			if (foundOperations == 0)
 			{
-				rhapsody.writeToOutputWindow("log", "Class not active\n");
+				trace("Class not actirve");
+				
 
 				String lufSystem = UIManager.getSystemLookAndFeelClassName();
 
@@ -331,7 +349,7 @@ public class COperationalRoundtrip implements ActionListener
 			}
 			if (myChangedOperations.size() == 0)
 			{
-				rhapsody.writeToOutputWindow("log", "No operation changed\n");
+				trace("No operation changed");
 				JOptionPane.showMessageDialog(null, "No operation changed");
 				resetActiveComponent();
 				return;
@@ -559,8 +577,11 @@ public class COperationalRoundtrip implements ActionListener
 						{
 							continue;
 						}
-						sourceCode = StaticCodeAnalysis.formatString(sourceCode);
+						
 						operation.setBody(sourceCode);
+						
+						StaticCodeAnalysis.formatOperation(operation, null);
+						
 					}
 				}
 
