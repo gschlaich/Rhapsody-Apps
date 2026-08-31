@@ -559,7 +559,7 @@ public class COperationalRoundtrip implements ActionListener
 						{
 							continue;
 						}
-						sourceCode = StaticCodeAnalysis.formatString(sourceCode);
+						sourceCode = StaticCodeAnalysis.formatString(sourceCode, operation);
 						operation.setBody(sourceCode);
 					}
 				}
