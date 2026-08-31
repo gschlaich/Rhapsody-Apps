@@ -137,7 +137,7 @@ public class MultiPlugin extends RPUserPlugin
 		// TODO Auto-generated method stub
 
 		myRhapsody = rpyApplication;
-		trace("Start");
+		trace("Start MultiPlugin");
 		trace("Build Date: " + getBuildDate());
 		
 		ASTHelper.setTraceAction(this::trace);
@@ -172,74 +172,78 @@ public class MultiPlugin extends RPUserPlugin
 	public void OnMenuItemSelect(String menuItem)
 	{
 
-		
+		trace("Menu Item Selected: " + menuItem);
 		
 		IRPModelElement selected = myRhapsody.getSelectedElement();
 
-		if (menuItem.equals(VIEW_MULTI_DEBUGGER_CMD))
+		if (menuItem.contains(VIEW_MULTI_DEBUGGER_CMD))
 		{
 			viewInDebugger(selected);
 			return;
 		}
-		if (menuItem.equals(VIEW_MULTI_EDITOR_CMD))
+		if (menuItem.contains(VIEW_MULTI_EDITOR_CMD))
 		{
 			viewInEditor(null);
 			return;
 		}
-		if (menuItem.equals(OPEN_MULTI_CMD))
+		if (menuItem.contains(OPEN_MULTI_CMD))
 		{
 			openGHSProject();
 			return;
 		}
-		if (menuItem.equals(COMPILE_MULTI_CMD))
+		if (menuItem.contains(COMPILE_MULTI_CMD))
 		{
 			compile(null);
 			return;
 		}
-		if (menuItem.equals(VIEW_MULTI_RHAPSODY_CMD))
+		if (menuItem.contains(VIEW_MULTI_RHAPSODY_CMD))
 		{
 			viewInRhapsody();
 			return;
 		}
-		if (menuItem.equals(SET_BREAKPOINT_CMD))
+		
+		if (menuItem.contains(OZONE_SET_BREAKPOINT_CMD))
+		{
+			ozoneSetBreakpoint(selected);
+			return;
+		}
+		if (menuItem.contains(OZONE_DELETE_BREAKPOINT_CMD))
+		{
+			ozoneDeleteBreakpoint(selected);
+			return;
+		}
+		
+		if (menuItem.contains(SET_BREAKPOINT_CMD))
 		{
 			setBreakPoint(selected);
 			return;
 		}
 		
 		// Ozone Commands
-		if (menuItem.equals(OZONE_CONNECT_CMD))
+		if (menuItem.contains(OZONE_CONNECT_CMD))
 		{
 			ozoneConnect();
 			return;
 		}
-		if (menuItem.equals(OZONE_DISCONNECT_CMD))
+		if (menuItem.contains(OZONE_DISCONNECT_CMD))
 		{
 			ozoneDisconnect();
 			return;
 		}
-		if (menuItem.equals(OZONE_VIEW_CMD))
+		if (menuItem.contains(OZONE_VIEW_CMD))
 		{
 			ozoneView(selected);
 			return;
 		}
-		if (menuItem.equals(OZONE_SET_BREAKPOINT_CMD))
-		{
-			ozoneSetBreakpoint(selected);
-			return;
-		}
-		if (menuItem.equals(OZONE_DELETE_BREAKPOINT_CMD))
-		{
-			ozoneDeleteBreakpoint(selected);
-			return;
-		}
-		if (menuItem.equals(OZONE_DELETE_ALL_BREAKPOINTS_CMD))
+		
+		if (menuItem.contains(OZONE_DELETE_ALL_BREAKPOINTS_CMD))
 		{
 			ozoneDeleteAllBreakpoints();
 			return;
 		}
-		if (menuItem.equals(OZONE_START_CMD))
+		if (menuItem.contains(OZONE_START_CMD))
 		{
+			
 			ozoneStart();
 			return;
 		}

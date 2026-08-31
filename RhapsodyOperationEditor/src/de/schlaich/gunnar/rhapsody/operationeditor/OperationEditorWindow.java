@@ -1180,7 +1180,7 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 
 					String body = myTextArea.getText();
 
-					String formatted = StaticCodeAnalysis.formatString(body);
+					String formatted = StaticCodeAnalysis.formatString(body, mySelectedOperation);
 					myTextArea.setText(formatted);
 				}
 
@@ -1694,11 +1694,12 @@ class FormatSelected extends TextAction
 {
 
 	private static final long serialVersionUID = -8665373931943623988L;
+	private IRPOperation myOperation = null;
 
-	public FormatSelected()
+	public FormatSelected(IRPOperation aOperation)
 	{
 		super("Format Selected");
-
+		myOperation = aOperation;
 	}
 
 	@Override
@@ -1707,7 +1708,7 @@ class FormatSelected extends TextAction
 		JTextComponent tc = getTextComponent(e);
 		String selectedText = tc.getSelectedText();
 
-		selectedText = StaticCodeAnalysis.formatString(selectedText);
+		selectedText = StaticCodeAnalysis.formatString(selectedText, myOperation); 
 
 		tc.replaceSelection(selectedText);
 

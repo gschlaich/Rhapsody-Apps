@@ -126,14 +126,8 @@ public class StaticCodeAnalysis {
 
 		String source = aOperation.getBody();
 		
-		String style = aOperation.getPropertyValue("CPP_CG.Class.clang-format");
 
-		if (source == null)
-		{
-			return;
-		}
-
-		String dest = formatString(source, style);
+		String dest = formatString(source, aOperation);
 
 		if (dest.equals(source) == false)
 		{
@@ -149,6 +143,19 @@ public class StaticCodeAnalysis {
 			aOperation.setBody(dest);
 		}
 	}
+	
+	public static String formatString(String aSource, IRPModelElement aElement)
+	{
+		String style = aElement.getPropertyValue("CPP_CG.Class.clang-format");
+		
+		if(style==null||style.equals(""))
+		{
+			style = "{BasedOnStyle: Microsoft}";
+		}
+		
+		return formatString(aSource, style);
+	}
+	
 	
 	public static void formatClassifier(IRPClassifier aClassifier, Consumer<String> aTraceAction)
 	{
