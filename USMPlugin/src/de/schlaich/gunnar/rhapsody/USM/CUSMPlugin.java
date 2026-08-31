@@ -307,7 +307,7 @@ public class CUSMPlugin extends RPUserPlugin
 		}
 		if (menuItem.contains(RoundtripCmd))
 		{
-			COperationalRoundtrip roundtrip = new COperationalRoundtrip();
+			COperationalRoundtrip roundtrip = new COperationalRoundtrip(this::trace);
 			roundtrip.startRoundtrip(myRhapsody, selected, false);
 			return;
 		}
