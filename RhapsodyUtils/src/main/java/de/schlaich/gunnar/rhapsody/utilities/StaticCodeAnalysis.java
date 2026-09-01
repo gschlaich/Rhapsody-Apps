@@ -126,6 +126,12 @@ public class StaticCodeAnalysis {
 
 		String source = aOperation.getBody();
 		
+		
+
+		if (source == null)
+		{
+			return;
+		}
 
 		String dest = formatString(source, aOperation);
 
@@ -144,19 +150,6 @@ public class StaticCodeAnalysis {
 		}
 	}
 	
-	public static String formatString(String aSource, IRPModelElement aElement)
-	{
-		String style = aElement.getPropertyValue("CPP_CG.Class.clang-format");
-		
-		if(style==null||style.equals(""))
-		{
-			style = "{BasedOnStyle: Microsoft}";
-		}
-		
-		return formatString(aSource, style);
-	}
-	
-	
 	public static void formatClassifier(IRPClassifier aClassifier, Consumer<String> aTraceAction)
 	{
 		if (aClassifier == null)
@@ -172,6 +165,21 @@ public class StaticCodeAnalysis {
 		}
 
 	}
+	
+	public static String formatString(String aSource, IRPModelElement aElement)
+	{
+		String style = aElement.getPropertyValue("CPP_CG.Class.clang-format");
+		
+		if(style==null||style.equals(""))
+		{
+
+				style = "{BasedOnStyle: Microsoft}";		
+		}
+		
+		return formatString(aSource, style);
+	}
+	
+	
 	
 	
 	public static String formatString(String aSource, String aStyle)
@@ -403,15 +411,15 @@ public class StaticCodeAnalysis {
 			}
 			
 			
-			
-			
-			trace("Checks: " + checkString);
+			//checkString = "{Checks: '-*,readability-identifier-naming', CheckOptions: {readability-identifier-naming.ClassCase: CamelCase, readability-identifier-naming.ClassPrefix: B}}";
+			trace("Clang-tidy --config= " + checkString);
 			
 
 			
 			params.add(fileName);
 			params.add("--config="+checkString);
 			//params.add("-extra-arg=-H");
+			//params.add("--dump-config");
 			params.add("--");
 			params.add("-std=c++14");
 			params.add(PrecompiledInclude);
@@ -421,7 +429,7 @@ public class StaticCodeAnalysis {
 			params.add("-I"+omRoot+OxfInclude);
 			params.add("-I"+omRoot+OsConfigInclude);
 			
-			params.addAll(componentIncludes.getIncludes());	
+			//params.addAll(componentIncludes.getIncludes());	
 			
 			 ProcessBuilder processBuilder = new ProcessBuilder(ClangCmd);
 			 
@@ -497,6 +505,7 @@ public class StaticCodeAnalysis {
 		            if(f.getName().equals(fileName)==false)
 		            {
 		            	//trace("File name does not match - skip");
+		            	
 		            	continue;
 		            }
 		            

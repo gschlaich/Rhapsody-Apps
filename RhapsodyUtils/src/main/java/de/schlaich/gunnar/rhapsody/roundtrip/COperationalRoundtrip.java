@@ -577,10 +577,12 @@ public class COperationalRoundtrip implements ActionListener
 						{
 							continue;
 						}
+						
 						sourceCode = StaticCodeAnalysis.formatString(sourceCode, operation);
+						
 						operation.setBody(sourceCode);
 						
-						StaticCodeAnalysis.formatOperation(operation, null);
+						
 						
 					}
 				}
@@ -593,6 +595,7 @@ public class COperationalRoundtrip implements ActionListener
 
 		if (command.equals("Cancel"))
 		{
+			trace("Cancel pressed, no changes applied");
 			resetActiveComponent();
 			myFrame.dispose();
 		}
