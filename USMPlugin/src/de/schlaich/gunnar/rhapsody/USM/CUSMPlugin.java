@@ -38,6 +38,7 @@ import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPRequirement;
 import com.telelogic.rhapsody.core.IRPTableView;
 import com.telelogic.rhapsody.core.IRPUnit;
+import com.telelogic.rhapsody.core.RPCodeGeneratorListener;
 import com.telelogic.rhapsody.core.RPUserPlugin;
 
 import de.schlaich.gunnar.aiTools.GeminiAPIClient;
@@ -47,6 +48,7 @@ import de.schlaich.gunnar.rhapsody.MsgCreator.CCreateMessage;
 import de.schlaich.gunnar.rhapsody.plantUMLView.PlantUMLStarter;
 import de.schlaich.gunnar.rhapsody.relation.CRhapsodyRelation;
 import de.schlaich.gunnar.rhapsody.roundtrip.COperationalRoundtrip;
+import de.schlaich.gunnar.rhapsody.simplifiers.ClassSimplifier;
 import de.schlaich.gunnar.rhapsody.test.PluginCommandTests;
 import de.schlaich.gunnar.rhapsody.roundtrip.CGoogleTestRoundTrip;
 import de.schlaich.gunnar.rhapsody.utilities.ASTHelper;
@@ -223,7 +225,10 @@ public class CUSMPlugin extends RPUserPlugin
 		activeProject.setNotifyPluginOnElementsChanged(1);
 		
 		
+		ClassSimplifier simplifier = new ClassSimplifier(this::trace);
 		
+		simplifier.connect(rpyApplication.getCodeGenSimplifiersRegistry());
+
 		//run autorun batch files
 		runBatchFiles(activeProject);
 		
@@ -1680,5 +1685,25 @@ class FileTypeFilter extends javax.swing.filechooser.FileFilter
 	public String getDescription()
 	{
 		return description + String.format(" (*%s)", extension);
+	}
+}
+
+class CodeGenerationListener extends RPCodeGeneratorListener
+{
+
+
+
+	@Override
+	public String getId()
+	{
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void onCodeGenerationCompleted()
+	{
+		// TODO Auto-generated method stub
+		
 	}
 }
