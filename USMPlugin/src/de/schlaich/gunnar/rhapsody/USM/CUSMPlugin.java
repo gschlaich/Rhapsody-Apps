@@ -63,6 +63,7 @@ import de.schlaich.gunnar.rhapsody.utilities.SelectionHistory;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
 import de.schlaich.gunnar.rhapsody.utilities.USMConfiguration;
 import de.schlaich.gunnar.rhapsody.utilities.WriterTemplateParser;
+import de.schlaich.gunnar.rhapsody.utilities.XmlEditor;
 import de.schlaich.gunnar.rhapsody.utilities.generateInitCode.CodeGenerator;
 
 public class CUSMPlugin extends RPUserPlugin
@@ -124,6 +125,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String libraryProperty = "CPP_CG.Package.USMLibraries";
 	public static final String IncludeProperty = "CPP_CG.Package.USMIncludePath";
 	public static final String MarkdownEditorCmd = "Markdown Editor";
+	public static final String EditXMLCmd = "Edit XML";
 	public static final String ReverseEngineeringCmd = "Reverse Engineering";
 	public static final String GoogleTestRoundTripCmd = "GoogleTest Roundtrip";
 	public static final String FormatCmd = "Format Code";
@@ -327,6 +329,7 @@ public class CUSMPlugin extends RPUserPlugin
 			return;
 			
 		}
+		
 		
 		if (menuItem.contains(SearchElementCmd))
 		{
@@ -955,16 +958,21 @@ public class CUSMPlugin extends RPUserPlugin
 			{
 				IRPOperation operation = (IRPOperation) selected;
 				geminiAPIClient.generateDescription(operation);
-				selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
-				
-				
-				
+				MarkdownEditorPreview.showDialogAsync(null, selected.getDescription(), text -> {
+					if (text != null) {
+						selected.setDescription(text);
+					}
+				});
 			}
 			else if (selected instanceof IRPClass == true)
 			{
 				IRPClass c = (IRPClass) selected;
 				geminiAPIClient.generateDescription(c);
-				selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
+				MarkdownEditorPreview.showDialogAsync(null, selected.getDescription(), text -> {
+					if (text != null) {
+						selected.setDescription(text);
+					}
+				});
 			}
 			else	
 			{
@@ -987,7 +995,11 @@ public class CUSMPlugin extends RPUserPlugin
 		
 		if (menuItem.contains(MarkdownEditorCmd))
 		{
-			selected.setDescription(MarkdownEditorPreview.showDialog(null, selected.getDescription()));
+			MarkdownEditorPreview.showDialogAsync(null, selected.getDescription(), text -> {
+				if (text != null) {
+					selected.setDescription(text);
+				}
+			});
 			return;
 		}
 		
@@ -1383,6 +1395,20 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			return;
 		}
+		
+		if(menuItem.contains(EditXMLCmd))
+		{
+			if(selected instanceof IRPHyperLink == false)
+			{
+				trace("No XML File");
+				return;
+			}
+			
+			IRPHyperLink link = (IRPHyperLink) selected;
+			XmlEditor.openHyperLink(link);
+			return;
+		}
+		
 		
 
 		trace("menue item unknown");

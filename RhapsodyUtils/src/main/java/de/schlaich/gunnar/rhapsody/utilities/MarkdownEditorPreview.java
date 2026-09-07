@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -77,6 +78,33 @@ public class MarkdownEditorPreview extends JDialog
         
         dlg.setVisible(true);                   // blockiert bis dispose()
         return dlg.okPressed ? dlg.textArea.getText() : null;
+    }
+
+    /** Öffnet den Dialog asynchron auf einem eigenen Swing-Thread, damit Rhapsody nicht blockiert. */
+    public static void showDialogAsync(Window owner, String initialText, Consumer<String> resultHandler) {
+        Thread dialogThread = new Thread(() -> {
+            try {
+                SwingUtilities.invokeAndWait(() -> {
+                    MarkdownEditorPreview dlg = new MarkdownEditorPreview(owner, initialText);
+                    dlg.addWindowListener(new java.awt.event.WindowAdapter() {
+                        @Override
+                        public void windowClosed(java.awt.event.WindowEvent e) {
+                            if (resultHandler != null) {
+                                resultHandler.accept(dlg.okPressed ? dlg.textArea.getText() : null);
+                            }
+                        }
+                    });
+                    dlg.setVisible(true);
+                });
+            }
+            catch (Exception ex) {
+                if (resultHandler != null) {
+                    resultHandler.accept(null);
+                }
+            }
+        }, "MarkdownEditorPreview");
+        dialogThread.setDaemon(true);
+        dialogThread.start();
     }
 
 	
@@ -240,8 +268,6 @@ public class MarkdownEditorPreview extends JDialog
 		}
 
 }
-
-
 
 
 
