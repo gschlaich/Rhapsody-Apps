@@ -1,4 +1,4 @@
-<project >
+<project>
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.schlaich.gunnar</groupId>
 	<artifactId>RhapsodyUtils</artifactId>
@@ -70,6 +70,16 @@
 			<version>3.3.2</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fifesoft</groupId>
+			<artifactId>rstaui</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fifesoft</groupId>
+			<artifactId>languagesupport</artifactId>
+			<version>3.1.4</version>
+		</dependency>
+		<dependency>
 			<groupId>net.sourceforge.plantuml</groupId>
 			<artifactId>plantuml-mit</artifactId>   <!-- oder plantuml-epl usw. -->
 			<version>1.2025.2</version>
@@ -102,9 +112,8 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-imaging</artifactId>
-			<version>1.0.0-alpha6</version>		
+			<version>1.0.0-alpha6</version>
 		</dependency>
-		
 		<!-- Testing dependencies -->
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -124,11 +133,10 @@
 			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
-
 	</dependencies>
 
 	<build>
-	<sourceDirectory>src</sourceDirectory>
+		<sourceDirectory>src</sourceDirectory>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -174,18 +182,20 @@
 					<artifactId>cdt</artifactId>
 					<version>1.0</version>
 					<scope>system</scope>
-					<systemPath>${usmroot}/Development/Share/Profiles/Bernina/CDT/cdt.jar</systemPath>
+					<systemPath>
+						${usmroot}/Development/Share/Profiles/Bernina/CDT/cdt.jar</systemPath>
 				</dependency>
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>equinox</artifactId>
 					<version>1.0</version>
 					<scope>system</scope>
-					<systemPath>${usmroot}/Development/Share/Profiles/Bernina/CDT/equinox-common-3.2.0.jar</systemPath>
+					<systemPath>
+						${usmroot}/Development/Share/Profiles/Bernina/CDT/equinox-common-3.2.0.jar</systemPath>
 				</dependency>
 			</dependencies>
 		</profile>
-		
+
 		<profile>
 			<id>rhapsody-local</id>
 			<activation>
@@ -222,7 +232,7 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/RhapsodyApps.jar</systemPath>
 				</dependency>
-				
+
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>swt</artifactId>
@@ -230,7 +240,7 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/libs/swt.jar</systemPath>
 				</dependency>
-				
+
 				<dependency>
 					<groupId>vendor.local</groupId>
 					<artifactId>jdom</artifactId>
@@ -238,10 +248,8 @@
 					<scope>system</scope>
 					<systemPath>${omroot}/RhapsodyApps/libs/jdom.jar</systemPath>
 				</dependency>
-				
-				
-				
-				
+
+
 			</dependencies>
 
 		</profile>
