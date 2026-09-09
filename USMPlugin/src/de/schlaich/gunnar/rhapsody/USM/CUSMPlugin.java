@@ -1405,7 +1405,7 @@ public class CUSMPlugin extends RPUserPlugin
 			}
 			
 			IRPHyperLink link = (IRPHyperLink) selected;
-			XmlEditor.openHyperLink(link);
+			XmlEditor.openHyperLink(link, myRhapsody);
 			return;
 		}
 		
