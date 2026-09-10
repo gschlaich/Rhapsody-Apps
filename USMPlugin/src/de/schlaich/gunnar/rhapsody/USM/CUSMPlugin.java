@@ -227,9 +227,9 @@ public class CUSMPlugin extends RPUserPlugin
 		activeProject.setNotifyPluginOnElementsChanged(1);
 		
 		
-		ClassSimplifier simplifier = new ClassSimplifier(this::trace);
+		//ClassSimplifier simplifier = new ClassSimplifier(this::trace);
 		
-		simplifier.connect(rpyApplication.getCodeGenSimplifiersRegistry());
+		//simplifier.connect(rpyApplication.getCodeGenSimplifiersRegistry());
 
 		//run autorun batch files
 		runBatchFiles(activeProject);
