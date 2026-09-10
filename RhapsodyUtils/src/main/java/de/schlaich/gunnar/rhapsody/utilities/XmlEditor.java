@@ -6,10 +6,12 @@ import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Image;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -20,6 +22,8 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -36,7 +40,9 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
@@ -46,6 +52,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
 
+import org.apache.commons.imaging.Imaging;
 import org.fife.rsta.ac.LanguageSupport;
 import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.rsta.ui.search.FindDialog;
@@ -77,7 +84,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	private final File xmlFile;
 	private boolean okPressed = false;
 	private Charset xmlCharset = StandardCharsets.UTF_8;
-	private JPanel titleBar;
+	
 	private JPanel buttonBar;
 	private RTextScrollPane scrollPane;
 	private SyntaxScheme myScheme;
@@ -89,7 +96,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	
 	static private IRPHyperLink HyperLink = null;
 	static private IRPApplication Rhapsody = null;
-
+	static private String ImageName  = null;
 	private CollapsibleSectionPanel csp;
 
 	public XmlEditor(Window owner, File xmlFile)
@@ -118,6 +125,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		buildUI();
 		if (RhapsodyPreferences.isWindowsDarkMode())
 		{
+			
 			setDarkStyle();
 		}
 		setMinimumSize(new Dimension(700, 500));
@@ -272,6 +280,8 @@ public class XmlEditor extends JDialog implements SearchListener
 		
 		HyperLink = link;
 		
+		ImageName = link.getIconFileName();
+		
 		Rhapsody = aRhapsody;
 
 		String absolutePath = RhapsodyHelper.getAbsolutePath(link);
@@ -380,11 +390,41 @@ public class XmlEditor extends JDialog implements SearchListener
 		buttonBar.add(okButton);
 		buttonBar.add(cancelButton);
 		
+		List<BufferedImage> icons = new ArrayList<BufferedImage>();
+		File f = new File(ImageName);
+		try
+		{
+			icons = Imaging.getAllBufferedImages(f);
+
+		}
+		catch(Exception e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		Image img = null;
+
+		if (icons.size() > 0)
+		{
+			img = icons.get(icons.size() - 1);
+		}
+
+		if (img != null)
+		{
+			setIconImage(img);
+		}
+		
 		
 
 		JPanel content = new JPanel(new BorderLayout());
 		if (RhapsodyPreferences.isWindowsDarkMode())
 		{
+			
+
+			
+	
+			
 			// JLabel titleLabel = new JLabel(getTitle());
 			// titleLabel.setBorder(new EmptyBorder(8, 12, 8, 12));
 			// titleLabel.setForeground(new Color(0xdddddd));
@@ -405,6 +445,10 @@ public class XmlEditor extends JDialog implements SearchListener
 			// titleBar.add(closeButton, BorderLayout.EAST);
 
 			// content.add(titleBar, BorderLayout.NORTH);
+			
+			
+			
+			
 		}
 
 		content.add(scrollPane, BorderLayout.CENTER);
@@ -417,6 +461,14 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		// getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(content, BorderLayout.CENTER);
+		
+		
+		JPopupMenu popup = textArea.getPopupMenu();
+
+		popup.addSeparator();
+		
+		
+		
 	}
 
 	private void loadXmlContent()
@@ -432,6 +484,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			xmlCharset = detectXmlCharset(bytes);
 			String xmlText = new String(bytes, xmlCharset);
 			textArea.setText(xmlText);
+			textArea.convertTabsToSpaces();
 		}
 		catch(IOException e)
 		{
@@ -466,6 +519,9 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			// fall through to XML declaration parsing below
 		}
+		
+		
+	
 
 		String text = new String(bytes, StandardCharsets.ISO_8859_1);
 		Matcher matcher = Pattern.compile("(?is)<?xml.*?encoding\\s*=\\s*(['\"])(.*?)\\1").matcher(text);
@@ -484,6 +540,27 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		return StandardCharsets.UTF_8;
 	}
+	
+	private String formatXml(String xmlContent)
+	{
+		try
+		{
+			javax.xml.transform.Source xmlInput = new javax.xml.transform.stream.StreamSource(new java.io.StringReader(xmlContent));
+			java.io.StringWriter stringWriter = new java.io.StringWriter();
+			javax.xml.transform.stream.StreamResult xmlOutput = new javax.xml.transform.stream.StreamResult(stringWriter);
+			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+			transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+			transformer.transform(xmlInput, xmlOutput);
+			return xmlOutput.getWriter().toString();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			return xmlContent; // Return original content if formatting fails
+		}
+	}
+	
 
 	private void saveXmlContent()
 	{
