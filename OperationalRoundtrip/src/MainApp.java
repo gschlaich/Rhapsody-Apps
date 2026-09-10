@@ -28,7 +28,7 @@ public class MainApp extends App {
 	@SuppressWarnings("unchecked")
 	public void execute(IRPApplication rhapsody, IRPModelElement selected) 
 	{
-		COperationalRoundtrip opRoundtrip = new COperationalRoundtrip();
+		COperationalRoundtrip opRoundtrip = new COperationalRoundtrip(null);
 		
 		opRoundtrip.startRoundtrip(rhapsody, selected, true);
 

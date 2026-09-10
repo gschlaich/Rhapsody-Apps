@@ -333,6 +333,12 @@ public class XmlEditor extends JDialog implements SearchListener
 		textArea.setCaretPosition(0);
 
 		LanguageSupportFactory.get().register(textArea);
+		
+		if(xmlFile.canWrite()==false)
+		{
+			textArea.setEditable(false);
+			this.setTitle(getTitle() + " (Read-Only)");
+		}
 
 		loadXmlContent();
 
@@ -345,6 +351,11 @@ public class XmlEditor extends JDialog implements SearchListener
 		JButton copyButton = new JButton("Copy to Appdata");
 		JButton okButton = new JButton("OK");
 		JButton cancelButton = new JButton("Cancel");
+		
+		if(xmlFile.canWrite()==false)
+		{
+			okButton.setEnabled(false);
+		}
 
 		okButton.addActionListener(e ->
 		{
