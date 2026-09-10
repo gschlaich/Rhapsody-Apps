@@ -154,14 +154,14 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		int ctrl = getToolkit().getMenuShortcutKeyMask();
 		int shift = InputEvent.SHIFT_MASK;
-		// KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl | shift);
-		// Action a = csp.addBottomComponent(ks, findToolBar);
-		// a.putValue(Action.NAME, "Show Find Search Bar");
-		// menu.add(new JMenuItem(a));
-		// ks = KeyStroke.getKeyStroke(KeyEvent.VK_H, ctrl | shift);
-		// a = csp.addBottomComponent(ks, replaceToolBar);
-		// a.putValue(Action.NAME, "Show Replace Search Bar");
-		// menu.add(new JMenuItem(a));
+		KeyStroke ks = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl | shift);
+		Action a = csp.addBottomComponent(ks, findToolBar);
+		a.putValue(Action.NAME, "Show Find Search Bar");
+		menu.add(new JMenuItem(a));
+		ks = KeyStroke.getKeyStroke(KeyEvent.VK_H, ctrl | shift);
+		a = csp.addBottomComponent(ks, replaceToolBar);
+		a.putValue(Action.NAME, "Show Replace Search Bar");
+		menu.add(new JMenuItem(a));
 
 		mb.add(menu);
 
@@ -410,8 +410,8 @@ public class XmlEditor extends JDialog implements SearchListener
 		content.add(scrollPane, BorderLayout.CENTER);
 		content.add(buttonBar, BorderLayout.SOUTH);
 
-		// csp = new CollapsibleSectionPanel();
-		// content.add(csp);
+		csp = new CollapsibleSectionPanel();
+		content.add(csp, BorderLayout.NORTH);
 
 		setJMenuBar(createMenuBar());
 
