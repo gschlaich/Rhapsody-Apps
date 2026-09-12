@@ -51,6 +51,8 @@ import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.JTextComponent;
+import javax.swing.text.TextAction;
 
 import org.apache.commons.imaging.Imaging;
 import org.fife.rsta.ac.LanguageSupport;
@@ -77,6 +79,9 @@ import org.fife.ui.rtextarea.SearchResult;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPHyperLink;
+import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPSearchManager;
+import com.telelogic.rhapsody.core.IRPSearchQuery;
 
 public class XmlEditor extends JDialog implements SearchListener
 {
@@ -467,6 +472,9 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		popup.addSeparator();
 		
+		popup.add(new SearchInText());
+		popup.add(new SearchInModel(Rhapsody));
+		
 		
 		
 	}
@@ -840,6 +848,88 @@ public class XmlEditor extends JDialog implements SearchListener
 			this.label.setText(label);
 		}
 
+	}
+	
+	private static class SearchInModel extends TextAction
+	{
+		
+		private static final long serialVersionUID = 1L;
+		private IRPApplication myRhapsody;
+
+		public SearchInModel(IRPApplication aRhapsody)
+		{
+			super("Search in Model");
+			myRhapsody = aRhapsody;
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			JTextComponent textComp = getTextComponent(e);
+			if (textComp != null)
+			{
+				String selectedText = textComp.getSelectedText();
+				if (selectedText != null && !selectedText.isEmpty())
+				{
+					//JOptionPane.showMessageDialog(textComp, "Searching for: " + selectedText);
+					if(myRhapsody == null)
+					{
+						return;
+					}
+					IRPProject project = myRhapsody.activeProject();
+					if(project == null)
+					{
+						return;
+					}
+					
+					IRPSearchManager searchManager = myRhapsody.getSearchManager();
+					
+					if(searchManager == null)
+					{
+						return;
+					}
+					
+					IRPSearchQuery query =  searchManager.createSearchQuery();
+					
+					query.setSearchText(selectedText);
+					
+					searchManager.searchAndShowResults(query);
+
+				}
+				
+			}
+		}
+	}
+	private class SearchInText extends TextAction
+	{
+		
+		private static final long serialVersionUID = 1L;
+
+		public SearchInText()
+		{
+			super("Search in Text");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			JTextComponent textComp = getTextComponent(e);
+			if (textComp != null)
+			{
+				String selectedText = textComp.getSelectedText();
+				if (selectedText != null && !selectedText.isEmpty())
+				{
+					putValue(ACCELERATOR_KEY, selectedText);
+					if (findDialog.isVisible())
+					{
+						findDialog.setVisible(false);
+					}
+					replaceDialog.setVisible(true);
+					
+				}
+				
+			}
+		}
 	}
 
 }

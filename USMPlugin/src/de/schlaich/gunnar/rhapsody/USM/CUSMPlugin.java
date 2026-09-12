@@ -1402,7 +1402,7 @@ public class CUSMPlugin extends RPUserPlugin
 			{
 				trace("No XML File");
 				return;
-			}
+			}	
 			
 			IRPHyperLink link = (IRPHyperLink) selected;
 			XmlEditor.openHyperLink(link, myRhapsody);
@@ -1418,6 +1418,9 @@ public class CUSMPlugin extends RPUserPlugin
 	@SuppressWarnings("unchecked")
 	private void addInclude(IRPModelElement selected, boolean addToComponent)
 	{
+		
+		trace(" Add Include Path to " + selected.getName() + " of type " + selected.getMetaClass());
+		
 		Path usmRoot = null;
 		try
 		{
