@@ -177,6 +177,11 @@ public class XmlEditor extends JDialog implements SearchListener
 		menu.add(new JMenuItem(a));
 
 		mb.add(menu);
+		
+		JMenu toolsMenu = new JMenu("Tools");
+		toolsMenu.add(new JMenuItem(new FormatAction()));
+		
+		mb.add(toolsMenu);
 
 		return mb;
 
@@ -826,6 +831,26 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 
 	}
+	
+	private class FormatAction extends AbstractAction
+	{
+
+		FormatAction()
+		{
+			super("Format XML");
+			int c = getToolkit().getMenuShortcutKeyMask();
+			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c | InputEvent.SHIFT_MASK));
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			String xmlContent = textArea.getText();
+			String formattedXml = formatXml(xmlContent);
+			textArea.setText(formattedXml);
+		}
+
+	}
 
 	/**
 	 * The status bar for this application.
@@ -919,7 +944,8 @@ public class XmlEditor extends JDialog implements SearchListener
 				String selectedText = textComp.getSelectedText();
 				if (selectedText != null && !selectedText.isEmpty())
 				{
-					putValue(ACCELERATOR_KEY, selectedText);
+					
+			
 					if (findDialog.isVisible())
 					{
 						findDialog.setVisible(false);
