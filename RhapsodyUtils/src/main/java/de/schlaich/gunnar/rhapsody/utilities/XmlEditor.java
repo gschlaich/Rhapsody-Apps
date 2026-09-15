@@ -103,6 +103,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	static private IRPApplication Rhapsody = null;
 	static private String ImageName  = null;
 	private CollapsibleSectionPanel csp;
+	private Consumer<String> myTraceAction = null;
 
 	public XmlEditor(Window owner, File xmlFile)
 	{
@@ -147,6 +148,27 @@ public class XmlEditor extends JDialog implements SearchListener
 		setLocationRelativeTo(owner);
 
 	}
+	
+	public void setTrace( Consumer<String> aTraceAction)
+	{
+		myTraceAction = aTraceAction;
+	}
+	
+	private void trace(String aMessage)
+	{
+		
+		aMessage = this.getClass().getSimpleName() + ": " + aMessage;
+		if (myTraceAction == null)
+		{
+			System.out.println(aMessage);
+			return;
+		}
+
+		myTraceAction.accept(aMessage);
+	}
+	
+		
+	
 
 	private void addItem(Action a, ButtonGroup bg, JMenu menu)
 	{
@@ -180,6 +202,26 @@ public class XmlEditor extends JDialog implements SearchListener
 		
 		JMenu toolsMenu = new JMenu("Tools");
 		toolsMenu.add(new JMenuItem(new FormatAction()));
+		toolsMenu.addSeparator();
+		toolsMenu.add(new JMenuItem(new ShowInExplorer()));
+		toolsMenu.addSeparator();
+//		if(xmlFile != null && xmlFile.exists() && xmlFile.isR)
+//		{
+//			JMenuItem copyToAppdata = new JMenuItem("Copy to Appdata");
+//			copyToAppdata.addActionListener(e ->
+//			{
+//				if(HyperLink == null)
+//				{
+//					JOptionPane.showMessageDialog(this, "No Hyperlink available!", "Error", JOptionPane.ERROR_MESSAGE);
+//					return;
+//				}
+//				
+//				USMConfiguration config = USMConfiguration.Instance(Rhapsody, null);
+//				
+//				config.copyToAppData(HyperLink);
+//			});
+//			toolsMenu.add(copyToAppdata);
+//		}
 		
 		mb.add(toolsMenu);
 
@@ -196,6 +238,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	public static void showDialog(Window owner, File xmlFile)
 	{
 		XmlEditor dlg = new XmlEditor(owner, xmlFile);
+		//dlg.setTrace(aTraceAction);
 		dlg.setVisible(true);
 	}
 	
@@ -569,6 +612,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 		catch(Exception e)
 		{
+			trace("Error formatting XML: " + e.getMessage());
 			e.printStackTrace();
 			return xmlContent; // Return original content if formatting fails
 		}
@@ -848,6 +892,39 @@ public class XmlEditor extends JDialog implements SearchListener
 			String xmlContent = textArea.getText();
 			String formattedXml = formatXml(xmlContent);
 			textArea.setText(formattedXml);
+		}
+
+	}
+	
+	private class ShowInExplorer extends AbstractAction
+	{
+
+		ShowInExplorer()
+		{
+			super("Show in Explorer");
+			int c = getToolkit().getMenuShortcutKeyMask();
+			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_E, c | InputEvent.SHIFT_MASK));
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			if (xmlFile != null && xmlFile.exists())
+			{
+				try
+				{
+					String cmd = String.format("explorer.exe /select,\"%s\"", xmlFile.getAbsolutePath());
+					Runtime.getRuntime().exec(cmd);
+				}
+				catch(IOException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 
 	}
