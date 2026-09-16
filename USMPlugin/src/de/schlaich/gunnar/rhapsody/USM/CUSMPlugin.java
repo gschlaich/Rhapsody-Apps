@@ -1400,7 +1400,7 @@ public class CUSMPlugin extends RPUserPlugin
 		{
 			if(selected instanceof IRPHyperLink == false)
 			{
-				trace("No XML File");
+				trace(selected.getName()+": No XML File");
 				return;
 			}	
 			
