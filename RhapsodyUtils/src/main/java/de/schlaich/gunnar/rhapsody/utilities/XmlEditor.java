@@ -25,6 +25,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,6 +92,9 @@ public class XmlEditor extends JDialog implements SearchListener
 	private final File xmlFile;
 	private boolean okPressed = false;
 	private Charset xmlCharset = StandardCharsets.UTF_8;
+	private boolean lastKnownWritableStatus = true;
+	private ScheduledExecutorService fileStatusMonitor = null;
+	private Consumer<Boolean> fileWritableStatusChangeListener = null;
 	
 	private JPanel buttonBar;
 	private RTextScrollPane scrollPane;
@@ -165,6 +171,84 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 
 		myTraceAction.accept(aMessage);
+	}
+	
+	/**
+	 * Setzt einen Listener, der aufgerufen wird, wenn sich der Schreibstatus der Datei ändert.
+	 * @param listener Consumer der mit dem neuen Status aufgerufen wird (true = schreibbar, false = schreibgeschützt)
+	 */
+	public void setFileWritableStatusChangeListener(Consumer<Boolean> listener)
+	{
+		fileWritableStatusChangeListener = listener;
+	}
+	
+	/**
+	 * Startet die Überwachung des Schreibstatus der Datei.
+	 * Der Überwacher prüft alle 2 Sekunden, ob sich der Status geändert hat.
+	 */
+	private void startFileStatusMonitor()
+	{
+		if (xmlFile == null || fileStatusMonitor != null)
+		{
+			return;
+		}
+		
+		lastKnownWritableStatus = xmlFile.canWrite();
+		fileStatusMonitor = Executors.newScheduledThreadPool(1);
+		fileStatusMonitor.scheduleAtFixedRate(() ->
+		{
+			boolean currentWritableStatus = xmlFile.canWrite();
+			if (currentWritableStatus != lastKnownWritableStatus)
+			{
+				lastKnownWritableStatus = currentWritableStatus;
+				SwingUtilities.invokeLater(() -> onFileWritableStatusChanged(currentWritableStatus));
+			}
+		}, 2, 2, TimeUnit.SECONDS);
+		
+		trace("File status monitor started");
+	}
+	
+	/**
+	 * Stoppt die Überwachung des Schreibstatus.
+	 */
+	private void stopFileStatusMonitor()
+	{
+		if (fileStatusMonitor != null)
+		{
+			fileStatusMonitor.shutdown();
+			fileStatusMonitor = null;
+			trace("File status monitor stopped");
+		}
+	}
+	
+	/**
+	 * Wird aufgerufen, wenn sich der Schreibstatus ändert.
+	 * @param isWritable true wenn die Datei jetzt schreibbar ist
+	 */
+	private void onFileWritableStatusChanged(boolean isWritable)
+	{
+		trace("File writable status changed: " + isWritable);
+		
+		// UI aktualisieren
+		textArea.setEditable(isWritable);
+		
+		if (isWritable)
+		{
+			setTitle(getTitle().replace(" (Read-Only)", ""));
+		}
+		else
+		{
+			if (!getTitle().contains("(Read-Only)"))
+			{
+				setTitle(getTitle() + " (Read-Only)");
+			}
+		}
+		
+		// Listener benachrichtigen
+		if (fileWritableStatusChangeListener != null)
+		{
+			fileWritableStatusChangeListener.accept(isWritable);
+		}
 	}
 	
 		
@@ -397,7 +481,7 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		LanguageSupportFactory.get().register(textArea);
 		
-		if(xmlFile.canWrite()==false)
+		if(xmlFile != null && xmlFile.canWrite()==false)
 		{
 			textArea.setEditable(false);
 			this.setTitle(getTitle() + " (Read-Only)");
@@ -415,7 +499,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		JButton okButton = new JButton("OK");
 		JButton cancelButton = new JButton("Cancel");
 		
-		if(xmlFile.canWrite()==false)
+		if(xmlFile != null && xmlFile.canWrite()==false)
 		{
 			okButton.setEnabled(false);
 		}
@@ -534,7 +618,18 @@ public class XmlEditor extends JDialog implements SearchListener
 		popup.add(new SearchInText());
 		popup.add(new SearchInModel(Rhapsody));
 		
+		// Starte die Überwachung des Dateistatus
+		startFileStatusMonitor();
 		
+		// Stoppe den Monitor wenn das Dialog geschlossen wird
+		addWindowListener(new java.awt.event.WindowAdapter()
+		{
+			@Override
+			public void windowClosed(java.awt.event.WindowEvent e)
+			{
+				stopFileStatusMonitor();
+			}
+		});
 		
 	}
 
