@@ -49,6 +49,7 @@ import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -114,7 +115,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	public XmlEditor(Window owner, File xmlFile)
 	{
 		super(owner, xmlFile == null ? "Edit XML" : "Edit XML - " + xmlFile.getName(),
-				Dialog.ModalityType.APPLICATION_MODAL);
+				Dialog.ModalityType.MODELESS);
 		this.xmlFile = xmlFile;
 
 		
@@ -1079,32 +1080,66 @@ public class XmlEditor extends JDialog implements SearchListener
 				String selectedText = textComp.getSelectedText();
 				if (selectedText != null && !selectedText.isEmpty())
 				{
-					//JOptionPane.showMessageDialog(textComp, "Searching for: " + selectedText);
 					if(myRhapsody == null)
 					{
 						return;
 					}
-					IRPProject project = myRhapsody.activeProject();
-					if(project == null)
-					{
-						return;
-					}
 					
-					IRPSearchManager searchManager = myRhapsody.getSearchManager();
-					
-					if(searchManager == null)
-					{
-						return;
-					}
-					
-					IRPSearchQuery query =  searchManager.createSearchQuery();
-					
-					query.setSearchText(selectedText);
-					
-					searchManager.searchAndShowResults(query);
-
+					// Führe die Suche asynchron aus
+					new SearchWorker(selectedText).execute();
+				}
+			}
+		}
+		
+		/**
+		 * SwingWorker für asynchrone Suche, um die UI nicht zu blockieren
+		 */
+		private class SearchWorker extends SwingWorker<Void, Void>
+		{
+			private String searchText;
+			
+			public SearchWorker(String searchText)
+			{
+				this.searchText = searchText;
+			}
+			
+			@Override
+			protected Void doInBackground() throws Exception
+			{
+				// Dieser Code läuft in einem separaten Thread
+				IRPProject project = myRhapsody.activeProject();
+				if(project == null)
+				{
+					return null;
 				}
 				
+				IRPSearchManager searchManager = myRhapsody.getSearchManager();
+				if(searchManager == null)
+				{
+					return null;
+				}
+				
+				IRPSearchQuery query = searchManager.createSearchQuery();
+				query.setSearchText(searchText);
+				
+				// Die eigentliche Suche
+				searchManager.searchAndShowResults(query);
+				
+				return null;
+			}
+			
+			@Override
+			protected void done()
+			{
+				// Dieser Code läuft wieder auf dem Event Dispatch Thread
+				try
+				{
+					get(); // Check für Exceptions
+				}
+				catch(Exception ex)
+				{
+					ex.printStackTrace();
+				}
 			}
 		}
 	}
