@@ -111,6 +111,10 @@ public class XmlEditor extends JDialog implements SearchListener
 	static private String ImageName  = null;
 	private CollapsibleSectionPanel csp;
 	private Consumer<String> myTraceAction = null;
+	
+	private JButton okButton = null;
+	private JButton applyButton = null;
+	private JMenuItem setWritableMenuItem = null;
 
 	public XmlEditor(Window owner, File xmlFile)
 	{
@@ -175,8 +179,8 @@ public class XmlEditor extends JDialog implements SearchListener
 	}
 	
 	/**
-	 * Setzt einen Listener, der aufgerufen wird, wenn sich der Schreibstatus der Datei ändert.
-	 * @param listener Consumer der mit dem neuen Status aufgerufen wird (true = schreibbar, false = schreibgeschützt)
+	 * Setzt einen Listener, der aufgerufen wird, wenn sich der Schreibstatus der Datei ï¿½ndert.
+	 * @param listener Consumer der mit dem neuen Status aufgerufen wird (true = schreibbar, false = schreibgeschï¿½tzt)
 	 */
 	public void setFileWritableStatusChangeListener(Consumer<Boolean> listener)
 	{
@@ -184,8 +188,8 @@ public class XmlEditor extends JDialog implements SearchListener
 	}
 	
 	/**
-	 * Startet die Überwachung des Schreibstatus der Datei.
-	 * Der Überwacher prüft alle 2 Sekunden, ob sich der Status geändert hat.
+	 * Startet die ï¿½berwachung des Schreibstatus der Datei.
+	 * Der ï¿½berwacher prï¿½ft alle 2 Sekunden, ob sich der Status geï¿½ndert hat.
 	 */
 	private void startFileStatusMonitor()
 	{
@@ -210,7 +214,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	}
 	
 	/**
-	 * Stoppt die Überwachung des Schreibstatus.
+	 * Stoppt die ï¿½berwachung des Schreibstatus.
 	 */
 	private void stopFileStatusMonitor()
 	{
@@ -223,7 +227,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	}
 	
 	/**
-	 * Wird aufgerufen, wenn sich der Schreibstatus ändert.
+	 * Wird aufgerufen, wenn sich der Schreibstatus ï¿½ndert.
 	 * @param isWritable true wenn die Datei jetzt schreibbar ist
 	 */
 	private void onFileWritableStatusChanged(boolean isWritable)
@@ -290,23 +294,16 @@ public class XmlEditor extends JDialog implements SearchListener
 		toolsMenu.addSeparator();
 		toolsMenu.add(new JMenuItem(new ShowInExplorer()));
 		toolsMenu.addSeparator();
-//		if(xmlFile != null && xmlFile.exists() && xmlFile.isR)
-//		{
-//			JMenuItem copyToAppdata = new JMenuItem("Copy to Appdata");
-//			copyToAppdata.addActionListener(e ->
-//			{
-//				if(HyperLink == null)
-//				{
-//					JOptionPane.showMessageDialog(this, "No Hyperlink available!", "Error", JOptionPane.ERROR_MESSAGE);
-//					return;
-//				}
-//				
-//				USMConfiguration config = USMConfiguration.Instance(Rhapsody, null);
-//				
-//				config.copyToAppData(HyperLink);
-//			});
-//			toolsMenu.add(copyToAppdata);
-//		}
+		
+		setWritableMenuItem =  toolsMenu.add(new JMenuItem(new SetWritable()));
+		
+		if(xmlFile != null && xmlFile.canWrite())
+		{
+			setWritableMenuItem.setEnabled(false);
+		}
+		
+		
+		
 		
 		mb.add(toolsMenu);
 
@@ -497,12 +494,14 @@ public class XmlEditor extends JDialog implements SearchListener
 		buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 		
 		JButton copyButton = new JButton("Copy to Appdata");
-		JButton okButton = new JButton("OK");
+		applyButton = new JButton("Apply");
+		okButton = new JButton("OK");
 		JButton cancelButton = new JButton("Cancel");
 		
 		if(xmlFile != null && xmlFile.canWrite()==false)
 		{
 			okButton.setEnabled(false);
+			applyButton.setEnabled(false);
 		}
 
 		okButton.addActionListener(e ->
@@ -513,6 +512,14 @@ public class XmlEditor extends JDialog implements SearchListener
 				saveXmlContent();
 			}
 			dispose();
+		});
+		
+		applyButton.addActionListener(e ->
+		{
+			if (xmlFile != null)
+			{
+				saveXmlContent();
+			}
 		});
 
 		cancelButton.addActionListener(e -> dispose());
@@ -536,6 +543,7 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		
 		buttonBar.add(copyButton);
+		buttonBar.add(applyButton);
 		buttonBar.add(okButton);
 		buttonBar.add(cancelButton);
 		
@@ -619,7 +627,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		popup.add(new SearchInText());
 		popup.add(new SearchInModel(Rhapsody));
 		
-		// Starte die Überwachung des Dateistatus
+		// Starte die ï¿½berwachung des Dateistatus
 		startFileStatusMonitor();
 		
 		// Stoppe den Monitor wenn das Dialog geschlossen wird
@@ -708,6 +716,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	{
 		try
 		{
+			//
 			javax.xml.transform.Source xmlInput = new javax.xml.transform.stream.StreamSource(new java.io.StringReader(xmlContent));
 			java.io.StringWriter stringWriter = new java.io.StringWriter();
 			javax.xml.transform.stream.StreamResult xmlOutput = new javax.xml.transform.stream.StreamResult(stringWriter);
@@ -1006,6 +1015,11 @@ public class XmlEditor extends JDialog implements SearchListener
 	private class ShowInExplorer extends AbstractAction
 	{
 
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		ShowInExplorer()
 		{
 			super("Show in Explorer");
@@ -1026,6 +1040,61 @@ public class XmlEditor extends JDialog implements SearchListener
 				catch(IOException ex)
 				{
 					ex.printStackTrace();
+				}
+			}
+			else
+			{
+				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+			}
+		}
+
+	}
+	
+	private class SetWritable extends AbstractAction
+	{
+
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
+		SetWritable()
+		{
+			super("Set Writable");
+			int c = getToolkit().getMenuShortcutKeyMask();
+			putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_W, c | InputEvent.SHIFT_MASK));
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e)
+		{
+			if (xmlFile != null && xmlFile.exists())
+			{
+				boolean success = xmlFile.setWritable(true);
+				if (success)
+				{
+					textArea.setEditable(true);
+					setTitle(getTitle().replace(" (Read-Only)", ""));
+					
+					if(okButton != null)
+					{
+						okButton.setEnabled(true);
+					}
+					if(applyButton != null)
+					{
+						applyButton.setEnabled(true);
+					}
+					if(setWritableMenuItem != null)
+					{
+						setWritableMenuItem.setEnabled(false);
+					}
+					
+					JOptionPane.showMessageDialog(XmlEditor.this, "File is now writable.", "Info", JOptionPane.INFORMATION_MESSAGE);
+					
+				}
+				else
+				{
+					JOptionPane.showMessageDialog(XmlEditor.this, "Failed to set file writable.", "Error", JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			else
@@ -1085,14 +1154,14 @@ public class XmlEditor extends JDialog implements SearchListener
 						return;
 					}
 					
-					// Führe die Suche asynchron aus
+					// Fï¿½hre die Suche asynchron aus
 					new SearchWorker(selectedText).execute();
 				}
 			}
 		}
 		
 		/**
-		 * SwingWorker für asynchrone Suche, um die UI nicht zu blockieren
+		 * SwingWorker fï¿½r asynchrone Suche, um die UI nicht zu blockieren
 		 */
 		private class SearchWorker extends SwingWorker<Void, Void>
 		{
@@ -1106,7 +1175,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			@Override
 			protected Void doInBackground() throws Exception
 			{
-				// Dieser Code läuft in einem separaten Thread
+				// Dieser Code lï¿½uft in einem separaten Thread
 				IRPProject project = myRhapsody.activeProject();
 				if(project == null)
 				{
@@ -1131,10 +1200,10 @@ public class XmlEditor extends JDialog implements SearchListener
 			@Override
 			protected void done()
 			{
-				// Dieser Code läuft wieder auf dem Event Dispatch Thread
+				// Dieser Code lï¿½uft wieder auf dem Event Dispatch Thread
 				try
 				{
-					get(); // Check für Exceptions
+					get(); // Check fï¿½r Exceptions
 				}
 				catch(Exception ex)
 				{
