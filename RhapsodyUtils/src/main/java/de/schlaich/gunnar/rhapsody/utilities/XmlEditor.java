@@ -1175,12 +1175,14 @@ public class XmlEditor extends JDialog implements SearchListener
 			@Override
 			protected Void doInBackground() throws Exception
 			{
-				// Dieser Code l�uft in einem separaten Thread
+				
 				IRPProject project = myRhapsody.activeProject();
 				if(project == null)
 				{
 					return null;
 				}
+				
+				
 				
 				IRPSearchManager searchManager = myRhapsody.getSearchManager();
 				if(searchManager == null)
