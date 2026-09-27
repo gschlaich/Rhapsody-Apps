@@ -1,4 +1,4 @@
-package apps;
+package de.schlaich.gunnar.rhapsody.operationeditor.starter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -15,6 +15,7 @@ import com.telelogic.rhapsody.core.IRPState;
 import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
+import de.schlaich.gunnar.editor.runner.MainApp;
 import de.schlaich.gunnar.rhapsody.operationeditor.OperationEditorWindow;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
@@ -23,7 +24,7 @@ public class Listener extends RPApplicationListener
 {
 
 	private IRPApplication myApplication = null;
-	private MainApp myMainApp = null;
+	private de.schlaich.gunnar.rhapsody.operationeditor.starter.MainApp myMainApp = null;
 	private String myProjectName = null;
 	private IRPProject myProject = null;
 
@@ -31,10 +32,10 @@ public class Listener extends RPApplicationListener
 
 	private RhapsodyPreferences myPrefs = null;
 
-	public Listener(IRPApplication aApplication, MainApp aMainApp)
+	public Listener(IRPApplication aApplication, de.schlaich.gunnar.rhapsody.operationeditor.starter.MainApp mainApp)
 	{
 		myApplication = aApplication;
-		myMainApp = aMainApp;
+		myMainApp = mainApp;
 
 		myProject = myApplication.activeProject();
 		if (myProject != null)

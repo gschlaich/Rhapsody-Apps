@@ -226,10 +226,10 @@ public class RhapsodyPreferences {
 	public boolean checkRhapsodyModelElement(IRPModelElement aModelElement)
 	{
 		
-		if(isDebug())
-		{
-			return false;
-		}
+//		if(isDebug())
+//		{
+//			return false;
+//		}
 		String guid = aModelElement.getGUID();
 		if(myUseLocalGUID)
 		{

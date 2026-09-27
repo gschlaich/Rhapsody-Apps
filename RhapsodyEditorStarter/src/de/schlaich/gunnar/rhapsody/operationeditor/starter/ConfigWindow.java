@@ -1,4 +1,4 @@
-package apps;
+package de.schlaich.gunnar.rhapsody.operationeditor.starter;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;

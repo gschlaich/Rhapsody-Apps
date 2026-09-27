@@ -1,4 +1,4 @@
-package apps;
+package de.schlaich.gunnar.rhapsodyMCPStarter;
 
 import java.util.List;
 

@@ -99,7 +99,7 @@ import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
-import apps.MainApp;
+import de.schlaich.gunnar.editor.runner.MainApp;
 import de.schlaich.gunnar.parser.CodeAnalysisParser;
 import de.schlaich.gunnar.parser.CppParser;
 import de.schlaich.gunnar.parser.DiffParser;
@@ -924,16 +924,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			return;
 		}
 
-		RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-
-		if (prefs.checkRhapsodyModelElement(op))
-		{
-			print(rhapsody, "Operation already open");
-			return;
-		}
-
-		prefs.setRhapsodyModelElement(op);
-
 		print(rhapsody, "Edit Operation of " + op.getName());
 
 		print(rhapsody, "Java Version: " + System.getProperty("java.vm.version"));
@@ -1235,8 +1225,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			Reporter.report(e1);
 			e1.printStackTrace();
 			myFrame.dispose();
-			RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-			prefs.clearRhapsodyModelElement(myGuid);
 			if (myExitOnClose)
 			{
 				System.exit(0);

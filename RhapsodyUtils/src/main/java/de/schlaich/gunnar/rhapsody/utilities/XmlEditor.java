@@ -2,6 +2,7 @@ package de.schlaich.gunnar.rhapsody.utilities;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -10,7 +11,10 @@ import java.awt.Image;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -35,6 +39,7 @@ import java.util.regex.Pattern;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
@@ -47,13 +52,18 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.KeyStroke;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
@@ -83,9 +93,14 @@ import org.fife.ui.rtextarea.SearchResult;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPHyperLink;
+import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPSearchManager;
 import com.telelogic.rhapsody.core.IRPSearchQuery;
+import com.telelogic.rhapsody.core.IRPSearchResult;
+import com.telelogic.rhapsody.core.IRPTableLayout;
+import com.telelogic.rhapsody.core.IRPTableView;
+import com.telelogic.rhapsody.core.RPSearchListener;
 
 public class XmlEditor extends JDialog implements SearchListener
 {
@@ -142,7 +157,6 @@ public class XmlEditor extends JDialog implements SearchListener
 		buildUI();
 		if (RhapsodyPreferences.isWindowsDarkMode())
 		{
-			
 			setDarkStyle();
 		}
 		setMinimumSize(new Dimension(700, 500));
@@ -1192,9 +1206,11 @@ public class XmlEditor extends JDialog implements SearchListener
 				
 				IRPSearchQuery query = searchManager.createSearchQuery();
 				query.setSearchText(searchText);
-				
-				// Die eigentliche Suche
-				searchManager.searchAndShowResults(query);
+			
+				 CSearchListener listener = new CSearchListener(myRhapsody);
+				 listener.connect(searchManager);
+				 
+				 searchManager.searchAsync(query);
 				
 				return null;
 			}
@@ -1246,5 +1262,465 @@ public class XmlEditor extends JDialog implements SearchListener
 			}
 		}
 	}
-
+	
 }
+
+class CSearchListener extends RPSearchListener
+{
+
+	private IRPApplication myRhapsody;
+	private CSearchResult mySearchResult;
+
+	CSearchListener(IRPApplication aRhapsody)
+	{
+		super();
+		this.myRhapsody = aRhapsody;
+		this.mySearchResult = null;
+	}
+
+	CSearchListener(IRPApplication aRhapsody, CSearchResult aSearchResult)
+	{
+		super();
+		this.myRhapsody = aRhapsody;
+		this.mySearchResult = aSearchResult;
+	}
+
+	@Override
+	public boolean onNewSearchResult(IRPSearchResult pSearchResult)
+	{
+		IRPModelElement matchedObject = pSearchResult.getMatchedObject();
+
+		if (myRhapsody != null && matchedObject != null)
+		{
+			myRhapsody.writeToOutputWindow("Log", pSearchResult.getMatchedField() + "\n");
+			myRhapsody.writeToOutputWindow("Log", matchedObject.getName() + " [" + matchedObject.getMetaClass() + "]\n");
+		}
+
+		if (mySearchResult != null && matchedObject != null)
+		{
+			mySearchResult.addElement(matchedObject);
+		}
+
+		return false;
+	}
+
+	@Override
+	public void searchEnded(IRPSearchQuery pSearchQuery)
+	{
+		if (mySearchResult != null)
+		{
+			mySearchResult.searchEnded();
+		}
+	}
+
+	@Override
+	public boolean searchStarted(IRPSearchQuery pSearchQuery)
+	{
+		if (mySearchResult != null)
+		{
+			mySearchResult.searchStarted();
+		}
+		return false;
+	}
+}
+
+class CSearchResult extends JDialog
+{
+
+	private static final long serialVersionUID = 1L;
+
+	private IRPApplication myRhapsody;
+	private final List<IRPModelElement> myElements = new ArrayList<>();
+	private DefaultTableModel myTableModel;
+	private JTable myTable;
+	private JLabel myStatusLabel;
+	private JButton myLocateButton;
+	private JButton myFeaturesButton;
+	private JButton myCloseButton;
+
+	public CSearchResult(IRPApplication aRhapsody)
+	{
+		this(null, aRhapsody, (String) null);
+	}
+
+	public CSearchResult(Window owner, IRPApplication aRhapsody)
+	{
+		this(owner, aRhapsody, (String) null);
+	}
+
+	public CSearchResult(Window owner, IRPApplication aRhapsody, String aSearchText)
+	{
+		super(owner, getDialogTitle(aSearchText), Dialog.ModalityType.MODELESS);
+		this.myRhapsody = aRhapsody;
+		initUI();
+	}
+
+	public CSearchResult(Window owner, IRPApplication aRhapsody, List<IRPModelElement> aElements)
+	{
+		this(owner, aRhapsody, (String) null);
+		if (aElements != null)
+		{
+			for (IRPModelElement elem : aElements)
+			{
+				addElement(elem);
+			}
+		}
+	}
+
+	private static String getDialogTitle(String aSearchText)
+	{
+		if (aSearchText != null && !aSearchText.trim().isEmpty())
+		{
+			return "Search Results - " + aSearchText.trim();
+		}
+		return "Search Results";
+	}
+
+	private void initUI()
+	{
+		String[] columnNames = { "Name", "Element Type", "Full Path" };
+
+		myTableModel = new DefaultTableModel(columnNames, 0)
+		{
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public boolean isCellEditable(int row, int column)
+			{
+				return false;
+			}
+		};
+
+		myTable = new JTable(myTableModel);
+		myTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		myTable.setAutoCreateRowSorter(true);
+		myTable.setFillsViewportHeight(true);
+		myTable.setRowHeight(22);
+
+		// Custom renderer for the first column to display icon next to name
+		myTable.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer()
+		{
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public Component getTableCellRendererComponent(JTable table, Object value,
+					boolean isSelected, boolean hasFocus, int row, int column)
+			{
+				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+				setIcon(null);
+				if (column == 0 && row >= 0 && row < table.getRowCount())
+				{
+					int modelRow = table.convertRowIndexToModel(row);
+					if (modelRow >= 0 && modelRow < myElements.size())
+					{
+						IRPModelElement element = myElements.get(modelRow);
+						if (element != null)
+						{
+							try
+							{
+								String iconPath = element.getIconFileName();
+								if (iconPath != null && !iconPath.isEmpty() && new File(iconPath).exists())
+								{
+									setIcon(new ImageIcon(iconPath));
+								}
+							}
+							catch (Exception ignored)
+							{
+							}
+						}
+					}
+				}
+				return c;
+			}
+		});
+
+		TableColumnModel colModel = myTable.getColumnModel();
+		colModel.getColumn(0).setPreferredWidth(200);
+		colModel.getColumn(1).setPreferredWidth(120);
+		colModel.getColumn(2).setPreferredWidth(350);
+
+		myTable.addMouseListener(new MouseAdapter()
+		{
+			@Override
+			public void mouseClicked(MouseEvent e)
+			{
+				if (e.getClickCount() == 2)
+				{
+					locateSelectedElement();
+				}
+			}
+		});
+
+		myTable.addKeyListener(new KeyAdapter()
+		{
+			@Override
+			public void keyPressed(KeyEvent e)
+			{
+				if (e.getKeyCode() == KeyEvent.VK_ENTER)
+				{
+					locateSelectedElement();
+					e.consume();
+				}
+			}
+		});
+
+		myTable.getSelectionModel().addListSelectionListener(e ->
+		{
+			boolean hasSelection = myTable.getSelectedRow() >= 0;
+			if (myLocateButton != null)
+			{
+				myLocateButton.setEnabled(hasSelection);
+			}
+			if (myFeaturesButton != null)
+			{
+				myFeaturesButton.setEnabled(hasSelection);
+			}
+		});
+
+		JScrollPane scrollPane = new JScrollPane(myTable);
+
+		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+		myLocateButton = new JButton("Locate in Browser");
+		myLocateButton.setEnabled(false);
+		myLocateButton.addActionListener(e -> locateSelectedElement());
+
+		myFeaturesButton = new JButton("Open Features");
+		myFeaturesButton.setEnabled(false);
+		myFeaturesButton.addActionListener(e -> openFeaturesSelectedElement());
+
+		myCloseButton = new JButton("Close");
+		myCloseButton.addActionListener(e -> dispose());
+
+		buttonPanel.add(myLocateButton);
+		buttonPanel.add(myFeaturesButton);
+		buttonPanel.add(myCloseButton);
+
+		myStatusLabel = new JLabel(" Ready");
+		myStatusLabel.setBorder(new EmptyBorder(4, 8, 4, 8));
+
+		JPanel bottomPanel = new JPanel(new BorderLayout());
+		bottomPanel.add(myStatusLabel, BorderLayout.WEST);
+		bottomPanel.add(buttonPanel, BorderLayout.EAST);
+
+		JPanel content = new JPanel(new BorderLayout());
+		content.add(scrollPane, BorderLayout.CENTER);
+		content.add(bottomPanel, BorderLayout.SOUTH);
+
+		setContentPane(content);
+
+		if (myRhapsody != null)
+		{
+			try
+			{
+				IRPProject project = myRhapsody.activeProject();
+				if (project != null)
+				{
+					String iconFile = project.getIconFileName();
+					if (iconFile != null && new File(iconFile).exists())
+					{
+						setIconImage(new ImageIcon(iconFile).getImage());
+					}
+				}
+			}
+			catch (Exception ignored)
+			{
+			}
+		}
+
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setSize(750, 450);
+		setLocationRelativeTo(getOwner());
+	}
+
+	public void addElement(IRPModelElement aElement)
+	{
+		if (aElement == null)
+		{
+			return;
+		}
+
+		Runnable task = () ->
+		{
+			myElements.add(aElement);
+			String name = "";
+			String metaClass = "";
+			String path = "";
+			try
+			{
+				name = aElement.getName();
+			}
+			catch (Exception e)
+			{
+				name = aElement.toString();
+			}
+			try
+			{
+				metaClass = aElement.getMetaClass();
+			}
+			catch (Exception e)
+			{
+				metaClass = "";
+			}
+			try
+			{
+				path = aElement.getFullPathName();
+			}
+			catch (Exception e)
+			{
+				path = "";
+			}
+			myTableModel.addRow(new Object[] { name, metaClass, path });
+			myStatusLabel.setText(" " + myElements.size() + " element(s) found");
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			task.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(task);
+		}
+	}
+
+	public void addElements(List<IRPModelElement> aElements)
+	{
+		if (aElements == null)
+		{
+			return;
+		}
+		for (IRPModelElement element : aElements)
+		{
+			addElement(element);
+		}
+	}
+
+	public void setElements(List<IRPModelElement> aElements)
+	{
+		clear();
+		addElements(aElements);
+	}
+
+	public List<IRPModelElement> getElements()
+	{
+		return new ArrayList<>(myElements);
+	}
+
+	public IRPModelElement getSelectedElement()
+	{
+		int selectedRow = myTable.getSelectedRow();
+		if (selectedRow >= 0)
+		{
+			int modelRow = myTable.convertRowIndexToModel(selectedRow);
+			if (modelRow >= 0 && modelRow < myElements.size())
+			{
+				return myElements.get(modelRow);
+			}
+		}
+		return null;
+	}
+
+	public void clear()
+	{
+		Runnable task = () ->
+		{
+			myElements.clear();
+			myTableModel.setRowCount(0);
+			myStatusLabel.setText(" Ready");
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			task.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(task);
+		}
+	}
+
+	public void searchStarted()
+	{
+		Runnable task = () ->
+		{
+			clear();
+			myStatusLabel.setText(" Searching...");
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			task.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(task);
+		}
+	}
+
+	public void searchEnded()
+	{
+		Runnable task = () ->
+		{
+			myStatusLabel.setText(" Search finished. " + myElements.size() + " element(s) found.");
+		};
+
+		if (SwingUtilities.isEventDispatchThread())
+		{
+			task.run();
+		}
+		else
+		{
+			SwingUtilities.invokeLater(task);
+		}
+	}
+
+	private void locateSelectedElement()
+	{
+		int selectedRow = myTable.getSelectedRow();
+		if (selectedRow >= 0)
+		{
+			int modelRow = myTable.convertRowIndexToModel(selectedRow);
+			if (modelRow >= 0 && modelRow < myElements.size())
+			{
+				IRPModelElement element = myElements.get(modelRow);
+				if (element != null)
+				{
+					try
+					{
+						element.locateInBrowser();
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+
+	private void openFeaturesSelectedElement()
+	{
+		int selectedRow = myTable.getSelectedRow();
+		if (selectedRow >= 0)
+		{
+			int modelRow = myTable.convertRowIndexToModel(selectedRow);
+			if (modelRow >= 0 && modelRow < myElements.size())
+			{
+				IRPModelElement element = myElements.get(modelRow);
+				if (element != null)
+				{
+					try
+					{
+						element.openFeaturesDialog(0);
+					}
+					catch (Exception ex)
+					{
+						ex.printStackTrace();
+					}
+				}
+			}
+		}
+	}
+}
+
+

@@ -1,4 +1,4 @@
-package apps;
+package de.schlaich.gunnar.rhapsody.operationeditor.starter;
 
 import java.awt.Dimension;
 import java.awt.Toolkit;
