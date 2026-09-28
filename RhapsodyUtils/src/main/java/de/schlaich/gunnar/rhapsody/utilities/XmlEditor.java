@@ -1142,11 +1142,12 @@ public class XmlEditor extends JDialog implements SearchListener
 
 	}
 	
-	private static class SearchInModel extends TextAction
+	private class SearchInModel extends TextAction
 	{
 		
 		private static final long serialVersionUID = 1L;
 		private IRPApplication myRhapsody;
+		private CSearchResult mySearchResultDialog;
 
 		public SearchInModel(IRPApplication aRhapsody)
 		{
@@ -1168,8 +1169,28 @@ public class XmlEditor extends JDialog implements SearchListener
 						return;
 					}
 					
-					// F�hre die Suche asynchron aus
-					new SearchWorker(selectedText).execute();
+					// Stelle sicher, dass Dialog-Operationen auf dem EDT erfolgen
+					SwingUtilities.invokeLater(() ->
+					{
+						// Wenn das Dialog noch nicht existiert oder geschlossen wurde, ein neues erstellen
+						if (mySearchResultDialog == null || !mySearchResultDialog.isVisible())
+						{
+							Window owner = SwingUtilities.getWindowAncestor(textComp);
+							mySearchResultDialog = new CSearchResult(owner, myRhapsody, selectedText);
+						}
+						else
+						{
+							// Bestehendes Dialog wiederverwenden und neu konfigurieren
+							mySearchResultDialog.updateTitle(selectedText);
+						}
+						
+						mySearchResultDialog.clear();
+						mySearchResultDialog.setVisible(true);
+						mySearchResultDialog.toFront();
+						
+						// Starte die Suche NACH dem Dialog-Setup
+						new SearchWorker(selectedText, mySearchResultDialog).execute();
+					});
 				}
 			}
 		}
@@ -1180,10 +1201,12 @@ public class XmlEditor extends JDialog implements SearchListener
 		private class SearchWorker extends SwingWorker<Void, Void>
 		{
 			private String searchText;
+			private CSearchResult searchResultDialog;
 			
-			public SearchWorker(String searchText)
+			public SearchWorker(String searchText, CSearchResult searchResultDialog)
 			{
 				this.searchText = searchText;
+				this.searchResultDialog = searchResultDialog;
 			}
 			
 			@Override
@@ -1206,9 +1229,9 @@ public class XmlEditor extends JDialog implements SearchListener
 				
 				IRPSearchQuery query = searchManager.createSearchQuery();
 				query.setSearchText(searchText);
-			
-				 CSearchListener listener = new CSearchListener(myRhapsody);
-				 listener.connect(searchManager);
+				
+				CSearchListener listener = new CSearchListener(myRhapsody, searchResultDialog);
+				listener.connect(searchManager);
 				 
 				 searchManager.searchAsync(query);
 				
@@ -1289,16 +1312,17 @@ class CSearchListener extends RPSearchListener
 	public boolean onNewSearchResult(IRPSearchResult pSearchResult)
 	{
 		IRPModelElement matchedObject = pSearchResult.getMatchedObject();
+		String matchedField = pSearchResult.getMatchedField();
 
 		if (myRhapsody != null && matchedObject != null)
 		{
-			myRhapsody.writeToOutputWindow("Log", pSearchResult.getMatchedField() + "\n");
+			myRhapsody.writeToOutputWindow("Log", matchedField + "\n");
 			myRhapsody.writeToOutputWindow("Log", matchedObject.getName() + " [" + matchedObject.getMetaClass() + "]\n");
 		}
 
 		if (mySearchResult != null && matchedObject != null)
 		{
-			mySearchResult.addElement(matchedObject);
+			mySearchResult.addElement(matchedObject, matchedField);
 		}
 
 		return false;
@@ -1323,404 +1347,3 @@ class CSearchListener extends RPSearchListener
 		return false;
 	}
 }
-
-class CSearchResult extends JDialog
-{
-
-	private static final long serialVersionUID = 1L;
-
-	private IRPApplication myRhapsody;
-	private final List<IRPModelElement> myElements = new ArrayList<>();
-	private DefaultTableModel myTableModel;
-	private JTable myTable;
-	private JLabel myStatusLabel;
-	private JButton myLocateButton;
-	private JButton myFeaturesButton;
-	private JButton myCloseButton;
-
-	public CSearchResult(IRPApplication aRhapsody)
-	{
-		this(null, aRhapsody, (String) null);
-	}
-
-	public CSearchResult(Window owner, IRPApplication aRhapsody)
-	{
-		this(owner, aRhapsody, (String) null);
-	}
-
-	public CSearchResult(Window owner, IRPApplication aRhapsody, String aSearchText)
-	{
-		super(owner, getDialogTitle(aSearchText), Dialog.ModalityType.MODELESS);
-		this.myRhapsody = aRhapsody;
-		initUI();
-	}
-
-	public CSearchResult(Window owner, IRPApplication aRhapsody, List<IRPModelElement> aElements)
-	{
-		this(owner, aRhapsody, (String) null);
-		if (aElements != null)
-		{
-			for (IRPModelElement elem : aElements)
-			{
-				addElement(elem);
-			}
-		}
-	}
-
-	private static String getDialogTitle(String aSearchText)
-	{
-		if (aSearchText != null && !aSearchText.trim().isEmpty())
-		{
-			return "Search Results - " + aSearchText.trim();
-		}
-		return "Search Results";
-	}
-
-	private void initUI()
-	{
-		String[] columnNames = { "Name", "Element Type", "Full Path" };
-
-		myTableModel = new DefaultTableModel(columnNames, 0)
-		{
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public boolean isCellEditable(int row, int column)
-			{
-				return false;
-			}
-		};
-
-		myTable = new JTable(myTableModel);
-		myTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		myTable.setAutoCreateRowSorter(true);
-		myTable.setFillsViewportHeight(true);
-		myTable.setRowHeight(22);
-
-		// Custom renderer for the first column to display icon next to name
-		myTable.getColumnModel().getColumn(0).setCellRenderer(new DefaultTableCellRenderer()
-		{
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public Component getTableCellRendererComponent(JTable table, Object value,
-					boolean isSelected, boolean hasFocus, int row, int column)
-			{
-				Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-				setIcon(null);
-				if (column == 0 && row >= 0 && row < table.getRowCount())
-				{
-					int modelRow = table.convertRowIndexToModel(row);
-					if (modelRow >= 0 && modelRow < myElements.size())
-					{
-						IRPModelElement element = myElements.get(modelRow);
-						if (element != null)
-						{
-							try
-							{
-								String iconPath = element.getIconFileName();
-								if (iconPath != null && !iconPath.isEmpty() && new File(iconPath).exists())
-								{
-									setIcon(new ImageIcon(iconPath));
-								}
-							}
-							catch (Exception ignored)
-							{
-							}
-						}
-					}
-				}
-				return c;
-			}
-		});
-
-		TableColumnModel colModel = myTable.getColumnModel();
-		colModel.getColumn(0).setPreferredWidth(200);
-		colModel.getColumn(1).setPreferredWidth(120);
-		colModel.getColumn(2).setPreferredWidth(350);
-
-		myTable.addMouseListener(new MouseAdapter()
-		{
-			@Override
-			public void mouseClicked(MouseEvent e)
-			{
-				if (e.getClickCount() == 2)
-				{
-					locateSelectedElement();
-				}
-			}
-		});
-
-		myTable.addKeyListener(new KeyAdapter()
-		{
-			@Override
-			public void keyPressed(KeyEvent e)
-			{
-				if (e.getKeyCode() == KeyEvent.VK_ENTER)
-				{
-					locateSelectedElement();
-					e.consume();
-				}
-			}
-		});
-
-		myTable.getSelectionModel().addListSelectionListener(e ->
-		{
-			boolean hasSelection = myTable.getSelectedRow() >= 0;
-			if (myLocateButton != null)
-			{
-				myLocateButton.setEnabled(hasSelection);
-			}
-			if (myFeaturesButton != null)
-			{
-				myFeaturesButton.setEnabled(hasSelection);
-			}
-		});
-
-		JScrollPane scrollPane = new JScrollPane(myTable);
-
-		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		myLocateButton = new JButton("Locate in Browser");
-		myLocateButton.setEnabled(false);
-		myLocateButton.addActionListener(e -> locateSelectedElement());
-
-		myFeaturesButton = new JButton("Open Features");
-		myFeaturesButton.setEnabled(false);
-		myFeaturesButton.addActionListener(e -> openFeaturesSelectedElement());
-
-		myCloseButton = new JButton("Close");
-		myCloseButton.addActionListener(e -> dispose());
-
-		buttonPanel.add(myLocateButton);
-		buttonPanel.add(myFeaturesButton);
-		buttonPanel.add(myCloseButton);
-
-		myStatusLabel = new JLabel(" Ready");
-		myStatusLabel.setBorder(new EmptyBorder(4, 8, 4, 8));
-
-		JPanel bottomPanel = new JPanel(new BorderLayout());
-		bottomPanel.add(myStatusLabel, BorderLayout.WEST);
-		bottomPanel.add(buttonPanel, BorderLayout.EAST);
-
-		JPanel content = new JPanel(new BorderLayout());
-		content.add(scrollPane, BorderLayout.CENTER);
-		content.add(bottomPanel, BorderLayout.SOUTH);
-
-		setContentPane(content);
-
-		if (myRhapsody != null)
-		{
-			try
-			{
-				IRPProject project = myRhapsody.activeProject();
-				if (project != null)
-				{
-					String iconFile = project.getIconFileName();
-					if (iconFile != null && new File(iconFile).exists())
-					{
-						setIconImage(new ImageIcon(iconFile).getImage());
-					}
-				}
-			}
-			catch (Exception ignored)
-			{
-			}
-		}
-
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-		setSize(750, 450);
-		setLocationRelativeTo(getOwner());
-	}
-
-	public void addElement(IRPModelElement aElement)
-	{
-		if (aElement == null)
-		{
-			return;
-		}
-
-		Runnable task = () ->
-		{
-			myElements.add(aElement);
-			String name = "";
-			String metaClass = "";
-			String path = "";
-			try
-			{
-				name = aElement.getName();
-			}
-			catch (Exception e)
-			{
-				name = aElement.toString();
-			}
-			try
-			{
-				metaClass = aElement.getMetaClass();
-			}
-			catch (Exception e)
-			{
-				metaClass = "";
-			}
-			try
-			{
-				path = aElement.getFullPathName();
-			}
-			catch (Exception e)
-			{
-				path = "";
-			}
-			myTableModel.addRow(new Object[] { name, metaClass, path });
-			myStatusLabel.setText(" " + myElements.size() + " element(s) found");
-		};
-
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			task.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(task);
-		}
-	}
-
-	public void addElements(List<IRPModelElement> aElements)
-	{
-		if (aElements == null)
-		{
-			return;
-		}
-		for (IRPModelElement element : aElements)
-		{
-			addElement(element);
-		}
-	}
-
-	public void setElements(List<IRPModelElement> aElements)
-	{
-		clear();
-		addElements(aElements);
-	}
-
-	public List<IRPModelElement> getElements()
-	{
-		return new ArrayList<>(myElements);
-	}
-
-	public IRPModelElement getSelectedElement()
-	{
-		int selectedRow = myTable.getSelectedRow();
-		if (selectedRow >= 0)
-		{
-			int modelRow = myTable.convertRowIndexToModel(selectedRow);
-			if (modelRow >= 0 && modelRow < myElements.size())
-			{
-				return myElements.get(modelRow);
-			}
-		}
-		return null;
-	}
-
-	public void clear()
-	{
-		Runnable task = () ->
-		{
-			myElements.clear();
-			myTableModel.setRowCount(0);
-			myStatusLabel.setText(" Ready");
-		};
-
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			task.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(task);
-		}
-	}
-
-	public void searchStarted()
-	{
-		Runnable task = () ->
-		{
-			clear();
-			myStatusLabel.setText(" Searching...");
-		};
-
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			task.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(task);
-		}
-	}
-
-	public void searchEnded()
-	{
-		Runnable task = () ->
-		{
-			myStatusLabel.setText(" Search finished. " + myElements.size() + " element(s) found.");
-		};
-
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			task.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(task);
-		}
-	}
-
-	private void locateSelectedElement()
-	{
-		int selectedRow = myTable.getSelectedRow();
-		if (selectedRow >= 0)
-		{
-			int modelRow = myTable.convertRowIndexToModel(selectedRow);
-			if (modelRow >= 0 && modelRow < myElements.size())
-			{
-				IRPModelElement element = myElements.get(modelRow);
-				if (element != null)
-				{
-					try
-					{
-						element.locateInBrowser();
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
-				}
-			}
-		}
-	}
-
-	private void openFeaturesSelectedElement()
-	{
-		int selectedRow = myTable.getSelectedRow();
-		if (selectedRow >= 0)
-		{
-			int modelRow = myTable.convertRowIndexToModel(selectedRow);
-			if (modelRow >= 0 && modelRow < myElements.size())
-			{
-				IRPModelElement element = myElements.get(modelRow);
-				if (element != null)
-				{
-					try
-					{
-						element.openFeaturesDialog(0);
-					}
-					catch (Exception ex)
-					{
-						ex.printStackTrace();
-					}
-				}
-			}
-		}
-	}
-}
-
-
