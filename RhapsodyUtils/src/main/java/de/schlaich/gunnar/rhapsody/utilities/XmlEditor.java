@@ -1191,9 +1191,34 @@ public class XmlEditor extends JDialog implements SearchListener
 						// Starte die Suche NACH dem Dialog-Setup
 						new SearchWorker(selectedText, mySearchResultDialog).execute();
 					});
+>>>>>>> 933961974919fde1a3f28efef8e7417469593782
 				}
 			}
 		}
+		
+		private void searchInModel(String searchText)
+		{
+			IRPProject project = myRhapsody.activeProject();
+			if(project == null)
+			{
+				return;
+			}
+			
+			IRPSearchManager searchManager = myRhapsody.getSearchManager();
+			if(searchManager == null)
+			{
+				return;
+			}
+			
+			IRPSearchQuery query = searchManager.createSearchQuery();
+			
+			query.setSearchText(searchText);
+			
+			// Die eigentliche Suche
+			searchManager.searchAsync(query);
+			
+		}
+		
 		
 		/**
 		 * SwingWorker f�r asynchrone Suche, um die UI nicht zu blockieren
@@ -1234,6 +1259,13 @@ public class XmlEditor extends JDialog implements SearchListener
 				listener.connect(searchManager);
 				 
 				 searchManager.searchAsync(query);
+=======
+				
+				
+				
+				// Die eigentliche Suche
+				searchManager.searchAsync(query);
+>>>>>>> Stashed changes
 				
 				return null;
 			}
