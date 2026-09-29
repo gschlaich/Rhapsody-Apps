@@ -924,19 +924,6 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 			return;
 		}
 
-<<<<<<< Updated upstream
-=======
-		//RhapsodyPreferences prefs = RhapsodyPreferences.Get();
-
-		//if (prefs.checkRhapsodyModelElement(op))
-		//{
-		//	print(rhapsody, "Operation already open");
-		//	return;
-		//}
-
-		//prefs.setRhapsodyModelElement(op);
-
->>>>>>> Stashed changes
 		print(rhapsody, "Edit Operation of " + op.getName());
 
 		print(rhapsody, "Java Version: " + System.getProperty("java.vm.version"));

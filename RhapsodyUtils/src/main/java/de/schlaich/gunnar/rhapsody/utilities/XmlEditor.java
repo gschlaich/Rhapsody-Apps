@@ -111,7 +111,7 @@ public class XmlEditor extends JDialog implements SearchListener
 	private boolean lastKnownWritableStatus = true;
 	private ScheduledExecutorService fileStatusMonitor = null;
 	private Consumer<Boolean> fileWritableStatusChangeListener = null;
-	
+
 	private JPanel buttonBar;
 	private RTextScrollPane scrollPane;
 	private SyntaxScheme myScheme;
@@ -120,24 +120,24 @@ public class XmlEditor extends JDialog implements SearchListener
 	private ReplaceDialog replaceDialog;
 	private FindToolBar findToolBar;
 	private ReplaceToolBar replaceToolBar;
-	
+
 	static private IRPHyperLink HyperLink = null;
 	static private IRPApplication Rhapsody = null;
-	static private String ImageName  = null;
+	static private String ImageName = null;
 	private CollapsibleSectionPanel csp;
 	private Consumer<String> myTraceAction = null;
-	
+
 	private JButton okButton = null;
 	private JButton applyButton = null;
 	private JMenuItem setWritableMenuItem = null;
 
 	public XmlEditor(Window owner, File xmlFile)
 	{
-		super(owner, xmlFile == null ? "Edit XML" : "Edit XML - " + xmlFile.getName(),
-				Dialog.ModalityType.MODELESS);
+		super(owner, xmlFile == null ? "Edit XML" : "Edit XML - " + xmlFile.getPath(), Dialog.ModalityType.MODELESS);
 		this.xmlFile = xmlFile;
 
 		
+		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
 		if (RhapsodyPreferences.isWindowsDarkMode())
 		{
@@ -146,12 +146,12 @@ public class XmlEditor extends JDialog implements SearchListener
 				UIManager.setLookAndFeel(new FlatDarkLaf());
 				// setUndecorated(true);
 			}
-			catch(UnsupportedLookAndFeelException e)
+			catch (UnsupportedLookAndFeelException e)
 			{
 				e.printStackTrace();
 			}
 		}
-		
+
 		initSearchDialogs();
 
 		buildUI();
@@ -173,15 +173,15 @@ public class XmlEditor extends JDialog implements SearchListener
 		setLocationRelativeTo(owner);
 
 	}
-	
-	public void setTrace( Consumer<String> aTraceAction)
+
+	public void setTrace(Consumer<String> aTraceAction)
 	{
 		myTraceAction = aTraceAction;
 	}
-	
+
 	private void trace(String aMessage)
 	{
-		
+
 		aMessage = this.getClass().getSimpleName() + ": " + aMessage;
 		if (myTraceAction == null)
 		{
@@ -191,19 +191,22 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		myTraceAction.accept(aMessage);
 	}
-	
+
 	/**
-	 * Setzt einen Listener, der aufgerufen wird, wenn sich der Schreibstatus der Datei �ndert.
-	 * @param listener Consumer der mit dem neuen Status aufgerufen wird (true = schreibbar, false = schreibgesch�tzt)
+	 * Setzt einen Listener, der aufgerufen wird, wenn sich der Schreibstatus der
+	 * Datei �ndert.
+	 * 
+	 * @param listener Consumer der mit dem neuen Status aufgerufen wird (true =
+	 *                 schreibbar, false = schreibgesch�tzt)
 	 */
 	public void setFileWritableStatusChangeListener(Consumer<Boolean> listener)
 	{
 		fileWritableStatusChangeListener = listener;
 	}
-	
+
 	/**
-	 * Startet die �berwachung des Schreibstatus der Datei.
-	 * Der �berwacher pr�ft alle 2 Sekunden, ob sich der Status ge�ndert hat.
+	 * Startet die �berwachung des Schreibstatus der Datei. Der �berwacher
+	 * pr�ft alle 2 Sekunden, ob sich der Status ge�ndert hat.
 	 */
 	private void startFileStatusMonitor()
 	{
@@ -211,7 +214,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			return;
 		}
-		
+
 		lastKnownWritableStatus = xmlFile.canWrite();
 		fileStatusMonitor = Executors.newScheduledThreadPool(1);
 		fileStatusMonitor.scheduleAtFixedRate(() ->
@@ -223,10 +226,10 @@ public class XmlEditor extends JDialog implements SearchListener
 				SwingUtilities.invokeLater(() -> onFileWritableStatusChanged(currentWritableStatus));
 			}
 		}, 2, 2, TimeUnit.SECONDS);
-		
+
 		trace("File status monitor started");
 	}
-	
+
 	/**
 	 * Stoppt die �berwachung des Schreibstatus.
 	 */
@@ -239,18 +242,19 @@ public class XmlEditor extends JDialog implements SearchListener
 			trace("File status monitor stopped");
 		}
 	}
-	
+
 	/**
 	 * Wird aufgerufen, wenn sich der Schreibstatus �ndert.
+	 * 
 	 * @param isWritable true wenn die Datei jetzt schreibbar ist
 	 */
 	private void onFileWritableStatusChanged(boolean isWritable)
 	{
 		trace("File writable status changed: " + isWritable);
-		
+
 		// UI aktualisieren
 		textArea.setEditable(isWritable);
-		
+
 		if (isWritable)
 		{
 			setTitle(getTitle().replace(" (Read-Only)", ""));
@@ -262,16 +266,13 @@ public class XmlEditor extends JDialog implements SearchListener
 				setTitle(getTitle() + " (Read-Only)");
 			}
 		}
-		
+
 		// Listener benachrichtigen
 		if (fileWritableStatusChangeListener != null)
 		{
 			fileWritableStatusChangeListener.accept(isWritable);
 		}
 	}
-	
-		
-	
 
 	private void addItem(Action a, ButtonGroup bg, JMenu menu)
 	{
@@ -302,23 +303,20 @@ public class XmlEditor extends JDialog implements SearchListener
 		menu.add(new JMenuItem(a));
 
 		mb.add(menu);
-		
+
 		JMenu toolsMenu = new JMenu("Tools");
 		toolsMenu.add(new JMenuItem(new FormatAction()));
 		toolsMenu.addSeparator();
 		toolsMenu.add(new JMenuItem(new ShowInExplorer()));
 		toolsMenu.addSeparator();
-		
-		setWritableMenuItem =  toolsMenu.add(new JMenuItem(new SetWritable()));
-		
-		if(xmlFile != null && xmlFile.canWrite())
+
+		setWritableMenuItem = toolsMenu.add(new JMenuItem(new SetWritable()));
+
+		if (xmlFile != null && xmlFile.canWrite())
 		{
 			setWritableMenuItem.setEnabled(false);
 		}
-		
-		
-		
-		
+
 		mb.add(toolsMenu);
 
 		return mb;
@@ -334,11 +332,10 @@ public class XmlEditor extends JDialog implements SearchListener
 	public static void showDialog(Window owner, File xmlFile)
 	{
 		XmlEditor dlg = new XmlEditor(owner, xmlFile);
-		//dlg.setTrace(aTraceAction);
+		// dlg.setTrace(aTraceAction);
 		dlg.setVisible(true);
 	}
-	
-	
+
 	public static void showDialog(Window owner, String initialText)
 	{
 		XmlEditor dlg = new XmlEditor(owner, initialText);
@@ -373,7 +370,7 @@ public class XmlEditor extends JDialog implements SearchListener
 					dlg.setVisible(true);
 				});
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				if (resultHandler != null)
 				{
@@ -408,7 +405,7 @@ public class XmlEditor extends JDialog implements SearchListener
 					dlg.setVisible(true);
 				});
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				if (resultHandler != null)
 				{
@@ -426,11 +423,11 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			return false;
 		}
-		
+
 		HyperLink = link;
-		
+
 		ImageName = link.getIconFileName();
-		
+
 		Rhapsody = aRhapsody;
 
 		String absolutePath = RhapsodyHelper.getAbsolutePath(link);
@@ -492,8 +489,8 @@ public class XmlEditor extends JDialog implements SearchListener
 		textArea.setCaretPosition(0);
 
 		LanguageSupportFactory.get().register(textArea);
-		
-		if(xmlFile != null && xmlFile.canWrite()==false)
+
+		if (xmlFile != null && xmlFile.canWrite() == false)
 		{
 			textArea.setEditable(false);
 			this.setTitle(getTitle() + " (Read-Only)");
@@ -506,13 +503,13 @@ public class XmlEditor extends JDialog implements SearchListener
 		scrollPane.setWheelScrollingEnabled(true);
 
 		buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-		
+
 		JButton copyButton = new JButton("Copy to Appdata");
 		applyButton = new JButton("Apply");
 		okButton = new JButton("OK");
 		JButton cancelButton = new JButton("Cancel");
-		
-		if(xmlFile != null && xmlFile.canWrite()==false)
+
+		if (xmlFile != null && xmlFile.canWrite() == false)
 		{
 			okButton.setEnabled(false);
 			applyButton.setEnabled(false);
@@ -527,7 +524,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			}
 			dispose();
 		});
-		
+
 		applyButton.addActionListener(e ->
 		{
 			if (xmlFile != null)
@@ -540,27 +537,26 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		copyButton.addActionListener(e ->
 		{
-			
-			if(HyperLink == null)
+
+			if (HyperLink == null)
 			{
 				JOptionPane.showMessageDialog(this, "No Hyperlink available!", "Error", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			
-			//HyperLink.get
-			
+
+			// HyperLink.get
+
 			USMConfiguration config = USMConfiguration.Instance(Rhapsody, null);
-			
+
 			config.copyToAppData(HyperLink);
 
 		});
 
-		
 		buttonBar.add(copyButton);
 		buttonBar.add(applyButton);
 		buttonBar.add(okButton);
 		buttonBar.add(cancelButton);
-		
+
 		List<BufferedImage> icons = new ArrayList<BufferedImage>();
 		File f = new File(ImageName);
 		try
@@ -568,7 +564,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			icons = Imaging.getAllBufferedImages(f);
 
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -585,17 +581,11 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			setIconImage(img);
 		}
-		
-		
 
 		JPanel content = new JPanel(new BorderLayout());
 		if (RhapsodyPreferences.isWindowsDarkMode())
 		{
-			
 
-			
-	
-			
 			// JLabel titleLabel = new JLabel(getTitle());
 			// titleLabel.setBorder(new EmptyBorder(8, 12, 8, 12));
 			// titleLabel.setForeground(new Color(0xdddddd));
@@ -607,19 +597,17 @@ public class XmlEditor extends JDialog implements SearchListener
 			// new Color(0x444444)));
 			// titleBar.add(titleLabel, BorderLayout.WEST);
 
-			//JButton closeButton = new JButton("X");
-			//closeButton.setFocusable(false);
-			//closeButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 8, 4, 8));
-			//closeButton.setBackground(new Color(0x232323));
-			//closeButton.setForeground(new Color(0xdddddd));
-			//closeButton.addActionListener(e -> dispose());
+			// JButton closeButton = new JButton("X");
+			// closeButton.setFocusable(false);
+			// closeButton.setBorder(javax.swing.BorderFactory.createEmptyBorder(4, 8, 4,
+			// 8));
+			// closeButton.setBackground(new Color(0x232323));
+			// closeButton.setForeground(new Color(0xdddddd));
+			// closeButton.addActionListener(e -> dispose());
 			// titleBar.add(closeButton, BorderLayout.EAST);
 
 			// content.add(titleBar, BorderLayout.NORTH);
-			
-			
-			
-			
+
 		}
 
 		content.add(scrollPane, BorderLayout.CENTER);
@@ -632,18 +620,17 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		// getContentPane().setLayout(new BorderLayout());
 		getContentPane().add(content, BorderLayout.CENTER);
-		
-		
+
 		JPopupMenu popup = textArea.getPopupMenu();
 
 		popup.addSeparator();
-		
+
 		popup.add(new SearchInText());
 		popup.add(new SearchInModel(Rhapsody));
-		
+
 		// Starte die �berwachung des Dateistatus
 		startFileStatusMonitor();
-		
+
 		// Stoppe den Monitor wenn das Dialog geschlossen wird
 		addWindowListener(new java.awt.event.WindowAdapter()
 		{
@@ -651,9 +638,10 @@ public class XmlEditor extends JDialog implements SearchListener
 			public void windowClosed(java.awt.event.WindowEvent e)
 			{
 				stopFileStatusMonitor();
+				dispose();
 			}
 		});
-		
+
 	}
 
 	private void loadXmlContent()
@@ -671,7 +659,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			textArea.setText(xmlText);
 			textArea.convertTabsToSpaces();
 		}
-		catch(IOException e)
+		catch (IOException e)
 		{
 			textArea.setText("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<!-- error reading file -->\n");
 		}
@@ -700,13 +688,10 @@ public class XmlEditor extends JDialog implements SearchListener
 			utf8Decoder.decode(ByteBuffer.wrap(bytes));
 			return StandardCharsets.UTF_8;
 		}
-		catch(CharacterCodingException ignored)
+		catch (CharacterCodingException ignored)
 		{
 			// fall through to XML declaration parsing below
 		}
-		
-		
-	
 
 		String text = new String(bytes, StandardCharsets.ISO_8859_1);
 		Matcher matcher = Pattern.compile("(?is)<?xml.*?encoding\\s*=\\s*(['\"])(.*?)\\1").matcher(text);
@@ -717,7 +702,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			{
 				return Charset.forName(enc);
 			}
-			catch(Exception ignored)
+			catch (Exception ignored)
 			{
 				// keep fallback
 			}
@@ -725,29 +710,31 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		return StandardCharsets.UTF_8;
 	}
-	
+
 	private String formatXml(String xmlContent)
 	{
 		try
 		{
 			//
-			javax.xml.transform.Source xmlInput = new javax.xml.transform.stream.StreamSource(new java.io.StringReader(xmlContent));
+			javax.xml.transform.Source xmlInput = new javax.xml.transform.stream.StreamSource(
+					new java.io.StringReader(xmlContent));
 			java.io.StringWriter stringWriter = new java.io.StringWriter();
-			javax.xml.transform.stream.StreamResult xmlOutput = new javax.xml.transform.stream.StreamResult(stringWriter);
-			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance().newTransformer();
+			javax.xml.transform.stream.StreamResult xmlOutput = new javax.xml.transform.stream.StreamResult(
+					stringWriter);
+			javax.xml.transform.Transformer transformer = javax.xml.transform.TransformerFactory.newInstance()
+					.newTransformer();
 			transformer.setOutputProperty(javax.xml.transform.OutputKeys.INDENT, "yes");
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
 			transformer.transform(xmlInput, xmlOutput);
 			return xmlOutput.getWriter().toString();
 		}
-		catch(Exception e)
+		catch (Exception e)
 		{
 			trace("Error formatting XML: " + e.getMessage());
 			e.printStackTrace();
 			return xmlContent; // Return original content if formatting fails
 		}
 	}
-	
 
 	private void saveXmlContent()
 	{
@@ -760,7 +747,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			Files.write(xmlFile.toPath(), textArea.getText().getBytes(xmlCharset));
 		}
-		catch(IOException ex)
+		catch (IOException ex)
 		{
 			ex.printStackTrace();
 		}
@@ -857,28 +844,28 @@ public class XmlEditor extends JDialog implements SearchListener
 
 		switch (type)
 		{
-			default: // Prevent FindBugs warning later
-			case MARK_ALL:
-				result = SearchEngine.markAll(textArea, context);
-				break;
-			case FIND:
-				result = SearchEngine.find(textArea, context);
-				if (!result.wasFound() || result.isWrapped())
-				{
-					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
-				}
-				break;
-			case REPLACE:
-				result = SearchEngine.replace(textArea, context);
-				if (!result.wasFound() || result.isWrapped())
-				{
-					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
-				}
-				break;
-			case REPLACE_ALL:
-				result = SearchEngine.replaceAll(textArea, context);
-				JOptionPane.showMessageDialog(null, result.getCount() + " occurrences replaced.");
-				break;
+		default: // Prevent FindBugs warning later
+		case MARK_ALL:
+			result = SearchEngine.markAll(textArea, context);
+			break;
+		case FIND:
+			result = SearchEngine.find(textArea, context);
+			if (!result.wasFound() || result.isWrapped())
+			{
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+			}
+			break;
+		case REPLACE:
+			result = SearchEngine.replace(textArea, context);
+			if (!result.wasFound() || result.isWrapped())
+			{
+				UIManager.getLookAndFeel().provideErrorFeedback(textArea);
+			}
+			break;
+		case REPLACE_ALL:
+			result = SearchEngine.replaceAll(textArea, context);
+			JOptionPane.showMessageDialog(null, result.getCount() + " occurrences replaced.");
+			break;
 		}
 
 		String text;
@@ -946,7 +933,7 @@ public class XmlEditor extends JDialog implements SearchListener
 				{
 					textArea.setCaretPosition(textArea.getLineStartOffset(line - 1));
 				}
-				catch(BadLocationException ble)
+				catch (BadLocationException ble)
 				{ // Never happens
 					UIManager.getLookAndFeel().provideErrorFeedback(textArea);
 					ble.printStackTrace();
@@ -1005,7 +992,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 
 	}
-	
+
 	private class FormatAction extends AbstractAction
 	{
 
@@ -1025,7 +1012,7 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 
 	}
-	
+
 	private class ShowInExplorer extends AbstractAction
 	{
 
@@ -1051,19 +1038,20 @@ public class XmlEditor extends JDialog implements SearchListener
 					String cmd = String.format("explorer.exe /select,\"%s\"", xmlFile.getAbsolutePath());
 					Runtime.getRuntime().exec(cmd);
 				}
-				catch(IOException ex)
+				catch (IOException ex)
 				{
 					ex.printStackTrace();
 				}
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		}
 
 	}
-	
+
 	private class SetWritable extends AbstractAction
 	{
 
@@ -1089,31 +1077,34 @@ public class XmlEditor extends JDialog implements SearchListener
 				{
 					textArea.setEditable(true);
 					setTitle(getTitle().replace(" (Read-Only)", ""));
-					
-					if(okButton != null)
+
+					if (okButton != null)
 					{
 						okButton.setEnabled(true);
 					}
-					if(applyButton != null)
+					if (applyButton != null)
 					{
 						applyButton.setEnabled(true);
 					}
-					if(setWritableMenuItem != null)
+					if (setWritableMenuItem != null)
 					{
 						setWritableMenuItem.setEnabled(false);
 					}
-					
-					JOptionPane.showMessageDialog(XmlEditor.this, "File is now writable.", "Info", JOptionPane.INFORMATION_MESSAGE);
-					
+
+					JOptionPane.showMessageDialog(XmlEditor.this, "File is now writable.", "Info",
+							JOptionPane.INFORMATION_MESSAGE);
+
 				}
 				else
 				{
-					JOptionPane.showMessageDialog(XmlEditor.this, "Failed to set file writable.", "Error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(XmlEditor.this, "Failed to set file writable.", "Error",
+							JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			else
 			{
-				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(XmlEditor.this, "File does not exist.", "Error",
+						JOptionPane.ERROR_MESSAGE);
 			}
 		}
 
@@ -1141,10 +1132,10 @@ public class XmlEditor extends JDialog implements SearchListener
 		}
 
 	}
-	
+
 	private class SearchInModel extends TextAction
 	{
-		
+
 		private static final long serialVersionUID = 1L;
 		private IRPApplication myRhapsody;
 		private CSearchResult mySearchResultDialog;
@@ -1154,7 +1145,7 @@ public class XmlEditor extends JDialog implements SearchListener
 			super("Search in Model");
 			myRhapsody = aRhapsody;
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
@@ -1164,62 +1155,64 @@ public class XmlEditor extends JDialog implements SearchListener
 				String selectedText = textComp.getSelectedText();
 				if (selectedText != null && !selectedText.isEmpty())
 				{
-					if(myRhapsody == null)
+					if (myRhapsody == null)
 					{
 						return;
 					}
+
 					
-					// Stelle sicher, dass Dialog-Operationen auf dem EDT erfolgen
-					SwingUtilities.invokeLater(() ->
+
+					// Wenn das Dialog noch nicht existiert oder geschlossen wurde, ein neues
+					// erstellen
+					if (mySearchResultDialog == null || !mySearchResultDialog.isVisible())
 					{
-						// Wenn das Dialog noch nicht existiert oder geschlossen wurde, ein neues erstellen
-						if (mySearchResultDialog == null || !mySearchResultDialog.isVisible())
-						{
-							Window owner = SwingUtilities.getWindowAncestor(textComp);
-							mySearchResultDialog = new CSearchResult(owner, myRhapsody, selectedText);
-						}
-						else
-						{
-							// Bestehendes Dialog wiederverwenden und neu konfigurieren
-							mySearchResultDialog.updateTitle(selectedText);
-						}
-						
-						mySearchResultDialog.clear();
-						mySearchResultDialog.setVisible(true);
-						mySearchResultDialog.toFront();
-						
-						// Starte die Suche NACH dem Dialog-Setup
-						new SearchWorker(selectedText, mySearchResultDialog).execute();
-					});
->>>>>>> 933961974919fde1a3f28efef8e7417469593782
+						Window owner = SwingUtilities.getWindowAncestor(textComp);
+						mySearchResultDialog = new CSearchResult(owner, myRhapsody, selectedText);
+					}
+					else
+					{
+						// Bestehendes Dialog wiederverwenden und neu konfigurieren
+						mySearchResultDialog.updateTitle(selectedText);
+					}
+
+					mySearchResultDialog.clear();
+					mySearchResultDialog.setVisible(true);
+					mySearchResultDialog.toFront();
+
+					// Starte die Suche NACH dem Dialog-Setup
+					//new SearchWorker(selectedText, mySearchResultDialog).execute();
+					searchInModel(selectedText);
+
 				}
 			}
 		}
-		
+
 		private void searchInModel(String searchText)
 		{
 			IRPProject project = myRhapsody.activeProject();
-			if(project == null)
+			if (project == null)
 			{
 				return;
 			}
-			
+
 			IRPSearchManager searchManager = myRhapsody.getSearchManager();
-			if(searchManager == null)
+			if (searchManager == null)
 			{
 				return;
 			}
-			
+
 			IRPSearchQuery query = searchManager.createSearchQuery();
-			
 			query.setSearchText(searchText);
-			
-			// Die eigentliche Suche
+
+			CSearchListener listener = new CSearchListener(myRhapsody, mySearchResultDialog);
+			listener.connect(searchManager);
+
 			searchManager.searchAsync(query);
-			
+
+			return;
+
 		}
-		
-		
+
 		/**
 		 * SwingWorker f�r asynchrone Suche, um die UI nicht zu blockieren
 		 */
@@ -1227,49 +1220,40 @@ public class XmlEditor extends JDialog implements SearchListener
 		{
 			private String searchText;
 			private CSearchResult searchResultDialog;
-			
+
 			public SearchWorker(String searchText, CSearchResult searchResultDialog)
 			{
 				this.searchText = searchText;
 				this.searchResultDialog = searchResultDialog;
 			}
-			
+
 			@Override
 			protected Void doInBackground() throws Exception
 			{
-				
+
 				IRPProject project = myRhapsody.activeProject();
-				if(project == null)
+				if (project == null)
 				{
 					return null;
 				}
-				
-				
-				
+
 				IRPSearchManager searchManager = myRhapsody.getSearchManager();
-				if(searchManager == null)
+				if (searchManager == null)
 				{
 					return null;
 				}
-				
+
 				IRPSearchQuery query = searchManager.createSearchQuery();
 				query.setSearchText(searchText);
-				
+
 				CSearchListener listener = new CSearchListener(myRhapsody, searchResultDialog);
 				listener.connect(searchManager);
-				 
-				 searchManager.searchAsync(query);
-=======
-				
-				
-				
-				// Die eigentliche Suche
+
 				searchManager.searchAsync(query);
->>>>>>> Stashed changes
-				
+
 				return null;
 			}
-			
+
 			@Override
 			protected void done()
 			{
@@ -1278,23 +1262,24 @@ public class XmlEditor extends JDialog implements SearchListener
 				{
 					get(); // Check f�r Exceptions
 				}
-				catch(Exception ex)
+				catch (Exception ex)
 				{
 					ex.printStackTrace();
 				}
 			}
 		}
 	}
+
 	private class SearchInText extends TextAction
 	{
-		
+
 		private static final long serialVersionUID = 1L;
 
 		public SearchInText()
 		{
 			super("Search in Text");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e)
 		{
@@ -1304,20 +1289,19 @@ public class XmlEditor extends JDialog implements SearchListener
 				String selectedText = textComp.getSelectedText();
 				if (selectedText != null && !selectedText.isEmpty())
 				{
-					
-			
+
 					if (findDialog.isVisible())
 					{
 						findDialog.setVisible(false);
 					}
 					replaceDialog.setVisible(true);
-					
+
 				}
-				
+
 			}
 		}
 	}
-	
+
 }
 
 class CSearchListener extends RPSearchListener
@@ -1349,7 +1333,8 @@ class CSearchListener extends RPSearchListener
 		if (myRhapsody != null && matchedObject != null)
 		{
 			myRhapsody.writeToOutputWindow("Log", matchedField + "\n");
-			myRhapsody.writeToOutputWindow("Log", matchedObject.getName() + " [" + matchedObject.getMetaClass() + "]\n");
+			myRhapsody.writeToOutputWindow("Log",
+					matchedObject.getName() + " [" + matchedObject.getMetaClass() + "]\n");
 		}
 
 		if (mySearchResult != null && matchedObject != null)
