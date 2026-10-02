@@ -278,8 +278,8 @@ public class CSearchResult extends JDialog
 			return;
 		}
 
-		Runnable task = () ->
-		{
+		//Runnable task = () ->
+		//{
 			myElements.add(aElement);
 			myFields.add(aField != null ? aField : "");
 			String name = "";
@@ -315,16 +315,17 @@ public class CSearchResult extends JDialog
 			// Stelle sicher, dass die Tabelle aktualisiert wird
 			myTable.revalidate();
 			myTable.repaint();
-		};
+			return;
+		//};
 
-		if (SwingUtilities.isEventDispatchThread())
-		{
-			task.run();
-		}
-		else
-		{
-			SwingUtilities.invokeLater(task);
-		}
+//		if (SwingUtilities.isEventDispatchThread())
+//		{
+//			task.run();
+//		}
+//		else
+//		{
+//			SwingUtilities.invokeLater(task);
+//		}
 	}
 
 	public void addElements(List<IRPModelElement> aElements)

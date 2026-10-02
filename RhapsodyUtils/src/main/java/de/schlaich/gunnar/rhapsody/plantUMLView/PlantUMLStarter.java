@@ -6,7 +6,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -14,7 +14,6 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.SourceStringReader;
-import net.sourceforge.plantuml.core.DiagramDescription;
 
 public class PlantUMLStarter {
 	
@@ -28,17 +27,35 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		//boolean showInSVG = false;
 		PlantUMLGenerator gen = new PlantUMLGenerator(selected, false);
-		//System.out.print(gen.getPlanUml());
+		MermaidGenerator mermaidGen = new MermaidGenerator(selected, false);
+		
+		System.out.print(mermaidGen.getMermaidDiagram());
 		StringSelection stringSelection = new StringSelection(gen.getPlantUml());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
 		
-		final ByteArrayOutputStream png = new ByteArrayOutputStream();
+		
+	
+		
+
+
+		
+		
+		final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
 		SourceStringReader reader = new SourceStringReader(gen.getPlantUml());
 		
 		
 		
-		final ByteArrayOutputStream os = new ByteArrayOutputStream();
+		
+		
+//		 try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+//	            // Index 0: erstes Diagramm im übergebenen String
+//	            reader.outputImage(output, 0, new FileFormatOption(format));
+//
+//	            return new String(output.toByteArray(), StandardCharsets.UTF_8);
+		
+		
+		//final ByteArrayOutputStream os = new ByteArrayOutputStream();
 		// Write the first image to "os"
 //		if(showInSVG==true)
 //		{
@@ -75,8 +92,20 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		try 
 		{
-			String desc = reader.outputImage(png).getDescription();
-			byte[] image = png.toByteArray();
+			FileFormat fileFormat = FileFormat.PNG;
+			reader.outputImage(outStream, 0, new FileFormatOption(fileFormat));
+			
+			//String desc = reader.outputImage(outStream).getDescription();
+			byte[] image = outStream.toByteArray();
+			
+			outStream.reset();
+			
+			fileFormat = FileFormat.SVG;
+			reader.outputImage(outStream, 0, new FileFormatOption(fileFormat));
+			String ascii = new String(outStream.toByteArray(), StandardCharsets.UTF_8);
+			
+			System.out.println(ascii);
+			
 			
 			
 			/*
