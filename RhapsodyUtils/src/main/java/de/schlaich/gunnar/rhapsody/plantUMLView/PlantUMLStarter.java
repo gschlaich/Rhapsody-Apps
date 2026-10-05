@@ -25,14 +25,22 @@ public class PlantUMLStarter {
 	
 public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose) {
 		
-		//boolean showInSVG = false;
-		PlantUMLGenerator gen = new PlantUMLGenerator(selected, false);
+		// Erstelle die neuen Generatoren
+		PlantUMLGenerator plantUMLGen = new PlantUMLGenerator(selected, false);
 		MermaidGenerator mermaidGen = new MermaidGenerator(selected, false);
 		
+		// Gebe das Mermaid-Diagramm in der Konsole aus
+		System.out.println("=== Mermaid Diagram ===");
 		System.out.print(mermaidGen.getMermaidDiagram());
-		StringSelection stringSelection = new StringSelection(gen.getPlantUml());
+		System.out.println("\n=== PlantUML Diagram ===");
+		System.out.print(plantUMLGen.getPlantUml());
+		
+		// Kopiere PlantUML-Diagramm in die Zwischenablage
+		StringSelection stringSelection = new StringSelection(plantUMLGen.getPlantUml());
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
+		
+		// ...rest of the code...
 		
 		
 	
@@ -42,7 +50,7 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		
 		final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		SourceStringReader reader = new SourceStringReader(gen.getPlantUml());
+		SourceStringReader reader = new SourceStringReader(plantUMLGen.getPlantUml());
 		
 		
 		

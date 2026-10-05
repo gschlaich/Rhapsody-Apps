@@ -1,22 +1,22 @@
 package de.schlaich.gunnar.rhapsody.plantUMLView;
 
 /**
- * Mermaid diagram syntax elements.
- * Implementiert das DiagramElements Interface für Mermaid-spezifische Syntax.
+ * PlantUML diagram syntax elements.
+ * Implementiert das DiagramElements Interface für PlantUML-spezifische Syntax.
  */
-public class MermaidElements implements DiagramElements
+public class PlantUMLElements implements DiagramElements
 {
 	// Start and End
 	@Override
 	public String getStartUML()
 	{
-		return "graph TD\n";
+		return "@startuml\n";
 	}
 
 	@Override
 	public String getEndUML()
 	{
-		return "\n";
+		return "@enduml\n";
 	}
 
 	// Class and Interface
@@ -42,32 +42,32 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getGeneralization()
 	{
-		return " --|> ";
+		return " <|-- ";
 	}
 
 	@Override
 	public String getComposition()
 	{
-		return " *-- ";
+		return " *--> ";
 	}
 
 	@Override
 	public String getAggregation()
 	{
-		return " o-- ";
+		return " o--> ";
 	}
 
 	// Package and Namespace
 	@Override
 	public String getPackage()
 	{
-		return "subgraph ";
+		return "package ";
 	}
 
 	@Override
 	public String getNamespace()
 	{
-		return "subgraph ";
+		return "namespace ";
 	}
 
 	// Brackets and Braces
@@ -132,20 +132,20 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getAbstractOperation()
 	{
-		return " {abstract} ";
+		return "{abstract} ";
 	}
 
 	@Override
 	public String getStatic()
 	{
-		return " {static} ";
+		return "{static} ";
 	}
 
 	// Dependencies
 	@Override
 	public String getDependency()
 	{
-		return " -.-> ";
+		return " ..> ";
 	}
 
 	// Messages (for sequence diagrams)
@@ -215,13 +215,13 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getHiddenDownLink()
 	{
-		return " -.- ";
+		return " -[hidden]down- ";
 	}
 
 	@Override
 	public String getHiddenLeftLink()
 	{
-		return " -.- ";
+		return " -[hidden]left- ";
 	}
 
 	// Conditionals and History
@@ -234,7 +234,7 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getHistory()
 	{
-		return " <<choice>> ";
+		return " <<history>> ";
 	}
 
 	// Separators
