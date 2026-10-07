@@ -60,7 +60,7 @@ public class ApplicationStarter
 		// Test the commands
 
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
-		// myUSMPlugin.OnMenuItemSelect("Util\\PlantUML");
+		 myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
@@ -122,7 +122,7 @@ public class ApplicationStarter
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowGUIDCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.EditXMLCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.EditXMLCmd);
 
 	}
 

@@ -1359,6 +1359,7 @@ class CSearchListener extends RPSearchListener
 	{
 		if (mySearchResult != null)
 		{
+			mySearchResult.setVisible(true);
 			mySearchResult.searchStarted();
 		}
 		return false;
