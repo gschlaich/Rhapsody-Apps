@@ -5,6 +5,8 @@ import java.util.List;
 import com.ibm.rhapsody.apps.*;
 import com.telelogic.rhapsody.core.*;
 
+import de.schlaich.gunnar.rhapsody.utilities.XmlEditor;
+
 
 public class XMLEditorStarter extends App {
 	
@@ -19,10 +21,16 @@ public class XMLEditorStarter extends App {
 @SuppressWarnings("unchecked")
 public void execute(IRPApplication rhapsody, IRPModelElement selected) {
 		
-		
-		//TODO Enter code here
 	
-		rhapsody.writeToOutputWindow("Log", "Template app. Enter code here!");
+		
+		if(selected instanceof IRPHyperLink == false)
+		{
+			rhapsody.writeToOutputWindow("log", "Selected element is not a Hyperlink. Please select a Hyperlink and try again.\n");
+			return;
+		}	
+		
+		IRPHyperLink link = (IRPHyperLink) selected;
+		XmlEditor.openHyperLink(link, rhapsody);
 	
 	
 	}	
