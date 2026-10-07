@@ -8,9 +8,21 @@ public class MermaidElements implements DiagramElements
 {
 	// Start and End
 	@Override
-	public String getStartUML()
+	public String getStartUML(DiagramType aDiagramType)
 	{
-		return "graph TD\n";
+		switch (aDiagramType)
+		{
+			case CLASS_DIAGRAM:
+				return "classDiagram\n";
+			case SEQUENCE_DIAGRAM:
+				return "sequenceDiagram\n";
+			case STATE_CHART:
+				return "stateDiagram-v2\n";
+			default:
+				return "graph TD\n"; // Default to a generic graph
+		}
+		
+		
 	}
 
 	@Override
@@ -152,25 +164,25 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getMessage()
 	{
-		return " -> ";
+		return " ->> ";
 	}
 
 	@Override
 	public String getCreateMessage()
 	{
-		return " --> ";
+		return " -->> ";
 	}
 
 	@Override
 	public String getRMessage()
 	{
-		return " <- ";
+		return " <<- ";
 	}
 
 	@Override
 	public String getRCreateMessage()
 	{
-		return " <-- ";
+		return " <<-- ";
 	}
 
 	// Participants and Actors

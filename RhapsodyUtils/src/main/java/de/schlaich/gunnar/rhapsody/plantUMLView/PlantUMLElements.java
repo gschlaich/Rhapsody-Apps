@@ -8,7 +8,7 @@ public class PlantUMLElements implements DiagramElements
 {
 	// Start and End
 	@Override
-	public String getStartUML()
+	public String getStartUML(DiagramType aDiagramType)
 	{
 		return "@startuml\n";
 	}

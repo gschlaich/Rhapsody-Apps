@@ -34,6 +34,8 @@ import com.telelogic.rhapsody.core.IRPTemplateParameter;
 import com.telelogic.rhapsody.core.IRPTransition;
 import com.telelogic.rhapsody.core.IRPTrigger;
 
+import de.schlaich.gunnar.rhapsody.plantUMLView.DiagramElements.DiagramType;
+
 /**
  * Abstrakte Basisklasse für Diagramm-Generatoren (PlantUML, Mermaid, etc.).
  * Enthält die gesamte gemeinsame Logik für alle Diagramm-Generierung.
@@ -64,7 +66,7 @@ public abstract class DiagramGenerator
 			if (aIRPElement instanceof IRPClass)
 			{
 				StringBuffer diagramStringBuffer = new StringBuffer();
-				diagramStringBuffer.append(getElements().getStartUML());
+				diagramStringBuffer.append(getElements().getStartUML(DiagramType.CLASS_DIAGRAM));
 				diagramStringBuffer.append("\n");
 				IRPClass irpClass = (IRPClass) aIRPElement;
 				generateInheritanceHierarchy(irpClass, diagramStringBuffer, true, true);
@@ -174,8 +176,7 @@ public abstract class DiagramGenerator
 	{
 		myRootLevel = 2;
 		StringBuffer diagramStringBuffer = new StringBuffer();
-		diagramStringBuffer.append(getElements().getStartUML());
-		diagramStringBuffer.append("\n");
+		
 
 		if (aIRPElement instanceof IRPObjectModelDiagram)
 		{
@@ -191,6 +192,8 @@ public abstract class DiagramGenerator
 		}
 		else
 		{
+			diagramStringBuffer.append(getElements().getStartUML(DiagramType.CLASS_DIAGRAM));
+			diagramStringBuffer.append("\n");
 			generateElement(aIRPElement, diagramStringBuffer, myRootLevel);
 		}
 
@@ -302,6 +305,9 @@ public abstract class DiagramGenerator
 		{
 			return false;
 		}
+		
+		aDiagramStringBuffer.append(getElements().getStartUML(DiagramType.CLASS_DIAGRAM));
+		aDiagramStringBuffer.append("\n");
 
 		myDiagramElement = aObjectModelDiagram;
 		List<IRPModelElement> elements = aObjectModelDiagram.getElementsInDiagram().toList();
@@ -328,6 +334,14 @@ public abstract class DiagramGenerator
 
 		return true;
 	}
+	
+	
+
+	protected String getClassifierRoleName(IRPClassifierRole aClassifierRole)
+	{
+		String name = aClassifierRole.getName();
+		return "\""+ name + "\"";
+	}
 
 	protected boolean generateGenericDiagram(IRPDiagram aDiagram, StringBuffer aDiagramStringBuffer, long aLevel)
 	{
@@ -335,6 +349,9 @@ public abstract class DiagramGenerator
 		{
 			return false;
 		}
+		
+		aDiagramStringBuffer.append(getElements().getStartUML(DiagramType.SEQUENCE_DIAGRAM));
+		aDiagramStringBuffer.append("\n");
 
 		myDiagramElement = aDiagram;
 		Map<Integer, String> messages = new HashMap<Integer, String>();
@@ -622,14 +639,18 @@ public abstract class DiagramGenerator
 		{
 			aDiagramStringBuffer.append(getElements().getActor());
 		}
+		else if (roleType.equals("SYSTEM_BORDER"))
+		{
+			aDiagramStringBuffer.append(getElements().getParticipant());
+		}
 		else
 		{
 			aDiagramStringBuffer.append(getElements().getParticipant());
 		}
 
-		aDiagramStringBuffer.append("\"");
-		aDiagramStringBuffer.append(aClassifierRole.getName());
-		aDiagramStringBuffer.append("\"\n");
+		
+		aDiagramStringBuffer.append(getClassifierRoleName(aClassifierRole));
+		aDiagramStringBuffer.append("\n");
 
 		return true;
 	}
@@ -647,9 +668,9 @@ public abstract class DiagramGenerator
 
 		StringBuffer messageStringBuffer = new StringBuffer();
 
-		messageStringBuffer.append("\"");
-		messageStringBuffer.append(aMessage.getSource().getName());
-		messageStringBuffer.append("\"");
+		
+		messageStringBuffer.append(getClassifierRoleName(aMessage.getSource()));
+	
 
 		if (aMessage.getMessageType().equals("CREATE"))
 		{
@@ -660,9 +681,9 @@ public abstract class DiagramGenerator
 			messageStringBuffer.append(getElements().getMessage());
 		}
 
-		messageStringBuffer.append("\"");
-		messageStringBuffer.append(aMessage.getTarget().getName());
-		messageStringBuffer.append("\"");
+		
+		messageStringBuffer.append(getClassifierRoleName(aMessage.getTarget()));
+		
 		messageStringBuffer.append(" : ");
 		messageStringBuffer.append(aMessage.getName());
 		messageStringBuffer.append(getElements().getBracketOpen());
@@ -754,6 +775,9 @@ public abstract class DiagramGenerator
 		{
 			return false;
 		}
+		
+		aDiagramStringBuffer.append(getElements().getStartUML(DiagramType.STATE_CHART));
+		aDiagramStringBuffer.append("\n");
 
 		List<IRPModelElement> elements = aStatechart.getElementsInDiagram().toList();
 

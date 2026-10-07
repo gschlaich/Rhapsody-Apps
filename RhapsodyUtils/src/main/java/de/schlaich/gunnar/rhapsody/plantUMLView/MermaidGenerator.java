@@ -1,10 +1,11 @@
 package de.schlaich.gunnar.rhapsody.plantUMLView;
 
+import com.telelogic.rhapsody.core.IRPClassifierRole;
 import com.telelogic.rhapsody.core.IRPModelElement;
 
 /**
- * Mermaid Diagram Generator - Minimal Implementation
- * Erbt ALL logic from DiagramGenerator, implements only getElements()
+ * Mermaid Diagram Generator - Minimal Implementation Erbt ALL logic from
+ * DiagramGenerator, implements only getElements()
  */
 public class MermaidGenerator extends DiagramGenerator
 {
@@ -18,7 +19,7 @@ public class MermaidGenerator extends DiagramGenerator
 	@Override
 	protected DiagramElements getElements()
 	{
-		if(elements == null)
+		if (elements == null)
 		{
 			elements = new MermaidElements();
 		}
@@ -29,4 +30,16 @@ public class MermaidGenerator extends DiagramGenerator
 	{
 		return getDiagram();
 	}
+
+	@Override
+	protected String getClassifierRoleName(IRPClassifierRole aClassifierRole)
+	{
+		String name = aClassifierRole.getName();
+		if (name.startsWith(":"))
+		{
+			name = name.substring(1);
+		}
+		return name;
+	}
+
 }

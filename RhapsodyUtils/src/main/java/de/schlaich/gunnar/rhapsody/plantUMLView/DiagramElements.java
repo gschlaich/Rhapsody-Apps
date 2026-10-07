@@ -6,8 +6,15 @@ package de.schlaich.gunnar.rhapsody.plantUMLView;
  */
 public interface DiagramElements
 {
+	
+	enum DiagramType {
+		CLASS_DIAGRAM,
+		SEQUENCE_DIAGRAM,
+		STATE_CHART
+	}
+	
 	// Start und End
-	String getStartUML();
+	String getStartUML(DiagramType aDiagramType);
 	String getEndUML();
 
 	// Klasse und Interface
