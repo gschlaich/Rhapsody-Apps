@@ -94,6 +94,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPProgressBar;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPSearchManager;
 import com.telelogic.rhapsody.core.IRPSearchQuery;
@@ -1164,20 +1165,20 @@ public class XmlEditor extends JDialog implements SearchListener
 
 					// Wenn das Dialog noch nicht existiert oder geschlossen wurde, ein neues
 					// erstellen
-					if (mySearchResultDialog == null || !mySearchResultDialog.isVisible())
-					{
-						Window owner = SwingUtilities.getWindowAncestor(textComp);
-						mySearchResultDialog = new CSearchResult(owner, myRhapsody, selectedText);
-					}
-					else
-					{
-						// Bestehendes Dialog wiederverwenden und neu konfigurieren
-						mySearchResultDialog.updateTitle(selectedText);
-					}
-
-					mySearchResultDialog.clear();
-					mySearchResultDialog.setVisible(true);
-					mySearchResultDialog.toFront();
+//					if (mySearchResultDialog == null || !mySearchResultDialog.isVisible())
+//					{
+//						Window owner = SwingUtilities.getWindowAncestor(textComp);
+//						mySearchResultDialog = new CSearchResult(owner, myRhapsody, selectedText);
+//					}
+//					else
+//					{
+//						// Bestehendes Dialog wiederverwenden und neu konfigurieren
+//						mySearchResultDialog.updateTitle(selectedText);
+//					}
+//
+//					mySearchResultDialog.clear();
+//					mySearchResultDialog.setVisible(true);
+//					mySearchResultDialog.toFront();
 
 					// Starte die Suche NACH dem Dialog-Setup
 					//new SearchWorker(selectedText, mySearchResultDialog).execute();
@@ -1202,12 +1203,21 @@ public class XmlEditor extends JDialog implements SearchListener
 			}
 
 			IRPSearchQuery query = searchManager.createSearchQuery();
+			
+			
+			
 			query.setSearchText(searchText);
 
-			CSearchListener listener = new CSearchListener(myRhapsody, mySearchResultDialog);
-			listener.connect(searchManager);
+			//CSearchListener listener = new CSearchListener(myRhapsody, mySearchResultDialog);
+			//listener.connect(searchManager);
 
-			searchManager.searchAsync(query);
+			IRPProgressBar progressBar = project.getNewProgressBar(100, "Searching in Model...");
+			
+			progressBar.tick(50);
+			
+			searchManager.searchAndShowResults(query);
+			
+			progressBar.reset();
 
 			return;
 
