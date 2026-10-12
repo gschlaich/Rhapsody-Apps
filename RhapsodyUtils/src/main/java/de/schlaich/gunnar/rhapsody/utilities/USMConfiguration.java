@@ -102,6 +102,9 @@ public class USMConfiguration
 		loadComponents(aProject);
 
 		removeHyperlinks();
+		
+			
+		
 		for (CClassClass cClass : myParamSetList)
 		{
 
@@ -109,67 +112,66 @@ public class USMConfiguration
 			{
 				continue;
 			}
-
-			IRPComponent component = myComponentMap.get("PARI");
-			if (myComponentMap.containsKey(cClass.getName()))
-			{
-				component = myComponentMap.get(cClass.getName());
-				trace("Set for Component found: " + component.getName());
-
-			}
-			if (component == null)
-			{
-				continue;
-			}
-
+			
+			
+			List<IRPHyperLink> existingLinks = aProject.getHyperLinks().toList();
+			
 			boolean addLink = true;
-			List<IRPHyperLink> links = component.getHyperLinks().toList();
-			for (IRPHyperLink link : links)
+			
+			for(IRPHyperLink link : existingLinks)
 			{
-				if (link.getName().equals(cClass.getName()))
+				if(link.getUserDefinedMetaClass().equals("ParameterSet") && link.getName().equals(cClass.getName()))
 				{
+					trace("Link already exists for: " + cClass.getName());
 					addLink = false;
+					break;
 				}
 			}
-
-			if (addLink == false)
+			
+			if(addLink == false)
 			{
 				continue;
 			}
+			
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ParameterSet", cClass.getName());
+			
+	
 
 			int objectId = getObjectId(cClass.getPath().toFile());
 
 			trace("Paramset: " + cClass.getName() + " ObjectId: " + objectId);
 
-			// IRPHyperLink link = (IRPHyperLink) component.addNewAggr("HyperLink",
-			// cClass.getName());
-
-			IRPHyperLink link = (IRPHyperLink) component.addNewAggr("ParameterSet", cClass.getName());
-
+			
 			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
-
-			IRPTableView paramSetView = null;
-
-			List<IRPTableView> tableViews = aProject.getNestedElementsByMetaClass("TableView", 1).toList();
-			for (IRPTableView tableView : tableViews)
-			{
-				if (tableView.getName().equals("ParamSets"))
-				{
-					paramSetView = tableView;
-					break;
-				}
-			}
-
-			if (paramSetView == null)
-			{
-				trace("No USMDataView found!");
-				return;
-			}
-
-			paramSetView.open();
-
+	
 		}
+		
+		IRPTableView paramSetView = null;	
+		
+		List<IRPTableView> tableViews = aProject.getNestedElementsByMetaClass("TableView", 1).toList();
+		
+		for (IRPTableView tableView : tableViews)
+		{
+			if (tableView.getName().equals("ParamSets"))
+			{
+				paramSetView = tableView;
+				break;
+			}
+		}
+
+		if (paramSetView == null)
+		{
+			trace("No USMDataView found!");
+			return;
+		}
+
+		
+		paramSetView.open();
+		
+		
+		List<IR>
+
 
 		// check if any part of the path is a component name
 
@@ -222,6 +224,13 @@ public class USMConfiguration
 		for (CClassClass cClass : notAdded)
 		{
 			boolean addedLink = false;
+			
+			
+			
+		
+			
+			
+			
 			String[] pathParts = cClass.getPath().toString().split("\\\\");
 			for (String part : pathParts)
 			{
@@ -300,7 +309,8 @@ public class USMConfiguration
 		// show table
 		IRPTableView usmDataView = null;
 
-		List<IRPTableView> tableViews = aProject.getNestedElementsByMetaClass("TableView", 1).toList();
+		
+		
 		for (IRPTableView tableView : tableViews)
 		{
 			if (tableView.getName().equals("USMDataView"))
