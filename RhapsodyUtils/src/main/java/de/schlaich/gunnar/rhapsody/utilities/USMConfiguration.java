@@ -28,11 +28,14 @@ import org.w3c.dom.NodeList;
 
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.IRPSearchManager;
+import com.telelogic.rhapsody.core.IRPSearchQuery;
 import com.telelogic.rhapsody.core.IRPStereotype;
 import com.telelogic.rhapsody.core.IRPTableView;
 
@@ -46,8 +49,12 @@ public class USMConfiguration
 
 	private String myAppDataPath = null;
 
-	List<CClassClass> myClassList = null;
-	List<CClassClass> myParamSetList = null;
+	//List<CClassClass> myClassList = null;
+	
+	Map<String, CClassClass> myClassMap = null;
+	Map<String, CClassClass> myParamSetMap = null;
+	
+	//List<CClassClass> myParamSetList = null;
 	private Path myDataPath = null;
 
 	Map<String, IRPComponent> myComponentMap = null;
@@ -84,6 +91,7 @@ public class USMConfiguration
 	public void loadConfiguration(IRPProject aProject)
 	{
 
+		trace("Load ClassCatalog");
 		File classCatalog = loadClassCatalog(aProject);
 		if (classCatalog == null)
 		{
@@ -91,21 +99,49 @@ public class USMConfiguration
 			return;
 		}
 
+		trace("Parse ClassCatalog");
 		parseClassCatalog(classCatalog);
 
+		trace("Load DataFileList");
 		File dataFileList = loadDataFile(aProject);
 		if (dataFileList != null)
 		{
+			trace("Parse DataFileList");
 			parseFileList(dataFileList);
 		}
+		
+		
+		//trace("Load Components");
+		//loadComponents(aProject);
 
-		loadComponents(aProject);
-
-		removeHyperlinks();
+		
+		//trace("Remove existing Hyperlinks");
+		//removeHyperlinks();
+		
+		trace("Remove Hyperlinks for Project: " + aProject.getName());
+		
+		List<IRPHyperLink> existingLinks = aProject.getHyperLinks().toList();
+		
+		for(IRPHyperLink link : existingLinks)
+		{
+			
+			trace("Check Link: " + link.getName() + " MetaClass: " + link.getUserDefinedMetaClass());
+			if(link.getUserDefinedMetaClass().equals("ParameterSet"))
+			{
+				link.deleteFromProject();
+				continue;
+			}
+			
+			if(link.getUserDefinedMetaClass().equals("USMDataItem"))
+			{
+				link.deleteFromProject();
+			}
+			
+		}
 		
 			
 		
-		for (CClassClass cClass : myParamSetList)
+		for (CClassClass cClass : myParamSetMap.values())
 		{
 
 			if (cClass.getName().contains("USM_PFT_"))
@@ -114,24 +150,6 @@ public class USMConfiguration
 			}
 			
 			
-			List<IRPHyperLink> existingLinks = aProject.getHyperLinks().toList();
-			
-			boolean addLink = true;
-			
-			for(IRPHyperLink link : existingLinks)
-			{
-				if(link.getUserDefinedMetaClass().equals("ParameterSet") && link.getName().equals(cClass.getName()))
-				{
-					trace("Link already exists for: " + cClass.getName());
-					addLink = false;
-					break;
-				}
-			}
-			
-			if(addLink == false)
-			{
-				continue;
-			}
 			
 			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ParameterSet", cClass.getName());
 			
@@ -169,114 +187,36 @@ public class USMConfiguration
 		
 		paramSetView.open();
 		
-		
-		List<IR>
-
-
-		// check if any part of the path is a component name
-
-		List<CClassClass> notAdded = new ArrayList<>();
-
-		for (CClassClass cClass : myClassList)
+		/*
+		for(CClassClass cClass : myClassList)
 		{
-			boolean addedLink = false;
-			String[] pathParts = cClass.getPath().toString().split("\\\\");
-			for (String part : pathParts)
-			{
-				if (myComponentMap.containsKey(part))
-				{
-					addedLink = true;
-					IRPComponent component = myComponentMap.get(part);
-					trace("Component found: " + component.getName() + ": " + cClass.getName());
-
-					List<IRPHyperLink> linkd = component.getHyperLinks().toList();
-					boolean addLink = true;
-
-					String fileName = cClass.getPath().getFileName().toString();
-
-					for (IRPHyperLink link : linkd)
-					{
-						if (link.getName().equals(fileName))
-						{
-							trace("Link already exists: " + link.getName());
-							addLink = false;
-
-						}
-					}
-
-					if (addLink == true)
-					{
-
-						IRPHyperLink link = (IRPHyperLink) component.addNewAggr("USMDataItem", fileName);
-						link.setURL(cClass.getPath().toString());
-						link.setName(fileName);
-						link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
-					}
-
-				}
-			}
-			if (addedLink == false)
-			{
-				notAdded.add(cClass);
-			}
+			String fileName = cClass.getPath().getFileName().toString();
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("USMDataItem", fileName);
+			link.setName(fileName);
+			link.setURL(cClass.getPath().toString());
+			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
 		}
-
-		for (CClassClass cClass : notAdded)
-		{
-			boolean addedLink = false;
-			
-			
-			
+		*/
 		
+		for(CClassClass cClass : myClassMap.values())
+		{
+			String fileName = cClass.getPath().getFileName().toString();
+			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("USMDataItem", fileName);
+			link.setName(fileName);
+			link.setURL(cClass.getPath().toString());
+			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
 			
+			List<IRPModelElement> elements = findElement(cClass, aProject);
 			
-			
-			String[] pathParts = cClass.getPath().toString().split("\\\\");
-			for (String part : pathParts)
+			for(IRPModelElement element : elements)
 			{
-				for (IRPComponent component : myComponentMap.values())
-				{
-					if (part.contains(component.getName()))
-					{
-						addedLink = true;
-						trace("Component found: " + component.getName() + ": " + cClass.getName());
-
-						List<IRPHyperLink> linkd = component.getHyperLinks().toList();
-						boolean addLink = true;
-
-						String fileName = cClass.getPath().getFileName().toString();
-
-						for (IRPHyperLink link : linkd)
-						{
-							if (link.getName().equals(fileName))
-							{
-								trace("Link already exists: " + link.getName());
-								addLink = false;
-
-							}
-						}
-
-						if (addLink == true)
-						{
-
-							IRPHyperLink link = (IRPHyperLink) component.addNewAggr("USMDataItem", fileName);
-							link.setURL(cClass.getPath().toString());
-							link.setName(fileName);
-							link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
-						}
-
-					}
-				}
-
+				trace("Add dependency to: " + element.getName() + " for data item: " + fileName);
+				link.addDependencyTo(element);
 			}
-			if (addedLink == false)
-			{
-				trace("----No component found for: " + cClass.getPath().toString());
-
-			}
-
+			
 		}
-
+		
+		
 		String appDataPath = getAppDataPath(aProject, true);
 
 		if (aProject.findNestedElement("AppData", "HyperLink") == null)
@@ -557,6 +497,7 @@ public class USMConfiguration
 
 	public boolean removeHyperlinks()
 	{
+		
 		if (myComponentMap == null)
 		{
 			return false;
@@ -724,6 +665,30 @@ public class USMConfiguration
 		}
 
 	}
+	
+	
+	private List<IRPModelElement> findElement(CClassClass cClass, IRPProject aProject)
+	{
+		
+		IRPSearchManager mgr = myApplication.getSearchManager();
+		if(mgr == null)
+		{
+			trace("SearchManager not found!");
+			return new ArrayList<>();
+		}
+		
+		IRPSearchQuery query = mgr.createSearchQuery();
+
+		query.addFilterElementType("Attribute");
+		query.addFilterSearchInField(IRPSearchQuery.SearchInField.INITIAL_VALUE);
+		query.setSearchText(cClass.getName());
+		
+		IRPCollection col = mgr.search(query);
+		
+		return col.toList();
+		
+
+	}
 
 	private File loadDataFile(IRPProject aProject)
 	{
@@ -805,8 +770,11 @@ public class USMConfiguration
 			doc.getDocumentElement().normalize();
 
 			// Liste zum Speichern der CClassClass-Objekte
-			myClassList = new ArrayList<>();
-			myParamSetList = new ArrayList<>();
+			//myClassList = new ArrayList<>();
+			//myParamSetList = new ArrayList<>();
+			
+			myClassMap = new HashMap<>();
+			myParamSetMap = new HashMap<>();
 
 			// Finde alle Element-Tags mit dem Typ CClassClass
 			NodeList nodeList = doc.getElementsByTagName("Element");
@@ -857,11 +825,17 @@ public class USMConfiguration
 							if (path.toString().contains("ParameterSetDefinitions") == true)
 							{
 
-								myParamSetList.add(cClass);
+								myParamSetMap.put(name, cClass);
+								
+								//myParamSetList.add(cClass);
 							}
 							else
 							{
-								myClassList.add(cClass);
+								String fileName = cClass.getPath().getFileName().toString();
+								
+								//myClassList.add(cClass);
+								
+								myClassMap.put(fileName, cClass);
 							}
 						}
 					}
@@ -908,6 +882,10 @@ public class USMConfiguration
 
 						continue;
 					}
+					
+					myClassMap.put(file.getName(), cClass);
+					
+					/*
 
 					for (CClassClass c : myClassList)
 					{
@@ -924,6 +902,7 @@ public class USMConfiguration
 						break;
 
 					}
+					*/
 
 				}
 			}
