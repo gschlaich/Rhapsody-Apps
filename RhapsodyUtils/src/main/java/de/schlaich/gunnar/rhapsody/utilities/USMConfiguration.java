@@ -139,13 +139,22 @@ public class USMConfiguration
 			
 		}
 		
+		String externalDataName = "ExternalData";
 		
-		IRPComponent externalDAta = aProject.findComponent("ExternalData");
+		IRPComponent externalData = aProject.findComponent(externalDataName);
 		
-		if(externalDAta != null)
+		if(externalData != null)
 		{
-			trace("Delete ExternalData component " + externalDAta.getName());
-			aProject.deleteComponent(externalDAta);
+			trace("Delete ExternalData component " + externalData.getName());
+			aProject.deleteComponent(externalData);
+			return;
+		}
+		
+		externalData = (IRPComponent) aProject.addNewAggr("Component", externalDataName);
+		
+		if(externalData == null)
+		{
+			trace("Error creating ExternalData component!");
 			return;
 		}
 		
@@ -163,7 +172,7 @@ public class USMConfiguration
 			
 			
 			
-			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("ParameterSet", cClass.getName());
+			IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("ParameterSet", cClass.getName());
 			
 	
 
@@ -213,7 +222,7 @@ public class USMConfiguration
 		for(CClassClass cClass : myClassMap.values())
 		{
 			String fileName = cClass.getPath().getFileName().toString();
-			IRPHyperLink link = (IRPHyperLink) aProject.addNewAggr("USMDataItem", fileName);
+			IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("USMDataItem", fileName);
 			link.setName(fileName);
 			link.setURL(cClass.getPath().toString());
 			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
@@ -223,7 +232,7 @@ public class USMConfiguration
 			for(IRPModelElement element : elements)
 			{
 				trace("Add dependency to: " + element.getName() + " for data item: " + fileName);
-				link.addDependencyTo(element);
+				link.addDependencyTo(element.getOwner());
 			}
 			
 		}
@@ -235,7 +244,7 @@ public class USMConfiguration
 		{
 		
 
-			IRPHyperLink appDatalink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "AppData");
+			IRPHyperLink appDatalink = (IRPHyperLink) externalData.addNewAggr("HyperLink", "AppData");
 
 			appDatalink.setURL(appDataPath);
 		}
@@ -249,7 +258,7 @@ public class USMConfiguration
 		if (aProject.findNestedElement("MainApp", "HyperLink") == null)
 		{
 			
-			IRPHyperLink mainAppLink = (IRPHyperLink) aProject.addNewAggr("HyperLink", "MainApp");
+			IRPHyperLink mainAppLink = (IRPHyperLink) externalData.addNewAggr("HyperLink", "MainApp");
 			mainAppLink.setURL(mainAppPath);
 			
 		}
@@ -892,6 +901,12 @@ public class USMConfiguration
 					if (path.contains("ParameterSetDefinitions") == true)
 					{
 
+						continue;
+					}
+					
+					if(myClassMap.containsKey(file.getName()))
+					{
+						trace("File already exists in class catalog: " + file.getName());
 						continue;
 					}
 					
