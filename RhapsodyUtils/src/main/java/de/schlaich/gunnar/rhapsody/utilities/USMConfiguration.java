@@ -139,6 +139,18 @@ public class USMConfiguration
 			
 		}
 		
+		
+		IRPComponent externalDAta = aProject.findComponent("ExternalData");
+		
+		if(externalDAta != null)
+		{
+			trace("Delete ExternalData component " + externalDAta.getName());
+			aProject.deleteComponent(externalDAta);
+			return;
+		}
+		
+		
+		
 			
 		
 		for (CClassClass cClass : myParamSetMap.values())
