@@ -28,6 +28,7 @@ import org.w3c.dom.NodeList;
 
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPHyperLink;
@@ -704,9 +705,20 @@ public class USMConfiguration
 		query.addFilterSearchInField(IRPSearchQuery.SearchInField.INITIAL_VALUE);
 		query.setSearchText(cClass.getName());
 		
-		IRPCollection col = mgr.search(query);
+		List<IRPModelElement> col = mgr.search(query).toList();
 		
-		return col.toList();
+		for(IRPModelElement element : col)
+		{
+			if(element instanceof IRPAttribute)
+			{
+				col.remove(element);
+				col.add(element.getOwner());
+				
+			}
+		}
+		
+		
+		return col;
 		
 
 	}
