@@ -32,6 +32,8 @@ import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPComponent;
+import com.telelogic.rhapsody.core.IRPFile;
+import com.telelogic.rhapsody.core.IRPGeneralization;
 import com.telelogic.rhapsody.core.IRPHyperLink;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
@@ -54,6 +56,7 @@ public class USMConfiguration
 	// List<CClassClass> myClassList = null;
 
 	Map<String, CClassClass> myClassMap = null;
+	Map<String, CClassClass> myListMap = null;
 	Map<String, CClassClass> myParamSetMap = null;
 
 	// List<CClassClass> myParamSetList = null;
@@ -139,24 +142,46 @@ public class USMConfiguration
 
 		}
 
+		
+		
+		List<IRPComponent>components =aProject.getComponents().toList();
+		
+		
+		IRPComponent exeComponent = components.get(0);
+		
+		if(exeComponent == null)
+		{
+			trace("No component found!");
+			return;
+		}
+		
+		List<IRPFile> files = exeComponent.getFiles().toList();
+		
 		String externalDataName = "ExternalData";
-
-		IRPComponent externalData = aProject.findComponent(externalDataName);
-
-		if (externalData != null)
+		
+		IRPFile externalData = null;
+		
+		for(IRPFile file : files)
 		{
-			trace("Delete ExternalData component " + externalData.getName());
-			aProject.deleteComponent(externalData);
-			return;
+			
+			if(file.getName().equals(externalDataName))
+			{
+				externalData = file;
+				break;
+			}
 		}
-
-		externalData = (IRPComponent) aProject.addNewAggr("Component", externalDataName);
-
-		if (externalData == null)
+		if(externalData!= null)
 		{
-			trace("Error creating ExternalData component!");
-			return;
+			trace("Delete existing ExternalData folder");
+			exeComponent.deleteFile(externalData);
 		}
+		
+		
+		externalData = exeComponent.addFolder(externalDataName);
+		
+		
+		
+
 
 		// IRPTableView paramSetView = null;
 
@@ -191,27 +216,34 @@ public class USMConfiguration
 
 		for (CClassClass cClass : myClassMap.values())
 		{
-			String fileName = cClass.getPath().getFileName().toString();
-			IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("USMDataItem", fileName);
-			link.setName(fileName);
-			link.setURL(cClass.getPath().toString());
-			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
+			IRPHyperLink link = addUSMDataItem(externalData, cClass);
 
 			String complexTypeName = cClass.getName();
 			
-			IRPClass complexTypeClass = complexTypeMap.get(complexTypeName);
-			
-			if(complexTypeClass != null)
-			{
-				trace("Found complex type: " + complexTypeName + " for class: " + cClass.getName());
-				link.addDependencyTo(complexTypeClass);
-			}
-			else
-			{
-				trace("No complex type found for class: " + cClass.getName());
-			}
+//			IRPClass complexTypeClass = complexTypeMap.get(complexTypeName);
+//			
+//			if(complexTypeClass != null)
+//			{
+//				trace("Found complex type: " + complexTypeName + " for class: " + cClass.getName());
+//				link.addDependencyTo(complexTypeClass);
+//				
+//				IRPPackage p = RhapsodyOperation.getNamespacePackage(complexTypeClass);
+//				
+//				link.addDependencyTo(p);
+//			}
+//			else
+//			{
+//				trace("No complex type found for class: " + cClass.getName());
+//			}
 
 		}
+		
+		for(CClassClass cClass : myListMap.values())
+		{
+			IRPHyperLink link = addUSMDataItem(externalData, cClass);
+
+		}
+		
 
 		for (CClassClass cClass : myParamSetMap.values())
 		{
@@ -221,14 +253,7 @@ public class USMConfiguration
 				continue;
 			}
 
-			IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("ParameterSet", cClass.getName());
-
-			int objectId = getObjectId(cClass.getPath().toFile());
-
-			trace("Paramset: " + cClass.getName() + " ObjectId: " + objectId);
-
-			link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
-			link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
+			addParameterSet(externalData, cClass);
 
 		}
 
@@ -282,6 +307,28 @@ public class USMConfiguration
 //
 //		usmDataView.open();
 
+	}
+
+	private void addParameterSet(IRPFile externalData, CClassClass cClass)
+	{
+		IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("ParameterSet", cClass.getName());
+
+		int objectId = getObjectId(cClass.getPath().toFile());
+
+		trace("Paramset: " + cClass.getName() + " ObjectId: " + objectId);
+
+		link.setURL("https://clickonce.bernina.com/UsmParameters/Parameterset/Details/" + objectId);
+		link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, cClass.getName());
+	}
+
+	private IRPHyperLink addUSMDataItem(IRPFile externalData, CClassClass cClass)
+	{
+		String fileName = cClass.getPath().getFileName().toString();
+		IRPHyperLink link = (IRPHyperLink) externalData.addNewAggr("USMDataItem", fileName);
+		link.setName(fileName);
+		link.setURL(cClass.getPath().toString());
+		link.setDisplayOption(HYPNameType.RP_HYP_FREETEXT, fileName);
+		return link;
 	}
 
 	public void copyToAppData(IRPHyperLink aConfigFile)
@@ -737,20 +784,52 @@ public class USMConfiguration
 				IRPAttribute attribute = (IRPAttribute) element;
 
 				String defaultValue = attribute.getDefaultValue();
+				
+				defaultValue = defaultValue.replace("\"", "").trim();
 
 				IRPModelElement owner = attribute.getOwner();
 				if(owner instanceof IRPClass)
 				{
 					IRPClass ownerClass = (IRPClass) owner;
 					
-					if(ownerClass.findGeneralization("IComplexType") != null)
+					
+					
+					//if(ownerClass.findGeneralization("IComplexType") != null)
 					{
 					
+						trace("Found complex type: " + defaultValue + " in class: " + ownerClass.getName());
 						complexTypeMap.put(defaultValue, ownerClass);
 					}
 				}
 
 			}
+		}
+		
+		IRPSearchQuery generalizationQuery = mgr.createSearchQuery();
+		
+		generalizationQuery.addFilterElementType("Generalization");
+		generalizationQuery.addFilterSearchInField(IRPSearchQuery.SearchInField.NAME);
+		generalizationQuery.setSearchText("IComplexType");
+		
+		List<IRPModelElement> generalizationCol = mgr.search(generalizationQuery).toList();
+		for(IRPModelElement element : generalizationCol)
+		{
+			if(element instanceof IRPGeneralization)
+			{
+				IRPGeneralization generalization = (IRPGeneralization) element;
+				IRPModelElement specific = generalization.getDerivedClass();
+				if(specific instanceof IRPClass)
+				{
+					IRPClass specificClass = (IRPClass) specific;
+					String className = specificClass.getName();
+					if(complexTypeMap.containsKey(className) == false)
+					{
+						trace("Found complex type class: " + className);
+						complexTypeMap.put(className, specificClass);
+					}
+				}
+			}
+			
 		}
 		
 		return complexTypeMap;
@@ -902,7 +981,7 @@ public class USMConfiguration
 
 								// myClassList.add(cClass);
 
-								myClassMap.put(fileName, cClass);
+								myClassMap.put(name, cClass);
 							}
 						}
 					}
@@ -927,6 +1006,9 @@ public class USMConfiguration
 		{
 			BufferedReader br = new BufferedReader(new FileReader(aDataFileList));
 			String line;
+			
+			myListMap = new HashMap<>();
+			
 			while ((line = br.readLine()) != null)
 			{
 				String[] parts = line.split(" ", 2);
@@ -952,11 +1034,12 @@ public class USMConfiguration
 
 					if (myClassMap.containsKey(file.getName()))
 					{
-						// trace("File already exists in class catalog: " + file.getName());
+						trace("File already exists in class catalog: " + file.getName());
 						continue;
 					}
 
-					myClassMap.put(file.getName(), cClass);
+					myListMap.put(file.getName(), cClass);
+					trace("Add file from list: " + file.getName() + " Path: " + file.getAbsolutePath());
 
 					/*
 					 * 
