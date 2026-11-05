@@ -23,81 +23,41 @@ public class PlantUMLStarter {
 		// TODO Auto-generated constructor stub
 	}
 	
-public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose) {
+public static void startPlantUML(IRPApplication rhapsody, IRPModelElement selected, boolean aExitOnClose, Boolean aShowMermaid) 
+{
 		
 		// Erstelle die neuen Generatoren
 		PlantUMLGenerator plantUMLGen = new PlantUMLGenerator(selected, false);
 		MermaidGenerator mermaidGen = new MermaidGenerator(selected, false);
 		
-		// Gebe das Mermaid-Diagramm in der Konsole aus
-		System.out.println("=== Mermaid Diagram ===");
-		System.out.print(mermaidGen.getMermaidDiagram());
-		System.out.println("\n=== PlantUML Diagram ===");
-		System.out.print(plantUMLGen.getPlantUml());
 		
-		// Kopiere PlantUML-Diagramm in die Zwischenablage
-		StringSelection stringSelection = new StringSelection(plantUMLGen.getPlantUml());
+		String diagramStr = aShowMermaid ? mermaidGen.getMermaidDiagram() : plantUMLGen.getPlantUml();
+		
+		// Kopiere UML-Diagramm in die Zwischenablage
+		StringSelection stringSelection = new StringSelection(diagramStr);
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		clipboard.setContents(stringSelection, null);
-		
-		// ...rest of the code...
-		
-		
-	
-		
-
-
-		
-		
-		final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-		SourceStringReader reader = new SourceStringReader(plantUMLGen.getPlantUml());
-		
-		
-		
-		
-		
-//		 try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-//	            // Index 0: erstes Diagramm im übergebenen String
-//	            reader.outputImage(output, 0, new FileFormatOption(format));
-//
-//	            return new String(output.toByteArray(), StandardCharsets.UTF_8);
-		
-		
-		//final ByteArrayOutputStream os = new ByteArrayOutputStream();
-		// Write the first image to "os"
-//		if(showInSVG==true)
-//		{
-//			try
-//			{
-//			
-//				@SuppressWarnings("deprecation")
-//				String descSVG = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
-//				DiagramDescription descc = reader.generateDiagramDescription(new FileFormatOption(FileFormat.SVG));
-//				String descSVG2 = descc.getDescription();
-//				os.close();
-//		
-//				// The XML is stored into svg
-//				final String svg = new String(os.toByteArray(), Charset.forName("UTF-8"));
-//				showSVG sv = new showSVG(svg);
-//				sv.setVisible(true);
-//			
-//			}
-//			catch(IOException e)
-//			{
-//				System.out.println("SVG generation failed");
-//				e.printStackTrace();
-//			}
-//		}
-//		else
-//		{
-	
 		
 		String imageName = selected.getIconFileName();
 		imageName = imageName.replace("\\", "/");
 		Toolkit kit = Toolkit.getDefaultToolkit();
 		Image img = kit.createImage(imageName);
 		
+		// Display Mermaid diagram if requested
+		if (aShowMermaid) {
+			showPNG viewer = MermaidViewer.displayMermaidDiagram(mermaidGen.getMermaidDiagram(), selected.getName(), aExitOnClose);
+			viewer.setIconImage(img);
+			viewer.setVisible(true);
+			
+			return;
+		}
 		
+		// Otherwise, display PlantUML diagram
+		final ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+		SourceStringReader reader = new SourceStringReader(plantUMLGen.getPlantUml());
+	
+		
+				
 		try 
 		{
 			FileFormat fileFormat = FileFormat.PNG;
@@ -116,14 +76,6 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 			
 			
 			
-			/*
-			JScrollPane pane = new JScrollPane(
-			JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-			JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-			*/
-			
-			
-			
 			showPNG sp = new showPNG(image, aExitOnClose);
 			//sp.setContentPane(pane);
 			//sp.setLocation(location);
@@ -139,7 +91,5 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		
 		
 	}	
-	
-	
 
 }

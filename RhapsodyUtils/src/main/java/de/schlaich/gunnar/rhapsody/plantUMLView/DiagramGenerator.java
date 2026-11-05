@@ -463,7 +463,7 @@ public abstract class DiagramGenerator
 		List<IRPTemplateParameter> templateParameters = aClassifier.getTemplateParameters().toList();
 		if (templateParameters.size() > 0)
 		{
-			aDiagramStringBuffer.append("<");
+			aDiagramStringBuffer.append(getElements().getTemplateOpen());
 			Iterator<IRPTemplateParameter> i = templateParameters.iterator();
 			while (i.hasNext())
 			{
@@ -474,7 +474,7 @@ public abstract class DiagramGenerator
 					aDiagramStringBuffer.append(", ");
 				}
 			}
-			aDiagramStringBuffer.append(">");
+			aDiagramStringBuffer.append(getElements().getTemplateClose());
 		}
 
 		aDiagramStringBuffer.append(getElements().getBraceOpen());

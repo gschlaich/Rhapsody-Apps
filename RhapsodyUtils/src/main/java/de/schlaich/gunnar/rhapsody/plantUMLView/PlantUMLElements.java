@@ -262,4 +262,17 @@ public class PlantUMLElements implements DiagramElements
 	{
 		return ">> ";
 	}
+	
+	@Override
+	public String getTemplateOpen()
+	{
+		return " <";
+	}
+	
+	@Override
+	public String getTemplateClose()
+	{
+		return "> ";
+	}
+	
 }

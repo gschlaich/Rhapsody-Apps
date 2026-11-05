@@ -77,6 +77,7 @@ public class CUSMPlugin extends RPUserPlugin
 	private SVNTools mySVNTools = null;
 
 	public static final String PlantUmlCmd = "PlantUML";
+	public static final String MermaidCmd = "Mermaid";
 	public static final String RoundtripCmd = "Operational Roundtrip";
 	public static final String SearchElementCmd = "Search Element";
 	public static final String SelectRelationCmd = "Select Relation";
@@ -310,9 +311,16 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(PlantUmlCmd))
 		{
-			PlantUMLStarter.startPlantUML(myRhapsody, selected, false);
+			PlantUMLStarter.startPlantUML(myRhapsody, selected, false, false);
 			return;
 		}
+		
+		if (menuItem.contains(MermaidCmd))
+		{
+			PlantUMLStarter.startPlantUML(myRhapsody, selected, false, true);
+			return;
+		}
+		
 		if (menuItem.contains(RoundtripCmd))
 		{
 			COperationalRoundtrip roundtrip = new COperationalRoundtrip(this::trace);

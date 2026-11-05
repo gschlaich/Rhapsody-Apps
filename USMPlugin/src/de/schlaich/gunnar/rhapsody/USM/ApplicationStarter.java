@@ -60,7 +60,8 @@ public class ApplicationStarter
 		// Test the commands
 
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
-		 myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
+		 myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MermaidCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
