@@ -46,6 +46,11 @@ public static void startPlantUML(IRPApplication rhapsody, IRPModelElement select
 		// Display Mermaid diagram if requested
 		if (aShowMermaid) {
 			showPNG viewer = MermaidViewer.displayMermaidDiagram(mermaidGen.getMermaidDiagram(), selected.getName(), aExitOnClose);
+			if(viewer == null) 
+			{
+				System.err.println("Error: Failed to display Mermaid diagram.");
+				return;
+			}
 			viewer.setIconImage(img);
 			viewer.setVisible(true);
 			

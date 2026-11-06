@@ -36,9 +36,9 @@ public class MermaidViewer
 		{
 			System.out.println("Converting Mermaid diagram to PNG using Kroki API...");
 			System.out.println("Diagram source length: " + mermaidSource.length() + " characters");
-			System.out.println("=== Mermaid Source ===");
-			System.out.println(mermaidSource);
-			System.out.println("=== End Mermaid Source ===");
+			//System.out.println("=== Mermaid Source ===");
+			//System.out.println(mermaidSource);
+			//System.out.println("=== End Mermaid Source ===");
 
 			return convertUsingKrokiPost(mermaidSource);
 		}
@@ -55,7 +55,7 @@ public class MermaidViewer
 	 * recommended method for the Kroki API
 	 * 
 	 * @param mermaidSource The Mermaid diagram source
-	 * @return PNG image as byte array
+	 * @return PNG image as byte array, or null if conversion fails
 	 * @throws IOException if conversion fails
 	 */
 	private static byte[] convertUsingKrokiPost(String mermaidSource) throws IOException
@@ -112,27 +112,27 @@ public class MermaidViewer
 				System.err.println("Kroki API error: 400 Bad Request");
 				System.err.println("Response message: " + connection.getResponseMessage());
 
-				// Try to read error details
-				try (java.io.InputStream es = connection.getErrorStream())
+				// Read error details
+				String errorContent = readErrorContent(connection);
+				if (errorContent != null && !errorContent.trim().isEmpty())
 				{
-					if (es != null)
-					{
-						ByteArrayOutputStream errorBuffer = new ByteArrayOutputStream();
-						byte[] data = new byte[1024];
-						int nRead;
-						while ((nRead = es.read(data, 0, data.length)) != -1)
-						{
-							errorBuffer.write(data, 0, nRead);
-						}
-						System.err.println(
-								"Error details: " + new String(errorBuffer.toByteArray(), StandardCharsets.UTF_8));
-					}
+			//		System.err.println("Error details: " + errorContent);
+					// Display error in GUI if it's HTML
+					displayErrorInWindow(errorContent);
 				}
 				return null;
 			}
 			else
 			{
-				System.err.println("Kroki API error: " + responseCode + " " + connection.getResponseMessage());
+				//System.err.println("Kroki API error: " + responseCode + " " + connection.getResponseMessage());
+				
+				// Try to read and display error content for other error codes too
+				String errorContent = readErrorContent(connection);
+				if (errorContent != null && !errorContent.trim().isEmpty())
+				{
+					//System.err.println("Error details: " + errorContent);
+					displayErrorInWindow(errorContent);
+				}
 				return null;
 			}
 		}
@@ -149,6 +149,75 @@ public class MermaidViewer
 				connection.disconnect();
 			}
 		}
+	}
+
+	/**
+	 * Reads error content from the connection's error stream
+	 * 
+	 * @param connection The HTTP connection
+	 * @return The error content as a string, or null if no error stream
+	 */
+	private static String readErrorContent(HttpURLConnection connection)
+	{
+		try (java.io.InputStream es = connection.getErrorStream())
+		{
+			if (es != null)
+			{
+				ByteArrayOutputStream errorBuffer = new ByteArrayOutputStream();
+				byte[] data = new byte[1024];
+				int nRead;
+				while ((nRead = es.read(data, 0, data.length)) != -1)
+				{
+					errorBuffer.write(data, 0, nRead);
+				}
+				return new String(errorBuffer.toByteArray(), StandardCharsets.UTF_8);
+			}
+		}
+		catch (IOException e)
+		{
+			System.err.println("Failed to read error stream: " + e.getMessage());
+		}
+		return null;
+	}
+
+	/**
+	 * Displays error content in a window (detects if it's HTML or plain text)
+	 * 
+	 * @param errorContent The error content to display
+	 */
+	private static void displayErrorInWindow(String errorContent)
+	{
+		// Check if content is HTML
+		if (errorContent.trim().toLowerCase().startsWith("<html") || 
+		    errorContent.trim().toLowerCase().contains("<!doctype"))
+		{
+			ErrorViewer errorViewer = new ErrorViewer(errorContent, false);
+			errorViewer.setTitle("Kroki API Error");
+			errorViewer.setVisible(true);
+		}
+		else
+		{
+			// For plain text errors, create a simple HTML view
+			String htmlError = "<html><body style='font-family: monospace; padding: 10px;'>"
+					+ "<h2 style='color: red;'>Kroki API Error</h2>"
+					+ "<pre>" + escapeHtml(errorContent) + "</pre>"
+					+ "</body></html>";
+			ErrorViewer errorViewer = new ErrorViewer(htmlError, false);
+			errorViewer.setTitle("Kroki API Error");
+			errorViewer.setVisible(true);
+		}
+	}
+
+	/**
+	 * Escapes HTML special characters in plain text
+	 * 
+	 * @param text The text to escape
+	 * @return The escaped text
+	 */
+	private static String escapeHtml(String text)
+	{
+		return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;")
+				.replace("'", "&#39;");
 	}
 
 	/**
