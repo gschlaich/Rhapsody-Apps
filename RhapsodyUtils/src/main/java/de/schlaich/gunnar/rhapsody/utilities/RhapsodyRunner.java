@@ -1,3 +1,63 @@
+package de.schlaich.gunnar.rhapsody.utilities;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.function.Consumer;
+
+import com.telelogic.rhapsody.core.IRPApplication;
+import com.telelogic.rhapsody.core.IRPComponent;
+import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPProject;
+import com.telelogic.rhapsody.core.RhapsodyAppServer;
+
+/**
+ * RhapsodyRunner - Utility class for launching and managing Rhapsody
+ * applications
+ */
+public class RhapsodyRunner
+{
+
+	private Consumer<String> traceAction = null;
+	private IRPApplication myRhapsodyApp = null;
+	private IRPProject myProject = null;
+	private String myTemplateProjectName = "test\\USMTemplate\\USMTemplate.rpy";
+
+	public RhapsodyRunner(Consumer<String> aTraceAction)
+	{
+		this.traceAction = aTraceAction;
+	}
+
+	/**
+	 * Traces a message using the configured trace action
+	 * 
+	 * @param message The message to trace
+	 */
+	private void trace(String message)
+	{
+
+		message = "[RhapsodyRunner] " + message;
+
+		if (traceAction != null)
+		{
+			traceAction.accept(message);
+		}
+		else
+		{
+			System.out.println(message);
+		}
+	}
+
+	/**
+	 * Creates and starts a temporary Rhapsody application with no project loaded
+	 * 
+	 * @return An IRPApplication instance with no active project, or null if
+	 *         creation fails
+	 */
+	public IRPApplication createTempRhapsodyApp()
+	{
+
+		IRPApplication tempApp = null;
 		File rhapsodyShareFile = new File(System.getenv("OMROOT"));
 
 		if (rhapsodyShareFile.exists() == false)
