@@ -206,7 +206,7 @@ public class TestProjectBuilder
 	
 	/**
 	 * Create a hidden Rhapsody application instance for test isolation.
-	 * This is the same approach used in SVNTools.createTempRhapsodyApp()
+	 * This is the same approach used in RhapsodyRunner.createTempRhapsodyApp()
 	 */
 	private IRPApplication createHiddenRhapsodyApp()
 	{

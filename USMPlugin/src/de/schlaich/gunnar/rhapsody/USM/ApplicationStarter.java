@@ -61,7 +61,7 @@ public class ApplicationStarter
 
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
 		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
-		 myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MermaidCmd);
+		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MermaidCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
@@ -123,7 +123,8 @@ public class ApplicationStarter
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ShowGUIDCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.EditXMLCmd);
+		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.EditXMLCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateCodeCmd);
 
 	}
 
