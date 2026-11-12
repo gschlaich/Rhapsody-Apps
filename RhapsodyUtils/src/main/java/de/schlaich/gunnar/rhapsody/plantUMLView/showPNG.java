@@ -49,16 +49,9 @@ public class showPNG extends JFrame {
 		 {
 			 height = size.height;
 		 }
-		 
-		 
-	
-			
+
 		setLocation(size.width/2-width/2,size.height/2-height/2);
-			
-			
-			
-			
-		 
+
 		 
 		 this.setSize(width,height);
 		 JLabel label = new JLabel();  

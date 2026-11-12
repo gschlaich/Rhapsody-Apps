@@ -59,6 +59,7 @@ import de.schlaich.gunnar.rhapsody.utilities.MarkdownViewer;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyPreferences;
 import de.schlaich.gunnar.rhapsody.utilities.RhapsodyReverseEngineering;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyRunner;
 import de.schlaich.gunnar.rhapsody.utilities.SVNTools;
 import de.schlaich.gunnar.rhapsody.utilities.SelectionHistory;
 import de.schlaich.gunnar.rhapsody.utilities.StaticCodeAnalysis;
@@ -77,6 +78,7 @@ public class CUSMPlugin extends RPUserPlugin
 	private SVNTools mySVNTools = null;
 
 	public static final String PlantUmlCmd = "PlantUML";
+	public static final String MermaidCmd = "Mermaid";
 	public static final String RoundtripCmd = "Operational Roundtrip";
 	public static final String SearchElementCmd = "Search Element";
 	public static final String SelectRelationCmd = "Select Relation";
@@ -152,6 +154,7 @@ public class CUSMPlugin extends RPUserPlugin
 	public static final String CopyToAppDataCmd = "Copy to AppData";
 	public static final String GetOperationLocationCmd = "Get Operation Location";
 	public static final String RunTestsCmd = "Run Tests";
+	public static final String GenerateCodeCmd = "Generate Code";
 
 
 	private final long myStartTimeNanos = System.nanoTime();
@@ -310,9 +313,16 @@ public class CUSMPlugin extends RPUserPlugin
 
 		if (menuItem.contains(PlantUmlCmd))
 		{
-			PlantUMLStarter.startPlantUML(myRhapsody, selected, false);
+			PlantUMLStarter.startPlantUML(myRhapsody, selected, false, false);
 			return;
 		}
+		
+		if (menuItem.contains(MermaidCmd))
+		{
+			PlantUMLStarter.startPlantUML(myRhapsody, selected, false, true);
+			return;
+		}
+		
 		if (menuItem.contains(RoundtripCmd))
 		{
 			COperationalRoundtrip roundtrip = new COperationalRoundtrip(this::trace);
@@ -1407,6 +1417,29 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			IRPHyperLink link = (IRPHyperLink) selected;
 			XmlEditor.openHyperLink(link, myRhapsody);
+			return;
+		}
+		
+		if(menuItem.contains(GenerateCodeCmd))
+		{
+			IRPUnit unit = selected.getSaveUnit();
+			
+			if(unit == null)
+			{
+				trace("No SaveUnit for selected element");
+				return;
+			}
+			
+			File currentDir  = new File(unit.getCurrentDirectory());
+			
+			File path = new File(currentDir, unit.getFilename());
+			
+			File tempdir = new File(System.getProperty("java.io.tmpdir"));
+			
+			RhapsodyRunner runner = new RhapsodyRunner(this::trace);
+			
+			runner.createProjectWithSBS(path.toString(), tempdir.toString());
+
 			return;
 		}
 		

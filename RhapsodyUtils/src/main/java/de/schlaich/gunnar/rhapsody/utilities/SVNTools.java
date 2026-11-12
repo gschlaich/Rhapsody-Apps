@@ -3272,67 +3272,9 @@ public class SVNTools
 
 	private IRPApplication createTempRhapsodyApp()
 	{
-
-		IRPApplication tempApp = null;
-		File rhapsodyShareFile = new File(System.getenv("OMROOT"));
-
-		if (rhapsodyShareFile.exists() == false)
-		{
-			trace("Rhapsody Share file does not exist");
-			return null;
-		}
-
-		File rhapsodyFile = rhapsodyShareFile.getParentFile();
-
-		if (rhapsodyFile.exists() == false)
-		{
-			trace("Rhapsody file does not exist");
-			return null;
-		}
-
-		ProcessBuilder processBuilder = new ProcessBuilder(rhapsodyFile.getAbsolutePath() + "\\rhapsody.exe",
-				"-hiddenui");
-
-		try
-		{
-			Process p = processBuilder.start();
-		}
-		catch(IOException e)
-		{
-			trace(e.getMessage());
-			return null;
-		}
-
-		// wait for rhapsody to start
-		try
-		{
-			Thread.sleep(1000);
-		}
-		catch(InterruptedException e)
-		{
-			trace(e.getMessage());
-			return null;
-		}
-
-		List<String> idList = RhapsodyAppServer.getActiveRhapsodyApplicationIDList();
-
-		for (String id : idList)
-		{
-			IRPApplication app = RhapsodyAppServer.getActiveRhapsodyApplicationByID(id);
-			if (app.activeProject() == null)
-			{
-				tempApp = app;// no project loaded..
-			}
-		}
-
-		if (tempApp == null)
-		{
-			trace("No empty Rhapsody Application found");
-			return null;
-		}
-
-		tempApp.setHiddenUI(true);
-		return tempApp;
+		// Use the static method from RhapsodyRunner
+		RhapsodyRunner runner = new RhapsodyRunner(this.myTraceAction);
+		return runner.createTempRhapsodyApp();
 	}
 
 	public void blame(IRPOperation aOperation, int aLimit, boolean aIsMonth)

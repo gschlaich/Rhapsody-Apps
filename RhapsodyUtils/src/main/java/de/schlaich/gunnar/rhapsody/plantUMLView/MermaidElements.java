@@ -41,7 +41,7 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getInterface()
 	{
-		return "interface ";
+		return "class ";
 	}
 
 	// Relations and Associations
@@ -54,7 +54,7 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getGeneralization()
 	{
-		return " --|> ";
+		return " <|-- ";
 	}
 
 	@Override
@@ -73,13 +73,13 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getPackage()
 	{
-		return "subgraph ";
+		return "namespace ";
 	}
 
 	@Override
 	public String getNamespace()
 	{
-		return "subgraph ";
+		return "namespace ";
 	}
 
 	// Brackets and Braces
@@ -157,7 +157,7 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getDependency()
 	{
-		return " -.-> ";
+		return " ..> ";
 	}
 
 	// Messages (for sequence diagrams)
@@ -227,13 +227,13 @@ public class MermaidElements implements DiagramElements
 	@Override
 	public String getHiddenDownLink()
 	{
-		return " -.- ";
+		return " -- ";
 	}
 
 	@Override
 	public String getHiddenLeftLink()
 	{
-		return " -.- ";
+		return " -- ";
 	}
 
 	// Conditionals and History
@@ -273,5 +273,18 @@ public class MermaidElements implements DiagramElements
 	public String getStereotypeClose()
 	{
 		return ">> ";
+	}
+	
+	@Override
+	public String getTemplateOpen()
+	{
+		return " ~";
+	}
+	
+	@Override
+	public String getTemplateClose()
+	{
+		return "~ ";
+		
 	}
 }

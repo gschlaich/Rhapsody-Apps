@@ -86,4 +86,8 @@ public interface DiagramElements
 	// Stereotypes
 	String getStereotypeOpen();
 	String getStereotypeClose();
+	
+	// Template
+	String getTemplateOpen();
+	String getTemplateClose();
 }
