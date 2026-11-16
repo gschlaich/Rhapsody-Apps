@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPInstance;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -28,18 +29,24 @@ public class JsonInstance extends JsonRelation
 	 */
 	
 	@JsonProperty("allNestedElements")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> allNestedElements;
+	
 	@JsonProperty("inLinks")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> inLinks;
+	
 	@JsonProperty("instantiatedBy")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase instantiatedBy;
+	
 	@JsonProperty("listOfInitializerArguments")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> listOfInitializerArguments;
+	
 	@JsonProperty("outLinks")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> outLinks;
-	
-	
-	
 	
 	public JsonInstance(IRPModelElement aModelElement, int level)
 	{

@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPDiagram;
@@ -40,8 +41,11 @@ public class JsonDiagram extends JsonUnit
 //	@JsonProperty("elementsInDiagram")
 //	protected List<JsonModelElementBase> elementsInDiagram = new java.util.ArrayList<JsonModelElementBase>();
 	@JsonProperty("graphicalNodes")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonGraphNode> graphicalNodes = new java.util.ArrayList<JsonGraphNode>();
+	
 	@JsonProperty("graphicalEdges")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonGraphEdge> graphicalEdges = new java.util.ArrayList<JsonGraphEdge>();
 	
 	@JsonProperty("lastVisualizationModifiedTime")

@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.io.IOException;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -21,10 +22,12 @@ public class JsonMetaClassSchema
 
 	
 	@JsonProperty("metaClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected MetaClass metaClass = null;
 	
 	
 	@JsonProperty("schemaBase64")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String schemaBase64 = null;
 	
 	public JsonMetaClassSchema(MetaClass metaClass)

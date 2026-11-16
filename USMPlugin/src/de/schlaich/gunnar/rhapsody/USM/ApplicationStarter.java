@@ -60,8 +60,8 @@ public class ApplicationStarter
 		// Test the commands
 
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SearchElementCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
-		//myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MermaidCmd);
+		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.PlantUmlCmd);
+		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MermaidCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RoundtripCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.SelectRelationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BuildAllCmd);
@@ -112,7 +112,7 @@ public class ApplicationStarter
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunAllBatchesCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.ListMetaClassesCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonPasteCmd);
-		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
+		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.JsonCopyCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.NextCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.BackChangedCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.MarkdownEditorCmd);
@@ -124,7 +124,7 @@ public class ApplicationStarter
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GetOperationLocationCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.RunTestsCmd);
 		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.EditXMLCmd);
-		myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateCodeCmd);
+		// myUSMPlugin.OnMenuItemSelect(CUSMPlugin.GenerateCodeCmd);
 
 	}
 

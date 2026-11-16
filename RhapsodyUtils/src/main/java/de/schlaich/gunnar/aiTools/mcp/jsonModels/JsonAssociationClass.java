@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAssociationClass;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -21,9 +22,13 @@ public class JsonAssociationClass extends JsonClass
 
 	@JsonProperty("isClass")
 	protected boolean isClass = false;
+	
 	@JsonProperty("end1")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase end1 = null;
+	
 	@JsonProperty("end2")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase end2 = null;
 
 	public JsonAssociationClass(IRPModelElement aModelElement, int level)

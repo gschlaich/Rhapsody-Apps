@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPArgument;
 import com.telelogic.rhapsody.core.IRPInterfaceItem;
@@ -14,6 +15,7 @@ public class JsonArgument extends JsonVariable
     Returns the direction of the argument (In, Out, or InOut).
 */
 	@JsonProperty("argumentDirection")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String argumentDirection = null;
 	
 	public JsonArgument(IRPModelElement aModelElement, int level)

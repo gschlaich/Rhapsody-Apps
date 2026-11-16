@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
@@ -28,11 +29,14 @@ public class JsonStatechart extends JsonClass
 	 * 
 	 */
 	@JsonProperty("isMainBehavior")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isMainBehavior = false;
 	@JsonProperty("isOverridden")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isOverridden = false;
 	
 	@JsonProperty("statechartDiagram")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase statechartDiagram = null;
 	
 	

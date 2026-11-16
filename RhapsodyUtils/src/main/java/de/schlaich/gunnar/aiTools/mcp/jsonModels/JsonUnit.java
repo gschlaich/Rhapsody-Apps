@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -59,22 +60,31 @@ public class JsonUnit extends JsonModelElement
 	// Checks whether the current IRPUnit object is saved in its own file.
 
 	@JsonProperty("addToModelMode")
-	protected AddToModelMode addToModelMode = AddToModelMode.UNKNOWN;
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	protected AddToModelMode addToModelMode = null;
 	@JsonProperty("cMHeader")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String cMHeader = "";
 	@JsonProperty("cMState")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected int cMState = 0;
 	@JsonProperty("currentDirectory")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String currentDirectory = "";
 	@JsonProperty("filename")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String filename = null;
 	@JsonProperty("includeInNextLoad")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean includeInNextLoad = false;
 	@JsonProperty("isStub")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isStub = false;
 	@JsonProperty("language")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String language = null;
 	@JsonProperty("lastModifiedTime")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String lastModifiedTime = null;
 
 	// protected List<JsonModelElementBase> nestedSaveUnits = null;
@@ -82,10 +92,13 @@ public class JsonUnit extends JsonModelElement
 	// protected List<JsonModelElementBase> structureDiagrams = null;
 
 	@JsonProperty("isReadOnly")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isReadOnly = false;
 	@JsonProperty("isReferenceUnit")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isReferenceUnit = false;
 	@JsonProperty("isSeparateSaveUnit")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isSeparateSaveUnit = false;
 
 	public JsonUnit(IRPModelElement aModelElement, int level)

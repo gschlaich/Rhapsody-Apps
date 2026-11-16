@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -26,10 +27,15 @@ public class JsonStateVertex extends JsonModelElement
 	 */
 	
 	@JsonProperty("inTransitions")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> inTransitions = null;
+	
 	@JsonProperty("outTransitions")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> outTransitions = null;
+	
 	@JsonProperty("parent")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase parentState = null;
 	
 	

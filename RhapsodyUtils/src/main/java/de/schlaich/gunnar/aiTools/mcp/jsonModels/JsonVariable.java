@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -24,15 +25,19 @@ public class JsonVariable extends JsonUnit
 	 */
 
 	@JsonProperty("declaration")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String declaration = null;
 
 	@JsonProperty("defaultValue")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String defaultValue = null;
 
 	@JsonProperty("vtype")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase vType = null;
 
 	@JsonProperty("valueSpecifications")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> valueSpecifications = null;
 
 	public JsonVariable(IRPModelElement aModelElement, int level)
@@ -56,10 +61,12 @@ public class JsonVariable extends JsonUnit
 			if (theVar.getType() != null)
 			{
 				vType = new JsonModelElementBase(theVar.getType());
+				//vType = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) theVar.getType(), myLevel + 1);
+						
 			}
 			
 
-			valueSpecifications = convertToJsonModelElementBaseList(theVar.getValueSpecifications());
+			valueSpecifications = convertToJsonModelElementList(theVar.getValueSpecifications());
 		}
 
 	}

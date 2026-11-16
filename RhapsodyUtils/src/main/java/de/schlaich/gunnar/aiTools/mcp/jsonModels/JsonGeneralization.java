@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPGeneralization;
@@ -16,14 +17,19 @@ public class JsonGeneralization extends JsonModelElement
 	 * property is virtual java.lang.String getVisibility() get property visibility
 	 */
 	@JsonProperty("extensionPoint")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String extensionPoint = null;
 	@JsonProperty("isVirtual")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isVirtual = false;
 	@JsonProperty("visibility")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String visibility = null;
 	@JsonProperty("baseClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase baseClass = null;
 	@JsonProperty("derivedClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase derivedClass = null;
 
 	public JsonGeneralization(IRPModelElement aModelElement, int level)

@@ -21,6 +21,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -43,6 +45,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.TextAction;
+import javax.swing.SwingWorker;
+
 
 //import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.Imaging;
@@ -99,6 +103,8 @@ import com.telelogic.rhapsody.core.IRPType;
 import com.telelogic.rhapsody.core.IRPUnit;
 import com.telelogic.rhapsody.core.RPApplicationListener;
 
+import de.schlaich.gunnar.aiTools.copilot.AiCompletion;
+import de.schlaich.gunnar.aiTools.copilot.CopilotRestClient;
 import de.schlaich.gunnar.editor.runner.MainApp;
 import de.schlaich.gunnar.parser.CodeAnalysisParser;
 import de.schlaich.gunnar.parser.CppParser;
@@ -420,6 +426,76 @@ public class OperationEditorWindow extends JRootPane implements HyperlinkListene
 		myTextArea.setCloseMarkupTags(true);
 		myTextArea.setHighlightCurrentLine(true);
 		myTextArea.setCodeFoldingEnabled(true);
+		
+		CopilotRestClient copilot = new CopilotRestClient();
+		AiCompletion aiCompletion = new AiCompletion(myTextArea);
+		
+		Charset charset = Charset.forName("windows-1252");
+
+		// Read files and register the context asynchronously.
+		new SwingWorker<String, Void>() {
+
+		    @Override
+		    protected String doInBackground() throws Exception 
+		    {
+
+		        File headerPath = null;
+		        File sourcePath = null;
+		    	
+		    	IRPModelElement selectedElement = mySelectedOperation.getOwner();
+		        if(selectedElement instanceof IRPClass) 
+		        {
+		            IRPClass ownerClass = (IRPClass) selectedElement;
+		            
+		            List<File> fileNames = RhapsodyHelper.getGeneratedCodeFiles(ownerClass, myApplication);
+		            
+		            for(File file : fileNames) 
+		            {
+		                String filePath = file.getAbsolutePath();
+		                if(filePath.endsWith(".h")) 
+		                {
+		                    headerPath = file;
+		                } 
+		                else if(filePath.endsWith(".cpp")) 
+		                {
+		                    sourcePath = file;
+		                }
+		            }
+		            
+
+		        }
+		    	
+		    	String header = new String(
+		            Files.readAllBytes(headerPath.toPath()),
+		            charset);
+
+		        String source = new String(
+		            Files.readAllBytes(sourcePath.toPath()),
+		            charset);
+
+				return copilot.registerContext(
+		            "CController", header, source);
+		    }
+
+		    @Override
+		    protected void done() {
+		        try {
+		            String contextId = get();
+
+		            aiCompletion.setContext(
+		                contextId,
+		                "start",
+		                "void CController::start()");
+
+		            System.out.println(
+		                "Copilot context registered: " + contextId);
+
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        }
+		    }
+
+		}.execute();
 
 		myTextArea.addFocusListener(new FocusListener()
 		{

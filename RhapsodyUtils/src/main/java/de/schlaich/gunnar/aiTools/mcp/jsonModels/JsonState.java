@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -54,22 +55,31 @@ public class JsonState extends JsonStateVertex
 	
 	
 	@JsonProperty("entryAction")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String entryAction = null;
 	@JsonProperty("exitAction")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String exitAction = null;
 	@JsonProperty("internalTransitions")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> internalTransitions = null;
 	@JsonProperty("isOverridden")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected Boolean isOverridden = false;
 	@JsonProperty("itsSwimlane")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsSwimlane = null;
 	@JsonProperty("subStates")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> subStates = null;
 	@JsonProperty("stateType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String stateType = null;
 	@JsonProperty("nestedStatechart")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase nestedStatechart = null;
 	@JsonProperty("root")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected Boolean root = false;
 	
 //	@JsonProperty("referenceToActivity")

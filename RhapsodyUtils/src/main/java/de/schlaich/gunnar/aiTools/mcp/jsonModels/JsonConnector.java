@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPConnector;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -33,11 +34,17 @@ public class JsonConnector extends JsonStateVertex
 
 	@JsonProperty("connectorType")
 	protected ConnectorType connectorType = ConnectorType.unknown;
+	
 	@JsonProperty("derivedInEdges")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> derivedInEdges;
+	
 	@JsonProperty("derivedOutEdge")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase derivedOutEdge;
+	
 	@JsonProperty("OfState")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase ofState;
 
 	public JsonConnector()

@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAttribute;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -25,16 +26,27 @@ public class JsonAttribute extends JsonVariable
           Gets the visibility specified for the attribute.
 	 */
 	@JsonProperty("isConstant")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isConstant = false;
+	
 	@JsonProperty("isOrdered")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isOrdered = false;
+	
 	@JsonProperty("isReference")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isReference = false;
+	
 	@JsonProperty("isStatic")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isStatic = false;
+	
 	@JsonProperty("multiplicity")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String multiplicity = "";
+	
 	@JsonProperty("visibility")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String visibility = "";
 	
 	public JsonAttribute(IRPModelElement aModelElement, int level)

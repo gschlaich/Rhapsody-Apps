@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -39,54 +40,70 @@ public class JsonOperation extends JsonInterfaceItem
 	 */
 
 	@JsonProperty("isAbstract")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isAbstract = false;
 
 	@JsonProperty("isCgDerived")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isCgDerived = false;
 
 	@JsonProperty("isConst")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isConst = false;
 
 	@JsonProperty("isCtor")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isCtor = false;
 
 	@JsonProperty("isDtor")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isDtor = false;
 
 	@JsonProperty("isFinal")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isFinal = false;
 
 	@JsonProperty("isInline")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isInline = false;
 
 	@JsonProperty("isStatic")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isStatic = false;
 
 	@JsonProperty("isTrigger")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTrigger = false;
 
 	@JsonProperty("isVirtual")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isVirtual = false;
 
 	@JsonProperty("body")
+	@JsonInclude(JsonInclude.Include.ALWAYS)
 	protected String body = null;
 
 	@JsonProperty(value = "signature", access = JsonProperty.Access.READ_ONLY)
+	@JsonInclude(JsonInclude.Include.ALWAYS)
 	protected String implementationSignature = null;
 
 	@JsonProperty("initializer")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String initializer = null;
 
 	@JsonProperty("returnTypeDeclaration")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String returnTypeDeclaration = null;
 
 	@JsonProperty("returns")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase returns = null;
 
 	@JsonProperty("visibility")
 	protected String visibility = null;
 
 	@JsonProperty("flowchart")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase flowchart = null;
 
 	public JsonOperation(IRPModelElement aModelElement, int level)

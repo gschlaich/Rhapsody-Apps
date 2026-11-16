@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPInterfaceItem;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -13,6 +14,7 @@ public class JsonInterfaceItem extends JsonClassifier
 //    	Returns the signature of the operation.
 	
 	@JsonProperty("signature")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String signature = null;
 
 	public JsonInterfaceItem(IRPModelElement aModelElement, int level)

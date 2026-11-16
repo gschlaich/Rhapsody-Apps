@@ -1,28 +1,40 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyHelper;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyReverseEngineering;
+
 public class JsonClass extends JsonClassifier
 {
 
 	@JsonProperty("isAbstract")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isAbstract = false;
 	
 	@JsonProperty("isActive")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isActive = false;
 	
 	@JsonProperty("isBehaviorOverriden")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isBehaviorOverriden = false;
 	
 	@JsonProperty("isComposite")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isComposite = false;
 	
 	@JsonProperty("isFinal")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isFinal = false;
+	
+	
 	
 	
 	public JsonClass(IRPModelElement aModelElement, int level)
@@ -40,8 +52,8 @@ public class JsonClass extends JsonClassifier
 		isActive = theClass.getIsActive()==1;
 		isBehaviorOverriden = theClass.getIsBehaviorOverriden()==1;
 		isComposite = theClass.getIsComposite()==1;
-		isFinal = theClass.getIsFinal()==1;	
-					
+		isFinal = theClass.getIsFinal()==1;
+				
 	}
 
 	public JsonClass()

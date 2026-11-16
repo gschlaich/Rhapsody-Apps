@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.telelogic.rhapsody.core.IRPGraphicalProperty;
@@ -16,10 +17,13 @@ public class JsonGraphicalProperty
 //		      get property value
 		
 	@JsonProperty("interfaceName")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String interfaceName = null;
 	@JsonProperty("key")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String key = null;
 	@JsonProperty("value")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String value = null;
 	
 	

@@ -1,6 +1,7 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPDiagram;
 import com.telelogic.rhapsody.core.IRPGraphEdge;
@@ -22,8 +23,10 @@ public class JsonGraphEdge extends JsonGraphElement
 	//    get property target
 	
 	@JsonProperty("source")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String sourceGUID = null;
 	@JsonProperty("target")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String targetGUID = null;
 	
 	

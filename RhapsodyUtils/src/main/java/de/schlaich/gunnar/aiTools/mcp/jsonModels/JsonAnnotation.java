@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAnnotation;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -22,12 +23,19 @@ public class JsonAnnotation extends JsonUnit
 //	  			Checks whether the specification is in RTF format
 
 	@JsonProperty("anchoredByMe")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> anchoredByMe = null;
+	
 	@JsonProperty("body")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String body = null;
+
 	@JsonProperty("specification")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String specification = null;
+	
 	@JsonProperty("isSpecificationRTF")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isSpecificationRTF = false;
 
 	public JsonAnnotation(IRPModelElement aModelElement, int level)

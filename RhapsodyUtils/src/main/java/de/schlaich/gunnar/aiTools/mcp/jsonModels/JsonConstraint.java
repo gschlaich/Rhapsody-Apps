@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPConstraint;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -16,6 +17,7 @@ public class JsonConstraint extends JsonAnnotation
       //	Returns all of the model elements affected by this constraint.
 	
 	@JsonProperty("constraintsByMe")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	List<JsonModelElementBase> constraintsByMe = null;
 	
 	public JsonConstraint(IRPModelElement aModelElement, int level)

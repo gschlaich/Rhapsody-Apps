@@ -131,7 +131,7 @@ public class RhapsodyRunner
 	 * @return An IRPProject instance with the imported file, or null if creation
 	 *         fails
 	 */
-	public IRPProject createProjectWithSBS(String sbsFilePath, String tempDirPath)
+	public IRPProject createProjectWithSBS(String sbsFilePath, String tempDirPath, String aGuid)
 	{
 
 		// Validate input files
@@ -243,7 +243,8 @@ public class RhapsodyRunner
 
 		trace("Project with SBS file created successfully");
 		
-		IRPModelElement addedElement = myProject.find
+		IRPModelElement addedElement = myProject.findElementByGUID(aGuid);
+		
 		
 		if (addedElement != null)
 		{

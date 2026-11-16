@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -39,53 +40,77 @@ public class JsonType extends JsonClassifier
 	 */
 
 	@JsonProperty("declaration")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String declaration = null;
 	@JsonProperty("kind")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String kind = null;
 	@JsonProperty("isPredefined")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isPredefined = false;
 	@JsonProperty("isTypedef")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTypedef = false;
 	@JsonProperty("isTypedefConstant")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTypedefConstant = false;
 	@JsonProperty("isTypedefOrdered")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTypedefOrdered = false;
 	@JsonProperty("isTypedefReference")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTypedefReference = false;
 	@JsonProperty("typedefMultiplicity")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String typedefMultiplicity = null;
 	@JsonProperty("typedefBaseType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase typedefBaseType = null;
 	//@JsonProperty("enumerationLiterals")
+	//@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	//protected List<JsonEnumerationLiteral> enumerationLiterals = null;
 	@JsonProperty("isArray")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isArray = false;
 	@JsonProperty("isEnum")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isEnum = false;
 	protected boolean isImplicit = false;
 	@JsonProperty("isKindEnumeration")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isKindEnumeration = false;
 	@JsonProperty("isKindLanguage")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isKindLanguage = false;
 	@JsonProperty("isKindStruct")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isKindStruct = false;
 	@JsonProperty("isKindTypedef")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isKindTypedef = false;
 	@JsonProperty("isKindUnion")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isKindUnion = false;
 	@JsonProperty("isPointer")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isPointer = false;
 	@JsonProperty("isPointerToPointer")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isPointerToPointer = false;
 	@JsonProperty("isReference")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isReference = false;
 	@JsonProperty("isReferenceToPointer")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isReferenceToPointer = false;
 	@JsonProperty("isStruct")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isStruct = false;
 	@JsonProperty("isTemplate")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTemplate = false;
 	@JsonProperty("isUnion")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isUnion = false;
 
 	public JsonType(IRPModelElement aModelElement, int level)

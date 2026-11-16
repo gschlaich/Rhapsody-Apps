@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -12,12 +13,16 @@ public class JsonTrigger extends JsonModelElement
 {
 
 	@JsonProperty("body")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String body = null;
 	@JsonProperty("isOperation")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isOperation = false;
 	@JsonProperty("isTimeout")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTimeout = false;
 	@JsonProperty("itsOperation")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsOperation = null;
 	
 	

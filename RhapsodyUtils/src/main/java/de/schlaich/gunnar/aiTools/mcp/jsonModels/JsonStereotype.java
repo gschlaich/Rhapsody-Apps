@@ -21,8 +21,10 @@ public class JsonStereotype extends JsonClassifier
           Gets the names of the metaclasses that the stereotype can be applied to.
 	 */
 	@JsonProperty("icon")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String icon = null;
 	@JsonProperty("isNewTerm")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isNewTerm = false;
 	@JsonProperty("ofMetaClass")
 	@JsonInclude(JsonInclude.Include.NON_NULL)

@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAssociationClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
@@ -40,38 +41,55 @@ public class JsonRelation extends JsonUnit
 	 * 
 	 */
 	@JsonProperty("inverse")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase inverse = null;
 	@JsonProperty("associationClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase associationClass = null;
 	@JsonProperty("isSymmetric")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isSymmetric = false;
 	@JsonProperty("isNavigable")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isNavigable = false;
 	@JsonProperty("multiplicity")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String multiplicity = "";
 	@JsonProperty("objectAsObjectType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase objectAsObjectType = null;
 	@JsonProperty("ofClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase ofClass = null;
 	@JsonProperty("otherClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase otherClass = null;
 	@JsonProperty("qualifierType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase qualifierType = null;
 	@JsonProperty("relationLabel")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String relationLabel = "";
 	@JsonProperty("relationLinkName")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String relationLinkName = "";
 	@JsonProperty("relationType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String relationType = "";
 	@JsonProperty("relationRoleName")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String relationRoleName = "";
 	@JsonProperty("visibility")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String visibility = "";
 	@JsonProperty("qualifier")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String qualifier = "";
 	@JsonProperty("isTypelessObject")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isTypelessObject = false;
 	@JsonProperty("qualifiers")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	List<JsonModelElementBase> qualifiers = null;
 
 	public JsonRelation(IRPModelElement aModelElement, int level)
@@ -119,6 +137,7 @@ public class JsonRelation extends JsonUnit
 		if (theRelation.getOtherClass() != null)
 		{
 			otherClass = new JsonModelElementBase(theRelation.getOtherClass());
+			//otherClass = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) theRelation.getOtherClass(), myLevel + 1);
 		}
 
 		if (theRelation.getQualifierType() != null)

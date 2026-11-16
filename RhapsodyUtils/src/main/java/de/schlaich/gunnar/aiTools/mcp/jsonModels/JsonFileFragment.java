@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPFile;
 import com.telelogic.rhapsody.core.IRPFileFragment;
@@ -24,10 +25,13 @@ public class JsonFileFragment extends JsonModelElement
 	}
 	
 	@JsonProperty("fragmentElement")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase fragmentElement = null;
 	@JsonProperty("fragmentText")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String fragmentText = null;
 	@JsonProperty("fragmentType")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected FragmentType fragmentType = FragmentType.undefFragment;
 	
 	

@@ -2,6 +2,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPComponent;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -12,42 +13,51 @@ public class JsonComponent extends JsonUnit
 
 //		java.lang.String 	getAdditionalSources()
 	@JsonProperty("additionalSources")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String additionalSources = null;
+	
 //		    Returns the additional sources defined for the component.
 //		java.lang.String 	getBuildType()
 	@JsonProperty("buildType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String buildType = null;
 //		    Returns the build type of the component - Library, Executable, or Analysis.
 //		
 
 //		java.lang.String 	getIncludePath()
 	@JsonProperty("includePath")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String includePath = null;
 //		    Returns the include path defined for the component.
 //		java.lang.String 	getLibraries()
 	@JsonProperty("libraries")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String libraries = null;
 //		    get property libraries
 //	
 //		java.lang.String 	getPath(int fullPath)
 	@JsonProperty("path")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String path = null;
 //		    get property path
 //		
 //		
 //		IRPCollection 	getScopeElements()
 	@JsonProperty("scopeElements")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> scopeElements;
 //		    Returns a collection of all the model elements in the scope of the component.
 
 //		
 //		java.lang.String 	getStandardHeaders()
 	@JsonProperty("standardHeaders")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String standardHeaders = null;
 //		    Returns the standard headers defined for the component.
 //		
 //		IRPCollection 	getVariationPoints()
 	@JsonProperty("variationPoints")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> variationPoints;
 //		    Returns a collection of the variation points that are included in the scope of the component.
 //		

@@ -139,6 +139,11 @@
 			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>de.schlaich.gunnar.rhapsody</groupId>
+			<artifactId>RhapsodyCopilotService</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 
 	<build>

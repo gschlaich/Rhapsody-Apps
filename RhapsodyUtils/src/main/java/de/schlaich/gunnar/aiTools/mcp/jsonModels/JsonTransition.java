@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPGuard;
 import com.telelogic.rhapsody.core.IRPInterfaceItem;
@@ -36,24 +37,34 @@ public class JsonTransition extends JsonModelElement
 	 */
 
 	@JsonProperty("inheritsFrom")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase inheritsFrom = null;
 	@JsonProperty("isOverridden")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isOverridden = false;
 	@JsonProperty("itsAction")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsAction = null;
 	@JsonProperty("itsGuard")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String itsGuard = null;
 	@JsonProperty("itsLabel")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String itsLabel = null;
 	@JsonProperty("itsTrigger")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsTrigger = null;
 	@JsonProperty("itsSource")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsSource = null;
 	@JsonProperty("itsTarget")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase itsTarget = null;
 	@JsonProperty("isDefaultTransition")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isDefaultTransition = false;
 	@JsonProperty("isStaticReaction")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean isStaticReaction = false;
 
 	public JsonTransition(IRPModelElement aModelElement, int level)

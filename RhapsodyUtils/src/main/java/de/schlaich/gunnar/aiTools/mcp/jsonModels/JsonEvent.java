@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPEvent;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -16,8 +17,11 @@ public class JsonEvent extends JsonInterfaceItem
 	
 	
 	@JsonProperty("baseEvent")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase baseEvent = null;
+	
 	@JsonProperty("superEvent")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase superEvent = null;
 	
 

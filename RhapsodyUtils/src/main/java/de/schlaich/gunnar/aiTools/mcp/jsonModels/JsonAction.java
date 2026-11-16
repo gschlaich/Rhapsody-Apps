@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPAction;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -19,6 +20,7 @@ public class JsonAction extends JsonModelElement
 	}
 	
 	@JsonProperty("body")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String body = null;
 	
 	@JsonProperty("actionType")

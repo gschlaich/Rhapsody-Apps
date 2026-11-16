@@ -124,13 +124,16 @@ public class JsonModelElementBase
 	@JsonProperty(value = "name", required = true)
 	protected String name = null;
 
-	@JsonProperty(value = "fullName", required = true)
+	@JsonProperty(value = "fullName")
+	@JsonInclude(JsonInclude.Include.NON_NULL)
 	protected String fullName = null;
 
-	private int myLevel = 0;
+	protected int myLevel = 0;
 
 	private static final String CREATION_PREFIX = "__create_";
 	protected String creationName = null;
+	
+	
 
 	public JsonModelElementBase(IRPModelElement aIRPModelElement)
 	{
@@ -141,7 +144,7 @@ public class JsonModelElementBase
 	{
 
 		myLevel = aLevel;
-
+		
 		String metaClassName = aIRPModelElement.getMetaClass();
 
 		try
@@ -156,8 +159,12 @@ public class JsonModelElementBase
 		name = aIRPModelElement.getName();
 
 		guid = aIRPModelElement.getGUID();
+		
+		if (myLevel == 0)
+		{
+			fullName = aIRPModelElement.getFullPathName();
+		}
 
-		fullName = aIRPModelElement.getFullPathName();
 	}
 
 	protected void trace(String aMessage)
@@ -484,6 +491,8 @@ public class JsonModelElementBase
 		}
 		return jsonModelElements;
 	}
+	
+	
 
 	protected List<IRPModelElement> convertToModelElementList(List<JsonModelElementBase> jsonModelElements,
 			IRPProject aProject, ImportMode aImportMode)
@@ -505,7 +514,7 @@ public class JsonModelElementBase
 
 	protected List<JsonModelElementBase> convertToJsonModelElementList(IRPCollection aCollection)
 	{
-		if (myLevel > 0)
+		if (myLevel > 2)
 		{
 			return convertToJsonModelElementBaseList(aCollection);
 		}
@@ -517,7 +526,7 @@ public class JsonModelElementBase
 			return theList;
 		}
 
-		int nextLevel = this.getLevel();
+		int nextLevel = this.getLevel()+1;
 
 		for (Object obj : aCollection.toList())
 		{
@@ -551,10 +560,13 @@ public class JsonModelElementBase
 		}
 		return JsonElements;
 	}
-
+/*
 	public List<JsonModelElementBase> getNestedElements()
 	{
-		return new ArrayList<JsonModelElementBase>();
+		//return new ArrayList<JsonModelElementBase>();
+		return null;
 	}
+	
+	*/
 
 }

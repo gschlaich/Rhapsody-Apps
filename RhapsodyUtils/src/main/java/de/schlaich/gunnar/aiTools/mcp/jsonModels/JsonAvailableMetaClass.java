@@ -4,6 +4,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.io.IOException;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -24,6 +25,7 @@ public class JsonAvailableMetaClass
 {
 
 	@JsonProperty("availableMetaClasses")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	List<MetaClass> availableMetaClasses = null;
 	
 	public JsonAvailableMetaClass()

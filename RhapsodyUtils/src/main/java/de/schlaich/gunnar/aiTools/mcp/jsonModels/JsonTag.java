@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
@@ -19,14 +20,19 @@ public class JsonTag extends JsonVariable
 //		java.lang.String 	getValue()
 
 	@JsonProperty("base")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase base = null;
 	@JsonProperty("fromProfile")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase fromProfile = null;
 	@JsonProperty("multiplicity")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String multiplicity = null;
 	@JsonProperty("tagMetaClass")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String tagMetaClass = null;
 	@JsonProperty("value")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String value = null;
 
 	public JsonTag(IRPModelElement aModelElement, int level)

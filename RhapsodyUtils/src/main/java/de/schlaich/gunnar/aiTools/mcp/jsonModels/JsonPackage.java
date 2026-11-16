@@ -3,6 +3,7 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPCollection;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -13,6 +14,7 @@ public class JsonPackage extends JsonUnit
 {
 
 	@JsonProperty("nameSpace")
+	@JsonInclude(JsonInclude.Include.ALWAYS)
 	protected String nameSpace = null;
 	
 	//@JsonProperty("GlobalFunctions")

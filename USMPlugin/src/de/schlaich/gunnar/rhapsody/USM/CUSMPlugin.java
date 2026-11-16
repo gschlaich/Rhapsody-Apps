@@ -1438,7 +1438,7 @@ public class CUSMPlugin extends RPUserPlugin
 			
 			RhapsodyRunner runner = new RhapsodyRunner(this::trace);
 			
-			runner.createProjectWithSBS(path.toString(), tempdir.toString());
+			runner.createProjectWithSBS(path.toString(), tempdir.toString(), selected.getGUID());
 
 			return;
 		}

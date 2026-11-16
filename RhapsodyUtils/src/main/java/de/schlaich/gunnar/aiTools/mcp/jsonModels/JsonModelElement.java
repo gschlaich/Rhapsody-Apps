@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.eclipse.cdt.internal.core.model.Parent;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -16,36 +17,57 @@ import com.telelogic.rhapsody.core.IRPModelElement;
 import com.telelogic.rhapsody.core.IRPProject;
 import com.telelogic.rhapsody.core.IRPStereotype;
 
+import de.schlaich.gunnar.rhapsody.utilities.RhapsodyOperation;
+
 public class JsonModelElement extends JsonModelElementBase {
 
 	@JsonProperty("newTermStereotype")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase newTermStereotype = null;
 
 	@JsonProperty("description")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String description = "";
 
 	@JsonProperty("stereotypes")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected List<JsonModelElementBase> stereotypes;
+	
+	@JsonProperty(value = "nameSpace", access = JsonProperty.Access.READ_ONLY)
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
+	protected String nameSpace = "";
 
 	@JsonProperty("nestedElements")
-	protected List<JsonModelElementBase> nestedElements;
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	protected List<JsonModelElementBase> nestedElements = null;
 
 	@JsonProperty("changedProperties")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected Map<String, String> changedProperties;
 
 	@JsonProperty("owner")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase owner = null;
 
 	@JsonProperty("external")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected boolean external = false;
+	
+	
 
 	public JsonModelElement(IRPModelElement aModelElement, int level) {
 		super(aModelElement, level);
-
-		IRPModelElement ownerElement = aModelElement.getOwner();
-
-		if (ownerElement != null) {
-			owner = new JsonModelElementBase(ownerElement);
+		
+		if(level == 0)
+		{
+			IRPModelElement ownerElement = aModelElement.getOwner();
+	
+			if (ownerElement != null) 
+			{
+				owner = new JsonModelElementBase(ownerElement);
+			}
+			
+			nameSpace = RhapsodyOperation.getNamespace(aModelElement);
 		}
 
 		getNestedElements(aModelElement);
@@ -66,6 +88,9 @@ public class JsonModelElement extends JsonModelElementBase {
 
 	protected void getNestedElements(IRPModelElement aModelElement) {
 		nestedElements = convertToJsonModelElementList(aModelElement.getNestedElements());
+		if (nestedElements != null && nestedElements.size() == 0) {
+			nestedElements = null;
+		}
 	}
 
 	private Map<String, String> getOverriddenProperties(IRPModelElement aModelElement) {
@@ -226,7 +251,7 @@ public class JsonModelElement extends JsonModelElementBase {
 		return newTermStereotype;
 	}
 
-	@Override
+	//@Override
 	public List<JsonModelElementBase> getNestedElements() {
 		return nestedElements;
 	}

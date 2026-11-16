@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.HYPNameType;
 import com.telelogic.rhapsody.core.IRPHyperLink;
@@ -39,12 +40,16 @@ public class JsonHyperLink extends JsonDependency
 	}
 	
 	@JsonProperty("target")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase  target = null;
 	@JsonProperty("textToDisplay")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String textToDisplay = null;
 	@JsonProperty("textToDisplayType")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected TextToDisplayType textToDisplayType = null;
 	@JsonProperty("URL")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String URL = null;
 	
 	

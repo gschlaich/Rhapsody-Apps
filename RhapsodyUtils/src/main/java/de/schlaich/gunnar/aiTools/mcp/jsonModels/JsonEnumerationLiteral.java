@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.telelogic.rhapsody.core.IRPEnumerationLiteral;
 import com.telelogic.rhapsody.core.IRPModelElement;
@@ -12,6 +13,7 @@ public class JsonEnumerationLiteral extends JsonModelElement
 {
 
 	@JsonProperty("Value")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String value = null;
 	
 	

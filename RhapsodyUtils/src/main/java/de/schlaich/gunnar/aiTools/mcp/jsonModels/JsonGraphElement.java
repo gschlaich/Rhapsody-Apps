@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -51,20 +52,26 @@ public class JsonGraphElement
 	//@JsonProperty("allGraphicalProperties")
 	//protected List<JsonGraphicalProperty> allGraphicalProperties = null;
 	@JsonProperty("associatedImage")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String associatedImage = null;
 	@JsonProperty("imageLayout")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String imageLayout = null;
 	@JsonProperty("interfaceName")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String interfaceName = null;
 	@JsonProperty("localProperties")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected Map<String, String> localProperties = null;
 	@JsonProperty("modelObject")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase modelObject = null;
 	@JsonProperty("selectedImage")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected String selectedImage = null;
 	
-	
 	@JsonProperty("graphicalPropertyMap")
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected Map<String, String> myGraphicalPropertyMap = null;
 
 	public JsonGraphElement(IRPGraphElement aGraphElement)

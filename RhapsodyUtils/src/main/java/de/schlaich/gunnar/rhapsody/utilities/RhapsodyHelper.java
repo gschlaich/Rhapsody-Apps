@@ -153,6 +153,7 @@ public class RhapsodyHelper
 
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static List<File> getGeneratedCodeFiles(IRPModelElement aElement, IRPApplication aRhapsody)
    {
 		if (aElement == null)
@@ -173,8 +174,31 @@ public class RhapsodyHelper
 		
 		IRPPackage packageElement = (IRPPackage) owner;
 		
-		IRPComponent component = null;
+		IRPProject project = aRhapsody.activeProject();
 		
+		IRPComponent component = project.getActiveComponent();
+		
+		List<IRPModelElement> scopeElements = component.getScopeElements().toList();
+		
+		boolean found = false;
+		
+		for(IRPModelElement scopeElement : scopeElements)
+		{
+			if (scopeElement.equals(packageElement))
+			{
+				found = true;
+				break;
+			}
+		}
+		
+		if (found == false)
+		{
+			return null;
+		}
+		
+		
+		
+	/*	
 		while (component == null)
 		{
 			component = (IRPComponent) packageElement.findNestedElementRecursive(packageElement.getName(), "Component");
@@ -193,6 +217,8 @@ public class RhapsodyHelper
 			}
 		}
 		
+*/
+		
 		IRPConfiguration config = getDefaultConfiguration(component);
 		
 		if (config == null)
@@ -209,6 +235,7 @@ public class RhapsodyHelper
 		
 		IRPCodeGenerator codeGenerator = aRhapsody.getTheCodeGeneratorInterface();
 		
+		@SuppressWarnings("unchecked")
 		List<String> filenames = codeGenerator.getGeneratedFileNames(aElement).toList();
 		if (filenames.isEmpty())
 		{
