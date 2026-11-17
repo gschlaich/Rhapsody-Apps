@@ -28,7 +28,7 @@ public class JsonStatechartDiagram extends JsonDiagram
 		{
 			IRPStatechartDiagram diagram = (IRPStatechartDiagram) aModelElement;
 
-			this.statechart = new JsonModelElementBase(diagram.getStatechart());
+			this.statechart = getJsonModelElementBase(diagram.getStatechart());
 			
 		}
 		

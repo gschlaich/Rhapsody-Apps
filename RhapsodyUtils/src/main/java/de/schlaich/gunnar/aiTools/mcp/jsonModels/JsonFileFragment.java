@@ -50,7 +50,7 @@ public class JsonFileFragment extends JsonModelElement
 
 			if (theFragment.getFragmentElement() != null)
 			{
-				fragmentElement = new JsonModelElementBase(theFragment.getFragmentElement());
+				fragmentElement = getJsonModelElementBase(theFragment.getFragmentElement());
 			}
 
 			fragmentText = theFragment.getFragmentText();

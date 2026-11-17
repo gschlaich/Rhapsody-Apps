@@ -107,7 +107,7 @@ public class JsonState extends JsonStateVertex
             isOverridden = theState.getIsOverridden() == 1;
 			if (theState.getItsSwimlane() != null)
 			{
-				itsSwimlane = new JsonModelElementBase(theState.getItsSwimlane());
+				itsSwimlane = getJsonModelElementBase(theState.getItsSwimlane());
 			}
 			subStates = convertToJsonModelElementBaseList(theState.getSubStates());
 			//subStates = convertToJsonModelElementList(theState.getSubStates());
@@ -115,7 +115,7 @@ public class JsonState extends JsonStateVertex
 			stateType = theState.getStateType();
 			if (theState.getNestedStatechart() != null)
 			{
-				nestedStatechart = new JsonModelElementBase(theState.getNestedStatechart());
+				nestedStatechart = getJsonModelElementBase(theState.getNestedStatechart());
 			}
 			
 			root = theState.isRoot()==1;

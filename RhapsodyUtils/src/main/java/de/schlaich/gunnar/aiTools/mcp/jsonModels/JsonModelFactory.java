@@ -401,7 +401,7 @@ public class JsonModelFactory
 			e.printStackTrace();
 			trace(e.toString());
 			trace("Exception creating json model element for " + metaClass + ": " + e.getMessage());
-			ret = new JsonModelElementBase(aModelElement);
+			ret = JsonModelElementBase.GetJsonModelElementBase(aModelElement);
 		}
 
 		//trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );

@@ -1,6 +1,8 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -70,6 +72,7 @@ public class JsonModelTester
 		// initCache();
 
 		String jsonString = "";
+		
 
 		JsonModelFactory jsonFactory = JsonModelFactory.Instance();
 
@@ -80,9 +83,15 @@ public class JsonModelTester
 		}
 
 		JsonModelElementBase jme = jsonFactory.getJsonModelElement(aModelElement, 0);
+		
+		
+		Collection<JsonModelElementBase> refElements = JsonModelElementBase.getReferencedJsonModelElementCollection(myApp.activeProject());
+		
+		JsonCompletionContext context = new JsonCompletionContext("Test", jme, refElements);
+		
 		try
 		{
-			jsonString = jme.toJsonString();
+			jsonString = context.toJsonString();
 		}
 		catch (IOException e)
 		{

@@ -33,6 +33,7 @@ public class JsonConnector extends JsonStateVertex
 	}
 
 	@JsonProperty("connectorType")
+	@JsonInclude(JsonInclude.Include.NON_DEFAULT)
 	protected ConnectorType connectorType = ConnectorType.unknown;
 	
 	@JsonProperty("derivedInEdges")
@@ -73,12 +74,12 @@ public class JsonConnector extends JsonStateVertex
 
 		if (theConnector.getDerivedOutEdge() != null)
 		{
-			derivedOutEdge = new JsonModelElementBase(theConnector.getDerivedOutEdge());
+			derivedOutEdge = getJsonModelElementBase(theConnector.getDerivedOutEdge());
 		}
 
 		if (theConnector.getOfState() != null)
 		{
-			ofState = new JsonModelElementBase(theConnector.getOfState());
+			ofState = getJsonModelElementBase(theConnector.getOfState());
 		}
 
 	}

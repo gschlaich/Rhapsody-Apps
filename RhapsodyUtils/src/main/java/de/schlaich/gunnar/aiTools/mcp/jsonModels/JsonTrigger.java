@@ -51,7 +51,7 @@ public class JsonTrigger extends JsonModelElement
 			
 			if(trigger.getItsOperation() != null)
 			{
-				this.itsOperation = new JsonModelElementBase(trigger.getItsOperation());
+				this.itsOperation = getJsonModelElementBase(trigger.getItsOperation());
 			}	
 		}
 		

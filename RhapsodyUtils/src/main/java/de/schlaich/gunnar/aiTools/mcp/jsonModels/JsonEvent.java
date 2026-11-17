@@ -38,11 +38,11 @@ public class JsonEvent extends JsonInterfaceItem
 
 			if (theEvent.getBaseEvent() != null)
 			{
-				baseEvent = new JsonModelElementBase(theEvent.getBaseEvent());
+				baseEvent = getJsonModelElementBase(theEvent.getBaseEvent());
 			}
 			if (theEvent.getSuperEvent() != null)
 			{
-				superEvent = new JsonModelElementBase(theEvent.getSuperEvent());
+				superEvent = getJsonModelElementBase(theEvent.getSuperEvent());
 			}
 		}
 	}

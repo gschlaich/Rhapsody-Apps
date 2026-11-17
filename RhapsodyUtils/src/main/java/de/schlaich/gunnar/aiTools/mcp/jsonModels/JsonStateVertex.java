@@ -60,7 +60,7 @@ public class JsonStateVertex extends JsonModelElement
 			
 			if (theStateVertex.getParent() != null)
 			{
-				parentState = new JsonModelElementBase(theStateVertex.getParent());
+				parentState = getJsonModelElementBase(theStateVertex.getParent());
 			}
 			
 			//outTransitions = convertToJsonModelElementList(theStateVertex.getOutTransitions());

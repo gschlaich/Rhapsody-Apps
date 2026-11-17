@@ -70,7 +70,7 @@ public class JsonHyperLink extends JsonDependency
 		
 		if (theHyperLink.getTarget() != null)
 		{
-			target = new JsonModelElementBase(theHyperLink.getTarget());
+			target = getJsonModelElementBase(theHyperLink.getTarget());
 		}
 		textToDisplay = theHyperLink.getTextToDisplay();
 		

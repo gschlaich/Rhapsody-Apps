@@ -139,11 +139,11 @@ public class JsonOperation extends JsonInterfaceItem
 		visibility = theOperation.getVisibility();
 		if (theOperation.getReturns() != null)
 		{
-			returns = new JsonModelElementBase(theOperation.getReturns());
+			returns = getJsonModelElementBase(theOperation.getReturns());
 		}
 		if (theOperation.getFlowchart() != null)
 		{
-			flowchart = new JsonModelElementBase(theOperation.getFlowchart());
+			flowchart = getJsonModelElementBase(theOperation.getFlowchart());
 		}
 
 	}

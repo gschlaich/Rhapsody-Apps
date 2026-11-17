@@ -87,11 +87,11 @@ public class JsonTransition extends JsonModelElement
 		itsLabel = theTransition.getItsLabel();
 		if (theTransition.getInheritsFrom() != null)
 		{
-			inheritsFrom = new JsonModelElementBase(theTransition.getInheritsFrom());
+			inheritsFrom = getJsonModelElementBase(theTransition.getInheritsFrom());
 		}
 		if (theTransition.getItsAction() != null)
 		{
-			itsAction = new JsonModelElementBase(theTransition.getItsAction());
+			itsAction = getJsonModelElementBase(theTransition.getItsAction());
 		}
 		if (theTransition.getItsGuard() != null)
 		{
@@ -105,17 +105,17 @@ public class JsonTransition extends JsonModelElement
 		{
 			//trace("------------------ Transition trigger: " + theTransition.getItsTrigger().getMetaClass() + " Class: " + theTransition.getItsTrigger().getClass());
 			
-			itsTrigger = new JsonModelElementBase(theTransition.getItsTrigger());
+			itsTrigger = getJsonModelElementBase(theTransition.getItsTrigger());
 		}
 
 		if (theTransition.getItsSource() != null)
 		{
-			itsSource = new JsonModelElementBase(theTransition.getItsSource());
+			itsSource = getJsonModelElementBase(theTransition.getItsSource());
 		}
 
 		if (theTransition.getItsTarget() != null)
 		{
-			itsTarget = new JsonModelElementBase(theTransition.getItsTarget());
+			itsTarget = getJsonModelElementBase(theTransition.getItsTarget());
 		}
 
 		isDefaultTransition = theTransition.isDefaultTransition() == 1;

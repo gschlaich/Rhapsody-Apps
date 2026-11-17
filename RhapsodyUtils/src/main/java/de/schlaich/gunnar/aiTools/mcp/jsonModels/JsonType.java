@@ -135,7 +135,7 @@ public class JsonType extends JsonClassifier
 			typedefMultiplicity = theType.getTypedefMultiplicity();
 			if (theType.getTypedefBaseType() != null)
 			{
-				typedefBaseType = new JsonModelElementBase(theType.getTypedefBaseType());
+				typedefBaseType = getJsonModelElementBase(theType.getTypedefBaseType());
 			}
 			// nested?
 			// enumerationLiterals = convertToJsonModelElementBaseList(theType.getEnumerationLiterals()); 

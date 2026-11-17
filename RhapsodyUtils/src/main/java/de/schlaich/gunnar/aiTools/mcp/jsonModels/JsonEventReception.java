@@ -31,7 +31,7 @@ public class JsonEventReception extends JsonInterfaceItem
 		if (aModelElement instanceof IRPEventReception)
 		{
 			IRPEventReception theEventReception = (IRPEventReception) aModelElement;
-			event = new JsonModelElementBase(theEventReception.getEvent());
+			event = getJsonModelElementBase(theEventReception.getEvent());
 		}
 	}
 

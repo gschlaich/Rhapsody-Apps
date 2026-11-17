@@ -36,9 +36,9 @@ public class JsonVariable extends JsonUnit
 	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	protected JsonModelElementBase vType = null;
 
-	@JsonProperty("valueSpecifications")
-	@JsonInclude(JsonInclude.Include.NON_EMPTY)
-	protected List<JsonModelElementBase> valueSpecifications = null;
+	//@JsonProperty("valueSpecifications")
+	//@JsonInclude(JsonInclude.Include.NON_EMPTY)
+	//protected List<JsonModelElementBase> valueSpecifications = null;
 
 	public JsonVariable(IRPModelElement aModelElement, int level)
 	{
@@ -60,16 +60,23 @@ public class JsonVariable extends JsonUnit
 			
 			if (theVar.getType() != null)
 			{
-				vType = new JsonModelElementBase(theVar.getType());
-				//vType = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) theVar.getType(), myLevel + 1);
+				vType = getJsonModelElementBase(theVar.getType());
+				
 						
 			}
 			
 
-			valueSpecifications = convertToJsonModelElementList(theVar.getValueSpecifications());
+			//valueSpecifications = convertToJsonModelElementList(theVar.getValueSpecifications());
 		}
 
 	}
+	
+	@Override
+	protected void getNestedElements(IRPModelElement aModelElement) 
+	{
+		nestedElements = null;
+	}
+	
 	
 	@Override
 	public void setAttributes(IRPModelElement modelElement, IRPProject project, ImportMode importMode)

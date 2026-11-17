@@ -334,7 +334,7 @@ public class RhapsodyClient
 			return "OK: JSON model validated successfully.";
 		}
 
-		JsonModelElementBase parentJson = new JsonModelElementBase(parentModelOpt.get());
+		JsonModelElementBase parentJson = JsonModelElementBase.GetJsonModelElementBase(parentModelOpt.get());
 		JsonModelElementBase existingJson = null;
 
 		if (aImportMode == ImportMode.update)
@@ -436,7 +436,7 @@ public class RhapsodyClient
 
 		if (asStub == true)
 		{
-			jme = new JsonModelElementBase(aModelElement);
+			jme = JsonModelElementBase.GetJsonModelElementBase(aModelElement);
 		}
 		else
 		{

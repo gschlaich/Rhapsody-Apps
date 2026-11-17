@@ -138,11 +138,11 @@ public class JsonMessage extends JsonModelElement
 		
 		if (theMessage.getSourceExecutionOccurrence() != null)
 		{
-			sourceExecutionOccurrence = new JsonModelElementBase(theMessage.getSourceExecutionOccurrence());
+			sourceExecutionOccurrence = getJsonModelElementBase(theMessage.getSourceExecutionOccurrence());
 		}
 		if (theMessage.getTargetExecutionOccurrence() != null)
 		{
-			targetExecutionOccurrence = new JsonModelElementBase(theMessage.getTargetExecutionOccurrence());
+			targetExecutionOccurrence = getJsonModelElementBase(theMessage.getTargetExecutionOccurrence());
 		}
 		
 		List<String> actualParameterListTemp = theMessage.getActualParameterList().toList();
@@ -150,7 +150,7 @@ public class JsonMessage extends JsonModelElement
 		
 		if (theMessage.getCommunicationConnection() != null)
 		{
-			communicationConnection = new JsonModelElementBase(theMessage.getCommunicationConnection());
+			communicationConnection = getJsonModelElementBase(theMessage.getCommunicationConnection());
 		}
 		condition = theMessage.getCondition();
 		if(theMessage.getDurationConstraint() != null)
@@ -159,31 +159,31 @@ public class JsonMessage extends JsonModelElement
 		}
 		if (theMessage.getFlowPort() != null)
 		{
-			flowPort = new JsonModelElementBase(theMessage.getFlowPort());
+			flowPort = getJsonModelElementBase(theMessage.getFlowPort());
 		}
 		if (theMessage.getFormalInterfaceItem() != null)
 		{
-			formalInterfaceItem = new JsonModelElementBase(theMessage.getFormalInterfaceItem());
+			formalInterfaceItem = getJsonModelElementBase(theMessage.getFormalInterfaceItem());
 		}
 		if (theMessage.getFormalType() != null)
 		{
-			formalType = new JsonModelElementBase(theMessage.getFormalType());
+			formalType = getJsonModelElementBase(theMessage.getFormalType());
 		}
 		//invariant = theMessage.getInvariant();
 		messageType = theMessage.getMessageType();
 		if (theMessage.getPort() != null)
 		{
-			port = new JsonModelElementBase(theMessage.getPort());
+			port = getJsonModelElementBase(theMessage.getPort());
 		}
 		returnValue = theMessage.getReturnValue();
 		sequenceNumber = theMessage.getSequenceNumber();
 		if (theMessage.getSource() != null)
 		{
-			source = new JsonModelElementBase(theMessage.getSource());
+			source = getJsonModelElementBase(theMessage.getSource());
 		}
 		if (theMessage.getTarget() != null)
 		{
-			target = new JsonModelElementBase(theMessage.getTarget());
+			target = getJsonModelElementBase(theMessage.getTarget());
 		}
 		//timeConstraint = theMessage.getTimeConstraint();
 		//timeObservation = theMessage.getTimeObservation();

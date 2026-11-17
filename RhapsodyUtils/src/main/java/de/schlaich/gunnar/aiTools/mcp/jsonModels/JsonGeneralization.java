@@ -49,11 +49,11 @@ public class JsonGeneralization extends JsonModelElement
 
 			if (theGen.getBaseClass() != null)
 			{
-				baseClass = new JsonModelElementBase(theGen.getBaseClass());
+				baseClass = getJsonModelElementBase(theGen.getBaseClass());
 			}
 			if (theGen.getDerivedClass() != null)
 			{
-				derivedClass = new JsonModelElementBase(theGen.getDerivedClass());
+				derivedClass = getJsonModelElementBase(theGen.getDerivedClass());
 			}
 		}
 

@@ -67,7 +67,7 @@ public class JsonInstance extends JsonRelation
 		inLinks = convertToJsonModelElementBaseList(theInstance.getInLinks());
 		if (theInstance.getInstantiatedBy() != null)
 		{
-			instantiatedBy = new JsonModelElementBase(theInstance.getInstantiatedBy());
+			instantiatedBy = getJsonModelElementBase(theInstance.getInstantiatedBy());
 		}
 		listOfInitializerArguments = convertToJsonModelElementBaseList(theInstance.getListOfInitializerArguments());
 		outLinks = convertToJsonModelElementBaseList(theInstance.getOutLinks());

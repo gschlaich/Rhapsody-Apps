@@ -46,8 +46,8 @@ public class JsonTag extends JsonVariable
 		{
 			IRPTag tag = (IRPTag) aModelElement;
 
-			this.base = new JsonModelElementBase(tag.getBase());
-			this.fromProfile = new JsonModelElementBase(tag.getFromProfile());
+			this.base = getJsonModelElementBase(tag.getBase());
+			this.fromProfile = getJsonModelElementBase(tag.getFromProfile());
 			this.multiplicity = tag.getMultiplicity();
 			this.tagMetaClass = tag.getTagMetaClass();
 			this.value = tag.getValue();

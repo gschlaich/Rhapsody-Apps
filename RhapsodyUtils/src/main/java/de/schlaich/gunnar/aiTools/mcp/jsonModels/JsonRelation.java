@@ -110,7 +110,7 @@ public class JsonRelation extends JsonUnit
 
 		if (theRelation.getInverse() != null)
 		{
-			inverse = new JsonModelElementBase(theRelation.getInverse());
+			inverse = getJsonModelElementBase(theRelation.getInverse());
 		}
 
 //		if (theRelation.getAssociationClass() != null)
@@ -126,23 +126,23 @@ public class JsonRelation extends JsonUnit
 
 		if (theRelation.getObjectAsObjectType() != null)
 		{
-			objectAsObjectType = new JsonModelElementBase(theRelation.getObjectAsObjectType());
+			objectAsObjectType = getJsonModelElementBase(theRelation.getObjectAsObjectType());
 		}
 
 		if (theRelation.getOfClass() != null)
 		{
-			ofClass = new JsonModelElementBase(theRelation.getOfClass());
+			ofClass = getJsonModelElementBase(theRelation.getOfClass());
 		}
 
 		if (theRelation.getOtherClass() != null)
 		{
-			otherClass = new JsonModelElementBase(theRelation.getOtherClass());
+			otherClass = getJsonModelElementBase(theRelation.getOtherClass());
 			//otherClass = JsonModelFactory.Instance().getJsonModelElement((IRPModelElement) theRelation.getOtherClass(), myLevel + 1);
 		}
 
 		if (theRelation.getQualifierType() != null)
 		{
-			qualifierType = new JsonModelElementBase(theRelation.getQualifierType());
+			qualifierType = getJsonModelElementBase(theRelation.getQualifierType());
 		}
 
 		relationLabel = theRelation.getRelationLabel();

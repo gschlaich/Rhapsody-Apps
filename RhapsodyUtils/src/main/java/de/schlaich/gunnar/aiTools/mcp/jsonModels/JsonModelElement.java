@@ -64,7 +64,7 @@ public class JsonModelElement extends JsonModelElementBase {
 	
 			if (ownerElement != null) 
 			{
-				owner = new JsonModelElementBase(ownerElement);
+				owner = getJsonModelElementBase(ownerElement);
 			}
 			
 			nameSpace = RhapsodyOperation.getNamespace(aModelElement);
@@ -81,7 +81,7 @@ public class JsonModelElement extends JsonModelElementBase {
 		description = aModelElement.getDescription();
 
 		if (aModelElement.getNewTermStereotype() != null) {
-			newTermStereotype = new JsonModelElementBase(aModelElement.getNewTermStereotype());
+			newTermStereotype = getJsonModelElementBase(aModelElement.getNewTermStereotype());
 		}
 
 	}

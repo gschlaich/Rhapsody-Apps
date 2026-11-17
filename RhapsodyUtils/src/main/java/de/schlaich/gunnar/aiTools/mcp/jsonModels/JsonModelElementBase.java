@@ -1,5 +1,6 @@
 package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 
+import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPClass;
 import com.telelogic.rhapsody.core.IRPClassifier;
 import com.telelogic.rhapsody.core.IRPCollection;
@@ -16,11 +17,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import javax.validation.constraints.NotNull;
@@ -28,6 +34,7 @@ import javax.validation.constraints.NotNull;
 // AcceptEventAction,AcceptTimeEvent,ActionBlock,ActivityDiagram,Actor,Argument,Association,AssociationEnd,Attribute,CallOperation,Class,ClassifierRole,Cleanup,CombinedFragment,Comment,CommunicationDiagram,Component,ComponentDiagram,ComponentInstance,Condition,ConditionMark,Configuration,Connector,Constraint,Constructor,ControlledFile,DefaultTransition,Dependency,DeploymentDiagram,Destructor,EnumerationLiteral,Event,ExecutionOccurrence,File,Flow,Folder,Generalization,HyperLink,Initializer,InstanceSlot,InstanceSpecification,InteractionOccurrence,InteractionOperand,ItemFlow,Link,MatrixLayout,MatrixView,Message,Module,Node,Object,ObjectModelDiagram,ObjectNode,Operation,Package,PanelDiagram,Pin,Port,Profile,Project,Reception,ReferenceActivity,Requirement,SequenceDiagram,State,Statechart,Stereotype,StructureDiagram,Swimlane,SysMLPort,TableLayout,TableView,Tag,Transition,TriggeredOperation,Type,UseCase,UseCaseDiagram
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "Type")
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "guid")
 @JsonSubTypes(
 { @JsonSubTypes.Type(value = JsonModelElement.class, name = "ModelElement"),
 		@JsonSubTypes.Type(value = JsonClass.class, name = "Class"),
@@ -128,14 +135,20 @@ public class JsonModelElementBase
 	@JsonInclude(JsonInclude.Include.NON_NULL)
 	protected String fullName = null;
 
+	@JsonIgnore
 	protected int myLevel = 0;
 
 	private static final String CREATION_PREFIX = "__create_";
+	
+	@JsonIgnore
 	protected String creationName = null;
 	
 	
-
-	public JsonModelElementBase(IRPModelElement aIRPModelElement)
+	
+	@JsonIgnore
+	protected static Map<String, JsonModelElementBase> myModelElementStubs = new HashMap<String, JsonModelElementBase>();
+	
+	private JsonModelElementBase(IRPModelElement aIRPModelElement)	
 	{
 		this(aIRPModelElement, 0);
 	}
@@ -145,8 +158,10 @@ public class JsonModelElementBase
 
 		myLevel = aLevel;
 		
+		
 		String metaClassName = aIRPModelElement.getMetaClass();
-
+		
+		
 		try
 		{
 			metaClass = MetaClass.valueOf(metaClassName);
@@ -246,6 +261,7 @@ public class JsonModelElementBase
 		String jsonString = objectMapper.writeValueAsString(this);
 		return jsonString;
 	}
+	
 
 	public void setAttributes(IRPModelElement aModelElement, IRPProject aProject, ImportMode aImportMode)
 	{
@@ -487,6 +503,9 @@ public class JsonModelElementBase
 			}
 			IRPModelElement modelElement = (IRPModelElement) element;
 			JsonModelElementBase jsonModelElement = new JsonModelElementBase(modelElement);
+			
+			myModelElementStubs.put(jsonModelElement.getGuid(), jsonModelElement);
+			
 			jsonModelElements.add(jsonModelElement);
 		}
 		return jsonModelElements;
@@ -542,6 +561,75 @@ public class JsonModelElementBase
 
 		return theList;
 	}
+	
+	public JsonModelElementBase getJsonModelElementBase(IRPModelElement aModelElement)
+	{
+		JsonModelElementBase ret =  new JsonModelElementBase(aModelElement);
+		myModelElementStubs.put(ret.getGuid(), ret);
+		return ret;	
+	}
+	
+	public static Collection<JsonModelElementBase> getReferencedJsonModelElementBaseCollection()
+	{	
+		return( myModelElementStubs.values());
+		
+	}
+	
+	public static Collection<JsonModelElementBase> getReferencedJsonModelElementCollection(IRPProject aProject)
+	{	
+		
+		Collection<JsonModelElementBase> ret = new ArrayList<JsonModelElementBase>();
+		
+		if(aProject == null)
+		{
+			return null;
+		}
+		
+		Collection<JsonModelElementBase> referencedElements = getReferencedJsonModelElementBaseCollection();
+		
+		List<JsonModelElementBase> referencedElementsList = new ArrayList<JsonModelElementBase>(referencedElements);
+		
+		for(JsonModelElementBase stub : referencedElementsList)
+		{
+			String guid = stub.getGuid();
+			
+			IRPModelElement element = aProject.findElementByGUID(guid);
+			
+			if(element instanceof IRPPackage)
+			{
+				// skip packages, they are not needed for reference
+				continue;
+			}
+			
+			if(element != null)
+			{
+				JsonModelElementBase jsonME = JsonModelFactory.Instance().getJsonModelElement(element, 0);
+				ret.add(jsonME);
+				
+			}
+
+		}
+		return ret;
+		
+	}
+
+	public JsonModelElementBase getModelElement(IRPModelElement aModelElement, int level)
+	{
+		if(level > 2)
+		{
+			return getJsonModelElementBase(aModelElement);
+		}
+		
+		JsonModelElementBase ret = JsonModelFactory.Instance().getJsonModelElement(aModelElement, level);
+		myModelElementStubs.put(ret.getGuid(), ret);
+		return ret;
+	}
+	
+	public static JsonModelElementBase GetJsonModelElementBase(IRPModelElement aModelElement)
+	{
+		return new JsonModelElementBase(aModelElement);
+	}
+
 
 	public JsonModelElementBase createJsonModelElement(IRPModelElement modelElement, int level)
 	{

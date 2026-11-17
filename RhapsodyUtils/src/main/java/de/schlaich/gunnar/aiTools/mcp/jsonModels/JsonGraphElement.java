@@ -120,7 +120,7 @@ public class JsonGraphElement
 
 		if (aGraphElement.getModelObject() != null)
 		{
-			modelObject = new JsonModelElementBase(aGraphElement.getModelObject());
+			modelObject = JsonModelElementBase.GetJsonModelElementBase(aGraphElement.getModelObject());
 		}
 
 		selectedImage = aGraphElement.getSelectedImage();
