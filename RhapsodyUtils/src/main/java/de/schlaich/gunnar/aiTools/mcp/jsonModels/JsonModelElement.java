@@ -60,12 +60,12 @@ public class JsonModelElement extends JsonModelElementBase {
 		
 		if(level == 0)
 		{
-			IRPModelElement ownerElement = aModelElement.getOwner();
-	
-			if (ownerElement != null) 
-			{
-				owner = getJsonModelElementBase(ownerElement);
-			}
+//			IRPModelElement ownerElement = aModelElement.getOwner();
+//	
+//			if (ownerElement != null) 
+//			{
+//				owner = getJsonModelElementBase(ownerElement);
+//			}
 			
 			nameSpace = RhapsodyOperation.getNamespace(aModelElement);
 		}

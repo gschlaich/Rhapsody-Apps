@@ -3,7 +3,9 @@ package de.schlaich.gunnar.aiTools.mcp.jsonModels;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,6 +29,7 @@ import com.github.victools.jsonschema.module.jackson.JacksonModule;
 import com.github.victools.jsonschema.generator.naming.*;
 import com.telelogic.rhapsody.core.IRPApplication;
 import com.telelogic.rhapsody.core.IRPModelElement;
+import com.telelogic.rhapsody.core.IRPPackage;
 import com.telelogic.rhapsody.core.IRPProject;
 
 import de.schlaich.gunnar.aiTools.mcp.jsonModels.JsonModelElementBase.ImportMode;
@@ -49,6 +52,10 @@ public class JsonModelFactory
 	IRPApplication myApp = null;
 	
 	private List<JsonModelElementBase> itsReferenceElements = new ArrayList<JsonModelElementBase>();
+		
+	private Set<String> itsAlreadyGeneratedElements = new HashSet<String>();
+	
+	private Map<String, JsonModelElementBase> itsJsonModelBaseElements = new HashMap<String, JsonModelElementBase>();
 
 	private JsonModelFactory(IRPApplication aApp, Consumer<String> aTraceAction)
 	{
@@ -140,6 +147,12 @@ public class JsonModelFactory
 	{
 		
 		return itsReferenceElements.add(aElement);
+	}
+	
+	
+	public boolean checkAlreadyGeneratedElement(String aGuid)
+	{
+		return itsAlreadyGeneratedElements.contains(aGuid);
 	}
 	
 	public void traceReferenceElements()
@@ -395,21 +408,59 @@ public class JsonModelFactory
 			Constructor<? extends JsonModelElement> c = jsonRefClass.getConstructor(IRPModelElement.class, int.class);
 
 			ret = c.newInstance(aModelElement, depth);
+			
+			itsAlreadyGeneratedElements.add(ret.getGuid());
+			
+			if(itsJsonModelBaseElements.containsKey(ret.getGuid()))
+			{
+				itsJsonModelBaseElements.remove(ret.getGuid());
+			}
+			
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
 			trace(e.toString());
 			trace("Exception creating json model element for " + metaClass + ": " + e.getMessage());
-			ret = JsonModelElementBase.GetJsonModelElementBase(aModelElement);
+			ret = getJsonModelElementBase(aModelElement);
 		}
 
 		//trace("Get json Model MetaClass: " + ret.getMetaclass() + ", Class: " + ret.getClass().getSimpleName()+", Name: " + ret.getName() );
 		return ret;
 
 	}
+	
+	public JsonModelElementBase getJsonModelElementBase(IRPModelElement aModelElement)
+	{
+		JsonModelElementBase elementBase = new JsonModelElementBase(aModelElement);
+		
+		String guid = elementBase.getGuid();
+		
+		if(itsAlreadyGeneratedElements.contains(guid)==false)
+		{
+			itsJsonModelBaseElements.put(guid, elementBase);
+		}
+		
+		return elementBase;
+	}
+	
+	public JsonModelElementBase getJsonModelElement(String aGuid)
+	{
+		IRPProject project = myApp.activeProject();
+		IRPModelElement element = project.findElementByGUID(aGuid);
 
-	public JsonModelElementBase getJsonModel(JsonModelElementBase aJsonBase)
+		if (element == null)
+		{
+			return null;
+		}
+		
+		return getJsonModelElement(element, 0);
+
+	}
+	
+	
+
+	public JsonModelElementBase getJsonModelElement(JsonModelElementBase aJsonBase)
 	{
 		String guid = aJsonBase.getGuid();
 
@@ -420,8 +471,6 @@ public class JsonModelFactory
 		{
 			return null;
 		}
-		
-		
 
 		return getJsonModelElement(element, 0);
 
@@ -480,6 +529,47 @@ public class JsonModelFactory
 		
 		return ret;
 	}
+	
+	
+	public Collection<JsonModelElementBase> getReferencedJsonModelElementCollection(IRPProject aProject)
+	{	
+		
+		Collection<JsonModelElementBase> ret = new ArrayList<JsonModelElementBase>();
+		
+		if(aProject == null)
+		{
+			return null;
+		}
+		
+		Collection<JsonModelElementBase> referencedElements = itsJsonModelBaseElements.values();
+		
+		List<JsonModelElementBase> referencedElementsList = new ArrayList<JsonModelElementBase>(referencedElements);
+		
+		for(JsonModelElementBase stub : referencedElementsList)
+		{
+			String guid = stub.getGuid();
+			
+			IRPModelElement element = aProject.findElementByGUID(guid);
+			
+			if(element instanceof IRPPackage)
+			{
+				// skip packages, they are not needed for reference
+				continue;
+			}
+			
+			if(element != null)
+			{
+				JsonModelElementBase jsonME = JsonModelFactory.Instance().getJsonModelElement(element, 0);
+				ret.add(jsonME);
+				
+			}
+
+		}
+		return ret;
+		
+	}
+	
+	
 
 	private void trace(String aMessage)
 	{

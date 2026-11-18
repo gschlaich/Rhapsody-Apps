@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import java.io.IOException;
@@ -145,10 +146,9 @@ public class JsonModelElementBase
 	
 	
 	
-	@JsonIgnore
-	protected static Map<String, JsonModelElementBase> myModelElementStubs = new HashMap<String, JsonModelElementBase>();
 	
-	private JsonModelElementBase(IRPModelElement aIRPModelElement)	
+	
+	JsonModelElementBase(IRPModelElement aIRPModelElement)	
 	{
 		this(aIRPModelElement, 0);
 	}
@@ -504,7 +504,7 @@ public class JsonModelElementBase
 			IRPModelElement modelElement = (IRPModelElement) element;
 			JsonModelElementBase jsonModelElement = new JsonModelElementBase(modelElement);
 			
-			myModelElementStubs.put(jsonModelElement.getGuid(), jsonModelElement);
+			
 			
 			jsonModelElements.add(jsonModelElement);
 		}
@@ -564,54 +564,14 @@ public class JsonModelElementBase
 	
 	public JsonModelElementBase getJsonModelElementBase(IRPModelElement aModelElement)
 	{
-		JsonModelElementBase ret =  new JsonModelElementBase(aModelElement);
-		myModelElementStubs.put(ret.getGuid(), ret);
-		return ret;	
+		
+		JsonModelFactory factory = JsonModelFactory.Instance();
+		
+		return factory.getJsonModelElementBase(aModelElement);
+		
+			
 	}
-	
-	public static Collection<JsonModelElementBase> getReferencedJsonModelElementBaseCollection()
-	{	
-		return( myModelElementStubs.values());
-		
-	}
-	
-	public static Collection<JsonModelElementBase> getReferencedJsonModelElementCollection(IRPProject aProject)
-	{	
-		
-		Collection<JsonModelElementBase> ret = new ArrayList<JsonModelElementBase>();
-		
-		if(aProject == null)
-		{
-			return null;
-		}
-		
-		Collection<JsonModelElementBase> referencedElements = getReferencedJsonModelElementBaseCollection();
-		
-		List<JsonModelElementBase> referencedElementsList = new ArrayList<JsonModelElementBase>(referencedElements);
-		
-		for(JsonModelElementBase stub : referencedElementsList)
-		{
-			String guid = stub.getGuid();
-			
-			IRPModelElement element = aProject.findElementByGUID(guid);
-			
-			if(element instanceof IRPPackage)
-			{
-				// skip packages, they are not needed for reference
-				continue;
-			}
-			
-			if(element != null)
-			{
-				JsonModelElementBase jsonME = JsonModelFactory.Instance().getJsonModelElement(element, 0);
-				ret.add(jsonME);
-				
-			}
 
-		}
-		return ret;
-		
-	}
 
 	public JsonModelElementBase getModelElement(IRPModelElement aModelElement, int level)
 	{
@@ -621,15 +581,11 @@ public class JsonModelElementBase
 		}
 		
 		JsonModelElementBase ret = JsonModelFactory.Instance().getJsonModelElement(aModelElement, level);
-		myModelElementStubs.put(ret.getGuid(), ret);
+		
 		return ret;
 	}
 	
-	public static JsonModelElementBase GetJsonModelElementBase(IRPModelElement aModelElement)
-	{
-		return new JsonModelElementBase(aModelElement);
-	}
-
+	
 
 	public JsonModelElementBase createJsonModelElement(IRPModelElement modelElement, int level)
 	{

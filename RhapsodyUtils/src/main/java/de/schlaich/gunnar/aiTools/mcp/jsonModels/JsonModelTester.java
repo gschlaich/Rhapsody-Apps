@@ -85,7 +85,7 @@ public class JsonModelTester
 		JsonModelElementBase jme = jsonFactory.getJsonModelElement(aModelElement, 0);
 		
 		
-		Collection<JsonModelElementBase> refElements = JsonModelElementBase.getReferencedJsonModelElementCollection(myApp.activeProject());
+		Collection<JsonModelElementBase> refElements =  jsonFactory.getReferencedJsonModelElementCollection(myApp.activeProject());
 		
 		JsonCompletionContext context = new JsonCompletionContext("Test", jme, refElements);
 		

@@ -54,7 +54,7 @@ public class JsonStatechart extends JsonClass
 			IRPStatechart theStatechart = (IRPStatechart) aModelElement;
 			isMainBehavior = theStatechart.getIsMainBehavior() == 1;
 			isOverridden = theStatechart.getIsOverridden() == 1;
-			statechartDiagram = new JsonModelElementBase(theStatechart.getStatechartDiagram(), 0);		
+			//statechartDiagram = new JsonModelElementBase(theStatechart.getStatechartDiagram(), 0);		
 		}
 	}
 	
@@ -186,7 +186,7 @@ public class JsonStatechart extends JsonClass
 				}
 				else if(jsonME instanceof JsonStatechartDiagram)
 				{
-					stateChartDiagrams.add(jsonME);
+					//stateChartDiagrams.add(jsonME);
 				}
 				else if(jsonME instanceof JsonState)
 				{
